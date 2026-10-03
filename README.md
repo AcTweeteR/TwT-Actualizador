@@ -86,3 +86,16 @@ Generar SHA-256 de artefactos publicados. El pipeline debe impedir la publicaci�
 
 NO se publica aquí. El provisioning privado vive en iCloud Drive/`actweeter kodi`.
 
+
+
+## Política temporal de publicación
+
+Durante la fase de desarrollo intensivo:
+
+1. Publicar **ahora**, antes de la reuse audit, una primera versión instalable con el estado funcional actual y saneado de AcTweeteR.
+2. Después de esa primera publicación, **no publicar por cada cambio ni por cada commit**.
+3. Las siguientes publicaciones serán **manuales**, únicamente cuando el propietario del proyecto lo solicite expresamente.
+4. Codex puede seguir desarrollando, probando y haciendo commits en el repositorio privado sin generar una actualización pública.
+5. Cuando el proyecto alcance una versión estable, se migrará a publicación automática. La política exacta de automatización se definirá entonces; no activar todavía publicación automática por commit.
+
+La primera publicación debe hacerse antes de comenzar la auditoría reuse-first, pero solo después de verificar que el artefacto es instalable y no contiene secretos.
