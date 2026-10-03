@@ -8,6 +8,8 @@
   redistribución acreditado por Inter ya incluido y su licencia SIL OFL 1.1.
 - Incluye avisos de procedencia y dependencias; no contiene provisioning ni datos
   personales.
+- El changelog post-update de una sola presentación y su consulta manual quedan
+  documentados como diseño futuro; no se implementa servicio ni popup en 1.1.1.
 - V1.1 sigue incompleta; consultar README.
 
 ## 1.1.0 — baseline local (no distribuida por este canal)

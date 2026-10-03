@@ -30,8 +30,9 @@ y [notices de terceros](THIRD_PARTY_NOTICES.md).
 3. Ve a **Instalar desde repositorio → AcTweeteR Repository → Aspecto → Skins → AcTweeteR → Instalar**.
    Kodi resolverá las dependencias declaradas desde los repositorios habilitados.
 4. Tras instalar, selecciona la skin AcTweeteR y comprueba **Información del add-on**
-   muestra `1.1.1` y el repositorio AcTweeteR como fuente. XStream, TV/PVR y la configuración
-   personal deben instalarse/restaurarse por separado; no se importan desde el Mac.
+   muestra `1.1.1`. La procedencia del canal se comprueba instalando desde la ficha
+   abierta bajo **AcTweeteR Repository**. XStream, TV/PVR y la configuración personal
+   deben instalarse/restaurarse por separado; no se importan desde el Mac.
 
 El origen del repositorio Kodi es
 `https://raw.githubusercontent.com/AcTweeteR/TwT-Actualizador/main/repo/`.
@@ -46,8 +47,13 @@ publicarán cuando el propietario las solicite expresamente.
   del skin; manifest de distribución `1.1.1`, canal `dev`.
 - SHA-256 públicos: [`checksums/SHA256SUMS`](checksums/SHA256SUMS).
 - Changelog: [`CHANGELOG.md`](CHANGELOG.md) y `repo/skin.actweeter/changelog-1.1.1.txt`.
-- Historial/rollback: se conservan los ZIP versionados y sus checksums; este es
-  el primer artefacto público.
+- Changelog post-update automático: **no implementado**; el texto está disponible
+  para consulta manual. No existe `service.actweeter` en esta versión y no se
+  mostrará ningún diálogo repetidamente.
+- Rollback: es la primera versión pública; no hay versión AcTweeteR pública
+  anterior. Si hubiera un problema, cambia a la skin Kodi predeterminada Estuary
+  y desinstala AcTweeteR sin borrar userdata. El ZIP 1.1.0 queda solo como
+  referencia local porque incluía fuentes no publicables.
 
 ## Publicación manual
 
