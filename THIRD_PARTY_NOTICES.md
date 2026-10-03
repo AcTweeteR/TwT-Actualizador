@@ -18,3 +18,10 @@ Kodi and all helpers/dependencies are separate upstream add-ons and retain
 their own authorship, terms and update channels. They are not copied into this
 repository. This notice identifies known direct origins for this artifact; it
 is not a complete code-level reuse audit, which remains a later project phase.
+
+`repo/upstream-bingie/addons.xml` is a filtered metadata-only snapshot of the
+public Bingie Omega repository index (<https://github.com/matke-84/repository.bingie>),
+limited to dependency records required directly or transitively by the skin.
+It contains no helper source or binary; Kodi downloads those packages directly
+from the upstream repository. The snapshot is manually refreshed for a future
+authorized repository release.

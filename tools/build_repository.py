@@ -15,14 +15,24 @@ ROOT = Path(__file__).resolve().parents[1]
 SKIN_ID = "skin.actweeter"
 SKIN_VERSION = "1.1.1"
 REPOSITORY_ID = "repository.actweeter"
-REPOSITORY_VERSION = "1.0.0"
+REPOSITORY_VERSION = "1.0.1"
 SKIN_ZIP = ROOT / "repo" / SKIN_ID / f"{SKIN_ID}-{SKIN_VERSION}.zip"
 REPOSITORY_DIR = ROOT / REPOSITORY_ID
 REPOSITORY_ZIP = REPOSITORY_DIR / f"{REPOSITORY_ID}-{REPOSITORY_VERSION}.zip"
+REPOSITORY_PUBLISHED_ZIP = ROOT / "repo" / REPOSITORY_ID / f"{REPOSITORY_ID}-{REPOSITORY_VERSION}.zip"
+BOOTSTRAP_ZIP = ROOT / "docs" / "bootstrap" / f"{REPOSITORY_ID}-{REPOSITORY_VERSION}.zip"
 INDEX = ROOT / "repo" / "addons.xml"
 MD5 = ROOT / "repo" / "addons.xml.md5"
+UPSTREAM_INDEX = ROOT / "repo" / "upstream-bingie" / "addons.xml"
+UPSTREAM_MD5 = ROOT / "repo" / "upstream-bingie" / "addons.xml.md5"
 MANIFEST = ROOT / "manifests" / f"{SKIN_VERSION}.json"
 CHECKSUMS = ROOT / "checksums" / "SHA256SUMS"
+REPOSITORY_CHANGELOG = REPOSITORY_DIR / f"changelog-{REPOSITORY_VERSION}.txt"
+UPSTREAM_ADDONS = {
+    "script.bingie.helper", "script.bingie.toolbox", "script.bingie.widgets",
+    "resource.images.studios.coloured", "plugin.video.tmdb.bingie.helper",
+    "plugin.program.autocompletion", "script.module.bingie",
+}
 SENSITIVE = [
     re.compile(rb"/Users/[^/\s]+/Library/Application Support/Kodi", re.I),
     re.compile(rb"(?i)(?:password|client_secret|access_token|api_key)\s*[=:]\s*[\"']?[^\s\"']{6,}"),
@@ -73,7 +83,7 @@ def scan_zip(path: Path) -> None:
 def zip_tree(source: Path, output: Path, root_name: str) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
-        for path in sorted(p for p in source.rglob("*") if p.is_file() and p != output):
+        for path in sorted(p for p in source.rglob("*") if p.is_file() and p != output and p.suffix.lower() != ".zip"):
             relative = Path(root_name) / path.relative_to(source)
             info = zipfile.ZipInfo(relative.as_posix(), FIXED_TIME)
             info.compress_type = zipfile.ZIP_DEFLATED
@@ -92,9 +102,26 @@ def build() -> None:
             "repository id/version mismatch")
     zip_tree(REPOSITORY_DIR, REPOSITORY_ZIP, REPOSITORY_ID)
     require(zipfile.ZipFile(REPOSITORY_ZIP).testzip() is None, "repository ZIP CRC failed")
+    REPOSITORY_PUBLISHED_ZIP.parent.mkdir(parents=True, exist_ok=True)
+    REPOSITORY_PUBLISHED_ZIP.write_bytes(REPOSITORY_ZIP.read_bytes())
+    BOOTSTRAP_ZIP.parent.mkdir(parents=True, exist_ok=True)
+    BOOTSTRAP_ZIP.write_bytes(REPOSITORY_ZIP.read_bytes())
+    require(REPOSITORY_CHANGELOG.is_file(), "missing repository changelog")
 
     skin_xml = ET.fromstring(zipfile.ZipFile(SKIN_ZIP).read(f"{SKIN_ID}/addon.xml"))
+    upstream_root = ET.parse(UPSTREAM_INDEX).getroot()
+    upstream_by_id = {addon.get("id"): addon for addon in upstream_root.findall("addon")}
+    require(UPSTREAM_ADDONS <= upstream_by_id.keys(), "upstream dependency metadata missing")
+    upstream_payload = UPSTREAM_INDEX.read_bytes()
+    require(UPSTREAM_MD5.read_text(encoding="ascii").strip() == hashlib.md5(upstream_payload).hexdigest(),
+            "upstream metadata checksum mismatch")
+    for addon_id in UPSTREAM_ADDONS:
+        require(upstream_by_id[addon_id].find("extension") is not None, f"invalid upstream metadata: {addon_id}")
+
+    repository_zip = zipfile.ZipFile(REPOSITORY_ZIP)
+    repository_entry = ET.fromstring(repository_zip.read(f"{REPOSITORY_ID}/addon.xml"))
     addons = ET.Element("addons")
+    addons.append(repository_entry)
     addons.append(skin_xml)
     payload = ET.tostring(addons, encoding="utf-8", xml_declaration=True) + b"\n"
     INDEX.write_bytes(payload)
@@ -106,8 +133,18 @@ def build() -> None:
         "repository_zip_sha256": sha256(REPOSITORY_ZIP),
     }
     MANIFEST.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    artifact_paths = [SKIN_ZIP, REPOSITORY_ZIP]
-    CHECKSUMS.write_text("".join(f"{sha256(p)}  {p.relative_to(ROOT).as_posix()}\n" for p in artifact_paths),
+    artifact_paths = [SKIN_ZIP, REPOSITORY_ZIP, REPOSITORY_PUBLISHED_ZIP, BOOTSTRAP_ZIP]
+    existing = {}
+    if CHECKSUMS.exists():
+        for line in CHECKSUMS.read_text(encoding="ascii").splitlines():
+            digest, path = line.split(maxsplit=1)
+            existing[path] = digest
+    for old_path in (REPOSITORY_DIR / f"{REPOSITORY_ID}-1.0.0.zip",):
+        if old_path.is_file():
+            existing[old_path.relative_to(ROOT).as_posix()] = sha256(old_path)
+    for path in artifact_paths:
+        existing[path.relative_to(ROOT).as_posix()] = sha256(path)
+    CHECKSUMS.write_text("".join(f"{digest}  {path}\n" for path, digest in sorted(existing.items())),
                          encoding="ascii")
 
     ET.parse(INDEX)
@@ -117,6 +154,8 @@ def build() -> None:
     print(f"Kodi index valid: {INDEX.relative_to(ROOT)}")
     print(f"Skin ZIP SHA-256: {sha256(SKIN_ZIP)}")
     print(f"Repository ZIP SHA-256: {sha256(REPOSITORY_ZIP)}")
+    print(f"Kodi-published repository ZIP SHA-256: {sha256(REPOSITORY_PUBLISHED_ZIP)}")
+    print(f"Upstream dependency metadata entries: {len(UPSTREAM_ADDONS)}")
     print("Sensitive pattern scan: PASS (no match values emitted)")
 
 

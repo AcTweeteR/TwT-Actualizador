@@ -1,5 +1,33 @@
 <?xml version='1.0' encoding='utf-8'?>
-<addons><addon id="skin.actweeter" version="1.1.1" name="AcTweeteR" provider-name="AcTweeteR maintainers">
+<addons><addon id="repository.actweeter" name="AcTweeteR Repository" version="1.0.1" provider-name="AcTweeteR">
+	<extension point="xbmc.addon.repository" name="AcTweeteR Repository">
+		<requires>
+			<import addon="xbmc.addon" version="12.0.0" />
+		</requires>
+		<dir minversion="20.9.1">
+			<info compressed="false">https://raw.githubusercontent.com/AcTweeteR/TwT-Actualizador/main/repo/addons.xml</info>
+			<checksum>https://raw.githubusercontent.com/AcTweeteR/TwT-Actualizador/main/repo/addons.xml.md5</checksum>
+			<datadir zip="true">https://raw.githubusercontent.com/AcTweeteR/TwT-Actualizador/main/repo/</datadir>
+		</dir>
+		<dir minversion="20.9.1">
+			<info compressed="false">https://raw.githubusercontent.com/AcTweeteR/TwT-Actualizador/main/repo/upstream-bingie/addons.xml</info>
+			<checksum>https://raw.githubusercontent.com/AcTweeteR/TwT-Actualizador/main/repo/upstream-bingie/addons.xml.md5</checksum>
+			<datadir zip="true">https://raw.githubusercontent.com/matke-84/repository.bingie/main/omega/</datadir>
+		</dir>
+	</extension>
+	<extension point="xbmc.addon.metadata">
+		<summary lang="es_ES">Repositorio oficial de distribución AcTweeteR</summary>
+		<description lang="es_ES">Canal manual de distribución de la skin AcTweeteR para Kodi.</description>
+		<summary lang="en_GB">AcTweeteR distribution repository</summary>
+		<description lang="en_GB">Manual Kodi add-on distribution channel for AcTweeteR.</description>
+		<platform>all</platform>
+		<license>MIT</license>
+		<news>changelog-1.0.1.txt</news>
+		<assets>
+			<icon>resources/icon.png</icon>
+		</assets>
+	</extension>
+</addon><addon id="skin.actweeter" version="1.1.1" name="AcTweeteR" provider-name="AcTweeteR maintainers">
 	<requires>
 		<import version="5.17.0" addon="xbmc.gui" />
 		<import addon="script.bingie.helper" version="1.1.2" />

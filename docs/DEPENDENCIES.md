@@ -7,24 +7,30 @@
 | Add-on | Versión mínima | Fuente esperada |
 |---|---:|---|
 | `xbmc.gui` | 5.17.0 | Kodi/Core |
-| `script.bingie.helper` | 1.1.2 | Bingie Repository |
-| `script.bingie.toolbox` | 1.0.0 | Bingie Repository |
-| `script.bingie.widgets` | 1.0.1 | Bingie Repository |
+| `script.bingie.helper` | 1.1.2 | Bingie upstream, agregado por `repository.actweeter` |
+| `script.bingie.toolbox` | 1.0.0 | Bingie upstream, agregado por `repository.actweeter` |
+| `script.bingie.widgets` | 1.0.1 | Bingie upstream, agregado por `repository.actweeter` |
 | `script.skinshortcuts` | 2.0.3 | Kodi official repository o Bingie Repository |
-| `resource.images.studios.coloured` | 1.0.0 | Bingie Repository |
-| `plugin.video.tmdb.bingie.helper` | 1.0.1 | Bingie Repository |
-| `plugin.program.autocompletion` | 2.1.3 | Bingie Repository |
+| `resource.images.studios.coloured` | 1.0.0 | Bingie upstream, agregado por `repository.actweeter` |
+| `plugin.video.tmdb.bingie.helper` | 1.0.1 | Bingie upstream, agregado por `repository.actweeter` |
+| `plugin.program.autocompletion` | 2.1.3 | Bingie upstream, agregado por `repository.actweeter` |
+| `script.module.bingie` | transitiva 1.0.1 | Bingie upstream, agregado por `repository.actweeter` |
 
-Kodi resuelve dependencias declaradas al instalar el skin cuando el repositorio
-que ofrece cada add-on está instalado y habilitado. El paquete no incluye esos
-add-ons upstream. Instala el repositorio Bingie upstream indicado en README;
-Kodi oficial se incluye con la instalación Kodi.
+Kodi Omega procesa múltiples `<dir>` dentro de una definición de repositorio,
+combina las entradas de sus índices y conserva la ruta de descarga asociada a
+cada entrada. `repository.actweeter 1.0.1` usa esa capacidad. El índice Bingie
+publicado aquí contiene solo metadata de los seis add-ons requeridos, derivada del
+índice upstream; los ZIP se descargan directamente del datadir upstream Bingie.
+No se incluyen ni copian código/binarios helper. La instantánea de metadata se
+actualiza únicamente en publicaciones manuales posteriores. Kodi oficial se
+incluye con Kodi y proporciona `script.skinshortcuts`.
 
 La versión instalada en el Mac no es una plantilla para copiar: algunos helpers
 y `script.skinshortcuts` tienen versiones distintas a sus mínimos y el runtime
 incluye una modificación local de Skin Shortcuts que no forma parte de este ZIP.
-La primera instalación en Apple TV debe validar la resolución real de
-dependencias; no se promete compatibilidad tvOS todavía.
+La instalación desde repositorio localiza las dependencias en el índice agregado;
+el test físico de instalación completa en Apple TV/tvOS sigue pendiente y no se
+promete compatibilidad tvOS hasta esa prueba.
 
 ## No incluidos
 

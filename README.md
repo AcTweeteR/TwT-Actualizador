@@ -19,30 +19,31 @@ y [notices de terceros](THIRD_PARTY_NOTICES.md).
 
 ## Instalación Kodi
 
-1. Descarga a una ubicación que Kodi pueda leer estos dos ZIP públicos y
-   transfiérelos al Apple TV (por ejemplo, un recurso SMB accesible desde Kodi):
-   [repository.bingie-1.0.0.zip](https://raw.githubusercontent.com/matke-84/repository.bingie/main/repository.bingie-1.0.0.zip)
-   y [repository.actweeter-1.0.0.zip](repository.actweeter/repository.actweeter-1.0.0.zip).
-   AcTweeteR no redistribuye los helpers upstream Bingie.
-2. En Kodi habilita **Fuentes desconocidas**. En **Add-ons → Instalar desde archivo ZIP**,
-   instala primero `repository.bingie-1.0.0.zip` y después
-   `repository.actweeter-1.0.0.zip` desde la ubicación compartida.
-3. Ve a **Instalar desde repositorio → AcTweeteR Repository → Aspecto → Skins → AcTweeteR → Instalar**.
-   Kodi resolverá las dependencias declaradas desde los repositorios habilitados.
-4. Tras instalar, selecciona la skin AcTweeteR y comprueba **Información del add-on**
-   muestra `1.1.1`. La procedencia del canal se comprueba instalando desde la ficha
-   abierta bajo **AcTweeteR Repository**. XStream, TV/PVR y la configuración personal
-   deben instalarse/restaurarse por separado; no se importan desde el Mac.
+La URL pública de bootstrap es **https://actweeter.github.io/TwT-Actualizador/bootstrap/**.
+En Kodi: **Ajustes → Explorador de archivos → Añadir fuente**, introduce esa URL;
+después **Add-ons → Instalar desde archivo ZIP → fuente AcTweeteR →
+`repository.actweeter-1.0.1.zip`**. A continuación abre **Instalar desde repositorio
+→ AcTweeteR Repository → Aspecto → Skins → AcTweeteR → Instalar** y selecciona la skin.
 
-El origen del repositorio Kodi es
-`https://raw.githubusercontent.com/AcTweeteR/TwT-Actualizador/main/repo/`.
-El repositorio está versionado manualmente. Las actualizaciones futuras solo se
-publicarán cuando el propietario las solicite expresamente.
+`repository.actweeter 1.0.1` publica el índice AcTweeteR y un índice filtrado de
+metadata upstream Bingie para las dependencias declaradas. Kodi agrega ambos
+directorios nativamente y descarga los ZIP upstream directamente de su repositorio;
+no se copian ni redistribuyen esos helpers, y no hace falta instalar
+`repository.bingie` por separado. Esta resolución está validada contra el código
+de repositorios de Kodi Omega y sus índices/ZIP HTTP; la prueba física en Apple TV
+sigue pendiente. Kodi oficial continúa siendo el origen de `script.skinshortcuts`.
+
+Después de instalar, selecciona AcTweeteR y comprueba **Información del add-on**
+indica `1.1.1`; su ficha debe aparecer bajo **AcTweeteR Repository**. XStream,
+TV/PVR y la configuración personal deben instalarse/restaurarse por separado; no
+se importan desde el Mac. Las futuras publicaciones seguirán siendo manuales y
+solo se harán a petición expresa del propietario.
 
 ## Versiones y artefactos
 
 - Skin: `skin.actweeter 1.1.1` (versión Kodi del paquete).
-- Add-on del repositorio Kodi: `repository.actweeter 1.0.0`.
+- Add-on del repositorio Kodi: `repository.actweeter 1.0.1` (bootstrap GitHub Pages
+  y agregación nativa del índice de dependencias Bingie).
 - Release global AcTweeteR: no se crea un tercer contador que duplique la versión
   del skin; manifest de distribución `1.1.1`, canal `dev`.
 - SHA-256 públicos: [`checksums/SHA256SUMS`](checksums/SHA256SUMS).
@@ -50,10 +51,10 @@ publicarán cuando el propietario las solicite expresamente.
 - Changelog post-update automático: **no implementado**; el texto está disponible
   para consulta manual. No existe `service.actweeter` en esta versión y no se
   mostrará ningún diálogo repetidamente.
-- Rollback: es la primera versión pública; no hay versión AcTweeteR pública
-  anterior. Si hubiera un problema, cambia a la skin Kodi predeterminada Estuary
-  y desinstala AcTweeteR sin borrar userdata. El ZIP 1.1.0 queda solo como
-  referencia local porque incluía fuentes no publicables.
+- Rollback: conserva `repository.actweeter 1.0.0` y publica el ZIP `1.0.1` en
+  paralelo. Si el nuevo bootstrap falla, instala el ZIP 1.0.0 desde el enlace
+  histórico del repositorio y vuelve a usar Estuary; no borres userdata.
+  El ZIP 1.1.0 queda solo como referencia local porque incluía fuentes no publicables.
 
 ## Publicación manual
 

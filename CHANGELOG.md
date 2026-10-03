@@ -1,5 +1,12 @@
 # Changelog AcTweeteR
 
+## repository.actweeter 1.0.1 — GitHub-only bootstrap
+
+- Añade el punto de entrada HTTP navegable de GitHub Pages para Kodi.
+- Agrega de forma nativa la metadata upstream Bingie requerida; los paquetes
+  continúan descargándose desde el repositorio upstream y no se redistribuyen.
+- No modifica `skin.actweeter 1.1.1` ni completa funciones V1.1.
+
 ## 1.1.1 — primera distribución pública (dev)
 
 - Empaquetado instalable mediante repositorio nativo Kodi.

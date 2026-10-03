@@ -4,7 +4,7 @@
   "channel": "dev",
   "components": {
     "skin.actweeter": "1.1.1",
-    "repository.actweeter": "1.0.0"
+    "repository.actweeter": "1.0.1"
   },
   "kodi": {
     "tested": [
@@ -18,6 +18,6 @@
   "publishing": "manual-only",
   "artifacts": {
     "skin_zip_sha256": "aab0efee5b8877f1e91e14821aca63db5fedfb4cf2f0f7d3f147853441d230b5",
-    "repository_zip_sha256": "a476588d41b4cc5004f50439705e04c13df6868adb0d91f01106274ac8ac1f0f"
+    "repository_zip_sha256": "03f8cf5194876f73697168dcf8b147ea0b55ff309786d16feb2490bfb7e748c0"
   }
 }
