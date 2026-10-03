@@ -1,0 +1,6 @@
+AcTweeteR skin 1.1.2 — Kodi Omega dependency compatibility
+
+Metadata-only compatibility revision from 1.1.1. Keeps all required add-ons,
+but aligns AutoCompletion and Studio Icons minimum versions with the versions
+available in Kodi's official Omega repository. No skin code/assets changed.
+Apple TV installation remains pending physical retest.

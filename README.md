@@ -4,14 +4,16 @@ Repositorio público de artefactos instalables. El desarrollo canónico continú
 [`AcTweeteR/TweeteR-Kodi`](https://github.com/AcTweeteR/TweeteR-Kodi) (privado).
 El provisioning personal vive únicamente en iCloud Drive/`actweeter kodi`.
 
-## Primera distribución: skin 1.1.1 (canal dev)
+## Versión de distribución: skin 1.1.2 (canal dev)
 
-La versión pública `skin.actweeter 1.1.1` conserva funcionalmente el runtime
-validado `1.1.0` de Kodi 21.3. El único ajuste del paquete es sustituir fuentes
-Netflix Sans/Impact sin permiso de redistribución acreditado por los archivos
-Inter ya incluidos, con su licencia OFL. No representa que V1.1 esté completa.
+`skin.actweeter 1.1.2` conserva la UI y recursos de 1.1.1. Es una revisión de
+metadata de dependencias para que Kodi Omega, con su política predeterminada de
+repositorios, pueda satisfacer los mínimos de AutoCompletion y Studio Icons
+desde Kodi official. V1.1 sigue incompleta.
 
-Probado: Kodi 21.3.0 en macOS. Apple TV/tvOS y Kodi 22/23 no están validados.
+La UI de referencia se validó en Kodi 21.3.0/macOS; 1.1.2 solo modifica metadata
+de dependencias y aún no se ha probado físicamente en Apple TV/tvOS. Kodi 22/23
+tampoco están validados.
 El paquete no incluye perfiles personales, userdata, provisioning, XStream Pro,
 credenciales, configuración PVR, historial, índices ni caches. La instalación
 del skin no configura proveedores. Consulta [dependencias y prerequisitos](docs/DEPENDENCIES.md)
@@ -26,28 +28,30 @@ después **Add-ons → Instalar desde archivo ZIP → fuente AcTweeteR →
 → AcTweeteR Repository → Aspecto → Skins → AcTweeteR → Instalar** y selecciona la skin.
 
 `repository.actweeter 1.0.1` publica el índice AcTweeteR y un índice filtrado de
-metadata upstream Bingie para las dependencias declaradas. Kodi agrega ambos
-directorios nativamente y descarga los ZIP upstream directamente de su repositorio;
-no se copian ni redistribuyen esos helpers, y no hace falta instalar
-`repository.bingie` por separado. Esta resolución está validada contra el código
-de repositorios de Kodi Omega y sus índices/ZIP HTTP; la prueba física en Apple TV
-sigue pendiente. Kodi oficial continúa siendo el origen de `script.skinshortcuts`.
+metadata upstream Bingie. Kodi agrega ambos directorios nativamente y descarga
+los ZIP helper directamente del upstream; no se copian ni redistribuyen esos
+helpers, y no hace falta instalar `repository.bingie` por separado. La versión
+1.1.2 reduce los dos mínimos que chocaban con la preferencia oficial por
+AutoCompletion 2.1.2 y Studio Icons 0.0.24 de Kodi. El cierre transitorio restante
+se resuelve con Kodi official/core y los helpers upstream. La prueba física Apple
+TV de este cierre está pendiente.
 
 Después de instalar, selecciona AcTweeteR y comprueba **Información del add-on**
-indica `1.1.1`; su ficha debe aparecer bajo **AcTweeteR Repository**. XStream,
+indica `1.1.2`; su ficha debe aparecer bajo **AcTweeteR Repository**. XStream,
 TV/PVR y la configuración personal deben instalarse/restaurarse por separado; no
 se importan desde el Mac. Las futuras publicaciones seguirán siendo manuales y
 solo se harán a petición expresa del propietario.
 
 ## Versiones y artefactos
 
-- Skin: `skin.actweeter 1.1.1` (versión Kodi del paquete).
+- Skin: `skin.actweeter 1.1.2` (revisión de mínimos de dependencias; UI basada en
+  1.1.1).
 - Add-on del repositorio Kodi: `repository.actweeter 1.0.1` (bootstrap GitHub Pages
   y agregación nativa del índice de dependencias Bingie).
 - Release global AcTweeteR: no se crea un tercer contador que duplique la versión
-  del skin; manifest de distribución `1.1.1`, canal `dev`.
+  del skin; manifest de distribución `1.1.2`, canal `dev`.
 - SHA-256 públicos: [`checksums/SHA256SUMS`](checksums/SHA256SUMS).
-- Changelog: [`CHANGELOG.md`](CHANGELOG.md) y `repo/skin.actweeter/changelog-1.1.1.txt`.
+- Changelog: [`CHANGELOG.md`](CHANGELOG.md) y `repo/skin.actweeter/changelog-1.1.2.txt`.
 - Changelog post-update automático: **no implementado**; el texto está disponible
   para consulta manual. No existe `service.actweeter` en esta versión y no se
   mostrará ningún diálogo repetidamente.

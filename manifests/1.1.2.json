@@ -1,0 +1,24 @@
+{
+  "product": "AcTweeteR",
+  "version": "1.1.2",
+  "channel": "dev",
+  "components": {
+    "skin.actweeter": "1.1.2",
+    "repository.actweeter": "1.0.1"
+  },
+  "kodi": {
+    "tested": [
+      "21.3.0"
+    ],
+    "minimum_api": "xbmc.gui 5.17.0",
+    "future_compatibility": "22/23 not yet validated"
+  },
+  "provisioning_included": false,
+  "v1_1_complete": false,
+  "publishing": "manual-only",
+  "release_scope": "Kodi Omega dependency-minimum compatibility only",
+  "artifacts": {
+    "skin_zip_sha256": "69e44a47d31569ef463e7aef06732905278c17b14bdfa0e0f38f9397c0c7eae2",
+    "repository_zip_sha256": "03f8cf5194876f73697168dcf8b147ea0b55ff309786d16feb2490bfb7e748c0"
+  }
+}

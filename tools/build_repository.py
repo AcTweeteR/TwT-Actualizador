@@ -13,10 +13,12 @@ from xml.etree import ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 SKIN_ID = "skin.actweeter"
-SKIN_VERSION = "1.1.1"
+SKIN_VERSION = "1.1.2"
+SOURCE_SKIN_VERSION = "1.1.1"
 REPOSITORY_ID = "repository.actweeter"
 REPOSITORY_VERSION = "1.0.1"
 SKIN_ZIP = ROOT / "repo" / SKIN_ID / f"{SKIN_ID}-{SKIN_VERSION}.zip"
+SOURCE_SKIN_ZIP = ROOT / "repo" / SKIN_ID / f"{SKIN_ID}-{SOURCE_SKIN_VERSION}.zip"
 REPOSITORY_DIR = ROOT / REPOSITORY_ID
 REPOSITORY_ZIP = REPOSITORY_DIR / f"{REPOSITORY_ID}-{REPOSITORY_VERSION}.zip"
 REPOSITORY_PUBLISHED_ZIP = ROOT / "repo" / REPOSITORY_ID / f"{REPOSITORY_ID}-{REPOSITORY_VERSION}.zip"
@@ -41,6 +43,10 @@ SENSITIVE = [
 ]
 FORBIDDEN_SUFFIXES = {".db", ".sqlite", ".sqlite3", ".log", ".m3u", ".m3u8", ".epg", ".xmltv"}
 FIXED_TIME = (2026, 10, 3, 0, 0, 0)
+COMPATIBILITY_MINIMUMS = {
+    "plugin.program.autocompletion": "2.1.2",
+    "resource.images.studios.coloured": "0.0.24",
+}
 
 
 def require(condition: bool, message: str) -> None:
@@ -91,7 +97,41 @@ def zip_tree(source: Path, output: Path, root_name: str) -> None:
             archive.writestr(info, path.read_bytes(), compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)
 
 
+def prepare_compatibility_skin() -> None:
+    """Create a metadata-only compatibility release from the immutable 1.1.1 ZIP."""
+    require(SOURCE_SKIN_ZIP.is_file(), f"missing source {SOURCE_SKIN_ZIP.relative_to(ROOT)}")
+    with zipfile.ZipFile(SOURCE_SKIN_ZIP, "r") as source:
+        addon_path = f"{SKIN_ID}/addon.xml"
+        original = source.read(addon_path)
+        addon = ET.fromstring(original)
+        require(addon.get("version") == SOURCE_SKIN_VERSION, "source skin version mismatch")
+        revised = original.decode("utf-8")
+        revised, count = re.subn(
+            rf'(<addon\b[^>]*\bversion=")({re.escape(SOURCE_SKIN_VERSION)})(")',
+            rf'\g<1>{SKIN_VERSION}\g<3>', revised, count=1,
+        )
+        require(count == 1, "skin version attribute not uniquely found")
+        for dependency, version in COMPATIBILITY_MINIMUMS.items():
+            node = addon.find(f"./requires/import[@addon='{dependency}']")
+            require(node is not None, f"required dependency missing from skin: {dependency}")
+            old_version = node.get("version")
+            pattern = (
+                rf'(<import\b[^>]*\baddon="{re.escape(dependency)}"[^>]*\bversion=")'
+                rf'{re.escape(old_version)}(")'
+            )
+            revised, count = re.subn(pattern, rf"\g<1>{version}\g<2>", revised, count=1)
+            require(count == 1, f"dependency minimum not uniquely found: {dependency}")
+        new_addon = revised.encode("utf-8")
+        ET.fromstring(new_addon)
+        SKIN_ZIP.parent.mkdir(parents=True, exist_ok=True)
+        with zipfile.ZipFile(SKIN_ZIP, "w") as target:
+            for info in source.infolist():
+                payload = new_addon if info.filename == addon_path else source.read(info.filename)
+                target.writestr(info, payload)
+
+
 def build() -> None:
+    prepare_compatibility_skin()
     require(SKIN_ZIP.is_file(), f"missing {SKIN_ZIP.relative_to(ROOT)}")
     scan_zip(SKIN_ZIP)
     require((ROOT / "repo" / SKIN_ID / "resources" / "icon.png").is_file(), "missing skin icon asset")
@@ -109,6 +149,10 @@ def build() -> None:
     require(REPOSITORY_CHANGELOG.is_file(), "missing repository changelog")
 
     skin_xml = ET.fromstring(zipfile.ZipFile(SKIN_ZIP).read(f"{SKIN_ID}/addon.xml"))
+    for addon_id, expected in COMPATIBILITY_MINIMUMS.items():
+        node = skin_xml.find(f"./requires/import[@addon='{addon_id}']")
+        require(node is not None and node.get("version") == expected,
+                f"compatibility minimum mismatch: {addon_id}")
     upstream_root = ET.parse(UPSTREAM_INDEX).getroot()
     upstream_by_id = {addon.get("id"): addon for addon in upstream_root.findall("addon")}
     require(UPSTREAM_ADDONS <= upstream_by_id.keys(), "upstream dependency metadata missing")

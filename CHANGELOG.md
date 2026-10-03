@@ -1,5 +1,14 @@
 # Changelog AcTweeteR
 
+## skin.actweeter 1.1.2 — Kodi Omega dependency compatibility
+
+- Mantiene todas las dependencias obligatorias y la UI de 1.1.1.
+- Ajusta únicamente los mínimos de AutoCompletion a 2.1.2 y Studio Icons a
+  0.0.24, versiones disponibles en Kodi official Omega. Esto evita depender de
+  “Any repository” para resolver IDs duplicados.
+- No cambia código, recursos, funcionalidad, repository.actweeter ni bootstrap.
+- Apple TV requiere retest físico; no se declara instalación tvOS validada.
+
 ## repository.actweeter 1.0.1 — GitHub-only bootstrap
 
 - Añade el punto de entrada HTTP navegable de GitHub Pages para Kodi.

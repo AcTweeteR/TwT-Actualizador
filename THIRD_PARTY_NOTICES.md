@@ -1,6 +1,6 @@
 # Third-party notices
 
-AcTweeteR skin 1.1.1 is a modified derivative of **BINGIE by Matke** (Omega
+AcTweeteR skin 1.1.2 is a modified derivative of **BINGIE by Matke** (Omega
 line 2.0.2): <https://github.com/matke-84/skin.bingie>. The upstream add-on
 metadata declares GPL v2. The complete GPL text remains inside the skin ZIP as
 `skin.actweeter/LICENSE`. AcTweeteR is not endorsed by the upstream authors.
@@ -25,3 +25,15 @@ limited to dependency records required directly or transitively by the skin.
 It contains no helper source or binary; Kodi downloads those packages directly
 from the upstream repository. The snapshot is manually refreshed for a future
 authorized repository release.
+
+## Dependency source/license notes for 1.1.2
+
+`plugin.program.autocompletion` is obtained from Kodi's official Omega
+repository (minimum 2.1.2). Its upstream metadata credits Philipp Temminghoff,
+sualfred, xulek and finkleandeinhorn and declares GPL-2.0-or-later.
+`resource.images.studios.coloured` is obtained from Kodi's official Omega
+repository (minimum 0.0.24; provider Team Kodi); its addon.xml has no explicit
+license field. Neither dependency is copied into this repository. The higher
+version Studio Icons - Coloured - Modded fork is not bundled or redistributed;
+its upstream README states the supplied textures are for non-commercial use.
+AcTweeteR makes no separate licensing claim for the dependency artwork.
