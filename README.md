@@ -1,101 +1,70 @@
-# TwT-Actualizador — distribución AcTweeteR
+# TwT-Actualizador — distribución Kodi de AcTweeteR
 
-Este repositorio es **público** y funciona exclusivamente como canal de distribución/actualización de AcTweeteR.
+Repositorio público de artefactos instalables. El desarrollo canónico continúa en
+[`AcTweeteR/TweeteR-Kodi`](https://github.com/AcTweeteR/TweeteR-Kodi) (privado).
+El provisioning personal vive únicamente en iCloud Drive/`actweeter kodi`.
 
-## Regla absoluta
+## Primera distribución: skin 1.1.1 (canal dev)
 
-**CERO SECRETOS.** Nunca publicar credenciales, usuarios de proveedores, contraseñas, tokens, cookies, API keys, URLs privadas, M3U/EPG privadas, userdata personal ni configuraciones exportadas desde iCloud.
+La versión pública `skin.actweeter 1.1.1` conserva funcionalmente el runtime
+validado `1.1.0` de Kodi 21.3. El único ajuste del paquete es sustituir fuentes
+Netflix Sans/Impact sin permiso de redistribución acreditado por los archivos
+Inter ya incluidos, con su licencia OFL. No representa que V1.1 esté completa.
 
-## Modelo
+Probado: Kodi 21.3.0 en macOS. Apple TV/tvOS y Kodi 22/23 no están validados.
+El paquete no incluye perfiles personales, userdata, provisioning, XStream Pro,
+credenciales, configuración PVR, historial, índices ni caches. La instalación
+del skin no configura proveedores. Consulta [dependencias y prerequisitos](docs/DEPENDENCIES.md)
+y [notices de terceros](THIRD_PARTY_NOTICES.md).
 
-- Desarrollo y código canónico: `AcTweeteR/TweeteR-Kodi` (privado).
-- Distribución: `AcTweeteR/TwT-Actualizador` (público).
-- Provisioning privado: iCloud Drive/`actweeter kodi`.
+## Instalación Kodi
 
-El Mac es el entorno master de desarrollo, build y validación.
+1. Descarga a una ubicación que Kodi pueda leer estos dos ZIP públicos y
+   transfiérelos al Apple TV (por ejemplo, un recurso SMB accesible desde Kodi):
+   [repository.bingie-1.0.0.zip](https://raw.githubusercontent.com/matke-84/repository.bingie/main/repository.bingie-1.0.0.zip)
+   y [repository.actweeter-1.0.0.zip](repository.actweeter/repository.actweeter-1.0.0.zip).
+   AcTweeteR no redistribuye los helpers upstream Bingie.
+2. En Kodi habilita **Fuentes desconocidas**. En **Add-ons → Instalar desde archivo ZIP**,
+   instala primero `repository.bingie-1.0.0.zip` y después
+   `repository.actweeter-1.0.0.zip` desde la ubicación compartida.
+3. Ve a **Instalar desde repositorio → AcTweeteR Repository → Aspecto → Skins → AcTweeteR → Instalar**.
+   Kodi resolverá las dependencias declaradas desde los repositorios habilitados.
+4. Tras instalar, selecciona la skin AcTweeteR y comprueba **Información del add-on**
+   muestra `1.1.1` y el repositorio AcTweeteR como fuente. XStream, TV/PVR y la configuración
+   personal deben instalarse/restaurarse por separado; no se importan desde el Mac.
 
-## Publicación continua desde desarrollo
+El origen del repositorio Kodi es
+`https://raw.githubusercontent.com/AcTweeteR/TwT-Actualizador/main/repo/`.
+El repositorio está versionado manualmente. Las actualizaciones futuras solo se
+publicarán cuando el propietario las solicite expresamente.
 
-No esperar a que AcTweeteR esté terminado para empezar a distribuir.
+## Versiones y artefactos
 
-Cada unidad de trabajo suficientemente instalable y validada debe poder producir un paquete/candidate para probarlo en Apple TV y demás dispositivos.
+- Skin: `skin.actweeter 1.1.1` (versión Kodi del paquete).
+- Add-on del repositorio Kodi: `repository.actweeter 1.0.0`.
+- Release global AcTweeteR: no se crea un tercer contador que duplique la versión
+  del skin; manifest de distribución `1.1.1`, canal `dev`.
+- SHA-256 públicos: [`checksums/SHA256SUMS`](checksums/SHA256SUMS).
+- Changelog: [`CHANGELOG.md`](CHANGELOG.md) y `repo/skin.actweeter/changelog-1.1.1.txt`.
+- Historial/rollback: se conservan los ZIP versionados y sus checksums; este es
+  el primer artefacto público.
 
-Canales previstos:
+## Publicación manual
 
-- `dev`: builds frecuentes para validación cruzada.
-- `beta`: candidates que han pasado regresión principal en Mac.
-- `stable`: releases consideradas aptas para uso normal.
+No existe workflow de publicación automática. Commits/desarrollo en el repo
+privado no generan publicaciones. Una futura publicación requiere petición
+expresa del propietario. El script `tools/build_repository.py` solo construye y
+valida los metadatos localmente; no publica ni realiza uploads.
 
-Una build dev nunca debe promocionarse automáticamente a stable.
+## Seguridad y provisioning
 
-## Repositorio Kodi
+Este repo público contiene **cero secretos**. Nunca copiar aquí usuarios,
+contraseñas, URL privadas, M3U/EPG, tokens, API keys, cookies, userdata, perfiles,
+bases personales, historiales, caches o contenidos de iCloud. No se implementa
+provisioning en esta primera versión.
 
-Aprovechar el mecanismo nativo de repositorios Kodi siempre que sea posible:
+## V1.1 pendiente
 
-- `addons.xml`
-- checksum
-- paquetes ZIP versionados
-- repository addon instalable una sola vez
-
-Objetivo: tras instalar una vez el repositorio AcTweeteR, las actualizaciones posteriores llegan mediante el sistema de addons de Kodi.
-
-## Manifest propio
-
-Mantener además manifests legibles por AcTweeteR para compatibilidad, canales, componentes y futuras plataformas.
-
-Ejemplo conceptual:
-
-```json
-{
-  "version": "x.y.z",
-  "channel": "dev|beta|stable",
-  "kodi": ["21", "22"],
-  "components": {}
-}
-```
-
-## Changelog post-update
-
-Cada release debe incluir changelog estructurado.
-
-AcTweeteR debe guardar localmente la última versión cuyo changelog fue mostrado.
-
-Al primer arranque posterior a una actualización:
-
-```
-installed_version != last_changelog_seen
-→ abrir changelog
-→ marcar versión como vista
-```
-
-En los siguientes arranques no debe volver a abrirse automáticamente.
-
-Debe existir una opción manual para consultar posteriormente las novedades.
-
-No mostrar automáticamente changelog en instalación inicial salvo decisión expresa futura.
-
-## Rollback
-
-Conservar artefactos de versiones anteriores y hashes para permitir diagnóstico/rollback controlado.
-
-## Integridad
-
-Generar SHA-256 de artefactos publicados. El pipeline debe impedir la publicación si detecta secretos o artefactos no saneados.
-
-## iCloud provisioning
-
-NO se publica aquí. El provisioning privado vive en iCloud Drive/`actweeter kodi`.
-
-
-
-## Política temporal de publicación
-
-Durante la fase de desarrollo intensivo:
-
-1. Publicar **ahora**, antes de la reuse audit, una primera versión instalable con el estado funcional actual y saneado de AcTweeteR.
-2. Después de esa primera publicación, **no publicar por cada cambio ni por cada commit**.
-3. Las siguientes publicaciones serán **manuales**, únicamente cuando el propietario del proyecto lo solicite expresamente.
-4. Codex puede seguir desarrollando, probando y haciendo commits en el repositorio privado sin generar una actualización pública.
-5. Cuando el proyecto alcance una versión estable, se migrará a publicación automática. La política exacta de automatización se definirá entonces; no activar todavía publicación automática por commit.
-
-La primera publicación debe hacerse antes de comenzar la auditoría reuse-first, pero solo después de verificar que el artefacto es instalable y no contiene secretos.
+No se declara V1.1 completa. Siguen pendientes perfil consumer, sync
+Master/consumer, bloqueo administrativo y actualización incremental/background
+del índice de Search. `profiles.xml` de referencia solo tenía Master.

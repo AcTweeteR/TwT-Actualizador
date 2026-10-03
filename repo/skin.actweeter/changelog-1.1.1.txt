@@ -1,0 +1,8 @@
+AcTweeteR skin 1.1.1 — first public dev distribution
+
+This package retains the validated 1.1.0 UI behavior. For redistribution
+safety, Netflix Sans and Impact font files are omitted and font references use
+Inter, which is included under SIL Open Font License 1.1.
+
+V1.1 remains incomplete. Profiles, profile sync, administrative guard and
+background incremental Search-index sync are not implemented in this release.

@@ -1,0 +1,3 @@
+repository.actweeter 1.0.0
+
+Initial Kodi repository bootstrap for manual AcTweeteR distributions.
