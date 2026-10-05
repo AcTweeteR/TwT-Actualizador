@@ -1,6 +1,6 @@
 # Third-party notices
 
-AcTweeteR skin 1.1.2 is a modified derivative of **BINGIE by Matke** (Omega
+AcTweeteR skin 1.1.3 is a modified derivative of **BINGIE by Matke** (Omega
 line 2.0.2): <https://github.com/matke-84/skin.bingie>. The upstream add-on
 metadata declares GPL v2. The complete GPL text remains inside the skin ZIP as
 `skin.actweeter/LICENSE`. AcTweeteR is not endorsed by the upstream authors.
@@ -37,3 +37,15 @@ license field. Neither dependency is copied into this repository. The higher
 version Studio Icons - Coloured - Modded fork is not bundled or redistributed;
 its upstream README states the supplied textures are for non-commercial use.
 AcTweeteR makes no separate licensing claim for the dependency artwork.
+
+## Additional components in 1.1.3
+
+`service.actweeter 0.1.0` is AcTweeteR-maintained code distributed under
+GPL-2.0-or-later; its complete license text is included in the service ZIP.
+The skin's upstream BINGIE notices, GPL text, and Inter/OFL notices remain in
+the skin ZIP.
+
+XStream Pro 1.1.2 and its local AcTweeteR patch are not included in this
+distribution. The inspected XStream upstream metadata declares CC BY-NC 4.0;
+the private derivative is not redistributed here. Kodi, PVR and all other
+dependencies retain their own upstream licenses and distribution channels.

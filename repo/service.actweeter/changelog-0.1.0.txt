@@ -1,0 +1,8 @@
+AcTweeteR Service 0.1.0
+
+- Kodi-native background coordinator for AcTweeteR search-index refresh.
+- Structural configuration sync uses an explicit allowlist.
+- Consumer provisioning remains experimental and is not productized by this
+  distribution.
+- No private provider settings, databases, credentials, or personal state are
+  included.

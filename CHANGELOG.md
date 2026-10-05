@@ -1,5 +1,17 @@
 # Changelog AcTweeteR
 
+## skin.actweeter 1.1.3 + service.actweeter 0.1.0 — Search AcTweeteR
+
+- Rediseña Buscar con un campo visible y enfocado como entrada canónica.
+- El teclado físico escribe y actualiza resultados provider-only en vivo.
+- En mando, el campo abre el teclado modal nativo de Kodi y busca al confirmar.
+- Retira el pseudo-teclado de pantalla y corrige su navegación/foco.
+- Añade el servicio Kodi para mantenimiento en segundo plano del índice y
+  configuración estructural. Los perfiles Consumer siguen experimentales y no
+  se consideran productizados.
+- Kodi 21.3 es la baseline; la actualización física de Apple TV a 1.1.3 queda
+  pendiente. XStream, credenciales y su patch privado no se incluyen.
+
 ## skin.actweeter 1.1.2 — Kodi Omega dependency compatibility
 
 - Mantiene todas las dependencias obligatorias y la UI de 1.1.1.

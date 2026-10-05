@@ -1,0 +1,12 @@
+AcTweeteR skin 1.1.3
+
+- Search has an AcTweeteR query field with live provider-only results when
+  typing with a physical keyboard.
+- On remote devices, selecting the field opens Kodi's native virtual keyboard;
+  results update after confirming the query.
+- The old on-screen pseudo-keyboard is removed and Search focus navigation is
+  corrected.
+- Requires AcTweeteR service 0.1.0 for background index maintenance.
+- Kodi 21.3 is the tested API baseline. Apple TV update validation is pending.
+- XStream, provider settings, personal data, and the private XStream patch are
+  not included.

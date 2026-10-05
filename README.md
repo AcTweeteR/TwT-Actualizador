@@ -1,81 +1,67 @@
 # TwT-Actualizador — distribución Kodi de AcTweeteR
 
-Repositorio público de artefactos instalables. El desarrollo canónico continúa en
+Repositorio público de artefactos Kodi. El desarrollo canónico continúa en
 [`AcTweeteR/TweeteR-Kodi`](https://github.com/AcTweeteR/TweeteR-Kodi) (privado).
 El provisioning personal vive únicamente en iCloud Drive/`actweeter kodi`.
 
-## Versión de distribución: skin 1.1.2 (canal dev)
+## Distribución actual: AcTweeteR 1.1.3 (canal dev)
 
-`skin.actweeter 1.1.2` conserva la UI y recursos de 1.1.1. Es una revisión de
-metadata de dependencias para que Kodi Omega, con su política predeterminada de
-repositorios, pueda satisfacer los mínimos de AutoCompletion y Studio Icons
-desde Kodi official. V1.1 sigue incompleta.
+- `skin.actweeter 1.1.3`
+- `service.actweeter 0.1.0`
+- `repository.actweeter 1.0.1` (sin cambios)
 
-La UI de referencia se validó en Kodi 21.3.0/macOS; 1.1.2 solo modifica metadata
-de dependencias y aún no se ha probado físicamente en Apple TV/tvOS. Kodi 22/23
-tampoco están validados.
-El paquete no incluye perfiles personales, userdata, provisioning, XStream Pro,
-credenciales, configuración PVR, historial, índices ni caches. La instalación
-del skin no configura proveedores. Consulta [dependencias y prerequisitos](docs/DEPENDENCIES.md)
-y [notices de terceros](THIRD_PARTY_NOTICES.md).
+La skin incluye el Search AcTweeteR: el teclado físico escribe directamente y
+actualiza resultados en vivo; seleccionar el campo desde un mando abre el
+teclado virtual nativo de Kodi y busca al confirmar. El servicio programa
+actualizaciones del índice local cuando existe el runtime XStream compatible.
 
-## Instalación Kodi
+Kodi 21.3 Omega es la baseline de API validada. El propietario confirmó en
+Apple TV la instalación anterior de la skin 1.1.2 y sus dependencias; la
+actualización automática a 1.1.3 todavía requiere su prueba física. Kodi 22/23,
+tvOS runtime y Android no se declaran validados.
 
-La URL pública de bootstrap es **https://actweeter.github.io/TwT-Actualizador/bootstrap/**.
-En Kodi: **Ajustes → Explorador de archivos → Añadir fuente**, introduce esa URL;
-después **Add-ons → Instalar desde archivo ZIP → fuente AcTweeteR →
-`repository.actweeter-1.0.1.zip`**. A continuación abre **Instalar desde repositorio
-→ AcTweeteR Repository → Aspecto → Skins → AcTweeteR → Instalar** y selecciona la skin.
+Esta distribución no incluye perfiles personales, userdata, provisioning,
+XStream, PVR/EPG, credenciales, historial, índices, caches ni datos personales.
+No productiza perfiles Consumer. El patch privado de XStream no se redistribuye:
+el upstream identificado declara CC BY-NC 4.0. Por ello, Search provider-only
+requiere que la instalación disponga de un runtime XStream compatible; instalar
+esta skin no instala ni configura el proveedor.
 
-`repository.actweeter 1.0.1` publica el índice AcTweeteR y un índice filtrado de
-metadata upstream Bingie. Kodi agrega ambos directorios nativamente y descarga
-los ZIP helper directamente del upstream; no se copian ni redistribuyen esos
-helpers, y no hace falta instalar `repository.bingie` por separado. La versión
-1.1.2 reduce los dos mínimos que chocaban con la preferencia oficial por
-AutoCompletion 2.1.2 y Studio Icons 0.0.24 de Kodi. El cierre transitorio restante
-se resuelve con Kodi official/core y los helpers upstream. La prueba física Apple
-TV de este cierre está pendiente.
+## Instalación y actualización Kodi
 
-Después de instalar, selecciona AcTweeteR y comprueba **Información del add-on**
-indica `1.1.2`; su ficha debe aparecer bajo **AcTweeteR Repository**. XStream,
-TV/PVR y la configuración personal deben instalarse/restaurarse por separado; no
-se importan desde el Mac. Las futuras publicaciones seguirán siendo manuales y
-solo se harán a petición expresa del propietario.
+La fuente estable de bootstrap es
+**https://actweeter.github.io/TwT-Actualizador/bootstrap/**. La primera
+instalación utiliza `repository.actweeter-1.0.1.zip` desde esa fuente y luego
+AcTweeteR Repository. Para esta actualización, deja que Kodi consulte su
+repositorio normal de add-ons y verifica que ofrece `skin.actweeter 1.1.3` y
+resuelve `service.actweeter 0.1.0`; no se requiere una nueva versión del
+repository add-on.
 
-## Versiones y artefactos
+El índice AcTweeteR contiene los ZIP de skin y service. Un segundo directorio
+agrega metadata upstream Bingie; Kodi descarga esos helpers directamente de su
+origen. Dependencias oficiales Kodi Omega se resuelven desde el repositorio
+incluido en Kodi. El cierre versionado está en
+[`docs/DEPENDENCIES.md`](docs/DEPENDENCIES.md).
 
-- Skin: `skin.actweeter 1.1.2` (revisión de mínimos de dependencias; UI basada en
-  1.1.1).
-- Add-on del repositorio Kodi: `repository.actweeter 1.0.1` (bootstrap GitHub Pages
-  y agregación nativa del índice de dependencias Bingie).
-- Release global AcTweeteR: no se crea un tercer contador que duplique la versión
-  del skin; manifest de distribución `1.1.2`, canal `dev`.
-- SHA-256 públicos: [`checksums/SHA256SUMS`](checksums/SHA256SUMS).
-- Changelog: [`CHANGELOG.md`](CHANGELOG.md) y `repo/skin.actweeter/changelog-1.1.2.txt`.
-- Changelog post-update automático: **no implementado**; el texto está disponible
-  para consulta manual. No existe `service.actweeter` en esta versión y no se
-  mostrará ningún diálogo repetidamente.
-- Rollback: conserva `repository.actweeter 1.0.0` y publica el ZIP `1.0.1` en
-  paralelo. Si el nuevo bootstrap falla, instala el ZIP 1.0.0 desde el enlace
-  histórico del repositorio y vuelve a usar Estuary; no borres userdata.
-  El ZIP 1.1.0 queda solo como referencia local porque incluía fuentes no publicables.
+## Versiones, cambios y verificaciones
 
-## Publicación manual
+- Manifest de esta distribución: [`manifests/1.1.3.json`](manifests/1.1.3.json).
+- SHA-256: [`checksums/SHA256SUMS`](checksums/SHA256SUMS).
+- Cambios: [`CHANGELOG.md`](CHANGELOG.md), más changelogs por add-on en `repo/`.
+- `service.actweeter` incluye su licencia GPL-2.0-or-later. No incluye el
+  patch XStream ni provisioning.
+- La publicación es manual y requiere autorización expresa; no hay publicación
+  automática por commit. No se ha modificado Apple TV.
 
-No existe workflow de publicación automática. Commits/desarrollo en el repo
-privado no generan publicaciones. Una futura publicación requiere petición
-expresa del propietario. El script `tools/build_repository.py` solo construye y
-valida los metadatos localmente; no publica ni realiza uploads.
+## Rollback
 
-## Seguridad y provisioning
+Se conservan los ZIP públicos 1.1.1 y 1.1.2 y el repositorio 1.0.1. Kodi no
+suele ofrecer un downgrade automático desde 1.1.3 a una versión inferior. Si
+aparece una regresión, la recuperación preferida es publicar una versión
+correctiva con número superior basada en el artefacto previo; conservar todos
+los ZIP y checksums existentes. No eliminar userdata para recuperar una versión.
 
-Este repo público contiene **cero secretos**. Nunca copiar aquí usuarios,
-contraseñas, URL privadas, M3U/EPG, tokens, API keys, cookies, userdata, perfiles,
-bases personales, historiales, caches o contenidos de iCloud. No se implementa
-provisioning en esta primera versión.
-
-## V1.1 pendiente
-
-No se declara V1.1 completa. Siguen pendientes perfil consumer, sync
-Master/consumer, bloqueo administrativo y actualización incremental/background
-del índice de Search. `profiles.xml` de referencia solo tenía Master.
+El histórico [`tools/build_repository.py`](tools/build_repository.py) construía
+la distribución 1.1.2 y no debe usarse para regenerar la 1.1.3. La metadata de
+esta release se ensambló con el builder privado versionado en TweeteR-Kodi,
+usando los ZIP reproducibles generados desde ese source.

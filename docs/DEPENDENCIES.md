@@ -1,8 +1,8 @@
 # Dependencias de instalación de AcTweeteR
 
-`skin.actweeter 1.1.2` conserva todas las dependencias obligatorias de 1.1.1.
-Solo ajusta los mínimos de dos dependencias para que la selección predeterminada
-de Kodi Omega pueda resolverlas desde su repositorio oficial.
+`skin.actweeter 1.1.3` conserva los mínimos de dependencias compatibles con la
+selección predeterminada de Kodi Omega e incorpora `service.actweeter 0.1.0` en
+el mismo índice AcTweeteR. `repository.actweeter` permanece en 1.0.1.
 
 ## Causa de los dos nodos no disponibles
 
@@ -22,20 +22,22 @@ el punto de extensión `kodi.resource.images` de tipo `studios`. El paquete de
 Studio Icons oficial puede tener menor cobertura de logos que el fork modificado;
 la API y el fallback visual del skin siguen siendo los mismos.
 
-La skin 1.1.2 mantiene las dos dependencias obligatorias, con mínimos `2.1.2` y
+La skin 1.1.3 mantiene las dos dependencias obligatorias, con mínimos `2.1.2` y
 `0.0.24`. No se modifica la preferencia global de seguridad ni se elimina una
 dependencia. Kodi oficial ofrece asimismo `script.module.autocompletion 2.1.1`,
 que satisface el mínimo `2.0.5` requerido por el addon de teclado.
 
 ## Cierre transitivo calculado
 
-Resolución calculada con la metadata de skin 1.1.2, el índice Kodi Omega, los
+Resolución calculada con la metadata de skin 1.1.3, el índice Kodi Omega, los
 índices upstream Bingie filtrados publicados y el manifest de sistema de Kodi
 21.3. Los imports `xbmc.*`/`kodi.*` son dependencias de core/sistema.
 
 | Nodo | Versión requerida | Versión elegida | Origen |
 |---|---:|---:|---|
-| `skin.actweeter` | — | 1.1.2 | AcTweeteR |
+| `skin.actweeter` | — | 1.1.3 | AcTweeteR |
+| `service.actweeter` | 0.1.0 | 0.1.0 | AcTweeteR Repository |
+| `xbmc.python` (service) | 3.0.0 | 3.0.1 | Kodi 21.3 core |
 | `xbmc.gui` | 5.17.0 | 5.17.0 | Kodi core |
 | `script.bingie.helper` | 1.1.2 | 1.1.2 | AcTweeteR metadata → Bingie upstream ZIP |
 | `script.bingie.toolbox` | 1.0.0 | 1.0.0 | AcTweeteR metadata → Bingie upstream ZIP |
@@ -76,5 +78,15 @@ Studio Icons 0.0.24 y AutoCompletion 2.1.2. XStream Pro, PVR, credenciales,
 userdata, historial y caches personales no son dependencias del paquete y no se
 distribuyen.
 
-El cierre anterior es validación estática de índices/metadata y no sustituye la
-reinstalación física en Apple TV. tvOS continúa pendiente de retest.
+`service.actweeter` requiere únicamente `xbmc.python 3.0.0` del core; no declara
+dependencias Python externas. El índice de release contiene los tres add-ons
+propios (repository, skin y service), y el índice filtrado upstream conserva
+los siete add-ons Bingie necesarios. La resolución Kodi 21.3 cierra 22 nodos sin
+dependencias obligatorias ausentes.
+
+XStream Pro, PVR, credenciales, userdata, historial y caches no se distribuyen.
+El Search provider-only necesita un runtime XStream compatible y parcheado; el
+patch local no se incluye por la licencia CC BY-NC 4.0 identificada para el
+upstream. La instalación física Apple TV de 1.1.2 y su cierre de dependencias
+fueron confirmados por el propietario; la detección/actualización a 1.1.3 sigue
+pendiente de retest físico. Kodi 22/23 tampoco se ha validado.
