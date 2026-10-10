@@ -4,21 +4,23 @@ Repositorio público de artefactos Kodi. El desarrollo canónico continúa en
 [`AcTweeteR/TweeteR-Kodi`](https://github.com/AcTweeteR/TweeteR-Kodi) (privado).
 El provisioning personal vive únicamente en iCloud Drive/`actweeter kodi`.
 
-## Distribución actual: AcTweeteR 1.1.3 (canal dev)
+## Distribución actual: AcTweeteR 1.2.2 (beta experimental)
 
-- `skin.actweeter 1.1.3`
-- `service.actweeter 0.1.0`
-- `repository.actweeter 1.0.1` (sin cambios)
+- `skin.actweeter 1.2.2`
+- `service.actweeter 0.2.2`
+- `repository.actweeter 1.0.2` (sin cambios)
 
-La skin incluye el Search AcTweeteR: el teclado físico escribe directamente y
-actualiza resultados en vivo; seleccionar el campo desde un mando abre el
-teclado virtual nativo de Kodi y busca al confirmar. El servicio programa
-actualizaciones del índice local cuando existe el runtime XStream compatible.
+La versión 1.2.2 corrige la ruta de Home sin filas de widgets y el acceso a la
+configuración inicial desde una instalación sin contenido. También recupera el
+asistente aceptado pero interrumpido y cierra una carrera de propiedad de la
+intro. La corrección está cubierta por pruebas automatizadas/estructurales;
+todavía requiere validación runtime específica en Google TV/Android TV y tvOS.
+Consulta la [guía de instalación 1.2.2](docs/INSTALLATION_BETA_1.2.2.md) y el
+[registro del incidente](docs/BLACK_HOME_INCIDENT_1.2.2.md).
 
-Kodi 21.3 Omega es la baseline de API validada. El propietario confirmó en
-Apple TV la instalación anterior de la skin 1.1.2 y sus dependencias; la
-actualización automática a 1.1.3 todavía requiere su prueba física. Kodi 22/23,
-tvOS runtime y Android no se declaran validados.
+Kodi 21.3 Omega es la baseline del proyecto. Esta corrección no se ha ejecutado
+en Apple TV, tvOS, Android TV ni Google TV; no se afirma validación runtime en
+esas plataformas. La instalación limpia sigue sin probarse.
 
 Esta distribución no incluye perfiles personales, userdata, provisioning,
 XStream, PVR/EPG, credenciales, historial, índices, caches ni datos personales.
@@ -44,7 +46,7 @@ incluido en Kodi. El cierre versionado está en
 
 ## Versiones, cambios y verificaciones
 
-- Manifest de esta distribución: [`manifests/1.1.3.json`](manifests/1.1.3.json).
+- Manifest de esta distribución: [`manifests/1.2.2.json`](manifests/1.2.2.json).
 - SHA-256: [`checksums/SHA256SUMS`](checksums/SHA256SUMS).
 - Cambios: [`CHANGELOG.md`](CHANGELOG.md), más changelogs por add-on en `repo/`.
 - `service.actweeter` incluye su licencia GPL-2.0-or-later. No incluye el
@@ -54,8 +56,8 @@ incluido en Kodi. El cierre versionado está en
 
 ## Rollback
 
-Se conservan los ZIP públicos 1.1.1 y 1.1.2 y el repositorio 1.0.1. Kodi no
-suele ofrecer un downgrade automático desde 1.1.3 a una versión inferior. Si
+Se conservan los ZIP públicos 1.2.0 y 1.2.1 y el repositorio 1.0.2. Kodi no
+suele ofrecer un downgrade automático desde 1.2.2 a una versión inferior. Si
 aparece una regresión, la recuperación preferida es publicar una versión
 correctiva con número superior basada en el artefacto previo; conservar todos
 los ZIP y checksums existentes. No eliminar userdata para recuperar una versión.

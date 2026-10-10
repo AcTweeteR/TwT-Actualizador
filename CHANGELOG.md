@@ -1,5 +1,15 @@
 # Changelog AcTweeteR
 
+## skin.actweeter 1.2.2 + service.actweeter 0.2.2 — corrección de primer arranque
+
+- Evita que Home pierda el foco cuando una instalación limpia no tiene filas de
+  widgets y presenta una ruta visible hacia configuración.
+- Reofrece un asistente aceptado pero interrumpido y migra estado incompleto
+  ambiguo de 0.2.1.
+- Establece propiedad de reproducción de la intro antes de abrir su diálogo.
+- Automatización/estructura PASS; QA runtime en Apple TV/tvOS y Android TV/Google
+  TV pendiente. Instalación limpia no probada.
+
 ## skin.actweeter 1.1.3 + service.actweeter 0.1.0 — Search AcTweeteR
 
 - Rediseña Buscar con un campo visible y enfocado como entrada canónica.

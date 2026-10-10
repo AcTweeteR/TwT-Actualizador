@@ -1,0 +1,9 @@
+AcTweeteR Service 0.2.2 — first-run recovery
+
+- Re-offer an interrupted, incomplete first-run wizard; persist an explicit
+  deferral only when the user chooses “Ahora no”.
+- Migrate ambiguous incomplete wizard state from service 0.2.1 once.
+- Claim video-intro ownership before opening the startup dialog to prevent a
+  focus transition from clearing its mask during dialog creation.
+
+Android TV and tvOS runtime validation remains pending.
