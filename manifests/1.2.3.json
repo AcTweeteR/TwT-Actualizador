@@ -1,0 +1,27 @@
+{
+  "product": "AcTweeteR",
+  "version": "1.2.3",
+  "channel": "experimental-beta",
+  "source_commit": "fc035fdbb5bc678664f54dc685abf204a9f243ab",
+  "components": {
+    "skin.actweeter": "1.2.3",
+    "service.actweeter": "0.2.2",
+    "repository.actweeter": "1.0.2"
+  },
+  "kodi": {
+    "baseline": "21.3 Omega",
+    "android_tv_runtime": "pending",
+    "tvos_runtime": "pending",
+    "clean_install": "not-tested"
+  },
+  "release_scope": "Deterministic first Home focus and visible factory Home on empty/updating widget state.",
+  "third_party_addon_packages_included": false,
+  "artifacts": {
+    "skin_zip": "repo/skin.actweeter/skin.actweeter-1.2.3.zip",
+    "skin_zip_sha256": "1ae0e9eb765ec1319ed20979d5c3ef09d0fabf5aabe75b1d020409babf50bcb4",
+    "service_zip": "repo/service.actweeter/service.actweeter-0.2.2.zip",
+    "service_zip_sha256": "9035bc7e2dfc2bdfbb2876355c713bc2f00b09126522210331bd76becc97b828",
+    "repository_zip": "repo/repository.actweeter/repository.actweeter-1.0.2.zip",
+    "repository_zip_sha256": "c52fd62c625aeb7407d6a291e4c63b851121e351e603f6cf69f35788bea3ab03"
+  }
+}

@@ -27,7 +27,7 @@
 			<icon>resources/icon.png</icon>
 		</assets>
 	</extension>
-</addon><addon id="skin.actweeter" version="1.2.2" name="AcTweeteR" provider-name="AcTweeteR maintainers">
+</addon><addon id="skin.actweeter" version="1.2.3" name="AcTweeteR" provider-name="AcTweeteR maintainers">
 	<requires>
 		<import version="5.17.0" addon="xbmc.gui" />
 		<import addon="script.bingie.helper" version="1.1.2" />
@@ -55,7 +55,7 @@
 		<description lang="es_MX">AcTweeteR - tu espacio de películas, series y televisión.</description>
 		<platform>all</platform>
 		<license>GPL v2.0</license>
-		<news>changelog-1.2.2.txt</news>
+		<news>changelog-1.2.3.txt</news>
 		<forum />
 		<source />
 		<assets>
