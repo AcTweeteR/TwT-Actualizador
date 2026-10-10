@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<addons><addon id="repository.actweeter" name="AcTweeteR Repository" version="1.0.1" provider-name="AcTweeteR">
+<addons><addon id="repository.actweeter" name="AcTweeteR Repository" version="1.0.2" provider-name="AcTweeteR">
 	<extension point="xbmc.addon.repository" name="AcTweeteR Repository">
 		<requires>
 			<import addon="xbmc.addon" version="12.0.0" />
@@ -10,8 +10,8 @@
 			<datadir zip="true">https://raw.githubusercontent.com/AcTweeteR/TwT-Actualizador/main/repo/</datadir>
 		</dir>
 		<dir minversion="20.9.1">
-			<info compressed="false">https://raw.githubusercontent.com/AcTweeteR/TwT-Actualizador/main/repo/upstream-bingie/addons.xml</info>
-			<checksum>https://raw.githubusercontent.com/AcTweeteR/TwT-Actualizador/main/repo/upstream-bingie/addons.xml.md5</checksum>
+			<info compressed="false">https://raw.githubusercontent.com/matke-84/repository.bingie/main/omega/addons.xml</info>
+			<checksum>https://raw.githubusercontent.com/matke-84/repository.bingie/main/omega/addons.xml.md5</checksum>
 			<datadir zip="true">https://raw.githubusercontent.com/matke-84/repository.bingie/main/omega/</datadir>
 		</dir>
 	</extension>
@@ -22,19 +22,19 @@
 		<description lang="en_GB">Manual Kodi add-on distribution channel for AcTweeteR.</description>
 		<platform>all</platform>
 		<license>MIT</license>
-		<news>changelog-1.0.1.txt</news>
+		<news>changelog-1.0.2.txt</news>
 		<assets>
 			<icon>resources/icon.png</icon>
 		</assets>
 	</extension>
-</addon><addon id="skin.actweeter" version="1.1.3" name="AcTweeteR" provider-name="AcTweeteR maintainers">
+</addon><addon id="skin.actweeter" version="1.2.0" name="AcTweeteR" provider-name="AcTweeteR maintainers">
 	<requires>
 		<import version="5.17.0" addon="xbmc.gui" />
 		<import addon="script.bingie.helper" version="1.1.2" />
 		<import addon="script.bingie.toolbox" version="1.0.0" />
 		<import addon="script.bingie.widgets" version="1.0.1" />
 		<import addon="script.skinshortcuts" version="2.0.3" />
-		<import addon="service.actweeter" version="0.1.0" />
+		<import addon="service.actweeter" version="0.2.0" />
 		<import addon="resource.images.studios.coloured" version="0.0.24" />
 		<import addon="plugin.video.tmdb.bingie.helper" version="1.0.1" />
 		<import addon="plugin.program.autocompletion" version="2.1.2" />
@@ -43,36 +43,41 @@
         <res aspect="16:9" default="true" folder="1080i" height="1080" width="1920" />
     </extension>
 	<extension point="xbmc.addon.metadata">
-		<summary lang="en_GB">Kodi skin with Netflix layout.</summary>
-		<summary lang="zh_CN">Netflix 布局 Kodi 皮肤。</summary>
-		<summary lang="es_ES">Kodi con diseño Netflix.</summary>
-		<summary lang="es_AR">Kodi con diseño Netflix.</summary>
-		<summary lang="es_MX">Kodi con diseño Netflix.</summary>
-		<description lang="en_GB">AcTweeteR – a locally maintained streaming interface derived from BINGIE.</description>
-		<description lang="zh_CN">Bingie -你最喜欢的电影和节目的主界面！</description>
+		<summary lang="en_GB">AcTweeteR streaming interface for Kodi.</summary>
+		<summary lang="zh_CN">AcTweeteR Kodi 流媒体界面。</summary>
+		<summary lang="es_ES">Kodi con una interfaz cinematográfica y personalizable.</summary>
+		<summary lang="es_AR">Kodi con una interfaz cinematográfica y personalizable.</summary>
+		<summary lang="es_MX">Kodi con una interfaz cinematográfica y personalizable.</summary>
+		<description lang="en_GB">AcTweeteR – a locally maintained streaming interface for movies, series and live TV.</description>
+		<description lang="zh_CN">AcTweeteR - 电影、剧集和电视的流媒体界面。</description>
 		<description lang="es_ES">AcTweeteR - tu espacio de películas, series y televisión.</description>
 		<description lang="es_AR">AcTweeteR - tu espacio de películas, series y televisión.</description>
 		<description lang="es_MX">AcTweeteR - tu espacio de películas, series y televisión.</description>
 		<platform>all</platform>
 		<license>GPL v2.0</license>
+		<news>changelog-1.2.0.txt</news>
 		<forum />
 		<source />
 		<assets>
 			<icon>resources/icon.png</icon>
-			<fanart>resources/fanart.jpg</fanart>			
+			<fanart>extras/media/backgrounds/settings_interface.jpg</fanart>
 		</assets>
-	<news>changelog-1.1.3.txt</news></extension>
-</addon><addon id="service.actweeter" name="AcTweeteR Service" version="0.1.0" provider-name="AcTweeteR maintainers">
+	</extension>
+</addon><addon id="service.actweeter" name="AcTweeteR Service" version="0.2.0" provider-name="AcTweeteR maintainers">
   <requires>
     <import addon="xbmc.python" version="3.0.0" />
   </requires>
   <extension point="xbmc.service" library="service.py" start="startup" />
+  <extension point="xbmc.python.script" library="setup.py">
+    <provides>executable</provides>
+  </extension>
   <extension point="xbmc.addon.metadata">
-    <summary lang="en_GB">AcTweeteR background search service</summary>
-    <summary lang="es_ES">Servicio de búsqueda en segundo plano de AcTweeteR</summary>
-    <description lang="en_GB">Schedules provider-only XStream search-index refreshes through the installed XStream add-on.</description>
-    <description lang="es_ES">Programa actualizaciones del índice de búsqueda solo del proveedor mediante el complemento XStream instalado.</description>
+    <summary lang="en_GB">AcTweeteR search, setup and service-status helper</summary>
+    <summary lang="es_ES">Ayudante de búsqueda, configuración y estado de servicios de AcTweeteR</summary>
+    <description lang="en_GB">Schedules provider-only XStream search-index refreshes and offers an on-demand first-run wizard and diagnostics. Credentials remain in official add-on settings.</description>
+    <description lang="es_ES">Programa actualizaciones del índice XStream y ofrece un asistente inicial y diagnósticos bajo demanda. Las credenciales permanecen en los ajustes oficiales de cada complemento.</description>
     <platform>all</platform>
     <license>GPL-2.0-or-later</license>
-  <news>changelog-0.1.0.txt</news></extension>
+    <news>changelog-0.2.0.txt</news>
+  </extension>
 </addon></addons>
