@@ -31,11 +31,10 @@ esta skin no instala ni configura el proveedor.
 
 La fuente estable de bootstrap es
 **https://actweeter.github.io/TwT-Actualizador/bootstrap/**. La primera
-instalación utiliza `repository.actweeter-1.0.1.zip` desde esa fuente y luego
-AcTweeteR Repository. Para esta actualización, deja que Kodi consulte su
-repositorio normal de add-ons y verifica que ofrece `skin.actweeter 1.1.3` y
-resuelve `service.actweeter 0.1.0`; no se requiere una nueva versión del
-repository add-on.
+instalación utiliza `repository.actweeter-1.0.2.zip` desde esa fuente y luego
+AcTweeteR Repository. Para instalar la beta, deja que Kodi consulte su
+repositorio normal de add-ons y selecciona las versiones beta disponibles en el
+catálogo.
 
 El índice AcTweeteR contiene los ZIP de skin y service. Un segundo directorio
 agrega metadata upstream Bingie; Kodi descarga esos helpers directamente de su
