@@ -1,0 +1,27 @@
+{
+  "product": "AcTweeteR",
+  "version": "1.2.5",
+  "channel": "experimental-beta",
+  "source_commit": "daf9daa127797440b376dd11ffaa235c7d11c260",
+  "components": {
+    "skin.actweeter": "1.2.5",
+    "service.actweeter": "0.2.3",
+    "repository.actweeter": "1.0.2"
+  },
+  "kodi": {
+    "baseline": "21.3 Omega",
+    "android_tv_runtime": "pending",
+    "tvos_runtime": "pending",
+    "clean_install": "not-tested"
+  },
+  "release_scope": "Correct empty Home widget detection to show the existing fallback when no media widget is visible.",
+  "third_party_addon_packages_included": false,
+  "artifacts": {
+    "skin_zip": "repo/skin.actweeter/skin.actweeter-1.2.5.zip",
+    "skin_zip_sha256": "c0d1f60db1ecf3bc01509cf2bb603e4bfef421748c475e9d7bdfb49141870559",
+    "service_zip": "repo/service.actweeter/service.actweeter-0.2.3.zip",
+    "service_zip_sha256": "620928979117b49837ee08eb0f6a1ddee1c5b388b6b93f1921343c3f9aa232fd",
+    "repository_zip": "repo/repository.actweeter/repository.actweeter-1.0.2.zip",
+    "repository_zip_sha256": "c52fd62c625aeb7407d6a291e4c63b851121e351e603f6cf69f35788bea3ab03"
+  }
+}

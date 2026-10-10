@@ -1,0 +1,8 @@
+AcTweeteR Service 0.2.3 — safe optional add-on setup
+
+- Offer Kodi-native installation only for optional add-ons whose authorized
+  repository is already installed, and only after explicit user confirmation.
+- Explain missing repositories and the separately sourced XStream Pro path;
+  missing optional integrations can be skipped without blocking the wizard.
+- Add a user-invoked Home diagnostic that logs allowlisted technical state only.
+- No credentials, content labels, media paths, or provider details are recorded.
