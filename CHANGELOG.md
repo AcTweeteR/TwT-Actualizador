@@ -1,5 +1,14 @@
 # Changelog AcTweeteR
 
+## service.actweeter 0.2.7 — elegibilidad XStream en tvOS
+
+- XStream Pro solo se ofrece en tvOS cuando IPTV Simple está instalado,
+  habilitado y cumple la versión mínima requerida.
+- La habilitación requiere consentimiento explícito; el asistente informa y
+  permite continuar si la dependencia falta o no es compatible.
+- No se incluye PVR IPTV Simple ni se cambia el flujo de configuración.
+- Validación automatizada: 325 tests PASS. No se ha realizado QA runtime en tvOS.
+
 ## skin.actweeter 1.2.8 — reproducción directa desde Inicio
 
 - Conserva la acción nativa de Kodi para elementos reproducibles de XStream en
