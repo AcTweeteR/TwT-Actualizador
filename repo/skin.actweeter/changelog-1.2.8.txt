@@ -1,0 +1,7 @@
+AcTweeteR 1.2.8 — reproducción directa desde Inicio
+
+- Conserva la acción nativa de Kodi para tarjetas reproducibles de XStream en
+  Inicio y Continue Watching mediante ListItem.Property(IsPlayable).
+- Mantiene Información para elementos no reproducibles.
+- Validación automatizada: 321 tests PASS. Runtime 1.2.8 no probado; auditoría
+  integral PARTIAL.

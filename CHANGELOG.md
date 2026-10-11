@@ -1,5 +1,13 @@
 # Changelog AcTweeteR
 
+## skin.actweeter 1.2.8 — reproducción directa desde Inicio
+
+- Conserva la acción nativa de Kodi para elementos reproducibles de XStream en
+  widgets y tarjetas de Inicio, evaluando `ListItem.Property(IsPlayable)`.
+- Mantiene la acción Información para elementos no reproducibles.
+- Suite automatizada: 321 PASS. La prueba runtime de 1.2.8 y la auditoría
+  funcional integral siguen pendientes; no se afirma validación en dispositivos.
+
 ## skin.actweeter 1.2.2 + service.actweeter 0.2.2 — corrección de primer arranque
 
 - Evita que Home pierda el foco cuando una instalación limpia no tiene filas de
