@@ -68,12 +68,12 @@
 			<fanart>extras/media/backgrounds/settings_interface.jpg</fanart>
 		</assets>
 	</extension>
-</addon><addon id="service.actweeter" name="AcTweeteR Service" version="0.3.8" provider-name="AcTweeteR maintainers">
+</addon><addon id="service.actweeter" name="AcTweeteR Service" version="0.3.9" provider-name="AcTweeteR maintainers">
   <requires>
     <import addon="xbmc.python" version="3.0.0" />
     <import addon="plugin.video.xstream-pro" version="1.1.2" />
     <import addon="pvr.iptvsimple" version="21.4.0" />
-    <import addon="slyguy.trailers" version="0.2.1" />
+    <import addon="slyguy.trailers" version="0.2.1" optional="true" />
     <import addon="plugin.video.youtube" />
   </requires>
   <extension point="xbmc.service" library="service.py" start="startup" />
@@ -87,7 +87,7 @@
     <description lang="es_ES">Programa actualizaciones del índice XStream y ofrece un asistente reanudable que no se completa hasta superar las comprobaciones funcionales obligatorias. Las credenciales permanecen en los ajustes oficiales de cada complemento.</description>
     <platform>all</platform>
     <license>GPL-2.0-or-later</license>
-    <news>changelog-0.3.8.txt</news>
+    <news>changelog-0.3.9.txt</news>
   </extension>
 </addon><addon id="plugin.video.xstream-pro" name="Xstream Pro" version="1.1.2" provider-name="PesicP">
     <requires>
