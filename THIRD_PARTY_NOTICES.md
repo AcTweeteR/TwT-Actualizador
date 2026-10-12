@@ -38,17 +38,18 @@ version Studio Icons - Coloured - Modded fork is not bundled or redistributed;
 its upstream README states the supplied textures are for non-commercial use.
 AcTweeteR makes no separate licensing claim for the dependency artwork.
 
-## Additional components in 1.1.3
+## Historical notes for 1.1.3
 
 `service.actweeter 0.1.0` is AcTweeteR-maintained code distributed under
 GPL-2.0-or-later; its complete license text is included in the service ZIP.
 The skin's upstream BINGIE notices, GPL text, and Inter/OFL notices remain in
 the skin ZIP.
 
-XStream Pro 1.1.2 and its local AcTweeteR patch are not included in this
-distribution. The inspected XStream upstream metadata declares CC BY-NC 4.0;
-the private derivative is not redistributed here. Kodi, PVR and all other
-dependencies retain their own upstream licenses and distribution channels.
+XStream Pro 1.1.2 and its local AcTweeteR patch were not included in the
+original 1.1.3 artifact. The current catalog entry, added on 2026-10-12, is
+documented separately below and distributed under the upstream CC BY-NC 4.0
+terms. Kodi, PVR and other dependencies retain their own upstream licenses and
+update sources.
 
 
 ## XStream Pro 1.1.2 package in the 2026-10-12 catalog
