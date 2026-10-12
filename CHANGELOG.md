@@ -1,5 +1,14 @@
 # Changelog AcTweeteR
 
+## Catálogo 2026-10-12 — sincronización de versiones actuales
+
+- Publica `service.actweeter 0.3.8` y `repository.actweeter 1.0.3` junto a la skin 1.2.8 ya disponible.
+- El índice incluye el paquete adaptado `plugin.video.xstream-pro 1.1.2` bajo CC BY-NC 4.0, con licencia, atribución y cambios indicados; uso no comercial únicamente.
+- Repository 1.0.3 incorpora el feed oficial SlyGuy; helpers BINGIE siguen servidos por Matke y dependencias Kodi por el repositorio oficial.
+- Suite privada: 363 tests PASS + 13 subtests PASS. Instalación limpia y validación runtime Apple TV/Android TV permanecen NOT_TESTED.
+
+# Changelog AcTweeteR
+
 ## service.actweeter 0.2.7 — elegibilidad XStream en tvOS
 
 - XStream Pro solo se ofrece en tvOS cuando IPTV Simple está instalado,

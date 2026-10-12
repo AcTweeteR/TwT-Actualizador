@@ -1,0 +1,40 @@
+{
+  "product": "AcTweeteR",
+  "channel": "experimental-beta",
+  "source_commit": "085bf9fe2dc76e3ae36ab8dad7946754227d132a",
+  "components": {
+    "skin.actweeter": "1.2.8",
+    "service.actweeter": "0.3.8",
+    "repository.actweeter": "1.0.3",
+    "plugin.video.xstream-pro": "1.1.2"
+  },
+  "kodi_baseline": "21.3 Omega",
+  "artifacts": {
+    "skin.actweeter": "repo/skin.actweeter/skin.actweeter-1.2.8.zip",
+    "service.actweeter": "repo/service.actweeter/service.actweeter-0.3.8.zip",
+    "repository.actweeter": "repo/repository.actweeter/repository.actweeter-1.0.3.zip",
+    "plugin.video.xstream-pro": "repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.zip"
+  },
+  "sha256": {
+    "skin_actweeter": "c1aecdba41de7795a3fe98a065bf87162ee45de61daae6e06f0b759f65b991f5",
+    "service_actweeter": "815b78a411a0a7f9c9f177dfbba19790ffaba5619166574a2b132d1f6f9d3fb2",
+    "repository_actweeter": "74620e81ff9a161bb7b0650f01e94406ccc9fa9366210ebb36e58872bb4995e8",
+    "xstream_pro": "eca199c1223697c80e280183b6910981bd1cb0c1079a9c917540b2a0881980d9"
+  },
+  "third_party": [
+    {
+      "id": "plugin.video.xstream-pro",
+      "version": "1.1.2",
+      "upstream_commit": "1aa3e67da7c03c6acc3ec7e1ca579a7f645220f4",
+      "license": "CC BY-NC 4.0",
+      "adapted": true,
+      "commercial_use_permitted": false
+    }
+  ],
+  "validation": {
+    "automated_tests": "363 passed; 13 subtests passed",
+    "clean_install": "NOT_TESTED",
+    "android_tv_runtime": "NOT_TESTED",
+    "tvos_runtime": "NOT_TESTED"
+  }
+}

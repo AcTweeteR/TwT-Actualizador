@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<addons><addon id="repository.actweeter" name="AcTweeteR Repository" version="1.0.2" provider-name="AcTweeteR">
+<addons><addon id="repository.actweeter" name="AcTweeteR Repository" version="1.0.3" provider-name="AcTweeteR">
 	<extension point="xbmc.addon.repository" name="AcTweeteR Repository">
 		<requires>
 			<import addon="xbmc.addon" version="12.0.0" />
@@ -14,6 +14,11 @@
 			<checksum>https://raw.githubusercontent.com/matke-84/repository.bingie/main/omega/addons.xml.md5</checksum>
 			<datadir zip="true">https://raw.githubusercontent.com/matke-84/repository.bingie/main/omega/</datadir>
 		</dir>
+		<dir minversion="20.9.1">
+			<info compressed="false">https://slyguy.uk/.repo/repository.slyguy/addons.xml</info>
+			<checksum>https://slyguy.uk/.repo/repository.slyguy/addons.xml.md5</checksum>
+			<datadir zip="true">https://slyguy.uk/.repo/repository.slyguy/</datadir>
+		</dir>
 	</extension>
 	<extension point="xbmc.addon.metadata">
 		<summary lang="es_ES">Repositorio oficial de distribución AcTweeteR</summary>
@@ -22,7 +27,7 @@
 		<description lang="en_GB">Manual Kodi add-on distribution channel for AcTweeteR.</description>
 		<platform>all</platform>
 		<license>MIT</license>
-		<news>changelog-1.0.2.txt</news>
+		<news>changelog-1.0.3.txt</news>
 		<assets>
 			<icon>resources/icon.png</icon>
 		</assets>
@@ -63,9 +68,13 @@
 			<fanart>extras/media/backgrounds/settings_interface.jpg</fanart>
 		</assets>
 	</extension>
-</addon><addon id="service.actweeter" name="AcTweeteR Service" version="0.2.7" provider-name="AcTweeteR maintainers">
+</addon><addon id="service.actweeter" name="AcTweeteR Service" version="0.3.8" provider-name="AcTweeteR maintainers">
   <requires>
     <import addon="xbmc.python" version="3.0.0" />
+    <import addon="plugin.video.xstream-pro" version="1.1.2" />
+    <import addon="pvr.iptvsimple" version="21.4.0" />
+    <import addon="slyguy.trailers" version="0.2.1" />
+    <import addon="plugin.video.youtube" />
   </requires>
   <extension point="xbmc.service" library="service.py" start="startup" />
   <extension point="xbmc.python.script" library="setup.py">
@@ -74,10 +83,33 @@
   <extension point="xbmc.addon.metadata">
     <summary lang="en_GB">AcTweeteR search, setup and service-status helper</summary>
     <summary lang="es_ES">Ayudante de búsqueda, configuración y estado de servicios de AcTweeteR</summary>
-    <description lang="en_GB">Schedules provider-only XStream search-index refreshes and offers an on-demand first-run wizard and diagnostics. Credentials remain in official add-on settings.</description>
-    <description lang="es_ES">Programa actualizaciones del índice XStream y ofrece un asistente inicial y diagnósticos bajo demanda. Las credenciales permanecen en los ajustes oficiales de cada complemento.</description>
+    <description lang="en_GB">Schedules provider-only XStream search-index refreshes and offers a resumable setup wizard that remains incomplete until required runtime checks pass. Credentials remain in official add-on settings.</description>
+    <description lang="es_ES">Programa actualizaciones del índice XStream y ofrece un asistente reanudable que no se completa hasta superar las comprobaciones funcionales obligatorias. Las credenciales permanecen en los ajustes oficiales de cada complemento.</description>
     <platform>all</platform>
     <license>GPL-2.0-or-later</license>
-    <news>changelog-0.2.7.txt</news>
+    <news>changelog-0.3.8.txt</news>
   </extension>
+</addon><addon id="plugin.video.xstream-pro" name="Xstream Pro" version="1.1.2" provider-name="PesicP">
+    <requires>
+        <import addon="xbmc.python" version="3.0.1" />
+        <import addon="script.module.requests" version="2.22.0" />
+        <import addon="pvr.iptvsimple" version="21.4.0" />
+        <import addon="service.upnext" version="1.1.0" optional="true" />
+    </requires>
+    <extension point="xbmc.python.pluginsource" library="resources/lib/addon.py">
+        <provides>video</provides>
+    </extension>
+    <extension point="xbmc.service" library="service.py" start="startup" />
+    <extension point="xbmc.addon.metadata">
+        <reuselanguageinvoker>false</reuselanguageinvoker>
+        <summary lang="en_GB">Xstream Pro - Organised M3U &amp; Xtream player</summary>
+        <description lang="en_GB">A clean M3U &amp; Xtream player with proper sorting: PVR, Live TV, Movies, Series and Replay, TMDB, Trakt, EPG support.</description>
+        <platform>all</platform>
+        <license>CC BY-NC 4.0</license>
+        <source>https://github.com/Pesicp/XStreamPro</source>
+        <assets>
+            <icon>icon.png</icon>
+            <fanart>resources/background/background.png</fanart>
+        </assets>
+    </extension>
 </addon></addons>

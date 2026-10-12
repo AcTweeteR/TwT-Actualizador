@@ -1,68 +1,30 @@
-# TwT-Actualizador — distribución Kodi de AcTweeteR
+# TwT-Actualizador — distribución de AcTweeteR
 
-Repositorio público de artefactos Kodi. El desarrollo canónico continúa en
-[`AcTweeteR/TweeteR-Kodi`](https://github.com/AcTweeteR/TweeteR-Kodi) (privado).
-El provisioning personal vive únicamente en iCloud Drive/`actweeter kodi`.
+Canal oficial de distribución Kodi de AcTweeteR. Baseline: Kodi 21.3 Omega.
 
-## Distribución actual: AcTweeteR 1.2.2 (beta experimental)
+## Versiones disponibles
 
-- `skin.actweeter 1.2.2`
-- `service.actweeter 0.2.2`
-- `repository.actweeter 1.0.2` (sin cambios)
+- Skin: `skin.actweeter 1.2.8`
+- Servicio: `service.actweeter 0.3.8`
+- Repositorio: `repository.actweeter 1.0.3`
+- Proveedor IPTV: `plugin.video.xstream-pro 1.1.2` (adaptación de terceros bajo CC BY-NC 4.0)
 
-La versión 1.2.2 corrige la ruta de Home sin filas de widgets y el acceso a la
-configuración inicial desde una instalación sin contenido. También recupera el
-asistente aceptado pero interrumpido y cierra una carrera de propiedad de la
-intro. La corrección está cubierta por pruebas automatizadas/estructurales;
-todavía requiere validación runtime específica en Google TV/Android TV y tvOS.
-Consulta la [guía de instalación 1.2.2](docs/INSTALLATION_BETA_1.2.2.md) y el
-[registro del incidente](docs/BLACK_HOME_INCIDENT_1.2.2.md).
+El catálogo conserva versiones anteriores. La skin 1.2.8 ya estaba publicada; esta sincronización añade el servicio 0.3.8, el repositorio 1.0.3 y el paquete XStream indicado.
 
-Kodi 21.3 Omega es la baseline del proyecto. Esta corrección no se ha ejecutado
-en Apple TV, tvOS, Android TV ni Google TV; no se afirma validación runtime en
-esas plataformas. La instalación limpia sigue sin probarse.
+## Instalar o actualizar
 
-Esta distribución no incluye perfiles personales, userdata, provisioning,
-XStream, PVR/EPG, credenciales, historial, índices, caches ni datos personales.
-No productiza perfiles Consumer. El patch privado de XStream no se redistribuye:
-el upstream identificado declara CC BY-NC 4.0. Por ello, Search provider-only
-requiere que la instalación disponga de un runtime XStream compatible; instalar
-esta skin no instala ni configura el proveedor.
+Si AcTweeteR Repository ya está instalado, actualiza los complementos desde Kodi tras refrescar el repositorio.
 
-## Instalación y actualización Kodi
+Para una instalación nueva, descarga el ZIP bootstrap desde [AcTweeteR Bootstrap](https://actweeter.github.io/TwT-Actualizador/bootstrap/) e instálalo desde **Ajustes → Complementos → Instalar desde un archivo ZIP**. Después abre AcTweeteR Repository e instala AcTweeteR. El procedimiento exacto de navegación varía por versión/plataforma y aún requiere validación limpia en tvOS.
 
-La fuente estable de bootstrap es
-**https://actweeter.github.io/TwT-Actualizador/bootstrap/**. La primera
-instalación utiliza `repository.actweeter-1.0.2.zip` desde esa fuente y luego
-AcTweeteR Repository. Para instalar la beta, deja que Kodi consulte su
-repositorio normal de add-ons y selecciona las versiones beta disponibles en el
-catálogo.
+Kodi resuelve dependencias oficiales desde su repositorio. El repositorio AcTweeteR añade los feeds de Matke BINGIE Omega y SlyGuy para sus complementos respectivos. PVR IPTV Simple puede venir integrado en algunos paquetes Kodi; que esté incluido no significa que esté habilitado o configurado.
 
-El índice AcTweeteR contiene los ZIP de skin y service. Un segundo directorio
-agrega metadata upstream Bingie; Kodi descarga esos helpers directamente de su
-origen. Dependencias oficiales Kodi Omega se resuelven desde el repositorio
-incluido en Kodi. El cierre versionado está en
-[`docs/DEPENDENCIES.md`](docs/DEPENDENCIES.md).
+## XStream Pro y condiciones
 
-## Versiones, cambios y verificaciones
+El ZIP 1.1.2 contiene una adaptación identificada de XStream Pro upstream commit `1aa3e67da7c03c6acc3ec7e1ca579a7f645220f4`, con su licencia y aviso de modificaciones dentro del paquete y en [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Se distribuye únicamente bajo los términos **CC BY-NC 4.0**: atribución, enlace a licencia, cambios indicados y uso no comercial. No está avalado por el autor upstream. Los iconos Tabler conservan su aviso MIT. XStream almacena la contraseña en sus propios ajustes; no reutilices credenciales del desarrollador.
 
-- Manifest de esta distribución: [`manifests/1.2.2.json`](manifests/1.2.2.json).
-- SHA-256: [`checksums/SHA256SUMS`](checksums/SHA256SUMS).
-- Cambios: [`CHANGELOG.md`](CHANGELOG.md), más changelogs por add-on en `repo/`.
-- `service.actweeter` incluye su licencia GPL-2.0-or-later. No incluye el
-  patch XStream ni provisioning.
-- La publicación es manual y requiere autorización expresa; no hay publicación
-  automática por commit. No se ha modificado Apple TV.
+## Validación y límites
 
-## Rollback
+Los paquetes e índices tienen SHA-256/MD5 publicados en [checksums/SHA256SUMS](checksums/SHA256SUMS). La suite automatizada privada pasó 363 pruebas y 13 subtests para el candidato. Esto no es una instalación limpia ni una prueba de reproducción en todos los dispositivos. La instalación runtime de esta publicación en Apple TV/tvOS y Android TV/Google TV queda pendiente; no se afirma que esos dispositivos estén actualizados.
 
-Se conservan los ZIP públicos 1.2.0 y 1.2.1 y el repositorio 1.0.2. Kodi no
-suele ofrecer un downgrade automático desde 1.2.2 a una versión inferior. Si
-aparece una regresión, la recuperación preferida es publicar una versión
-correctiva con número superior basada en el artefacto previo; conservar todos
-los ZIP y checksums existentes. No eliminar userdata para recuperar una versión.
-
-El histórico [`tools/build_repository.py`](tools/build_repository.py) construía
-la distribución 1.1.2 y no debe usarse para regenerar la 1.1.3. La metadata de
-esta release se ensambló con el builder privado versionado en TweeteR-Kodi,
-usando los ZIP reproducibles generados desde ese source.
+No contiene perfiles personales, credenciales, bases Kodi ni provisioning del Mac. No se distribuye PVR binario multiplataforma: usa el componente compatible de Kodi y su repositorio oficial.

@@ -1,92 +1,28 @@
-# Dependencias de instalación de AcTweeteR
+# Dependencias y procedencia — AcTweeteR 1.2.8 / service 0.3.8
 
-`skin.actweeter 1.1.3` conserva los mínimos de dependencias compatibles con la
-selección predeterminada de Kodi Omega e incorpora `service.actweeter 0.1.0` en
-el mismo índice AcTweeteR. `repository.actweeter` permanece en 1.0.1.
+Baseline de catálogo: Kodi 21.3 Omega. El índice declara los mínimos reales de cada add-on; Kodi resuelve los imports según sus repositorios habilitados. El catálogo no implica que un componente esté configurado o probado en runtime.
 
-## Causa de los dos nodos no disponibles
+| Componente | Mínimo / versión | Fuente | Función y estado |
+|---|---:|---|---|
+| skin.actweeter | 1.2.8 | AcTweeteR | Interfaz; GPL-2.0, fuente incluida en ZIP |
+| service.actweeter | 0.3.8 | AcTweeteR | Asistente/servicio; GPL-2.0-or-later |
+| repository.actweeter | 1.0.3 | AcTweeteR | Catálogo propio más feeds Matke Omega y SlyGuy |
+| plugin.video.xstream-pro | 1.1.2 | ZIP de este catálogo | Adaptación de tercero; CC BY-NC 4.0, solo uso no comercial |
+| PVR IPTV Simple | >=21.4.0 | Repositorio Kodi oficial o binario incluido por la distribución Kodi | Requisito de XStream/PVR. El paquete tvOS Kodi 21.3 examinado contiene 21.11.0; disponibilidad y habilitación se deben comprobar en el dispositivo |
+| plugin.video.youtube | versión que resuelva Kodi | Repositorio Kodi oficial | Integración de tráilers; no se distribuyen sus credenciales |
+| slyguy.trailers | >=0.2.1 | Feed oficial SlyGuy añadido por repository.actweeter 1.0.3 | Backend adicional de tráilers |
+| Helpers script.bingie.* y plugin.video.tmdb.bingie.helper | mínimos en addon.xml | Feed Matke BINGIE Omega | Helpers de interfaz/metadatos; los ZIP se sirven desde upstream |
+| Skin Shortcuts, AutoCompletion, Studio Icons y módulos | mínimos en addon.xml | Repositorio Kodi oficial | Dependencias de interfaz y módulos |
 
-Kodi Omega, por defecto, prefiere la versión del repositorio oficial cuando un ID
-existe también en uno privado. Solo elige la versión privada más alta si la
-preferencia global “Update official add-ons from” está en “Any repository”. El
-código de Omega realiza esa selección en `CAddonRepos::FindDependency` y después
-comprueba el mínimo en `AddonInstaller`; si la versión seleccionada no lo cumple,
-la dependencia se informa como no disponible.
+## Resolución y actualizaciones
 
-Así, 1.1.1 pedía `plugin.program.autocompletion >=2.1.3` aunque Kodi oficial ofrece
-2.1.2, y `resource.images.studios.coloured >=1.0.0` aunque Kodi oficial ofrece
-0.0.24. Los índices Bingie sí ofrecían versiones privadas superiores, pero no
-podían imponerse a la política predeterminada. La interfaz AcTweeteR consume la
-ruta normal de plugin del AutoCompletion oficial, y el recurso oficial conserva
-el punto de extensión `kodi.resource.images` de tipo `studios`. El paquete de
-Studio Icons oficial puede tener menor cobertura de logos que el fork modificado;
-la API y el fallback visual del skin siguen siendo los mismos.
+`repository.actweeter 1.0.3` declara el feed AcTweeteR, el feed Omega de Matke y el feed SlyGuy. YouTube, PVR IPTV Simple y módulos oficiales no se copian en nuestros ZIP. XStream Pro 1.1.2 sí se publica aquí como adaptación CC BY-NC con avisos completos; Kodi lo considera servido por AcTweeteR Repository, por lo que los cambios de versión deben publicarse en este catálogo. XStream incluye su propio updater upstream; la convivencia y la persistencia de la integración parcheada requieren seguimiento, no se afirma un test de actualización aquí.
 
-La skin 1.1.3 mantiene las dos dependencias obligatorias, con mínimos `2.1.2` y
-`0.0.24`. No se modifica la preferencia global de seguridad ni se elimina una
-dependencia. Kodi oficial ofrece asimismo `script.module.autocompletion 2.1.1`,
-que satisface el mínimo `2.0.5` requerido por el addon de teclado.
+No se incluyen binarios PVR de otra plataforma. En tvOS, Kodi puede traer PVR IPTV Simple en su propio paquete; esa disponibilidad no equivale a configuración PVR/EPG funcional. Los feeds externos y el repositorio oficial deben poder alcanzarse desde la red del dispositivo.
 
-## Cierre transitivo calculado
+## Estado de compatibilidad
 
-Resolución calculada con la metadata de skin 1.1.3, el índice Kodi Omega, los
-índices upstream Bingie filtrados publicados y el manifest de sistema de Kodi
-21.3. Los imports `xbmc.*`/`kodi.*` son dependencias de core/sistema.
-
-| Nodo | Versión requerida | Versión elegida | Origen |
-|---|---:|---:|---|
-| `skin.actweeter` | — | 1.1.3 | AcTweeteR |
-| `service.actweeter` | 0.1.0 | 0.1.0 | AcTweeteR Repository |
-| `xbmc.python` (service) | 3.0.0 | 3.0.1 | Kodi 21.3 core |
-| `xbmc.gui` | 5.17.0 | 5.17.0 | Kodi core |
-| `script.bingie.helper` | 1.1.2 | 1.1.2 | AcTweeteR metadata → Bingie upstream ZIP |
-| `script.bingie.toolbox` | 1.0.0 | 1.0.0 | AcTweeteR metadata → Bingie upstream ZIP |
-| `script.bingie.widgets` | 1.0.1 | 1.0.1 | AcTweeteR metadata → Bingie upstream ZIP |
-| `script.skinshortcuts` | 2.0.3 | 2.0.3 | Kodi official |
-| `resource.images.studios.coloured` | 0.0.24 | 0.0.24 | Kodi official |
-| `plugin.video.tmdb.bingie.helper` | 1.0.1 | 1.0.3 | AcTweeteR metadata → Bingie upstream ZIP |
-| `plugin.program.autocompletion` | 2.1.2 | 2.1.2 | Kodi official |
-| `script.module.bingie` | 1.0.1 | 1.0.1 | AcTweeteR metadata → Bingie upstream ZIP |
-| `script.module.autocompletion` | 2.0.5 | 2.1.1 | Kodi official |
-| `script.module.simplejson` | 3.3.0 | 3.19.1+matrix.1 | Kodi official |
-| `script.module.simplecache` | 2.0.2 | 2.0.2 | Kodi official |
-| `script.module.requests` | 2.9.1 | 2.31.0 | Kodi official |
-| `script.module.infotagger` | 0.0.4/0.0.5 | 0.0.8 | Kodi official |
-| `script.module.addon.signals` | 0.0.6 | 0.0.6+matrix.1 | Kodi official |
-| `script.module.beautifulsoup4` | 4.9.3 | 4.12.2 | Kodi official |
-| `script.module.qrcode` | 6.1.0 | 6.1.0+matrix.3 | Kodi official |
-| `script.module.soupsieve` | 2.4.1 | 2.4.1 | Kodi official |
-| `script.module.six` | 1.14.0+matrix.1 | 1.16.0+matrix.1 | Kodi official |
-| `script.module.certifi` | 2023.5.7 | 2023.5.7 | Kodi official |
-| `script.module.chardet` | 5.1.0 | 5.1.0 | Kodi official |
-| `script.module.idna` | 3.4.0 | 3.10.0 | Kodi official |
-| `script.module.urllib3` | 1.26.16+matrix.1 | 2.2.3 | Kodi official |
-| `script.module.unidecode` | 1.1.1+matrix.2 | 1.3.6 | Kodi official |
-| `script.module.simpleeval` | 0.9.10 | 0.9.13 | Kodi official |
-| `script.module.pil` | 1.1.7 | 5.1.0 | Kodi system/bundled |
-| `xbmc.python`, `xbmc.addon`, `kodi.resource` | varies | Kodi 21.3 core API | Kodi core/system |
-
-No hay nodos obligatorios `MISSING` en este cierre. No se copian paquetes helper
-al repositorio público: los ZIP Bingie se sirven desde el upstream y los ZIP
-oficiales desde el repositorio Kodi incluido en Kodi.
-
-## Dependencias directas y portabilidad
-
-La skin también requiere Kodi GUI 5.17.0, Bingie Helper 1.1.2, Bingie Toolbox
-1.0.0, Bingie Widgets 1.0.1, Skin Shortcuts 2.0.3, TMDb Bingie Helper 1.0.1,
-Studio Icons 0.0.24 y AutoCompletion 2.1.2. XStream Pro, PVR, credenciales,
-userdata, historial y caches personales no son dependencias del paquete y no se
-distribuyen.
-
-`service.actweeter` requiere únicamente `xbmc.python 3.0.0` del core; no declara
-dependencias Python externas. El índice de release contiene los tres add-ons
-propios (repository, skin y service), y el índice filtrado upstream conserva
-los siete add-ons Bingie necesarios. La resolución Kodi 21.3 cierra 22 nodos sin
-dependencias obligatorias ausentes.
-
-XStream Pro, PVR, credenciales, userdata, historial y caches no se distribuyen.
-El Search provider-only necesita un runtime XStream compatible y parcheado; el
-patch local no se incluye por la licencia CC BY-NC 4.0 identificada para el
-upstream. La instalación física Apple TV de 1.1.2 y su cierre de dependencias
-fueron confirmados por el propietario; la detección/actualización a 1.1.3 sigue
-pendiente de retest físico. Kodi 22/23 tampoco se ha validado.
+- Kodi 21.3 Omega: versión objetivo y compatibilidad declarada por metadata.
+- macOS: existen validaciones previas de partes del asistente en Master; la instalación limpia de este conjunto no está demostrada.
+- Android TV / Google TV y tvOS / Apple TV: dependencias evaluadas estáticamente, pruebas runtime de esta publicación pendientes.
+- Instalación limpia, autenticación IPTV, PVR/EPG y reproducción real no se deducen de la validez XML/ZIP.
