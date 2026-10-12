@@ -1,0 +1,11 @@
+AcTweeteR Service 0.4.1
+
+- Wait for Kodi's actual PVR initialization state after requesting XStream's
+  native PVR synchronization; report timeout, cancellation, or API-stage errors
+  without repeating the sync request or modifying IPTV Simple settings.
+- After explicit user consent, enable and read back XStream's version-pinned
+  auto_sync_pvr setting so the profile refresh route invokes PVR sync.
+- Treat PVR as ready only after Kodi reports an available, non-scanning client
+  and at least one real TV channel group with channels.
+- Keep EPG observation separate from installation completion; no guide entries
+  are reported as observed unless Kodi returns a real broadcast.

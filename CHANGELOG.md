@@ -1,5 +1,12 @@
 # Changelog AcTweeteR
 
+## service.actweeter 0.4.1 — verificación de sincronización PVR
+
+- Espera el estado real de inicialización PVR después de solicitar la sincronización nativa de XStream, con timeout acotado y errores de consulta diferenciados.
+- Solicita consentimiento antes de habilitar y comprobar la preferencia de sincronización PVR de XStream; no reescribe ajustes de IPTV Simple ni repite la solicitud de sincronización.
+- No afirma que EPG esté disponible sin observar emisiones reales.
+- Suite automatizada: 377 PASS. Validación runtime en Apple TV: pendiente; no se declara funcionamiento en dispositivo.
+
 ## Catálogo 2026-10-12 — sincronización de versiones actuales
 
 - Publica `service.actweeter 0.3.8` y `repository.actweeter 1.0.3` junto a la skin 1.2.8 ya disponible.
