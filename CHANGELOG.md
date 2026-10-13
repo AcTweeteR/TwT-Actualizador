@@ -1,5 +1,16 @@
 # Changelog AcTweeteR
 
+## skin.actweeter 1.2.9 — diseño del proveedor y años dinámicos
+
+- Corrige el grupo de Inicio usado por Skin Shortcuts; seis filas del proveedor.
+- Películas y Series incluyen nueve filas, con estrenos del año actual y anterior.
+- Elimina etiquetas heredadas de IMDb/Trakt en las filas predeterminadas IPTV.
+- Spotlight obtiene varios elementos reales, no una única portada fija.
+- Entrega un menú inicial sin datos de perfil de desarrollo. El servicio 0.4.6
+  prepara los DATA mediante Kodi VFS y solicita la generación nativa.
+- Antes del despliegue se verificó en el Apple TV el backup de ajustes/includes.
+  Las pruebas automatizadas pasan; la comprobación visual se realiza tras actualizar.
+
 ## service.actweeter 0.4.6 — compatibilidad del XML de perfil en tvOS
 
 - Lee y escribe DATA y ajustes mediante Kodi VFS: en tvOS un XML puede existir
