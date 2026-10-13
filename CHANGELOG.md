@@ -1,5 +1,14 @@
 # Changelog AcTweeteR
 
+## service.actweeter 0.4.7 — retirada de captura de QA
+
+- Retira la acción de captura introducida durante esta validación; su solicitud
+  coincidió con la salida de Kodi al menú tvOS. No altera las funciones del producto.
+- Conserva la corrección VFS, backups e interfaz del proveedor. 431 tests PASS.
+- Apple TV: Inicio carga filas del proveedor; Películas carga 24 títulos de
+  2026 y 24 de 2025. DATA y Spotlight persisten tras la reapertura de Kodi.
+- Continuar viendo/Favoritos vacíos no se rellenan con datos inventados.
+
 ## skin.actweeter 1.2.9 — diseño del proveedor y años dinámicos
 
 - Corrige el grupo de Inicio usado por Skin Shortcuts; seis filas del proveedor.
