@@ -1,5 +1,15 @@
 # Changelog AcTweeteR
 
+## service.actweeter 0.4.6 — compatibilidad del XML de perfil en tvOS
+
+- Lee y escribe DATA y ajustes mediante Kodi VFS: en tvOS un XML puede existir
+  en NSUserDefaults sin un archivo POSIX. Defecto observado en el Apple TV.
+- Verifica backups por lectura posterior y conserva datos personalizados.
+- Diagnóstico de includes nativos con referencias por perfil; preparación
+  disponible sin reiniciar Kodi. 430 pruebas automatizadas PASS.
+- La nueva interfaz permanece pendiente de comprobación visual hasta desplegar
+  la skin 1.2.9; no se confunde XML generado con PASS_RUNTIME.
+
 ## service.actweeter 0.4.5 — backup por la entrada nativa del plugin
 
 - Hace accesible el backup local desde el plugin del servicio: Kodi prioriza
