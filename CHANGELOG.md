@@ -1,5 +1,12 @@
 # Changelog AcTweeteR
 
+## service.actweeter 0.4.10 — estado Unicode independiente de plataforma
+
+- Lee explícitamente en UTF-8 el estado que contiene preferencias españolas.
+- 437 tests PASS. En Apple TV el bridge 0.4.9 ya produjo preview automático,
+  AVStarted y avance de 17 segundos en Home; se comprobó cleanup al volver al menú.
+- Mantiene backups, consentimiento e integración local sin publicar SlyGuy ZIP.
+
 ## service.actweeter 0.4.9 — integración reproducible de previews
 
 - Resuelve el hueco de despliegue: el SlyGuy oficial no carga el bridge de
