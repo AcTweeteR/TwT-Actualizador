@@ -1,5 +1,15 @@
 # Changelog AcTweeteR
 
+## service.actweeter 0.4.4 — preparación segura de la interfaz
+
+- Copia verificada de DATA, ajustes de skin e includes en el dispositivo antes
+  de aplicar el diseño del proveedor. No copia credenciales ni perfiles del Mac.
+- Regeneración nativa de Skin Shortcuts con protección de personalizaciones,
+  reintento y diagnóstico que distingue XML generado de interfaz comprobada.
+- 427 pruebas automatizadas PASS. La validación visual de la nueva skin 1.2.9
+  en el Apple TV afectado está pendiente; el servicio preserva la skin 1.2.8.
+- No cambia el repositorio 1.0.3, XStream Pro ni los paquetes históricos.
+
 ## service.actweeter 0.4.3 — versión estable
 
 - Asistente reanudable para preparar y comprobar los componentes declarados;
