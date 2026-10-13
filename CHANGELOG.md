@@ -1,5 +1,16 @@
 # Changelog AcTweeteR
 
+## service.actweeter 0.4.9 — integración reproducible de previews
+
+- Resuelve el hueco de despliegue: el SlyGuy oficial no carga el bridge de
+  AcTweeteR. El configurador puede conectar localmente el bridge ya existente.
+- Requiere consentimiento, SlyGuy 0.2.1 y hashes oficiales exactos. Copia
+  verificada, idempotencia, restart nativo y rollback sin cambiar preferencias.
+- No distribuye paquetes ni fuentes de SlyGuy; se obtiene del repositorio oficial.
+- Refresca una vez la caché propia de metadatos si el idioma ya era español,
+  evitando mantener sinopsis inglesas generadas antes de la preparación.
+- 436 tests PASS; la instalación del hook no se confunde con reproducción validada.
+
 ## skin.actweeter 1.2.10 / service.actweeter 0.4.8
 
 - El mismo tráiler SlyGuy terminaba al salir de Home y avanzaba desde otra
