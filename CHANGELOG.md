@@ -1,5 +1,19 @@
 # Changelog AcTweeteR
 
+## skin.actweeter 1.2.10 / service.actweeter 0.4.8
+
+- El mismo tráiler SlyGuy terminaba al salir de Home y avanzaba desde otra
+  ventana: se limita la orden Stop heredada al backend antiguo sin SlyGuy.
+- La parada de previews SlyGuy continúa gestionada mediante ownership.
+- Configura metadatos XStream españoles si conserva sus preferencias inglesas
+  de fábrica. Respalda preferencias y únicamente caché de metadatos Premium;
+  no altera progreso, favoritos ni credenciales.
+- Conserva la interfaz confirmada visualmente por el propietario en Apple TV,
+  las filas por año y su persistencia. 433 pruebas automatizadas PASS.
+- Repositorio 1.0.3 y XStream Pro 1.1.2 permanecen sin cambios; las versiones
+  anteriores se conservan. La validación de estos dos últimos ajustes se realiza
+  tras actualizar el Apple TV afectado.
+
 ## service.actweeter 0.4.7 — retirada de captura de QA
 
 - Retira la acción de captura introducida durante esta validación; su solicitud
