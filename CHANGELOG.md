@@ -1,5 +1,19 @@
 # Changelog AcTweeteR
 
+## service.actweeter 0.4.3 — versión estable
+
+- Asistente reanudable para preparar y comprobar los componentes declarados;
+  configuración de proveedor preservada al reintentar.
+- Validación del perfil activo para PVR, evitando aceptar canales de otra
+  instancia como configuración de AcTweeteR.
+- Ajustes booleanos de XStream escritos mediante su API tipada y verificados
+  con rollback de los valores previos si falla la actualización.
+- Manejo defensivo de `HTTPError` cuando no existe cuerpo de respuesta.
+- 416 pruebas automatizadas PASS. Se conservan resultados runtime comunicados
+  anteriormente para asistente, IPTV/VOD, episodios, PVR/EPG, persistencia y
+  trailers manuales; la instalación limpia aislada sigue NOT_TESTED y no se
+  afirma validación runtime nueva en tvOS/Android TV.
+
 ## service.actweeter 0.4.1 — verificación de sincronización PVR
 
 - Espera el estado real de inicialización PVR después de solicitar la sincronización nativa de XStream, con timeout acotado y errores de consulta diferenciados.
