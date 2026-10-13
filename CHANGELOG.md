@@ -1,5 +1,12 @@
 # Changelog AcTweeteR
 
+## service.actweeter 0.4.5 — backup por la entrada nativa del plugin
+
+- Hace accesible el backup local desde el plugin del servicio: Kodi prioriza
+  esta entrada cuando el complemento declara varios puntos de extensión.
+- Conserva 0.4.4 y todos los paquetes previos sin sobrescribirlos.
+- 428 pruebas automatizadas PASS; comprobación visual de skin 1.2.9 pendiente.
+
 ## service.actweeter 0.4.4 — preparación segura de la interfaz
 
 - Copia verificada de DATA, ajustes de skin e includes en el dispositivo antes
