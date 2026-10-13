@@ -14,6 +14,8 @@
 - 437 tests PASS. En Apple TV el bridge 0.4.9 ya produjo preview automático,
   AVStarted y avance de 17 segundos en Home; se comprobó cleanup al volver al menú.
 - Mantiene backups, consentimiento e integración local sin publicar SlyGuy ZIP.
+- Tras reiniciar Kodi en Apple TV, el propietario confirmó sinopsis españolas y
+  preview automático operativos.
 
 ## service.actweeter 0.4.9 — integración reproducible de previews
 
