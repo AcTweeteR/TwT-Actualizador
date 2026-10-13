@@ -1,5 +1,13 @@
 # Changelog AcTweeteR
 
+## skin.actweeter 1.2.11 — parada segura también en widgets
+
+- Completa la protección de SlyGuy en las filas de widgets, además de Home y
+  Spotlight. Las paradas de previews corresponden al coordinador de ownership.
+- Conserva el diseño del proveedor confirmado visualmente en Apple TV y los
+  valores de preview para nuevas instalaciones. Requiere servicio 0.4.10.
+- 437 tests PASS; sin cambios en XStream Pro ni repository.actweeter.
+
 ## service.actweeter 0.4.10 — estado Unicode independiente de plataforma
 
 - Lee explícitamente en UTF-8 el estado que contiene preferencias españolas.
