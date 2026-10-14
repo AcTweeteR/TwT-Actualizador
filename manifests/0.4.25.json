@@ -1,0 +1,61 @@
+{
+  "release": "0.4.25",
+  "channel": "stable",
+  "source_commit": "dcccc9401adc69c4cc91ab438b01145ef84c4021",
+  "kodi_baseline": "21.3 Omega",
+  "addons": [
+    {
+      "id": "repository.actweeter",
+      "version": "1.0.3",
+      "file": "repo/repository.actweeter/repository.actweeter-1.0.3.zip",
+      "sha256": "74620e81ff9a161bb7b0650f01e94406ccc9fa9366210ebb36e58872bb4995e8"
+    },
+    {
+      "id": "skin.actweeter",
+      "version": "1.2.22",
+      "file": "repo/skin.actweeter/skin.actweeter-1.2.22.zip",
+      "sha256": "34341059225c8795d5af2adad799a0b0ad7cc01c7fae18d541d5c737f3e5cfff"
+    },
+    {
+      "id": "service.actweeter",
+      "version": "0.4.25",
+      "file": "repo/service.actweeter/service.actweeter-0.4.25.zip",
+      "sha256": "ee2414f45194fa58ab14b7e6e55aaf203874ac212becd242e8d9fe96721adf05"
+    },
+    {
+      "id": "plugin.video.xstream-pro",
+      "version": "1.1.2.5",
+      "file": "repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.5.zip",
+      "sha256": "2d230dcd0617740ab0641a43d8c66384dc7f072b4835fc5756488f9258717f4a"
+    }
+  ],
+  "automated_tests": "581 PASS",
+  "integrity": "Python AST, XML, Kodi index/MD5, ZIP/CRC and SHA-256: PASS_AUTOMATED",
+  "upgrade_from": "0.4.24",
+  "upgrade_behavior": "In-place native Kodi add-on update; no profile/database reset or personal-data migration is introduced by this release.",
+  "runtime_status": {
+    "clean_install": "NOT_TESTED",
+    "upgrade_from_0.4.24": "NOT_TESTED",
+    "android_touch": "PENDING",
+    "android_trailers": "PENDING",
+    "android_kodi_21_3": "NOT_TESTED",
+    "tvos_kodi_21_3": "NOT_TESTED",
+    "macos_kodi_21_3": "NOT_TESTED",
+    "windows_kodi_21_3": "NOT_TESTED",
+    "linux_kodi_21_3": "NOT_TESTED"
+  },
+  "performance": {
+    "status": "SYNTHETIC_BENCHMARK_ONLY",
+    "android_device_measurements": "NOT_MEASURED"
+  },
+  "known_critical_issue": "Kodi shutdown may block while cancelling plugin:// directory jobs; root component remains unidentified.",
+  "owner_exception": "Owner expressly accepts this known risk for stable release 0.4.25 only; the issue remains open.",
+  "third_party": {
+    "id": "plugin.video.xstream-pro",
+    "version": "1.1.2.5",
+    "upstream_version": "1.1.2",
+    "upstream_commit": "1aa3e67da7c03c6acc3ec7e1ca579a7f645220f4",
+    "license": "CC BY-NC 4.0",
+    "redistribution": "non-commercial with retained attribution, license link, and modification notices"
+  }
+}

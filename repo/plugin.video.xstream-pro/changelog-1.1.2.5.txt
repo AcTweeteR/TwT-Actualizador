@@ -1,0 +1,9 @@
+XStream Pro distribution revision 1.1.2.5
+
+- Replaces per-provider-item SQLite SELECT lookups during Search index
+  reconciliation with one prior-row scan per media type inside the existing
+  transaction.
+- Preserves provider IDs, last-duplicate-record-wins behavior, incremental
+  additions/updates/deletions, existing schema and credentials.
+- Based on upstream 1.1.2; attribution and CC BY-NC 4.0 license are retained.
+- AcTweeteR modifications are documented in ACTWEETER_MODIFICATIONS.txt.

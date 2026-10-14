@@ -1,5 +1,21 @@
 # Changelog AcTweeteR
 
+## AcTweeteR 0.4.25 — estable
+
+- Skin 1.2.22: conserva las correcciones de foco/BingieInfo, Spotlight abriendo
+  la ficha sin autoplay, objetivos táctiles y sinopsis ampliadas. La validación
+  táctil runtime Android sigue pendiente.
+- Servicio 0.4.25: reduce comprobaciones ociosas de XStream, evita parsear
+  repetidamente Skin Shortcuts mientras genera los DATA y mantiene las métricas
+  opcionales desactivadas por defecto.
+- XStream Pro 1.1.2.5: reconcilia el índice local leyendo las filas previas una
+  vez por tipo dentro de la transacción, eliminando el SELECT por elemento sin
+  cambiar esquema ni semántica de IDs. Se conservan licencia y avisos CC BY-NC.
+- 581 pruebas automatizadas PASS; instalación/actualización runtime, Android,
+  tráilers Android y rendimiento en dispositivos no se declaran validados.
+- La incidencia de cierre de Kodi sigue abierta. El propietario aceptó el
+  riesgo únicamente para esta versión 0.4.25.
+
 ## AcTweeteR 0.4.24 — estable
 
 - Skin 1.2.20: incorpora scrollbar vertical nativo de Kodi en Home, conectado
