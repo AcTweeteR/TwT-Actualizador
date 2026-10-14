@@ -1,4 +1,4 @@
-9907505d869fdd51ce5db308342c25e29712ad4f3fce77c22d06e9a0704482e6  CHANGELOG.md
+bb655600943921a42859e417d3b94ed54044c4fea34468be754fc87a9aa16cb8  CHANGELOG.md
 cb4521399c4e9d314ccebe8931f3cb81cf1727b2c5641eeaf8b7877c0cdb2f12  docs/bootstrap/index.html
 03f8cf5194876f73697168dcf8b147ea0b55ff309786d16feb2490bfb7e748c0  docs/bootstrap/repository.actweeter-1.0.1.zip
 c52fd62c625aeb7407d6a291e4c63b851121e351e603f6cf69f35788bea3ab03  docs/bootstrap/repository.actweeter-1.0.2.zip
@@ -7,18 +7,22 @@ c52fd62c625aeb7407d6a291e4c63b851121e351e603f6cf69f35788bea3ab03  docs/bootstrap
 6125092819a0a2fd7586d8eb853a0a5bce7e03c3d5971df61fb7bb9a306495bd  manifests/0.4.17.json
 2b290223a6c618e72c9a4a5559163e490230cbdc55e60d95f3cdbb163e08e74b  manifests/0.4.18.json
 0b5ea1be5ddb3603b62db3614231a8aeb180490d2d6fe9c224a3c41df6bb8bc1  manifests/0.4.21.json
+de533651f1864d8dab581d64c7d840ee77245a810603e8d71809f55500859c47  manifests/0.4.22.json
 ef303994fd0ece6765d743d5aac8eea41fc7a4db662db33ebe6d0529a1a4e618  MULTIPLATFORM_TRAKT_WIDGET_AUDIT.md
-9de7d56177f8cee7df61be9729b5d4933e7b8d683071fc6e159752f84b01d03b  README.md
+043e2b8b74a3fdfd5e1ac4a024b186aa0ca24ddd25ed7677088cb4cad5af5498  README.md
+750280502943819973d2bad856b3ca63733d51eca9d938ba44453b1d091381a1  RELEASE_NOTES_0.4.22.md
 b8ee9d86282357e9bd6ad445d9f47910efe558ab60fb499e2c42851675c59842  RELEASE_NOTES_0.4.10.md
 09721e9453b6d1a54b1d88d60ff4a4a5dbf0dc3d4b6f32f0177074b73026c8dc  RELEASE_NOTES_0.4.17.md
 93294444ae8c1e94445c8aad3c35dee2f4d2ac6a7018ec6caed9576d7c49cccf  RELEASE_NOTES_0.4.18.md
 5acff5aaa2c2a7dc2e2e90603782e6783bea71f74830b4047da9a50b58cb1052  RELEASE_NOTES_0.4.21.md
 24824cee4ecc904485194646a08e36d8cc870f57c85e61287df0c6fcbde1cd2d  RELEASE_NOTES_0.4.3.md
-40d15b7ce0836e89f81006f448841863b039a308486260e77f120db07af2d61f  repo/addons.xml
-c2642ff3113dd0ee738e0a979d3af74791b9b1b49e4d8bd9438656d55861c651  repo/addons.xml.md5
+1d8ed6e91e78983e73b4ba03a33eb4c57e2646ffc264675ec44218432ee6b1d0  repo/addons.xml
+ac65810c2f9636e5c7fa07be87cc04b66588280871558181c4066ba9a2500235  repo/addons.xml.md5
 c50998f44cf313b298455c5c7f1f41d98c265aa0a5f86df60f5951016318d5b7  repo/plugin.video.xstream-pro/changelog-1.1.2.2.txt
 02c1c833fb4f87524ec36ddb77f3f93fbe0ddf5ab3b4eeb9e3caaa3ccca9e331  repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.1.zip
 58ce9234943f16f140da71270bfc8fb2ce94d1702fae31471d5c11cfaafd617c  repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.2.zip
+5102ac71884839a6dfeaee60e27e8047043872f07e4b2cfb03192b16d5ed8f99  repo/plugin.video.xstream-pro/changelog-1.1.2.3.txt
+50a085ca562fea7c209111bdb0a4541c48447e6913b54237f728a781faf8815e  repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.3.zip
 eca199c1223697c80e280183b6910981bd1cb0c1079a9c917540b2a0881980d9  repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.zip
 26cde12bbb7799481a951b81281ab698b185c826994c168b47571c09eeee6ac7  repo/repository.actweeter/changelog-1.0.3.txt
 03f8cf5194876f73697168dcf8b147ea0b55ff309786d16feb2490bfb7e748c0  repo/repository.actweeter/repository.actweeter-1.0.1.zip
@@ -31,6 +35,7 @@ f7c0c97dd5e38a25863f71532ed70f42beeee370f604ac6ade9906112afae84c  repo/service.a
 18c486a5636b767c5b0917af619c600671656e82caece904a52f63577bdad66a  repo/service.actweeter/changelog-0.4.17.txt
 adcdc58524c88f0e2770a9c95514d91b527c5e7ac472ca422c5b5197b2b1b3e5  repo/service.actweeter/changelog-0.4.18.txt
 cd6baca520d559f3b4bed42766e0a38590036c431e4964fe7a04cec29bd767b6  repo/service.actweeter/changelog-0.4.21.txt
+c2cd4506e4aecd81690acd9efc029e8d58760874fc3d18591bbb2aa2ff7b6258  repo/service.actweeter/changelog-0.4.22.txt
 b716f86d3e218552204542b3da61c9ef8e506e58e365ef56a3187a3a0d48262f  repo/service.actweeter/changelog-0.4.3.txt
 358f5afec8948f3d44b5639bd3e7e3a995b624e93032b6d13f9f939b8509aff7  repo/service.actweeter/changelog-0.4.4.txt
 0b910da7d4843d4d3ee8b1308942b0f8e34be1de463842fd08a6e0d228408b60  repo/service.actweeter/changelog-0.4.5.txt
@@ -51,6 +56,7 @@ c1064720ce027dd436d0a10dbfbc1bed3cf788726b94ed353779a22ba8dca4bf  repo/service.a
 4c203f14465df469fcd88f8a89bd3c11e8087c97e5f4875a6737b061c0883617  repo/service.actweeter/service.actweeter-0.4.17.zip
 ddeacdcb3793596cc256606a023c2b3e48a0d4065d4f1d1391d718ab74f9b85e  repo/service.actweeter/service.actweeter-0.4.18.zip
 3c3c5069d1c7f91d84d7a55df148f8eee1df51e1817cd0dd04f3217ec9a03ae8  repo/service.actweeter/service.actweeter-0.4.21.zip
+982cf7f35dbc772be0442fd08bf0689dc41877c42f0a26b384ae02484352d18a  repo/service.actweeter/service.actweeter-0.4.22.zip
 fbc8d4c06e04f5814618ebdea69ede531428273914f0c5d80e1bb574b574d4db  repo/service.actweeter/service.actweeter-0.4.3.zip
 5473c375a127cdc7211cb6e2e35fdeabf855eefabbc50bb4dad5f50a947a7863  repo/service.actweeter/service.actweeter-0.4.4.zip
 82e9e109d2dc570245dc02fc91710e058b9af224f97e973ec664144ab8959e81  repo/service.actweeter/service.actweeter-0.4.5.zip
@@ -84,4 +90,4 @@ c1aecdba41de7795a3fe98a065bf87162ee45de61daae6e06f0b759f65b991f5  repo/skin.actw
 e954b5a6282f74e0d01225827774571f2a7d6fb6ef6d87b73baeda8f3f1042f4  repo/skin.actweeter/skin.actweeter-1.2.9.zip
 a476588d41b4cc5004f50439705e04c13df6868adb0d91f01106274ac8ac1f0f  repository.actweeter/repository.actweeter-1.0.0.zip
 03f8cf5194876f73697168dcf8b147ea0b55ff309786d16feb2490bfb7e748c0  repository.actweeter/repository.actweeter-1.0.1.zip
-1c581967860649445b3ba3563450185d663ba097d8802de8833b9d6d5c48ed23  THIRD_PARTY_NOTICES.md
+86765f85ea540d2d6da5e592862a6b7014d196383443580109629078cee3397e  THIRD_PARTY_NOTICES.md

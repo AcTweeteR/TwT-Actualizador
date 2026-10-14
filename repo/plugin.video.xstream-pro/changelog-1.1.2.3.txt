@@ -1,0 +1,5 @@
+XStream Pro distribution revision 1.1.2.3 (upstream 1.1.2)
+
+- Fixes AcTweeteR recommendation patch placement using unique source context.
+- Python syntax is validated before packaging and again in the final ZIP.
+- Retains upstream license and attribution; CC BY-NC 4.0, non-commercial use.

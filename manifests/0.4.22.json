@@ -1,0 +1,48 @@
+{
+  "candidate": "AcTweeteR 0.4.22 stable",
+  "source_commit": "8070bd9c4f27001fc451bbacff3839e0f8ca5867",
+  "release": "0.4.22",
+  "channel": "stable",
+  "kodi_baseline": "21.3 Omega",
+  "addons": [
+    {
+      "id": "repository.actweeter",
+      "version": "1.0.3",
+      "file": "repo/repository.actweeter/repository.actweeter-1.0.3.zip",
+      "sha256": "74620e81ff9a161bb7b0650f01e94406ccc9fa9366210ebb36e58872bb4995e8"
+    },
+    {
+      "id": "skin.actweeter",
+      "version": "1.2.18",
+      "file": "repo/skin.actweeter/skin.actweeter-1.2.18.zip",
+      "sha256": "162ae6ce246d5173a586177e2646c41f217a957be305b2e157f479b1948f8f16"
+    },
+    {
+      "id": "service.actweeter",
+      "version": "0.4.22",
+      "file": "repo/service.actweeter/service.actweeter-0.4.22.zip",
+      "sha256": "982cf7f35dbc772be0442fd08bf0689dc41877c42f0a26b384ae02484352d18a"
+    },
+    {
+      "id": "plugin.video.xstream-pro",
+      "version": "1.1.2.3",
+      "file": "repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.3.zip",
+      "sha256": "50a085ca562fea7c209111bdb0a4541c48447e6913b54237f728a781faf8815e",
+      "upstream_version": "1.1.2",
+      "upstream_commit": "1aa3e67da7c03c6acc3ec7e1ca579a7f645220f4",
+      "license": "CC BY-NC 4.0",
+      "redistribution": "non-commercial with retained attribution, license, and modification notices"
+    }
+  ],
+  "automated_tests": "545 PASS",
+  "integrity": "ZIP CRC, Python syntax, XML, addons.xml MD5, and SHA-256 verified",
+  "runtime_status": {
+    "android_kodi_21_3": "NOT_TESTED_AFTER_FIX",
+    "tvos_kodi_21_3": "NOT_TESTED",
+    "macos_kodi_21_3": "NOT_TESTED",
+    "windows_kodi_21_3": "NOT_TESTED",
+    "linux_kodi_21_3": "NOT_TESTED"
+  },
+  "known_critical_issue": "Kodi shutdown can remain blocked waiting on plugin:// directory jobs; root component remains unidentified.",
+  "owner_exception": "Owner expressly accepted this known shutdown risk for stable release 0.4.22 only."
+}

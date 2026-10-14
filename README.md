@@ -2,6 +2,21 @@
 
 Canal oficial para Kodi 21.3 Omega.
 
+## Canal estable — AcTweeteR 0.4.22
+
+- Skin: `skin.actweeter 1.2.18` (sin cambios)
+- Servicio: `service.actweeter 0.4.22`
+- Repositorio: `repository.actweeter 1.0.3` (sin cambios)
+- IPTV: `plugin.video.xstream-pro 1.1.2.3` (revisión no comercial CC BY-NC 4.0)
+
+El servicio 0.4.22 requiere XStream Pro 1.1.2.3. La revisión corrige un error
+de sintaxis Python en la integración de recomendaciones que impedía cargar las
+rutas de XStream. Los ZIP anteriores se conservan para recuperación.
+
+Paquetes: [bootstrap repository 1.0.3](docs/bootstrap/repository.actweeter-1.0.3.zip), [skin 1.2.18](repo/skin.actweeter/skin.actweeter-1.2.18.zip), [service 0.4.22](repo/service.actweeter/service.actweeter-0.4.22.zip), [XStream Pro 1.1.2.3](repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.3.zip). [Release estable v0.4.22](https://github.com/AcTweeteR/TwT-Actualizador/releases/tag/v0.4.22).
+
+Suite automatizada: **545 PASS**. Integridad ZIP/XML/índice/checksums: **PASS_AUTOMATED / PASS_STATIC**. Runtime de la corrección en Android, tvOS y las demás plataformas: **NOT_TESTED**. Continúa abierta la incidencia crítica de cierre de Kodi durante trabajos `plugin://`; se acepta expresamente solo para esta publicación.
+
 ## Canal estable — AcTweeteR 0.4.21
 
 - Skin: `skin.actweeter 1.2.18`

@@ -1,5 +1,17 @@
 # Changelog AcTweeteR
 
+## AcTweeteR 0.4.22 — estable
+
+- Servicio 0.4.22 y XStream Pro 1.1.2.3 corrigen el `IndentationError` causado
+  por inserciones de parche basadas en offsets de línea.
+- El empaquetador ancla las modificaciones a contexto fuente único y valida
+  sintácticamente los Python antes y después de crear el ZIP.
+- Skin 1.2.18 y repositorio 1.0.3 no cambian. Sin migraciones de credenciales,
+  progreso o perfiles.
+- 545 tests automatizados PASS; corrección todavía NOT_TESTED en Kodi runtime.
+- La incidencia crítica de cierre de Kodi/plugin:// sigue abierta. El
+  propietario aceptó expresamente el riesgo para esta publicación 0.4.22.
+
 ## AcTweeteR 0.4.21 — estable
 
 - Skin 1.2.18 / servicio 0.4.21 / XStream Pro 1.1.2.2.
