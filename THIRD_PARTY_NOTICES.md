@@ -52,8 +52,8 @@ terms. Kodi, PVR and other dependencies retain their own upstream licenses and
 update sources.
 
 
-## XStream Pro 1.1.2 package in the 2026-10-12 catalog
+## XStream Pro 1.1.2 and AcTweeteR revision 1.1.2.1
 
-This repository now carries a modified XStream Pro 1.1.2 package for AcTweeteR integration. Upstream: [PesicP/XStreamPro tag 1.1.2](https://github.com/Pesicp/XStreamPro/tree/1.1.2), commit `1aa3e67da7c03c6acc3ec7e1ca579a7f645220f4`. The ZIP retains `LICENCE.txt`, which grants sharing/adaptation under **CC BY-NC 4.0**; it also contains `ACTWEETER_MODIFICATIONS.txt` identifying the adaptation (AcTweeteR hooks and profile-specific refresh entry point). This distribution is not endorsed by the upstream author. The material may not be used commercially. Link to the full license: https://creativecommons.org/licenses/by-nc/4.0/ .
+This repository carries XStream Pro 1.1.2.1, an AcTweeteR-maintained revision of XStream Pro upstream tag 1.1.2. Upstream: [PesicP/XStreamPro](https://github.com/Pesicp/XStreamPro/tree/1.1.2), commit `1aa3e67da7c03c6acc3ec7e1ca579a7f645220f4`. The ZIP retains `LICENCE.txt`, which grants sharing/adaptation under **CC BY-NC 4.0**; it also contains `ACTWEETER_MODIFICATIONS.txt` identifying the changes. This distribution is not endorsed by the upstream author. The material may not be used commercially. Link to the full license: https://creativecommons.org/licenses/by-nc/4.0/ . Attribution, license notice and change notice remain in the package.
 
 The add-on's Tabler Icons attribution and MIT notice remain in its license file. Its declared Kodi dependencies are resolved from the Kodi repository; no separate third-party dependency ZIPs are bundled here. This catalog's package snapshot is maintained by AcTweeteR for compatibility and is distinct from upstream's release/update channel.

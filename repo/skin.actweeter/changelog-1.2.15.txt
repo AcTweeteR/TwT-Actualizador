@@ -1,0 +1,6 @@
+AcTweeteR Skin 1.2.15 — candidato privado, no publicado.
+
+- Requiere service.actweeter >=0.4.17 para el configurador con Trakt integrado.
+- Conserva las correcciones de 1.2.14: primera ejecución, español de fábrica
+  y estado vacío legible. No cambia el diseño ni las preferencias existentes.
+- Sin validación runtime nueva en tvOS; publicación pendiente.

@@ -1,5 +1,19 @@
 # Changelog AcTweeteR
 
+## AcTweeteR 0.4.17 — estable
+
+- Skin 1.2.15 y servicio 0.4.17: configurador inicial reanudable con
+  autorización oficial de Trakt por dispositivo o aplazamiento.
+- XStream Pro 1.1.2.1 incorpora la revisión mantenida de refresco y callbacks;
+  Kodi puede actualizarla como versión nueva sin reemplazar 1.1.2.
+- Los errores al iniciar la actualización Xtream conservan las credenciales y
+  permiten reintentar. Trakt solo recibe valores predeterminados seguros si se
+  instala por primera vez; se conservan los ajustes existentes.
+- 510 pruebas automatizadas PASS. La instalación limpia y la ejecución de esta
+  versión en dispositivos todavía no están validadas.
+- Sigue abierta la incidencia de cierre de Kodi durante trabajos de directorio
+  `plugin://`; su causa aún no está identificada.
+
 ## skin.actweeter 1.2.11 — parada segura también en widgets
 
 - Completa la protección de SlyGuy en las filas de widgets, además de Home y

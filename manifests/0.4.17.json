@@ -1,0 +1,44 @@
+{
+  "channel": "stable",
+  "release": "0.4.17",
+  "source_commit": "ac835db392708d4d95cb294780601049f461159d",
+  "baseline": "Kodi 21.3 Omega",
+  "addons": [
+    {
+      "id": "repository.actweeter",
+      "version": "1.0.3",
+      "path": "docs/bootstrap/repository.actweeter-1.0.3.zip",
+      "sha256": "74620e81ff9a161bb7b0650f01e94406ccc9fa9366210ebb36e58872bb4995e8",
+      "changed": false
+    },
+    {
+      "id": "skin.actweeter",
+      "version": "1.2.15",
+      "path": "repo/skin.actweeter/skin.actweeter-1.2.15.zip",
+      "sha256": "514cd8338ff04ca14e8ec7d5e9a5dc359009b02b7e15b93eae9dc3a7bb885a30"
+    },
+    {
+      "id": "service.actweeter",
+      "version": "0.4.17",
+      "path": "repo/service.actweeter/service.actweeter-0.4.17.zip",
+      "sha256": "4c203f14465df469fcd88f8a89bd3c11e8087c97e5f4875a6737b061c0883617"
+    },
+    {
+      "id": "plugin.video.xstream-pro",
+      "version": "1.1.2.1",
+      "path": "repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.1.zip",
+      "sha256": "02c1c833fb4f87524ec36ddb77f3f93fbe0ddf5ab3b4eeb9e3caaa3ccca9e331",
+      "upstream_version": "1.1.2",
+      "license": "CC BY-NC 4.0"
+    }
+  ],
+  "runtime_validation": {
+    "clean_install": "NOT_TESTED",
+    "tvos": "NOT_TESTED",
+    "android_tv": "NOT_TESTED",
+    "macos": "NOT_TESTED",
+    "windows": "NOT_TESTED",
+    "linux": "NOT_TESTED"
+  },
+  "known_issue": "Kodi shutdown can remain blocked while plugin:// directory jobs are pending; cause not identified."
+}
