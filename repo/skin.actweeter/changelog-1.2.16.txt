@@ -1,0 +1,5 @@
+AcTweeteR Skin 1.2.16
+
+- Add a changing XStream route token to Continue Watching widgets so Kodi
+  refreshes Home and hub results after a resume point is saved.
+- Keep XStream as the sole source of resumable movies and episodes.

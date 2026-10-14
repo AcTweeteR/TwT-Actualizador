@@ -2,16 +2,16 @@
 
 Canal oficial de distribución Kodi de AcTweeteR. Baseline: Kodi 21.3 Omega.
 
-## Canal estable — AcTweeteR 0.4.17
+## Canal estable — AcTweeteR 0.4.18
 
-- Skin: `skin.actweeter 1.2.15`
-- Servicio: `service.actweeter 0.4.17`
+- Skin: `skin.actweeter 1.2.16`
+- Servicio: `service.actweeter 0.4.18`
 - Repositorio: `repository.actweeter 1.0.3`
 - Proveedor IPTV: `plugin.video.xstream-pro 1.1.2.1` (adaptación de terceros bajo CC BY-NC 4.0)
 
 Kodi obtiene las versiones actuales desde el índice oficial. Se conservan las versiones anteriores para rollback; las migraciones no eliminan credenciales, favoritos, historial ni progreso.
 
-Paquetes: [repositorio 1.0.3](docs/bootstrap/repository.actweeter-1.0.3.zip), [skin 1.2.15](repo/skin.actweeter/skin.actweeter-1.2.15.zip), [servicio 0.4.17](repo/service.actweeter/service.actweeter-0.4.17.zip) y [XStream Pro 1.1.2.1](repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.1.zip). También están adjuntos al [release v0.4.17](https://github.com/AcTweeteR/TwT-Actualizador/releases/tag/v0.4.17).
+Paquetes: [repositorio 1.0.3](docs/bootstrap/repository.actweeter-1.0.3.zip), [skin 1.2.16](repo/skin.actweeter/skin.actweeter-1.2.16.zip), [servicio 0.4.18](repo/service.actweeter/service.actweeter-0.4.18.zip) y [XStream Pro 1.1.2.1](repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.1.zip). También están adjuntos al [release v0.4.18](https://github.com/AcTweeteR/TwT-Actualizador/releases/tag/v0.4.18).
 
 ## Interfaz AcTweeteR, no configuración del Mac
 
@@ -37,8 +37,12 @@ El ZIP 1.1.2.1 adapta XStream Pro upstream commit `1aa3e67da7c03c6acc3ec7e1ca579
 
 ## Validación y límites
 
-Los paquetes e índices tienen SHA-256/MD5 publicados en [checksums/SHA256SUMS](checksums/SHA256SUMS). La suite de esta candidata pasó 510 pruebas automatizadas. Los resultados runtime históricos pertenecen a versiones/perfiles anteriores; no son pruebas de 0.4.17.
+Los paquetes e índices tienen SHA-256/MD5 publicados en [checksums/SHA256SUMS](checksums/SHA256SUMS). La suite de esta candidata pasó 523 pruebas automatizadas; no equivalen a instalación real de Kodi.
 
-**Pendiente de runtime:** instalación limpia y actualización de 0.4.17, autorización y sincronización Trakt, IPTV/PVR/EPG, reproducción VOD y tráilers con este candidato; no se afirma compatibilidad runtime en Apple TV, Android TV, macOS, Windows o Linux. Sigue abierta una incidencia de cierre normal de Kodi tras consultas de directorios `plugin://`; el origen no está identificado ni corregido. Las vistas/listas remotas Trakt no están integradas en AcTweeteR. El preview automático SlyGuy necesita consentimiento para instalar el bridge local reversible; SlyGuy no se redistribuye.
+**Continuar viendo:** los DATA portables contienen la ruta actualizable para instalaciones limpias; la migración v4 añade el token de refresco a los perfiles gestionados existentes con backup verificado. El servicio invalida/refresca la fila al terminar una reproducción no-preview. Esta corrección aún requiere comprobación visual en Apple TV.
+
+**Gates por plataforma para 0.4.18:** clean install y actualización nativa: `NOT_TESTED` en macOS, Windows, Linux, Android, Android TV, Google TV y tvOS. Integridad ZIP/índice y tests: `PASS_AUTOMATED`; estructura del paquete Kodi/Python/XML: `PASS_STATIC`. No se afirma compatibilidad runtime en ninguna plataforma para esta versión.
+
+Sigue abierta una incidencia crítica de cierre normal de Kodi durante trabajos de directorio `plugin://`; el origen no está identificado ni corregido. El propietario autorizó 0.4.18 aceptando ese riesgo únicamente para este release. Las vistas/listas remotas Trakt no están integradas en AcTweeteR. El preview automático SlyGuy necesita consentimiento para instalar el bridge local reversible; SlyGuy no se redistribuye.
 
 No contiene perfiles personales, credenciales, bases Kodi ni provisioning del Mac. No se distribuye PVR binario multiplataforma: usa el componente compatible de Kodi y su repositorio oficial.

@@ -1,0 +1,52 @@
+{
+  "channel": "stable",
+  "release": "0.4.18",
+  "source_commit": "b70ebd7f2408508a9f0b76622ec25a7a2e33c8f9",
+  "baseline": "Kodi 21.3 Omega",
+  "addons": [
+    {
+      "id": "repository.actweeter",
+      "version": "1.0.3",
+      "path": "docs/bootstrap/repository.actweeter-1.0.3.zip",
+      "sha256": "74620e81ff9a161bb7b0650f01e94406ccc9fa9366210ebb36e58872bb4995e8",
+      "changed": false
+    },
+    {
+      "id": "skin.actweeter",
+      "version": "1.2.16",
+      "path": "repo/skin.actweeter/skin.actweeter-1.2.16.zip",
+      "sha256": "ac0893421d71c5ab104d64c9a268948b994da0d339df1ce9ea3f17503733fa3f"
+    },
+    {
+      "id": "service.actweeter",
+      "version": "0.4.18",
+      "path": "repo/service.actweeter/service.actweeter-0.4.18.zip",
+      "sha256": "ddeacdcb3793596cc256606a023c2b3e48a0d4065d4f1d1391d718ab74f9b85e"
+    },
+    {
+      "id": "plugin.video.xstream-pro",
+      "version": "1.1.2.1",
+      "path": "repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.1.zip",
+      "sha256": "02c1c833fb4f87524ec36ddb77f3f93fbe0ddf5ab3b4eeb9e3caaa3ccca9e331",
+      "upstream_version": "1.1.2",
+      "license": "CC BY-NC 4.0",
+      "changed": false
+    }
+  ],
+  "publication_gates": {
+    "clean_install": "NOT_TESTED",
+    "in_place_update": "NOT_TESTED",
+    "continue_widget_runtime": "NOT_TESTED",
+    "known_shutdown_issue": "OPEN_OWNER_ACCEPTED_FOR_0.4.18_ONLY"
+  },
+  "platforms": {
+    "macOS": {"static": "PASS_STATIC", "runtime": "NOT_TESTED"},
+    "Windows": {"static": "PASS_STATIC", "runtime": "NOT_TESTED"},
+    "Linux": {"static": "PASS_STATIC", "runtime": "NOT_TESTED"},
+    "Android": {"static": "PASS_STATIC", "runtime": "NOT_TESTED"},
+    "Android TV": {"static": "PASS_STATIC", "runtime": "NOT_TESTED"},
+    "Google TV": {"static": "PASS_STATIC", "runtime": "NOT_TESTED"},
+    "tvOS": {"static": "PASS_STATIC", "runtime": "NOT_TESTED"}
+  },
+  "automated_tests": {"status": "PASS_AUTOMATED", "count": 523}
+}

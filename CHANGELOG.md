@@ -1,5 +1,17 @@
 # Changelog AcTweeteR
 
+## AcTweeteR 0.4.18 — estable
+
+- Skin 1.2.16 / servicio 0.4.18: Continuar viendo incorpora invalidación de
+  caché al terminar reproducción y un token de refresco en los DATA portables.
+- Migración de interfaz v4 para perfiles existentes: respalda y actualiza solo
+  los DATA gestionados de Continuar viendo; conserva datos y preferencias.
+- 523 pruebas automatizadas PASS. La fila corregida todavía requiere
+  verificación visual en Apple TV; clean install/update runtime de esta versión
+  quedan sin probar en las plataformas objetivo.
+- La incidencia crítica de cierre de Kodi en trabajos `plugin://` sigue
+  abierta. El propietario aceptó explícitamente ese riesgo para 0.4.18 solo.
+
 ## AcTweeteR 0.4.17 — estable
 
 - Skin 1.2.15 y servicio 0.4.17: configurador inicial reanudable con

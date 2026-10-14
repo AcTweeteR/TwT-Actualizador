@@ -1,4 +1,4 @@
-# Instalar AcTweeteR 0.4.17 en Kodi
+# Instalar AcTweeteR 0.4.18 en Kodi
 
 ## 1. Instala Kodi
 
@@ -42,8 +42,11 @@ de error sin compartir datos privados.
 
 ## Estado de validación
 
-AcTweeteR 0.4.17 es una publicación estable, pero todavía no se ha ejecutado
-una instalación limpia de esta versión en Apple TV. Tampoco se ha validado el
-flujo real de Trakt. Existe una incidencia abierta de cierre de Kodi asociada a
-trabajos pendientes `plugin://`; la causa sigue sin determinarse. Consulta las
-[notas de la versión](RELEASE_NOTES_0.4.17.html) antes de instalar.
+AcTweeteR 0.4.18 es una publicación estable. La instalación limpia, la
+actualización y la corrección visual de Continuar viendo de esta versión no se
+han validado en runtime; el propietario comprobará la fila tras actualizar en
+Apple TV. Tampoco se ha validado el flujo real de Trakt. Existe una incidencia
+crítica abierta de cierre de Kodi asociada a trabajos pendientes `plugin://`;
+su causa sigue sin determinarse y la excepción de riesgo solo se concedió para
+este release. Consulta las [notas de la versión](RELEASE_NOTES_0.4.18.html)
+antes de instalar.
