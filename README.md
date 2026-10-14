@@ -2,20 +2,27 @@
 
 Canal oficial para Kodi 21.3 Omega.
 
-## Canal estable — AcTweeteR 0.4.22
+## Canal estable — AcTweeteR 0.4.23
 
 - Skin: `skin.actweeter 1.2.18` (sin cambios)
-- Servicio: `service.actweeter 0.4.22`
+- Servicio: `service.actweeter 0.4.23`
 - Repositorio: `repository.actweeter 1.0.3` (sin cambios)
-- IPTV: `plugin.video.xstream-pro 1.1.2.3` (revisión no comercial CC BY-NC 4.0)
+- IPTV: `plugin.video.xstream-pro 1.1.2.4` (revisión no comercial CC BY-NC 4.0)
 
-El servicio 0.4.22 requiere XStream Pro 1.1.2.3. La revisión corrige un error
-de sintaxis Python en la integración de recomendaciones que impedía cargar las
-rutas de XStream. Los ZIP anteriores se conservan para recuperación.
+XStream Pro 1.1.2.4 añade a los ListItem reproducibles los metadatos de
+películas/episodios y la propiedad `script.trakt.ids` esperada por script.trakt
+3.9.0. El cambio no incorpora OAuth ni scrobbling propio y no modifica las URL
+de reproducción ni el almacenamiento de progreso. El scrobbling real todavía
+no se ha validado en Kodi runtime. Los paquetes anteriores se conservan.
 
-Paquetes: [bootstrap repository 1.0.3](docs/bootstrap/repository.actweeter-1.0.3.zip), [skin 1.2.18](repo/skin.actweeter/skin.actweeter-1.2.18.zip), [service 0.4.22](repo/service.actweeter/service.actweeter-0.4.22.zip), [XStream Pro 1.1.2.3](repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.3.zip). [Release estable v0.4.22](https://github.com/AcTweeteR/TwT-Actualizador/releases/tag/v0.4.22).
+Paquetes: [bootstrap repository 1.0.3](docs/bootstrap/repository.actweeter-1.0.3.zip), [skin 1.2.18](repo/skin.actweeter/skin.actweeter-1.2.18.zip), [service 0.4.23](repo/service.actweeter/service.actweeter-0.4.23.zip), [XStream Pro 1.1.2.4](repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.4.zip). [Release estable v0.4.23](https://github.com/AcTweeteR/TwT-Actualizador/releases/tag/v0.4.23).
 
-Suite automatizada: **545 PASS**. Integridad ZIP/XML/índice/checksums: **PASS_AUTOMATED / PASS_STATIC**. Runtime de la corrección en Android, tvOS y las demás plataformas: **NOT_TESTED**. Continúa abierta la incidencia crítica de cierre de Kodi durante trabajos `plugin://`; se acepta expresamente solo para esta publicación.
+Suite automatizada: **553 PASS**. Integridad ZIP/CRC, XML, índice, MD5 y
+SHA-256: **PASS_AUTOMATED / PASS_STATIC**. Integración con script.trakt en
+reproducción real y runtime en Android, tvOS, macOS, Windows y Linux:
+**NOT_TESTED**. Continúa abierta la incidencia crítica de cierre de Kodi en
+trabajos `plugin://`; el propietario acepta expresamente ese riesgo solo para
+esta publicación 0.4.23.
 
 ## Canal estable — AcTweeteR 0.4.21
 
@@ -44,7 +51,7 @@ Sigue [la guía de instalación](INSTALLATION_ALL_IN_ONE_ES.md). En breve: insta
 
 ## Licencias y artefactos
 
-XStream Pro 1.1.2.2 está basado en upstream 1.1.2, commit `1aa3e67da7c03c6acc3ec7e1ca579a7f645220f4`. Retiene atribución, enlace CC BY-NC 4.0 y `ACTWEETER_MODIFICATIONS.txt`; no es un build avalado por el autor upstream y no puede usarse comercialmente. Consulte [avisos de terceros](THIRD_PARTY_NOTICES.md) y [SHA256SUMS](checksums/SHA256SUMS).
+XStream Pro 1.1.2.4 está basado en upstream 1.1.2, commit `1aa3e67da7c03c6acc3ec7e1ca579a7f645220f4`. Retiene atribución, enlace CC BY-NC 4.0 y `ACTWEETER_MODIFICATIONS.txt`; no es un build avalado por el autor upstream y no puede usarse comercialmente. Consulte [avisos de terceros](THIRD_PARTY_NOTICES.md) y [SHA256SUMS](checksums/SHA256SUMS).
 
 ## Validación
 

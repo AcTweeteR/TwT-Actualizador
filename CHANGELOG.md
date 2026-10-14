@@ -1,5 +1,18 @@
 # Changelog AcTweeteR
 
+## AcTweeteR 0.4.23 — estable
+
+- Servicio 0.4.23 requiere XStream Pro 1.1.2.4 y mantiene Trakt opcional.
+- XStream Pro propaga metadatos de películas y episodios al ListItem final,
+  incluidos los identificadores soportados y `script.trakt.ids`; no añade un
+  cliente OAuth ni un scrobbler paralelo.
+- Skin 1.2.18 y repositorio 1.0.3 no cambian. No hay migración de datos ni
+  alteraciones de credenciales, favoritos, historial o progreso.
+- 553 pruebas automatizadas PASS; la reproducción real y el scrobbling de
+  script.trakt permanecen NOT_TESTED.
+- La incidencia crítica de cierre de Kodi sigue abierta. El propietario acepta
+  expresamente este riesgo conocido únicamente para la publicación 0.4.23.
+
 ## AcTweeteR 0.4.22 — estable
 
 - Servicio 0.4.22 y XStream Pro 1.1.2.3 corrigen el `IndentationError` causado

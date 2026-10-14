@@ -1,0 +1,5 @@
+XStream Pro distribution revision 1.1.2.4 (based on upstream 1.1.2)
+- Supplies movie and episode playback metadata and script.trakt.ids for script.trakt 3.9.0.
+- No OAuth, scrobbling client, credentials, or resume-state changes.
+- Non-commercial redistribution under CC BY-NC 4.0; see retained license and modification notices.
+- Runtime scrobbling has not been tested.
