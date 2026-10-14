@@ -1,0 +1,7 @@
+AcTweeteR Skin 1.2.20
+
+- Adds a Kodi-native scrollbar connected to Home's vertical widget container,
+  providing a direct touch target when a gesture starts outside a widget row.
+- Keeps horizontal carousel containers, native Kodi touch gestures, and
+  keyboard/remote focus navigation unchanged.
+- Runtime touch behavior still requires validation on Android hardware.

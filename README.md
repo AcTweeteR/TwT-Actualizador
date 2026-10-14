@@ -2,27 +2,27 @@
 
 Canal oficial para Kodi 21.3 Omega.
 
-## Canal estable — AcTweeteR 0.4.23
+## Canal estable — AcTweeteR 0.4.24
 
-- Skin: `skin.actweeter 1.2.18` (sin cambios)
-- Servicio: `service.actweeter 0.4.23`
+- Skin: `skin.actweeter 1.2.20`
+- Servicio: `service.actweeter 0.4.23` (sin cambios)
 - Repositorio: `repository.actweeter 1.0.3` (sin cambios)
 - IPTV: `plugin.video.xstream-pro 1.1.2.4` (revisión no comercial CC BY-NC 4.0)
 
-XStream Pro 1.1.2.4 añade a los ListItem reproducibles los metadatos de
-películas/episodios y la propiedad `script.trakt.ids` esperada por script.trakt
-3.9.0. El cambio no incorpora OAuth ni scrobbling propio y no modifica las URL
-de reproducción ni el almacenamiento de progreso. El scrobbling real todavía
-no se ha validado en Kodi runtime. Los paquetes anteriores se conservan.
+La skin 1.2.20 añade una barra de desplazamiento vertical nativa de Kodi para
+Home, amplía los objetivos táctiles de acciones y ofrece un visor desplazable
+de sinopsis completa. Mantiene gestos nativos en carruseles y navegación con
+mando/teclado. **El uso táctil todavía no está validado en runtime Android.**
+El servicio, XStream y repository no cambian; el scrobbling de XStream/script.trakt
+sigue sin validación runtime. Los paquetes anteriores se conservan.
 
-Paquetes: [bootstrap repository 1.0.3](docs/bootstrap/repository.actweeter-1.0.3.zip), [skin 1.2.18](repo/skin.actweeter/skin.actweeter-1.2.18.zip), [service 0.4.23](repo/service.actweeter/service.actweeter-0.4.23.zip), [XStream Pro 1.1.2.4](repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.4.zip). [Release estable v0.4.23](https://github.com/AcTweeteR/TwT-Actualizador/releases/tag/v0.4.23).
+Paquetes: [bootstrap repository 1.0.3](docs/bootstrap/repository.actweeter-1.0.3.zip), [skin 1.2.20](repo/skin.actweeter/skin.actweeter-1.2.20.zip), [service 0.4.23](repo/service.actweeter/service.actweeter-0.4.23.zip), [XStream Pro 1.1.2.4](repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.4.zip). [Release estable v0.4.24](https://github.com/AcTweeteR/TwT-Actualizador/releases/tag/v0.4.24).
 
-Suite automatizada: **553 PASS**. Integridad ZIP/CRC, XML, índice, MD5 y
-SHA-256: **PASS_AUTOMATED / PASS_STATIC**. Integración con script.trakt en
-reproducción real y runtime en Android, tvOS, macOS, Windows y Linux:
-**NOT_TESTED**. Continúa abierta la incidencia crítica de cierre de Kodi en
-trabajos `plugin://`; el propietario acepta expresamente ese riesgo solo para
-esta publicación 0.4.23.
+Suite automatizada: **563 PASS**. Integridad ZIP/CRC, XML, índice, MD5 y
+SHA-256: **PASS_AUTOMATED / PASS_STATIC**. Táctil Android y runtime en Android,
+tvOS, macOS, Windows y Linux: **NOT_TESTED** para 0.4.24. Continúa abierta la
+incidencia crítica de cierre de Kodi en trabajos `plugin://`; el propietario
+aceptó expresamente ese riesgo solo para esta publicación 0.4.24.
 
 ## Canal estable — AcTweeteR 0.4.21
 
@@ -47,7 +47,7 @@ Trakt es opcional. `script.trakt` conserva la propiedad del scrobbling/bibliotec
 
 ## Instalar o actualizar
 
-Sigue [la guía de instalación](INSTALLATION_ALL_IN_ONE_ES.md). En breve: instala Kodi 21.3, activa «Orígenes desconocidos» mediante la confirmación de Kodi, añade `https://actweeter.github.io/TwT-Actualizador/bootstrap/`, instala `repository.actweeter-1.0.3.zip) y luego AcTweeteR desde el repositorio. Para actualizar, utiliza el actualizador nativo; no elimines datos ni el perfil.
+Sigue [la guía de instalación](INSTALLATION_ALL_IN_ONE_ES.md). En breve: instala Kodi 21.3, activa «Orígenes desconocidos» mediante la confirmación de Kodi, añade `https://actweeter.github.io/TwT-Actualizador/bootstrap/`, instala `repository.actweeter-1.0.3.zip` y luego AcTweeteR desde el repositorio. Para actualizar, utiliza el actualizador nativo; no elimines datos ni el perfil.
 
 ## Licencias y artefactos
 
@@ -55,7 +55,7 @@ XStream Pro 1.1.2.4 está basado en upstream 1.1.2, commit `1aa3e67da7c03c6acc3e
 
 ## Validación
 
-Suite automatizada de esta candidata: **542 PASS**. ZIP, CRC, XML, índice y checksums: **PASS_AUTOMATED / PASS_STATIC**. Instalación limpia, actualización y funciones IPTV/PVR/EPG/Trakt/recomendaciones/reproducción en Kodi runtime para 0.4.21: **NOT_TESTED**. Tampoco se declara validación runtime en macOS, Windows, Linux, Android, Android TV, Google TV o tvOS.
+Para 0.4.24, la suite es **563 PASS** y los paquetes/índice/checksums están verificados automáticamente. El comportamiento táctil en Android y el runtime de esta versión en macOS, Windows, Linux, Android, Android TV, Google TV y tvOS permanecen **NOT_TESTED**. Las autorizaciones y la sincronización Trakt tampoco se presentan como runtime validadas.
 
 Permanece abierta una incidencia crítica de cierre de Kodi al esperar trabajos de directorio `plugin://`; su origen no se ha identificado. El propietario aceptó expresamente el riesgo para 0.4.21. No está corregido, y la excepción no se extiende a versiones futuras.
 

@@ -1,5 +1,20 @@
 # Changelog AcTweeteR
 
+## AcTweeteR 0.4.24 — estable
+
+- Skin 1.2.20: incorpora scrollbar vertical nativo de Kodi en Home, conectado
+  al contenedor de widgets, para ofrecer una zona táctil de desplazamiento más
+  predecible.
+- Aumenta los objetivos táctiles de las acciones de las fichas y añade acceso
+  a la sinopsis completa mediante el visor paginado/desplazable nativo.
+- Conserva los gestos de carruseles y el foco con mando/teclado. La validación
+  táctil runtime en Android permanece PENDING; no se afirma como corregida.
+- Servicio 0.4.23, XStream Pro 1.1.2.4 y repository 1.0.3 no cambian; no se
+  alteran credenciales, progreso ni configuraciones.
+- 563 pruebas automatizadas PASS. La incidencia crítica de cierre de Kodi
+  continúa abierta; el propietario aceptó expresamente el riesgo únicamente
+  para la publicación 0.4.24.
+
 ## AcTweeteR 0.4.23 — estable
 
 - Servicio 0.4.23 requiere XStream Pro 1.1.2.4 y mantiene Trakt opcional.
