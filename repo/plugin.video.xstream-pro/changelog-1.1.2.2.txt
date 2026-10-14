@@ -1,0 +1,7 @@
+XStream Pro 1.1.2.2 — AcTweeteR distribution revision
+Upstream base: 1.1.2 / commit 1aa3e67da7c03c6acc3ec7e1ca579a7f645220f4.
+Change: strict recommendation availability filter requires exact provider
+TMDb ID matches; unmatched/ambiguous content is omitted.
+The ZIP retains upstream LICENCE.txt and adds ACTWEETER_MODIFICATIONS.txt.
+CC BY-NC 4.0 applies: attribution, license link, modification notice, and
+non-commercial use only. This is not endorsed by the upstream author.

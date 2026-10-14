@@ -1,0 +1,123 @@
+{
+  "addons": [
+    {
+      "file": "repo/repository.actweeter/repository.actweeter-1.0.3.zip",
+      "id": "repository.actweeter",
+      "sha256": "74620e81ff9a161bb7b0650f01e94406ccc9fa9366210ebb36e58872bb4995e8",
+      "version": "1.0.3"
+    },
+    {
+      "file": "repo/skin.actweeter/skin.actweeter-1.2.18.zip",
+      "id": "skin.actweeter",
+      "sha256": "162ae6ce246d5173a586177e2646c41f217a957be305b2e157f479b1948f8f16",
+      "version": "1.2.18"
+    },
+    {
+      "file": "repo/service.actweeter/service.actweeter-0.4.21.zip",
+      "id": "service.actweeter",
+      "sha256": "3c3c5069d1c7f91d84d7a55df148f8eee1df51e1817cd0dd04f3217ec9a03ae8",
+      "version": "0.4.21"
+    },
+    {
+      "file": "repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.2.zip",
+      "id": "plugin.video.xstream-pro",
+      "sha256": "58ce9234943f16f140da71270bfc8fb2ce94d1702fae31471d5c11cfaafd617c",
+      "version": "1.1.2.2"
+    }
+  ],
+  "candidate": "AcTweeteR 0.4.21 stable",
+  "files": [
+    {
+      "file": "CHANGELOG.md",
+      "bytes": 13502,
+      "sha256": "9907505d869fdd51ce5db308342c25e29712ad4f3fce77c22d06e9a0704482e6"
+    },
+    {
+      "file": "INSTALLATION_ALL_IN_ONE_ES.md",
+      "bytes": 1929,
+      "sha256": "9950d474abd99d5ac74c30b848d7fd31e813d1764955e3b76735c67bdc4991e5"
+    },
+    {
+      "file": "MULTIPLATFORM_TRAKT_WIDGET_AUDIT.md",
+      "bytes": 4436,
+      "sha256": "ef303994fd0ece6765d743d5aac8eea41fc7a4db662db33ebe6d0529a1a4e618"
+    },
+    {
+      "file": "README.md",
+      "bytes": 3586,
+      "sha256": "9de7d56177f8cee7df61be9729b5d4933e7b8d683071fc6e159752f84b01d03b"
+    },
+    {
+      "file": "RELEASE_NOTES_0.4.21.md",
+      "bytes": 2822,
+      "sha256": "5acff5aaa2c2a7dc2e2e90603782e6783bea71f74830b4047da9a50b58cb1052"
+    },
+    {
+      "file": "repo/addons.xml",
+      "bytes": 7054,
+      "sha256": "40d15b7ce0836e89f81006f448841863b039a308486260e77f120db07af2d61f"
+    },
+    {
+      "file": "repo/addons.xml.md5",
+      "bytes": 33,
+      "sha256": "c2642ff3113dd0ee738e0a979d3af74791b9b1b49e4d8bd9438656d55861c651"
+    },
+    {
+      "file": "repo/plugin.video.xstream-pro/changelog-1.1.2.2.txt",
+      "bytes": 478,
+      "sha256": "c50998f44cf313b298455c5c7f1f41d98c265aa0a5f86df60f5951016318d5b7"
+    },
+    {
+      "file": "repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.2.zip",
+      "bytes": 5553919,
+      "sha256": "58ce9234943f16f140da71270bfc8fb2ce94d1702fae31471d5c11cfaafd617c"
+    },
+    {
+      "file": "repo/service.actweeter/changelog-0.4.21.txt",
+      "bytes": 509,
+      "sha256": "cd6baca520d559f3b4bed42766e0a38590036c431e4964fe7a04cec29bd767b6"
+    },
+    {
+      "file": "repo/service.actweeter/service.actweeter-0.4.21.zip",
+      "bytes": 133166,
+      "sha256": "3c3c5069d1c7f91d84d7a55df148f8eee1df51e1817cd0dd04f3217ec9a03ae8"
+    },
+    {
+      "file": "repo/skin.actweeter/changelog-1.2.18.txt",
+      "bytes": 330,
+      "sha256": "fa94bc79361c7a87423addfd4f3f12d499cb24f2c8f57b77adf570a01ba93482"
+    },
+    {
+      "file": "repo/skin.actweeter/skin.actweeter-1.2.18.zip",
+      "bytes": 30056638,
+      "sha256": "162ae6ce246d5173a586177e2646c41f217a957be305b2e157f479b1948f8f16"
+    },
+    {
+      "file": "THIRD_PARTY_NOTICES.md",
+      "bytes": 4195,
+      "sha256": "1c581967860649445b3ba3563450185d663ba097d8802de8833b9d6d5c48ed23"
+    }
+  ],
+  "package_inputs_match_head": true,
+  "platform_runtime_status": {
+    "macos_kodi_21_3": "NOT_TESTED",
+    "windows_kodi_21_3": "NOT_TESTED",
+    "linux_kodi_21_3": "NOT_TESTED",
+    "android_kodi_21_3": "NOT_TESTED",
+    "android_tv_google_tv_kodi_21_3": "NOT_TESTED",
+    "tvos_kodi_21_3": "NOT_TESTED"
+  },
+  "public_url_status": "PENDING_GITHUB_DEPLOYMENT",
+  "publication_status": "STABLE_RELEASE_AUTHORIZED",
+  "repository_datadir": "repo/<addon-id>/<addon-id>-<version>.zip",
+  "source_commit": "7512818b1b3c7b76563efa216df7a52a9b5c6078",
+  "third_party_addon_packages_included": true,
+  "third_party_package": {
+    "id": "plugin.video.xstream-pro",
+    "license": "CC BY-NC 4.0",
+    "redistribution_status": "CC_BY_NC_4.0_NONCOMMERCIAL_WITH_ATTRIBUTION_AND_MODIFICATION_NOTICE",
+    "sha256": "58ce9234943f16f140da71270bfc8fb2ce94d1702fae31471d5c11cfaafd617c",
+    "upstream_commit": "1aa3e67da7c03c6acc3ec7e1ca579a7f645220f4",
+    "version": "1.1.2.2"
+  }
+}

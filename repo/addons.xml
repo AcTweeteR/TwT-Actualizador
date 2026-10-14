@@ -32,14 +32,14 @@
 			<icon>resources/icon.png</icon>
 		</assets>
 	</extension>
-</addon><addon id="skin.actweeter" version="1.2.16" name="AcTweeteR" provider-name="AcTweeteR maintainers">
+</addon><addon id="skin.actweeter" version="1.2.18" name="AcTweeteR" provider-name="AcTweeteR maintainers">
 	<requires>
 		<import version="5.17.0" addon="xbmc.gui" />
 		<import addon="script.bingie.helper" version="1.1.2" />
 		<import addon="script.bingie.toolbox" version="1.0.0" />
 		<import addon="script.bingie.widgets" version="1.0.1" />
 		<import addon="script.skinshortcuts" version="2.0.3" />
-		<import addon="service.actweeter" version="0.4.18" />
+		<import addon="service.actweeter" version="0.4.20" />
 		<import addon="resource.language.es_es" version="11.0.108" />
 		<import addon="resource.images.studios.coloured" version="0.0.24" />
 		<import addon="plugin.video.tmdb.bingie.helper" version="1.0.1" />
@@ -61,7 +61,7 @@
 		<description lang="es_MX">AcTweeteR - tu espacio de películas, series y televisión.</description>
 		<platform>all</platform>
 		<license>GPL v2.0</license>
-		<news>changelog-1.2.16.txt</news>
+		<news>changelog-1.2.18.txt</news>
 		<forum />
 		<source />
 		<assets>
@@ -69,10 +69,10 @@
 			<fanart>extras/media/backgrounds/settings_interface.jpg</fanart>
 		</assets>
 	</extension>
-</addon><addon id="service.actweeter" name="AcTweeteR Service" version="0.4.18" provider-name="AcTweeteR maintainers">
+</addon><addon id="service.actweeter" name="AcTweeteR Service" version="0.4.21" provider-name="AcTweeteR maintainers">
   <requires>
     <import addon="xbmc.python" version="3.0.0" />
-    <import addon="plugin.video.xstream-pro" version="1.1.2.1" />
+    <import addon="plugin.video.xstream-pro" version="1.1.2.2" />
     <import addon="pvr.iptvsimple" version="21.4.0" />
     <import addon="slyguy.trailers" version="0.2.1" optional="true" />
     <import addon="plugin.video.youtube" />
@@ -92,9 +92,9 @@
     <description lang="es_ES">Programa actualizaciones del índice XStream y ofrece un asistente reanudable que no se completa hasta superar las comprobaciones funcionales obligatorias. Las credenciales permanecen en los ajustes oficiales de cada complemento.</description>
     <platform>all</platform>
     <license>GPL-2.0-or-later</license>
-    <news>changelog-0.4.18.txt</news>
+    <news>changelog-0.4.21.txt</news>
   </extension>
-</addon><addon id="plugin.video.xstream-pro" name="Xstream Pro" version="1.1.2.1" provider-name="PesicP">
+</addon><addon id="plugin.video.xstream-pro" name="Xstream Pro" version="1.1.2.2" provider-name="PesicP">
     <requires>
         <import addon="xbmc.python" version="3.0.1" />
         <import addon="script.module.requests" version="2.22.0" />

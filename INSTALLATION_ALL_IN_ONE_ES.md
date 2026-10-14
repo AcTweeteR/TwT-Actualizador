@@ -1,52 +1,32 @@
-# Instalar AcTweeteR 0.4.18 en Kodi
+# Instalar AcTweeteR desde cero
+
+Guía para Kodi 21.3 Omega. Los nombres pueden variar ligeramente entre plataformas.
 
 ## 1. Instala Kodi
 
-Instala Kodi 21.3 Omega desde la fuente oficial para el dispositivo. No copies
-el perfil de otra instalación.
+Instala Kodi 21.3 desde la tienda oficial de tu dispositivo o desde [kodi.tv](https://kodi.tv/download/).
 
-## 2. Permite instalar el repositorio
+## 2. Permite repositorios externos
 
-En Kodi abre **Ajustes → Sistema → Complementos → Orígenes desconocidos**,
-activa la opción y acepta el aviso de Kodi. AcTweeteR no cambia este permiso.
+En Kodi abre **Ajustes → Sistema → Add-ons** y activa **Orígenes desconocidos**. Confirma el aviso de seguridad de Kodi. AcTweeteR no cambia esta opción automáticamente.
 
 ## 3. Añade el repositorio AcTweeteR
 
-Abre **Ajustes → Gestor de archivos → Añadir fuente** e introduce:
+1. Abre **Ajustes → Administrador de archivos → Añadir fuente**.
+2. Escribe `https://actweeter.github.io/TwT-Actualizador/bootstrap/`.
+3. Asigna el nombre **AcTweeteR**.
+4. Ve a **Add-ons → Instalar desde archivo ZIP**, elige la fuente AcTweeteR e instala `repository.actweeter-1.0.3.zip`.
 
-`https://actweeter.github.io/TwT-Actualizador/bootstrap/`
+## 4. Instala la skin
 
-Nombra la fuente **AcTweeteR**. Después abre **Complementos → Instalar desde
-un archivo ZIP → AcTweeteR** y selecciona `repository.actweeter-1.0.3.zip`.
-Añadir la fuente no instala el repositorio: Kodi debe mostrar que el ZIP se
-instaló correctamente.
+Abre **Add-ons → Instalar desde repositorio → AcTweeteR Repository** e instala AcTweeteR. Kodi puede pedir confirmación para instalar dependencias; acepta únicamente los avisos que Kodi muestra para los paquetes requeridos. Al terminar, acepta **Cambiar a esta skin**.
 
-## 4. Instala la skin desde Kodi
+## 5. Configura el proveedor
 
-Abre **Complementos → Instalar desde repositorio → AcTweeteR Repository →
-Apariencia → Skin → AcTweeteR**. Selecciona **Instalar**, confirma las
-dependencias que Kodi presente y acepta activar AcTweeteR cuando pregunte.
-Deja que Kodi complete la instalación; no descargues dependencias por separado.
+El configurador solicita la URL Xtream, el usuario y la contraseña del proveedor. Introduce estos datos solo en Kodi y comprueba el nombre del servidor. Trakt es opcional y puede autorizarse mediante los complementos correspondientes ahora o posteriormente.
 
-## 5. Configura IPTV y Trakt
+No compartas capturas o registros que contengan datos de acceso. No borres el perfil para actualizar: usa el repositorio AcTweeteR para recibir versiones nuevas.
 
-Cuando aparezca el configurador, introduce servidor, usuario y contraseña
-Xtream. El servicio conserva las credenciales en los ajustes del complemento
-oficial correspondiente y no debe incluirlas en sus registros. Trakt puede
-autorizarse con el procedimiento del propio complemento o posponerse para más
-tarde. Kodi puede presentar confirmaciones legítimas al instalar componentes.
+### Compatibilidad y validación
 
-No escribas rutas M3U/EPG ni edites archivos. Si el catálogo, una dependencia o
-la autenticación falla, usa **Reintentar** o **Reparar** y conserva el mensaje
-de error sin compartir datos privados.
-
-## Estado de validación
-
-AcTweeteR 0.4.18 es una publicación estable. La instalación limpia, la
-actualización y la corrección visual de Continuar viendo de esta versión no se
-han validado en runtime; el propietario comprobará la fila tras actualizar en
-Apple TV. Tampoco se ha validado el flujo real de Trakt. Existe una incidencia
-crítica abierta de cierre de Kodi asociada a trabajos pendientes `plugin://`;
-su causa sigue sin determinarse y la excepción de riesgo solo se concedió para
-este release. Consulta las [notas de la versión](RELEASE_NOTES_0.4.18.html)
-antes de instalar.
+Kodi 21.3 Omega es el baseline del paquete. La instalación limpia y el runtime de esta versión no se han probado en las plataformas indicadas en las notas de 0.4.21; sigue las confirmaciones normales de Kodi. AcTweeteR no incluye binarios PVR de otros sistemas: utiliza los componentes compatibles que incorpore Kodi o su repositorio oficial.

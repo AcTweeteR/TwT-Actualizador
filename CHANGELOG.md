@@ -1,5 +1,20 @@
 # Changelog AcTweeteR
 
+## AcTweeteR 0.4.21 — estable
+
+- Skin 1.2.18 / servicio 0.4.21 / XStream Pro 1.1.2.2.
+- Trakt opcional; sin tercera integración ni sincronización duplicada.
+- Filas nativas de recomendaciones en Películas y Series con filtrado estricto
+  por coincidencia TMDb exacta disponible en XStream.
+- Migración de widgets v7, versionada, idempotente, con backup y cuidado de
+  personalizaciones.
+- 542 pruebas automatizadas PASS. Recomendaciones/OAuth, IPTV y reproducción
+  runtime en esta versión siguen NOT_TESTED.
+- La incidencia crítica de cierre Kodi/plugin:// permanece abierta; el
+  propietario acepta explícitamente el riesgo únicamente para 0.4.21.
+
+# Changelog AcTweeteR
+
 ## AcTweeteR 0.4.18 — estable
 
 - Skin 1.2.16 / servicio 0.4.18: Continuar viendo incorpora invalidación de

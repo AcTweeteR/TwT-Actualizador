@@ -1,48 +1,40 @@
 # TwT-Actualizador — distribución de AcTweeteR
 
-Canal oficial de distribución Kodi de AcTweeteR. Baseline: Kodi 21.3 Omega.
+Canal oficial para Kodi 21.3 Omega.
 
-## Canal estable — AcTweeteR 0.4.18
+## Canal estable — AcTweeteR 0.4.21
 
-- Skin: `skin.actweeter 1.2.16`
-- Servicio: `service.actweeter 0.4.18`
+- Skin: `skin.actweeter 1.2.18`
+- Servicio: `service.actweeter 0.4.21`
 - Repositorio: `repository.actweeter 1.0.3`
-- Proveedor IPTV: `plugin.video.xstream-pro 1.1.2.1` (adaptación de terceros bajo CC BY-NC 4.0)
+- IPTV: `plugin.video.xstream-pro 1.1.2.2` (adaptación de terceros CC BY-NC 4.0; no comercial)
 
-Kodi obtiene las versiones actuales desde el índice oficial. Se conservan las versiones anteriores para rollback; las migraciones no eliminan credenciales, favoritos, historial ni progreso.
+Kodi instala y actualiza los paquetes desde el índice oficial. Los artefactos anteriores se conservan para recuperación. La migración de widgets v7 es idempotente y protege los datos gestionados con backups.
 
-Paquetes: [repositorio 1.0.3](docs/bootstrap/repository.actweeter-1.0.3.zip), [skin 1.2.16](repo/skin.actweeter/skin.actweeter-1.2.16.zip), [servicio 0.4.18](repo/service.actweeter/service.actweeter-0.4.18.zip) y [XStream Pro 1.1.2.1](repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.1.zip). También están adjuntos al [release v0.4.18](https://github.com/AcTweeteR/TwT-Actualizador/releases/tag/v0.4.18).
+Paquetes: [bootstrap repository 1.0.3](docs/bootstrap/repository.actweeter-1.0.3.zip`), [skin 1.2.18](repo/skin.actweeter/skin.actweeter-1.2.18.zip), [service 0.4.21](repo/service.actweeter/service.actweeter-0.4.21.zip), [XStream Pro 1.1.2.2](repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.2.zip). [Release estable v0.4.21](https://github.com/AcTweeteR/TwT-Actualizador/releases/tag/v0.4.21).
 
-## Interfaz AcTweeteR, no configuración del Mac
+## Interfaz e IPTV
 
-Los paquetes contienen los DATA predeterminados del producto. El servicio los prepara en el perfil del dispositivo y pide a Skin Shortcuts que genere sus includes mediante el mecanismo nativo. Inicio incluye Continuar viendo, Añadidas recientemente, Tendencias, Películas, Series y Favoritos. Películas y Series incluyen el año actual y el anterior, calculados dinámicamente.
+La skin prepara sus menús y widgets mediante mecanismos de Kodi y los DATA empaquetados; no copia perfiles de desarrollo. Los hubs de Películas y Series conservan las filas existentes y añaden recomendaciones nativas de XStream. Solo se aceptan coincidencias exactas de TMDb disponibles en el catálogo del proveedor. Sin autenticación o resultados válidos, no se muestra contenido recomendado.
 
-Todos los widgets IPTV utilizan registros del proveedor configurado; no se sustituyen por listas externas IMDb/Trakt. Continuar viendo y Favoritos permanecen vacíos cuando no existen datos reales. Los metadatos se preparan en español cuando XStream mantiene valores de fábrica. Otros idiomas personalizados se conservan.
+La instalación necesita los datos Xtream del usuario. No se deben guardar credenciales en el repositorio ni en capturas/logs. PVR IPTV Simple y otros complementos binarios dependen de la build de Kodi y su plataforma; AcTweeteR no redistribuye un binario de una plataforma para otra.
 
-Antes de cambiar DATA o ajustes se guarda una copia verificada dentro del dispositivo. Las personalizaciones desconocidas no se sobrescriben: desde el configurador, «Reparar interfaz de AcTweeteR» solicita consentimiento. No se copian perfiles ni credenciales del Mac.
+## Trakt
 
-El preview automático necesita el bridge de AcTweeteR en el contexto de SlyGuy. El configurador solicita consentimiento para una integración local y reversible de SlyGuy 0.2.1, comprobando hashes originales exactos y conservando sus preferencias. No se redistribuyen ZIP de SlyGuy. Una versión o modificación desconocida no se parchea; las actualizaciones siguen procediendo de su repositorio oficial. El servicio dispone de rollback que respeta cambios posteriores del usuario.
+Trakt es opcional. `script.trakt` conserva la propiedad del scrobbling/biblioteca Kodi y XStream mantiene su integración de cuenta/recomendaciones. AcTweeteR no comparte tokens entre complementos ni implementa un tercer cliente. Autorización y sincronización Trakt de esta versión: `NOT_TESTED` en Kodi runtime.
 
 ## Instalar o actualizar
 
-Para empezar desde cero, instala Kodi 21.3, activa **Orígenes desconocidos** en Kodi y sigue los pasos de [Instalación](https://actweeter.github.io/TwT-Actualizador/INSTALLATION_ALL_IN_ONE_ES.html). El bootstrap instala AcTweeteR Repository; luego instala AcTweeteR desde el repositorio y acepta las confirmaciones normales de Kodi.
+Sigue [la guía de instalación](INSTALLATION_ALL_IN_ONE_ES.md). En breve: instala Kodi 21.3, activa «Orígenes desconocidos» mediante la confirmación de Kodi, añade `https://actweeter.github.io/TwT-Actualizador/bootstrap/`, instala `repository.actweeter-1.0.3.zip) y luego AcTweeteR desde el repositorio. Para actualizar, utiliza el actualizador nativo; no elimines datos ni el perfil.
 
-El asistente solicita servidor, usuario y contraseña IPTV, y ofrece autorizar Trakt mediante su flujo oficial o continuar más tarde. Kodi puede mostrar confirmaciones de instalación de dependencias. No se ha validado todavía una instalación limpia de esta versión en Apple TV.
+## Licencias y artefactos
 
-Kodi resuelve dependencias oficiales desde su repositorio. El repositorio AcTweeteR añade los feeds de Matke BINGIE Omega y SlyGuy para sus complementos respectivos. PVR IPTV Simple puede venir integrado en algunos paquetes Kodi; que esté incluido no significa que esté habilitado o configurado.
+XStream Pro 1.1.2.2 está basado en upstream 1.1.2, commit `1aa3e67da7c03c6acc3ec7e1ca579a7f645220f4`. Retiene atribución, enlace CC BY-NC 4.0 y `ACTWEETER_MODIFICATIONS.txt`; no es un build avalado por el autor upstream y no puede usarse comercialmente. Consulte [avisos de terceros](THIRD_PARTY_NOTICES.md) y [SHA256SUMS](checksums/SHA256SUMS).
 
-## XStream Pro y condiciones
+## Validación
 
-El ZIP 1.1.2.1 adapta XStream Pro upstream commit `1aa3e67da7c03c6acc3ec7e1ca579a7f645220f4`. Conserva licencia, atribución, enlace, aviso de modificaciones y condiciones **CC BY-NC 4.0** en el paquete y en [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Uso no comercial; no existe aval del autor upstream. Los iconos Tabler conservan su aviso MIT. XStream guarda la contraseña en sus propios ajustes.
+Suite automatizada de esta candidata: **542 PASS**. ZIP, CRC, XML, índice y checksums: **PASS_AUTOMATED / PASS_STATIC**. Instalación limpia, actualización y funciones IPTV/PVR/EPG/Trakt/recomendaciones/reproducción en Kodi runtime para 0.4.21: **NOT_TESTED**. Tampoco se declara validación runtime en macOS, Windows, Linux, Android, Android TV, Google TV o tvOS.
 
-## Validación y límites
+Permanece abierta una incidencia crítica de cierre de Kodi al esperar trabajos de directorio `plugin://`; su origen no se ha identificado. El propietario aceptó expresamente el riesgo para 0.4.21. No está corregido, y la excepción no se extiende a versiones futuras.
 
-Los paquetes e índices tienen SHA-256/MD5 publicados en [checksums/SHA256SUMS](checksums/SHA256SUMS). La suite de esta candidata pasó 523 pruebas automatizadas; no equivalen a instalación real de Kodi.
-
-**Continuar viendo:** los DATA portables contienen la ruta actualizable para instalaciones limpias; la migración v4 añade el token de refresco a los perfiles gestionados existentes con backup verificado. El servicio invalida/refresca la fila al terminar una reproducción no-preview. Esta corrección aún requiere comprobación visual en Apple TV.
-
-**Gates por plataforma para 0.4.18:** clean install y actualización nativa: `NOT_TESTED` en macOS, Windows, Linux, Android, Android TV, Google TV y tvOS. Integridad ZIP/índice y tests: `PASS_AUTOMATED`; estructura del paquete Kodi/Python/XML: `PASS_STATIC`. No se afirma compatibilidad runtime en ninguna plataforma para esta versión.
-
-Sigue abierta una incidencia crítica de cierre normal de Kodi durante trabajos de directorio `plugin://`; el origen no está identificado ni corregido. El propietario autorizó 0.4.18 aceptando ese riesgo únicamente para este release. Las vistas/listas remotas Trakt no están integradas en AcTweeteR. El preview automático SlyGuy necesita consentimiento para instalar el bridge local reversible; SlyGuy no se redistribuye.
-
-No contiene perfiles personales, credenciales, bases Kodi ni provisioning del Mac. No se distribuye PVR binario multiplataforma: usa el componente compatible de Kodi y su repositorio oficial.
+No se incluyen credenciales personales, perfiles Kodi ni datos privados. Las dependencias externas mantienen sus fuentes y licencias propias.
