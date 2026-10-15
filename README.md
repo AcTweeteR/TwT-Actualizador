@@ -2,6 +2,28 @@
 
 Canal oficial para Kodi 21.3 Omega.
 
+## Canal estable — AcTweeteR 0.4.27 (hotfix)
+
+- Skin: `skin.actweeter 1.2.24`
+- Servicio: `service.actweeter 0.4.26` (sin cambios)
+- Repositorio: `repository.actweeter 1.0.3` (sin cambios)
+- XStream Pro: `plugin.video.xstream-pro 1.1.2.5` (sin cambios; CC BY-NC 4.0)
+
+Hotfix para la regresión de acciones en las fichas introducida por el
+prototipo 0.4.26: se restauran los controles nativos `radiobutton` de Play,
+Resume y Trailer en los dos diseños de información, con sus IDs, acciones,
+condiciones y navegación. La verificación estática y automatizada pasa; la
+recuperación de botones requiere confirmación runtime del usuario. Esto no
+declara resueltos el tacto general, el scroll ni el foco del ratón en Android.
+
+Paquetes: [skin 1.2.24](repo/skin.actweeter/skin.actweeter-1.2.24.zip),
+[service 0.4.26](repo/service.actweeter/service.actweeter-0.4.26.zip),
+[XStream Pro 1.1.2.5](repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.5.zip).
+[Notas 0.4.27](RELEASE_NOTES_0.4.27.md). La suite automatizada tiene 590 PASS;
+la instalación y las acciones en dispositivos siguen pendientes de runtime.
+Conserva 0.4.25 para rollback. El tag 0.4.26 se mantiene intacto y esa
+versión no se recomienda por la regresión confirmada.
+
 ## Canal estable — AcTweeteR 0.4.25
 
 - Skin: `skin.actweeter 1.2.22`

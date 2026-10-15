@@ -1,5 +1,23 @@
 # Changelog AcTweeteR
 
+## AcTweeteR 0.4.27 — hotfix de controles de ficha
+
+- Revierte el prototipo de controles `button` de la skin 1.2.23. En ambos
+  diseños de ficha se restauran los `radiobutton` nativos de Play, Resume y
+  Trailer, incluidos sus IDs, pilas de acciones, condiciones de visibilidad,
+  texturas y enlaces de navegación.
+- El cambio experimental correlacionado envolvía los botones push dentro de
+  grupos y alteraba el hit target/semántica del control. La regresión de
+  botones fue confirmada por el usuario en Apple TV y Android tras instalar
+  0.4.26; la reversión no demuestra todavía la recuperación runtime.
+- No se modifica `input.enablemouse`, ni el scroll, el foco del ratón, XStream,
+  Trakt, PVR o los datos del usuario. El problema táctil preexistente de
+  Android queda separado y sin resolver.
+- 590 pruebas automatizadas PASS. Validación runtime de botones pendiente del
+  usuario; no se presenta como PASS.
+- Skin 1.2.24; servicio 0.4.26, XStream Pro 1.1.2.5 y repository 1.0.3 sin
+  cambios respecto a los artefactos publicados en 0.4.26.
+
 ## AcTweeteR 0.4.26 — prueba de interacción táctil
 
 - Skin 1.2.23 sustituye experimentalmente los controles de acción Play,
