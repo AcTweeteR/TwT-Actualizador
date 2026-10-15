@@ -1,0 +1,7 @@
+AcTweeteR Service 0.4.26 — private interaction experiment
+
+- Add opt-in correlation logs for detail action dispatch and Kodi player
+  start/terminal callbacks. Logs contain only an opaque correlation ID,
+  action category, control variant, numeric dialog/focus snapshot, and event.
+- No playback route, provider URL, media identity, credential, or token is
+  recorded. Physical input modality cannot be inferred from these events.

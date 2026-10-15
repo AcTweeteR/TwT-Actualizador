@@ -1,0 +1,65 @@
+{
+  "release": "0.4.26",
+  "release_kind": "official interaction test release",
+  "source_commit": "9a29d3e12b3eb4df15ebb6dc477ad1cedc7af402",
+  "kodi_baseline": "21.3 Omega",
+  "addons": [
+    {
+      "id": "repository.actweeter",
+      "version": "1.0.3",
+      "file": "repo/repository.actweeter/repository.actweeter-1.0.3.zip",
+      "sha256": "74620e81ff9a161bb7b0650f01e94406ccc9fa9366210ebb36e58872bb4995e8",
+      "changed": false
+    },
+    {
+      "id": "skin.actweeter",
+      "version": "1.2.23",
+      "file": "repo/skin.actweeter/skin.actweeter-1.2.23.zip",
+      "sha256": "d191ec54b242598319cb3b75b94d19ac7084b11f00810741549bd42a79caac7a",
+      "changed": true
+    },
+    {
+      "id": "service.actweeter",
+      "version": "0.4.26",
+      "file": "repo/service.actweeter/service.actweeter-0.4.26.zip",
+      "sha256": "f956a39af7a5b666cf33ec9f4e1b5ec9199dc6f2d06192bcedf72f347d39032d",
+      "changed": true
+    },
+    {
+      "id": "plugin.video.xstream-pro",
+      "version": "1.1.2.5",
+      "file": "repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.5.zip",
+      "sha256": "2d230dcd0617740ab0641a43d8c66384dc7f072b4835fc5756488f9258717f4a",
+      "changed": false
+    }
+  ],
+  "automated_tests": {
+    "pass": 590,
+    "normal_suite": 586,
+    "local_socket_tests_retried_separately": 4,
+    "failures": 0
+  },
+  "package_integrity": "AST/XML, ZIP/CRC, index and MD5 checked; SHA-256 listed per artifact.",
+  "upgrade_from": "0.4.25",
+  "upgrade_behavior": "Kodi native in-place add-on update; no personal profile, credential, history, favorite, playback progress, or database changes are included.",
+  "runtime_status": {
+    "android_touch": "PENDING_OWNER_TEST",
+    "android_scroll": "NOT_CHANGED_NOT_FIXED",
+    "android_mouse_hover": "NOT_CHANGED_NOT_FIXED",
+    "playback_runtime": "NOT_TESTED",
+    "clean_install_runtime": "NOT_TESTED",
+    "upgrade_runtime": "NOT_TESTED",
+    "tvos": "NOT_TESTED",
+    "macos": "NOT_TESTED",
+    "windows": "NOT_TESTED",
+    "linux": "NOT_TESTED"
+  },
+  "shutdown_issue": "CLOSED_NOT_REPRODUCIBLE; no technical fix confirmed; reopen if it recurs.",
+  "third_party": {
+    "id": "plugin.video.xstream-pro",
+    "version": "1.1.2.5",
+    "distribution_status": "unchanged existing public artifact",
+    "license": "CC BY-NC 4.0",
+    "sha256_unchanged_from_public_main": "2d230dcd0617740ab7b0650f01e94406ccc9fa9366210ebb36e58872bb4995e8"
+  }
+}

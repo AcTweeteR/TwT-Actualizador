@@ -1,5 +1,22 @@
 # Changelog AcTweeteR
 
+## AcTweeteR 0.4.26 — prueba de interacción táctil
+
+- Skin 1.2.23 sustituye experimentalmente los controles de acción Play,
+  Resume y Trailer de las fichas por botones push de Kodi, conservando IDs,
+  acciones, condiciones y navegación. Es una hipótesis de interacción; no se
+  considera una corrección táctil confirmada.
+- Servicio 0.4.26 incorpora trazas de diagnóstico optativas, desactivadas por
+  defecto, sin registrar títulos, rutas, URLs, credenciales ni tokens.
+- Scroll y comportamiento del ratón no cambian. La prueba runtime táctil queda
+  pendiente del propietario; mando, teclado y reproducción requieren también
+  validación en Kodi.
+- 590 pruebas automatizadas PASS (586 en la suite normal y las 4 pruebas de
+  sockets locales reintentadas por separado con permisos de loopback).
+- XStream Pro 1.1.2.5 y repository.actweeter 1.0.3 no cambian.
+- La incidencia de cierre queda `CLOSED_NOT_REPRODUCIBLE`: no se ha confirmado
+  una corrección técnica; reabrir si vuelve a reproducirse.
+
 ## AcTweeteR 0.4.25 — estable
 
 - Skin 1.2.22: conserva las correcciones de foco/BingieInfo, Spotlight abriendo

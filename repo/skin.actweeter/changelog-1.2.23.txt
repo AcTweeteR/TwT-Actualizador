@@ -1,0 +1,8 @@
+AcTweeteR Skin 1.2.23 — private interaction experiment
+
+- In the movie/episode information dialogs, prototype Play, Resume and
+  Trailer as push-button controls inside same-sized groups; preserve their
+  original IDs, visibility expressions, action stacks, layout and icon art.
+- Add an opt-in, content-free interaction trace switch for controlled
+  comparison. Touch/mouse/remote runtime behavior is not yet validated.
+- Scroll, hover and focus behavior are unchanged pending runtime evidence.
