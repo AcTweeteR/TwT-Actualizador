@@ -1,0 +1,4 @@
+AcTweeteR Service 0.4.13
+- Detecta Kodi en Windows y Linux sin confundir compatibilidad estructural con runtime validado.
+- Añade auditoría estática, sanitizada y reproducible de rutas plugin:// de la skin.
+- Mantiene el requisito de la skin en service.actweeter 0.4.11.

@@ -1,0 +1,7 @@
+repository.actweeter 1.0.1
+
+- Adds a Kodi-native second repository directory for the required Bingie upstream
+  add-ons, using a minimal metadata snapshot and upstream package downloads.
+- Keeps the existing AcTweeteR index and versioned package directory.
+- Supports the GitHub Pages bootstrap entry point; no automatic publishing added.
+- Does not change or republish skin.actweeter 1.1.1 or implement V1.1 features.

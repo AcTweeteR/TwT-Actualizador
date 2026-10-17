@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<includes>
+    <!-- Opt-in, in-memory action observation. This is NOT an OS touch listener.
+         No titles, identifiers, URLs, tokens, file paths, or log writes. -->
+    <include name="AcTweeteR_Touch_ActionSnapshot">
+        <param name="action" default="info" />
+        <definition>
+            <onclick condition="Skin.HasSetting(AcTweeteRTouchDiagnostics)">SetProperty(AcTweeteRTouchAction,$PARAM[action],Home)</onclick>
+            <onclick condition="Skin.HasSetting(AcTweeteRTouchDiagnostics)">SetProperty(AcTweeteRTouchSource,$PARAM[sourceid],Home)</onclick>
+            <onclick condition="Skin.HasSetting(AcTweeteRTouchDiagnostics)">SetProperty(AcTweeteRTouchFocusBefore,$INFO[System.CurrentControlId],Home)</onclick>
+            <onclick condition="Skin.HasSetting(AcTweeteRTouchDiagnostics)">SetProperty(AcTweeteRTouchTime,$INFO[System.Time(hh:mm:ss)],Home)</onclick>
+            <onclick condition="Skin.HasSetting(AcTweeteRTouchDiagnostics)">SetProperty(AcTweeteRTouchSameSpotlight,unknown,Home)</onclick>
+            <onclick condition="Skin.HasSetting(AcTweeteRTouchDiagnostics)">ClearProperty(AcTweeteRTouchPosition,Home)</onclick>
+        </definition>
+    </include>
+    <include name="AcTweeteR_WidgetClickSnapshot">
+        <definition>
+            <include content="AcTweeteR_Touch_ActionSnapshot">
+                <param name="sourceid" value="$PARAM[sourceid]" />
+            </include>
+            <onclick condition="Skin.HasSetting(AcTweeteRTouchDiagnostics)">SetProperty(AcTweeteRTouchPosition,$INFO[Container($PARAM[sourceid]).Position],Home)</onclick>
+            <!-- Compare in memory; retain only equality, never either URL. -->
+            <onclick condition="Skin.HasSetting(AcTweeteRTouchDiagnostics) + !String.IsEmpty(Container($PARAM[sourceid]).ListItem.FileNameAndPath) + !String.IsEmpty(Container(1508).ListItem.FileNameAndPath) + String.IsEqual(Container($PARAM[sourceid]).ListItem.FileNameAndPath,Container(1508).ListItem.FileNameAndPath)">SetProperty(AcTweeteRTouchSameSpotlight,yes,Home)</onclick>
+            <onclick condition="Skin.HasSetting(AcTweeteRTouchDiagnostics) + !String.IsEmpty(Container($PARAM[sourceid]).ListItem.FileNameAndPath) + !String.IsEmpty(Container(1508).ListItem.FileNameAndPath) + !String.IsEqual(Container($PARAM[sourceid]).ListItem.FileNameAndPath,Container(1508).ListItem.FileNameAndPath)">SetProperty(AcTweeteRTouchSameSpotlight,no,Home)</onclick>
+        </definition>
+    </include>
+    <include name="AcTweeteR_TouchDiagnosticsOverlay">
+        <!-- Labels/images cannot focus or capture a gesture. No textbox,
+             grouplist, hidden button, timer or background polling. -->
+        <control type="group">
+            <visible>Skin.HasSetting(AcTweeteRTouchDiagnostics)</visible>
+            <right>20</right>
+            <top>20</top>
+            <width>600</width>
+            <height>170</height>
+            <control type="image">
+                <width>100%</width><height>100%</height>
+                <texture colordiffuse="EE000000">colors/color_white.png</texture>
+            </control>
+            <control type="label">
+                <left>10</left><width>580</width><height>160</height>
+                <font>Reg24</font><textcolor>white</textcolor>
+                <label>TOUCH DIAG: $INFO[Window(Home).Property(AcTweeteRTouchTime)][CR]action=$INFO[Window(Home).Property(AcTweeteRTouchAction)] source=$INFO[Window(Home).Property(AcTweeteRTouchSource)][CR]focus-before=$INFO[Window(Home).Property(AcTweeteRTouchFocusBefore)] now=$INFO[System.CurrentControlId][CR]position=$INFO[Window(Home).Property(AcTweeteRTouchPosition)] same-spotlight=$INFO[Window(Home).Property(AcTweeteRTouchSameSpotlight)]</label>
+            </control>
+        </control>
+    </include>
+</includes>

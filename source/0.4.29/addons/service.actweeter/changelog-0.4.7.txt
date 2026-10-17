@@ -1,0 +1,7 @@
+AcTweeteR Service 0.4.7
+
+- Retira la acción de captura introducida para validación: su solicitud
+  coincidió con la salida real de Kodi en tvOS. No se repite esa operación.
+- Conserva backup VFS, DATA del proveedor y generación nativa de la interfaz.
+- La confirmación visual se obtiene del usuario; los contenedores cargados
+  y la persistencia se comprueban mediante consultas de solo lectura.

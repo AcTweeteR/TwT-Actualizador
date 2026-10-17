@@ -1,0 +1,7 @@
+AcTweeteR Skin 1.2.17
+
+- Reorders provider-backed movie and series hub rows: Continue Watching,
+  recent additions, trending, popular, then the two dynamic premiere years.
+- Displays XStream's provider-ID-based new-series/new-episode status in the
+  square card layout, alongside the existing poster and landscape overlays.
+- Keeps the version 0.4.18 Continue Watching refresh token and provider route.

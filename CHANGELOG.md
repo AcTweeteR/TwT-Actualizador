@@ -1,5 +1,23 @@
 # Changelog AcTweeteR
 
+## AcTweeteR 0.4.29 — candidato de reparación
+
+- Skin 1.2.28 y servicio 0.4.29 corrigen la selección del layout expandible:
+  deja de evaluarse una URL `plugin://` dinámica como expresión booleana y
+  usa metadatos explícitos de Skin Shortcuts.
+- Migración v9 marca únicamente las rutas XStream de lista para las que el
+  paquete distribuido implementa expansión; conserva expresiones de refresco,
+  filtra parámetros sensibles y deja intactos los DATA personalizados sin
+  consentimiento. La migración crea backup antes de cambiar datos propios.
+- Se reconstruyeron ZIP de skin/servicio y el índice; XStream Pro 1.1.2.7 y el
+  repositorio Kodi 1.0.3 se reutilizan sin cambios.
+- 9 pruebas específicas PASS, AST Python y análisis XML estático PASS. No son
+  validación runtime. Instalación/actualización, EXPANDIR, widgets, tráilers,
+  distintivos, colecciones y navegación táctil en Lenovo: NOT_TESTED después
+  de esta candidata.
+- Mantener 0.4.28 disponible para rollback; no publicar como release estable
+  hasta completar el flujo de actualización oficial y su comprobación.
+
 ## AcTweeteR 0.4.28
 
 - Skin 1.2.27 y servicio 0.4.28; repository.actweeter 1.0.3 sin cambios.

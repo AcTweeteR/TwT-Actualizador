@@ -1,0 +1,4 @@
+AcTweeteR Service 0.4.12
+- Añade trazas correlacionadas y sanitizadas para consultas plugin:// lanzadas por el servicio.
+- Distingue el despacho asíncrono del final observado y registra error/cancelación solicitada sin guardar URLs ni datos del proveedor.
+- Vincula el refresco manual del catálogo al resultado del callback ya soportado.

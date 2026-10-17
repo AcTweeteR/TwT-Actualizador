@@ -1,0 +1,9 @@
+AcTweeteR Skin 1.2.22
+
+- Preserve 1.2.21 Spotlight selection/play separation and suppress focus-based
+  autoplay. Manual trailer actions remain explicit.
+- Remove invalid SetFocus keymap overrides and an invalid duplicate coordinate
+  from the information-dialog result group.
+- Widen the native Home vertical scrollbar touch target while keeping Kodi's
+  built-in control and remote navigation.
+- Runtime touch and trailer validation remain pending.

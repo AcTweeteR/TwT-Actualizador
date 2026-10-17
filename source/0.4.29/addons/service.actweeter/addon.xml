@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <addon id="service.actweeter" name="AcTweeteR Service" version="0.4.29" provider-name="AcTweeteR maintainers">
+  <requires>
+    <import addon="xbmc.python" version="3.0.0" />
+    <import addon="plugin.video.xstream-pro" version="1.1.2.7" />
+    <import addon="pvr.iptvsimple" version="21.4.0" />
+    <import addon="slyguy.trailers" version="0.2.1" optional="true" />
+    <import addon="plugin.video.youtube" />
+    <import addon="script.trakt" version="3.9.0" optional="true" />
+  </requires>
+  <extension point="xbmc.service" library="service.py" start="startup" />
+  <extension point="xbmc.python.script" library="setup.py">
+    <provides>executable</provides>
+  </extension>
+  <extension point="xbmc.python.pluginsource" library="resources/lib/diagnostic_plugin.py">
+    <provides>executable</provides>
+  </extension>
+  <extension point="xbmc.addon.metadata">
+    <summary lang="en_GB">AcTweeteR search, setup and service-status helper</summary>
+    <summary lang="es_ES">Ayudante de búsqueda, configuración y estado de servicios de AcTweeteR</summary>
+    <description lang="en_GB">Schedules provider-only XStream search-index refreshes and offers a resumable setup wizard that remains incomplete until required runtime checks pass. Credentials remain in official add-on settings.</description>
+    <description lang="es_ES">Programa actualizaciones del índice XStream y ofrece un asistente reanudable que no se completa hasta superar las comprobaciones funcionales obligatorias. Las credenciales permanecen en los ajustes oficiales de cada complemento.</description>
+    <platform>all</platform>
+    <license>GPL-2.0-or-later</license>
+    <news>changelog-0.4.28.txt</news>
+  </extension>
+</addon>
