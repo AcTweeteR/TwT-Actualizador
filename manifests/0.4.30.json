@@ -1,0 +1,63 @@
+{
+  "release": "0.4.30",
+  "release_kind": "official Kodi repository distribution update",
+  "distribution_commit": "a04b542c37cd50337028ccfb77d90d14a5eda387",
+  "source_base_commit": "af4f905ba14d73f140fe32800ee294f1c8436ec1",
+  "source_snapshot": "source/0.4.30",
+  "kodi_baseline": "21.3 Omega",
+  "addons": [
+    {
+      "id": "repository.actweeter",
+      "version": "1.0.3",
+      "file": "repo/repository.actweeter/repository.actweeter-1.0.3.zip",
+      "sha256": "74620e81ff9a161bb7b0650f01e94406ccc9fa9366210ebb36e58872bb4995e8",
+      "changed": false
+    },
+    {
+      "id": "skin.actweeter",
+      "version": "1.2.28",
+      "file": "repo/skin.actweeter/skin.actweeter-1.2.28.zip",
+      "sha256": "665701c48f2fd9e5f7d070cefd2708c06b2dee839cd12ab4ed41f1fc35386561",
+      "changed": true
+    },
+    {
+      "id": "service.actweeter",
+      "version": "0.4.30",
+      "file": "repo/service.actweeter/service.actweeter-0.4.30.zip",
+      "sha256": "881f091f627e05ea5e2621f61b79edf22eda32146a735637b60afab57aa572a7",
+      "changed": true
+    },
+    {
+      "id": "plugin.video.xstream-pro",
+      "version": "1.1.2.7",
+      "file": "repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.7.zip",
+      "sha256": "d90257ba7a197142e6a9146b9d3e1c9601e72b67c42f45152e0f6fb9a34eff34",
+      "changed": false,
+      "license": "CC BY-NC 4.0"
+    }
+  ],
+  "index": {
+    "file": "repo/addons.xml",
+    "sha256": "02700c9d7848bbac3fad9cbd21bd36e1cde745bb463175e32e87bdb0365c5b35",
+    "md5": "b2c69b1f7bf379d44491b571694cd5c0",
+    "checksum_file_sha256": "53a79e7dfbc094672d209439ba317db29ff03a4fb4472db6a6e9656e4e5b0f50"
+  },
+  "automated_tests": {
+    "pass": 15,
+    "failures": 0,
+    "runtime_status": "NOT_TESTED"
+  },
+  "package_integrity": "Repository and skin deterministic rebuilds byte-match prior packages; service 0.4.30 rebuilt from source; XStream 1.1.2.7 reused byte-identically. ZIP CRC, XML/index, MD5 and SHA-256 verified locally.",
+  "upgrade_from": "0.4.29 migration logic unit-tested; Kodi runtime not tested",
+  "rollback": "0.4.29 release and packages retained",
+  "runtime_status": {
+    "repository_install": "NOT_TESTED",
+    "upgrade_persistence": "NOT_TESTED",
+    "layout_migration": "NOT_TESTED",
+    "expand_widget": "NOT_TESTED",
+    "android_touch": "NOT_TESTED",
+    "trailers": "NOT_TESTED",
+    "collections": "NOT_TESTED",
+    "series_badges": "NOT_TESTED"
+  }
+}

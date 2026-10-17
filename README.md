@@ -2,33 +2,34 @@
 
 Canal oficial para Kodi 21.3 Omega.
 
-## Canal oficial — AcTweeteR 0.4.28
+## Canal oficial — AcTweeteR 0.4.30
 
-- Skin: `skin.actweeter 1.2.27`
-- Servicio: `service.actweeter 0.4.28`
+- Skin: `skin.actweeter 1.2.28`
+- Servicio: `service.actweeter 0.4.30`
 - XStream Pro: `plugin.video.xstream-pro 1.1.2.7` (CC BY-NC 4.0)
 - Repositorio Kodi: `repository.actweeter 1.0.3` (sin cambios)
 
-Los widgets compatibles presentan como máximo 20 contenidos del proveedor y
-un `EXPANDIR` rojo adicional solo cuando existe una ruta de expansión
-verificada. Favoritos y Pendientes se mantienen en Mis colecciones para
-Películas y Series, con aislamiento por perfil/tipo y distintivos rojos de
-novedades. La skin integra cambios estructurales de hit testing derivados de
-touch10; no se afirma que tacto, scroll, botones de fichas ni navegación hayan
-sido validados en runtime Android o tvOS. Instalación limpia y actualización
-runtime tampoco se probaron.
+El servicio 0.4.30 corrige el disparo de la migración de Skin Shortcuts en
+perfiles existentes aunque el asistente inicial ya haya sido reclamado en la
+sesión Kodi. Crea backup y solicita consentimiento si detecta personalizaciones;
+solo marca la interfaz como generada tras inspeccionar los includes de salida.
+Esto no equivale a validar visualmente los widgets ni resuelve por sí mismo los
+fallos táctiles, de scroll, de botones o de tráileres.
 
-Paquetes: [skin 1.2.27](repo/skin.actweeter/skin.actweeter-1.2.27.zip),
-[servicio 0.4.28](repo/service.actweeter/service.actweeter-0.4.28.zip),
+Paquetes: [skin 1.2.28](repo/skin.actweeter/skin.actweeter-1.2.28.zip),
+[servicio 0.4.30](repo/service.actweeter/service.actweeter-0.4.30.zip),
 [XStream Pro 1.1.2.7](repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.7.zip).
-El bootstrap usa el repositorio 1.0.3. Suite automatizada: 606 PASS y 285 subtests.
+El bootstrap usa el repositorio 1.0.3. Las 15 pruebas automatizadas incluidas
+en el snapshot cubren artefactos, expansión y disparo de migración; Kodi runtime,
+actualización/persistencia, tacto, tráilers, colecciones, distintivos y la
+alcanzabilidad visual de EXPANDIR siguen pendientes de validación.
 Consulta
-[notas 0.4.28](RELEASE_NOTES_0.4.28.md), [manifiesto](manifests/0.4.28.json)
+[notas 0.4.30](RELEASE_NOTES_0.4.30.md), [manifiesto](manifests/0.4.30.json)
 y [avisos de terceros](THIRD_PARTY_NOTICES.md). XStream solo se redistribuye
 bajo CC BY-NC 4.0 para uso no comercial, con licencia, atribución y avisos
 preservados. Las fuentes y los comandos para reconstruir exactamente estos
-paquetes están en [source/0.4.28](source/0.4.28/README.md); la automatización
-compara sus hashes con los artefactos publicados. La versión 0.4.27 permanece
+paquetes están en [source/0.4.30](source/0.4.30/README.md); la automatización
+reconstruye los paquetes y compara el índice del candidato. 0.4.29 permanece
 disponible para rollback.
 
 ## Canal estable — AcTweeteR 0.4.27 (hotfix)

@@ -1,0 +1,5 @@
+0.4.30
+- Retry pending Skin Shortcuts layout migrations independently of the once-per-process setup wizard.
+- Preserve customization consent and create a verified backup before changing profile-owned interface files.
+- Do not mark the generated layout complete until Kodi's generated includes have been inspected.
+- Tactile controls and trailer playback remain unvalidated at runtime.

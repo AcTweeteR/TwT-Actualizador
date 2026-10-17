@@ -1,5 +1,15 @@
 # Changelog AcTweeteR
 
+## AcTweeteR 0.4.30 — migración de interfaz al actualizar
+
+- El servicio 0.4.30 vuelve a comprobar la migración de Skin Shortcuts aunque
+  el asistente inicial ya esté reclamado durante el proceso Kodi actual.
+- Conserva backup y consentimiento antes de sustituir DATA o preferencias
+  personalizadas; la migración solo se verifica tras inspeccionar la salida
+  generada por Kodi.
+- No cambia la skin, los controles radiobutton, XStream ni datos personales.
+  Tacto y reproducción de tráilers siguen pendientes de validación runtime.
+
 ## AcTweeteR 0.4.29 — actualización oficial de feed
 
 - Skin 1.2.28 y servicio 0.4.29 corrigen la selección del layout expandible:
