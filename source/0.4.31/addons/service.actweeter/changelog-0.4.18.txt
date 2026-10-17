@@ -1,0 +1,7 @@
+AcTweeteR Service 0.4.18
+
+- Invalidate the skin's XStream Continue Watching routes after normal playback
+  ends, and defer a native container refresh while Home or the Movies hub is
+  active. XStream remains responsible for resume-point persistence.
+- Do not run provider queries from the playback callback or refresh for the
+  AcTweeteR preview/SlyGuy trailer playback flows.

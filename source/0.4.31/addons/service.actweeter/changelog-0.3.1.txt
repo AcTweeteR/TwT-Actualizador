@@ -1,0 +1,7 @@
+AcTweeteR Service 0.3.1 — required YouTube component
+
+- Resolve plugin.video.youtube through Kodi's official repository as a
+  required installed/enabled component for AcTweeteR's search/fallback routes.
+- Keep Google OAuth/API authorization separate; add-on presence is not
+  represented as a successful login or trailer playback.
+- Preserve SlyGuy yt-dlp as the primary trailer path.

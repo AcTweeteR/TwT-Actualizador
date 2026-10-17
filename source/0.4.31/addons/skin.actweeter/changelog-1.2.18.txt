@@ -1,0 +1,7 @@
+AcTweeteR Skin 1.2.18
+
+- Adds XStream-native personalized recommendation routes to Movies and Series
+  hubs after Popular and before premiere-year rows.
+- Service v6 migration omits the rows unless XStream's provider-availability
+  filter is enabled.
+- Preserves existing v5 order and user layout through backup/consent handling.

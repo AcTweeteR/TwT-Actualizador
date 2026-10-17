@@ -1,0 +1,6 @@
+AcTweeteR Skin 1.2.11
+
+- Aplica también a las filas de widgets la protección de SlyGuy frente a
+  órdenes Stop heredadas; el coordinador sigue gestionando ownership y cleanup.
+- Conserva DATA del proveedor, años dinámicos y los previews de fábrica.
+- Requiere el servicio 0.4.10 para el estado persistente español en tvOS.

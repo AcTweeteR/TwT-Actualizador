@@ -1,0 +1,304 @@
+--- a/resources/lib/addon.py
++++ b/resources/lib/addon.py
+@@ -46,6 +46,7 @@
+ from favorites import Favorites
+ from history import WatchedMovies, WatchedEpisodes, WatchHistory, ResumePoints
+ import series_changes
++import trakt_playback_metadata
+ 
+ _tmdb_routes = None
+ _tmdb_routes_setup = None
+@@ -4876,6 +4877,11 @@
+     resume_pos=0,
+     resume_total=0,
+     tmdb_id="",
++    year="",
++    episode_num="",
++    show_title="",
++    video_ids=None,
++    show_ids=None,
+ ):
+     pnum = profile_num if profile_num is not None else pm.active
+     li = xbmcgui.ListItem(path=play_url)
+@@ -4884,9 +4890,32 @@
+         li.setProperty("ResumeTime", str(resume_pos))
+         li.setProperty("TotalTime", str(resume_total or 0))
+     info_tag = li.getVideoInfoTag()
+-    info_tag.setMediaType("video")
+-    info_tag.setTitle(title or name)
+     info_tag.setPlot(plot or "")
++    _params = globals().get("args", {})
++    def _arg(key):
++        values = _params.get(key, [""])
++        return values[0] if values else ""
++    def _ids(value, key):
++        if isinstance(value, dict):
++            return value
++        try:
++            value = json.loads(_arg(key) or "{}")
++        except (TypeError, ValueError):
++            value = {}
++        return value if isinstance(value, dict) else {}
++    video_ids, show_ids = _ids(video_ids, "video_ids"), _ids(show_ids, "show_ids")
++    _trakt_data = {
++        "stype": stype, "name": name, "title": title,
++        "episode_title": title or name,
++        "show_title": show_title or _arg("showname") or _arg("show_title") or title,
++        "year": year or _arg("year"), "season": season_num or _arg("season"),
++        "episode": episode_num or _arg("episode") or _arg("episode_num"),
++        "tmdb_id": tmdb_id or _arg("tmdb_id"),
++        "video_ids": video_ids, "show_ids": show_ids,
++    }
++    trakt_ids_json = trakt_playback_metadata.apply_video_info_tag(
++        info_tag, xbmcgui.Window(10000), _trakt_data
++    )
+     if icon:
+         li.setArt({"icon": icon, "thumb": icon})
+     _prepare_playback_item(li)
+@@ -5001,14 +5028,16 @@
+         stream_id = str(ep_id)
+ 
+     # Monitor playback for resume saving and error recovery
+-    _monitor_playback(name, play_url, stype, profile_num=pnum, upnext_data=upnext_data, stream_id=stream_id, icon=icon, extra=extra, tmdb_id=tmdb_id, title=title, plot=plot)
++    _monitor_playback(name, play_url, stype, profile_num=pnum, upnext_data=upnext_data,
++        stream_id=stream_id, icon=icon, extra=extra, tmdb_id=tmdb_id, title=title,
++        plot=plot, trakt_ids_json=trakt_ids_json, trakt_metadata=_trakt_data)
+ 
+ 
+ _PLAYBACK_MAX_RETRIES = 5
+ _PLAYBACK_RETRY_DELAY = 3000
+ 
+ 
+-def _monitor_playback(name, url, stype="live", profile_num=None, upnext_data=None, stream_id="", icon="", extra=None, tmdb_id="", title="", plot=""):
++def _monitor_playback(name, url, stype="live", profile_num=None, upnext_data=None, stream_id="", icon="", extra=None, tmdb_id="", title="", plot="", trakt_ids_json="", trakt_metadata=None):
+     """Background thread to save resume position, detect stream failures, and notify Up Next."""
+     pnum = profile_num if profile_num is not None else pm.active
+ 
+@@ -5027,6 +5056,9 @@
+                     )
+                     li = xbmcgui.ListItem(path=url)
+                     li.setProperty("IsPlayable", "true")
++                    trakt_playback_metadata.apply_video_info_tag(
++                        li.getVideoInfoTag(), xbmcgui.Window(10000), trakt_metadata or {}
++                    )
+                     _prepare_playback_item(li)
+                     player.play(url, li)
+                     xbmc.sleep(_tvos_sleep(_PLAYBACK_RETRY_DELAY))
+@@ -5048,5 +5080,10 @@
+                     xbmcgui.NOTIFICATION_ERROR,
+                     3000,
+                 )
++            if not player.isPlaying():
++                trakt_playback_metadata.clear_window_ids_if_current(
++                    xbmcgui.Window(10000), trakt_ids_json
++                )
++            return
+         if stype in ("movie", "series"):
+             wh_extra = dict(extra) if extra else {}
+@@ -5112,6 +5147,9 @@
+             except Exception as e:
+                 _log(f"Playback monitoring error: {e}")
+             xbmc.sleep(_tvos_sleep(5000))
++        trakt_playback_metadata.clear_window_ids_if_current(
++            xbmcgui.Window(10000), trakt_ids_json
++        )
+ 
+     t = threading.Thread(target=_worker)
+     t.daemon = True
+@@ -11263,6 +11301,10 @@
+                 "title": name,
+                 "year": info.get("year", ""),
+                 "tmdb_type": "movie",
++                "tmdb_id": info.get("tmdb_id", ""),
++                "video_ids": json.dumps({key: value for key, value in {
++                    "tmdb": info.get("tmdb_id"), "imdb": info.get("imdb_id")
++                }.items() if value}),
+             }
+             xbmcplugin.addDirectoryItem(
+                 handle=addon_handle, url=build_url(q), listitem=li, isFolder=False
+@@ -11671,6 +11713,12 @@
+             "season": season_num,
+             "episode": ep.get("episode_num", ""),
+             "tmdb_type": "tv",
++            "tmdb_id": series_tmdb_id,
++            "show_ids": json.dumps({key: value for key, value in {
++                "tmdb": series_meta.get("tmdb_id") or series_meta.get("tmdb"),
++                "imdb": series_meta.get("imdb_id") or series_meta.get("imdb"),
++                "tvdb": series_meta.get("tvdb_id") or series_meta.get("tvdb"),
++            }.items() if value}),
+         }
+         xbmcplugin.addDirectoryItem(
+             handle=addon_handle, url=build_url(q), listitem=li, isFolder=False
+@@ -15109,16 +15157,16 @@
+ def _source_result_play_url(pnum, r, title, tmdb_type, tmdb_id):
+     stype = "series" if tmdb_type == "tv" else "movie"
+     icon = r.get("icon", "") or _local_icon("xstream_manager")
+-    return build_url({
+-        "mode": "play_stream",
+-        "url": r.get("url", ""),
+-        "name": r["name"],
+-        "title": title,
+-        "icon": icon,
+-        "stype": stype,
+-        "profile_num": pnum,
++    q = {
++        "mode": "play_stream", "url": r.get("url", ""), "name": r["name"],
++        "title": title, "icon": icon, "stype": stype, "profile_num": pnum,
+         "tmdb_id": tmdb_id,
+-    })
++    }
++    for key in ("year", "season", "episode", "video_ids", "show_ids", "showname"):
++        values = globals().get("args", {}).get(key, [""])
++        if values and values[0]:
++            q[key] = values[0]
++    return build_url(q)
+ 
+ 
+ def _play_source_result(selected, title, tmdb_type, tmdb_id):
+@@ -15409,6 +15457,8 @@
+             "season_num": season_num,
+             "ep_id": ep_id,
+             "profile_num": pnum,
++            "year": year, "episode": ep_num, "tmdb_id": tmdb_id,
++            "show_ids": json.dumps({"tmdb": tmdb_id} if tmdb_id else {}),
+         })
+         li = _new_listitem(ep_title)
+         playlist.add(plugin_url, li)
+--- a/resources/lib/premium_routes.py
++++ b/resources/lib/premium_routes.py
+@@ -760,18 +760,45 @@
+             entry = next((e for e in entries if resume_key(e) == get('key')), None)
+             if entry:
+                 kind = entry.get('stype')
+-                available = catalog(g, kind, pnum)[0] if kind in ('movie', 'series') else []
++                available, credentials = catalog(g, kind, pnum) if kind in ('movie', 'series') else ([], ())
+                 title = entry.get('title') or entry.get('name', '')
+-                if not any(s.get('name') in (title, entry.get('name')) or entry.get('name', '').startswith(
+-                        s.get('name', '') + ' - ') for s in available):
++                matched_item = next((s for s in available if s.get('name') in
++                    (title, entry.get('name')) or entry.get('name', '').startswith(
++                        s.get('name', '') + ' - ')), None)
++                if not matched_item:
+                     entry = None
+             if entry:
++                kind = entry.get('stype', 'movie')
++                item_data = metadata(g, matched_item, kind, credentials)
++                show_ids = {}
++                episode_data, episode_num = {}, entry.get('episode_num', entry.get('episode', ''))
++                episode_title = entry.get('title') or entry.get('name', '')
++                show_title = item_data.get('title', '')
++                if kind == 'series':
++                    raw = g['_cache_load']('series_info_' + provider_id(matched_item, kind)) or {}
++                    series_data = raw if isinstance(raw, dict) else {}
++                    raw = series_data.get('info') if isinstance(series_data.get('info'), dict) else {}
++                    show_title = show_title or raw.get('name', '')
++                    season_items = (series_data.get('episodes') or {}).get(str(entry.get('season_num', '')), [])
++                    episode_data = next((ep for ep in season_items if str(ep.get('id', '')) == str(entry.get('ep_id', ''))), {})
++                    episode_title = episode_data.get('title') or episode_title
++                    episode_num = episode_num or episode_data.get('episode_num', '')
++                    show_ids = {key: value for key, value in {
++                        'tmdb': item_data.get('tmdb_id') or raw.get('tmdb'),
++                        'imdb': item_data.get('imdb_id') or raw.get('imdb_id') or raw.get('imdb'),
++                        'tvdb': raw.get('tvdb_id') or raw.get('tvdb'),
++                    }.items() if value}
++                video_ids = ({key: value for key, value in {
++                    'tmdb': item_data.get('tmdb_id'), 'imdb': item_data.get('imdb_id')
++                }.items() if value} if kind == 'movie' else {})
+-                g['play_stream'](entry['url'], entry['name'], title=entry.get('title', ''),
++                g['play_stream'](entry['url'], entry['name'], title=episode_title,
+                     plot=entry.get('plot', ''), icon=entry.get('icon', ''),
+-                    stype=entry.get('stype', 'movie'), profile_num=pnum,
++                    stype=kind, profile_num=pnum,
+                     series_id=entry.get('series_id', ''), season_num=entry.get('season_num', ''),
+                     ep_id=entry.get('ep_id', ''), resume_pos=entry.get('position', 0),
+-                    resume_total=entry.get('duration', 0))
++                    resume_total=entry.get('duration', 0), tmdb_id=item_data.get('tmdb_id', ''),
++                    year=item_data.get('year', ''), video_ids=video_ids, show_ids=show_ids,
++                    episode_num=episode_num, show_title=show_title)
+             else:
+                 plugin.setResolvedUrl(handle, False, g['_new_listitem'](''))
+             return
+@@ -858,7 +877,10 @@
+         url = g['IPTV'].build_xtream_stream_url(*credentials, item, 'movie')
+         g['play_stream'](url, item['name'], title=data['title'], plot=data.get('plot', ''),
+                          icon=data.get('poster_url', ''), stype='movie', profile_num=pnum,
+-                         tmdb_id=data.get('tmdb_id', ''))
++                         tmdb_id=data.get('tmdb_id', ''), year=data.get('year', ''),
++                         video_ids={key: value for key, value in {
++                             'tmdb': data.get('tmdb_id'), 'imdb': data.get('imdb_id')
++                         }.items() if value})
+         return
+     pending_module = g.get('pending_adapter')
+     pending = (pending_module.PendingAdapter(g['_get_profile_fav'](pnum))
+--- /dev/null
++++ b/resources/lib/trakt_playback_metadata.py
+@@ -0,0 +1,68 @@
++"""Kodi ListItem metadata bridge for the official script.trakt add-on."""
++import json
++import re
++
++_PATTERNS = {"tmdb": re.compile(r"^[0-9]+$"), "tvdb": re.compile(r"^[0-9]+$"),
++             "imdb": re.compile(r"^tt[0-9]+$", re.IGNORECASE)}
++_PROPERTY = "script.trakt.ids"
++
++
++def normalize_ids(values):
++    if not isinstance(values, dict):
++        return {}
++    return {key: str(value).strip() for key, pattern in _PATTERNS.items()
++            if (value := values.get(key)) is not None and pattern.fullmatch(str(value).strip())}
++
++
++def _number(value, zero=False):
++    try:
++        result = int(value)
++    except (TypeError, ValueError, OverflowError):
++        return None
++    return result if result >= (0 if zero else 1) else None
++
++
++def apply_video_info_tag(tag, window, data):
++    data = data if isinstance(data, dict) else {}
++    movie, episode = data.get("stype") == "movie", data.get("stype") == "series"
++    tag.setMediaType("movie" if movie else "episode" if episode else "video")
++    if episode:
++        show = str(data.get("show_title") or data.get("title") or "")
++        tag.setTitle(str(data.get("episode_title") or data.get("name") or show))
++        if show:
++            tag.setTvShowTitle(show)
++        season, number = _number(data.get("season"), True), _number(data.get("episode"))
++        if season is not None:
++            tag.setSeason(season)
++        if number is not None:
++            tag.setEpisode(number)
++        video_ids = normalize_ids(data.get("video_ids"))
++        trakt_ids = normalize_ids(data.get("show_ids"))
++        if data.get("tmdb_id"):
++            trakt_ids.setdefault("tmdb", str(data["tmdb_id"]))
++            trakt_ids = normalize_ids(trakt_ids)
++    else:
++        tag.setTitle(str(data.get("title") or data.get("name") or ""))
++        year = _number(data.get("year"))
++        if year is not None:
++            tag.setYear(year)
++        video_ids = normalize_ids(data.get("video_ids"))
++        if movie and data.get("tmdb_id"):
++            video_ids.setdefault("tmdb", str(data["tmdb_id"]))
++            video_ids = normalize_ids(video_ids)
++        trakt_ids = video_ids
++    if video_ids:
++        preferred = next((key for key in ("tmdb", "imdb", "tvdb") if key in video_ids), "")
++        tag.setUniqueIDs(video_ids, preferred)
++    encoded = json.dumps(trakt_ids, sort_keys=True, separators=(",", ":")) if trakt_ids else ""
++    current = window.getProperty(_PROPERTY)
++    if encoded:
++        window.setProperty(_PROPERTY, encoded)
++    elif current:
++        window.clearProperty(_PROPERTY)
++    return encoded
++
++
++def clear_window_ids_if_current(window, expected):
++    if expected and window.getProperty(_PROPERTY) == expected:
++        window.clearProperty(_PROPERTY)
+

@@ -1,0 +1,35 @@
+name: Verify AcTweeteR 0.4.31 reproducibility
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  rebuild:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run migration tests and rebuild service/index
+        working-directory: source/0.4.31
+        run: |
+          mkdir -p "$RUNNER_TEMP/actweeter-0.4.31"
+          python3 -m unittest discover -s tests -v
+          python3 tools/build_service_package.py --output "$RUNNER_TEMP/actweeter-0.4.31/service.actweeter-0.4.31.zip"
+          python3 tools/build_distribution_index.py \
+            --repository-zip "$GITHUB_WORKSPACE/repo/repository.actweeter/repository.actweeter-1.0.3.zip" \
+            --skin-zip "$GITHUB_WORKSPACE/repo/skin.actweeter/skin.actweeter-1.2.28.zip" \
+            --service-zip "$RUNNER_TEMP/actweeter-0.4.31/service.actweeter-0.4.31.zip" \
+            --xstream-zip "$GITHUB_WORKSPACE/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.7.zip" \
+            --output-dir "$RUNNER_TEMP/actweeter-0.4.31/index"
+      - name: Compare service package and index
+        run: |
+          set -eu
+          tmp="$RUNNER_TEMP/actweeter-0.4.31"
+          cmp "$tmp/service.actweeter-0.4.31.zip" repo/service.actweeter/service.actweeter-0.4.31.zip
+          cmp "$tmp/index/addons.xml" repo/addons.xml
+          cmp "$tmp/index/addons.xml.md5" repo/addons.xml.md5
