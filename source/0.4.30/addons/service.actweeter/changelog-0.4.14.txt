@@ -1,0 +1,9 @@
+AcTweeteR Service 0.4.14
+
+- Detect Windows and Linux through the shared Kodi platform detector in the
+  actual setup/install path, matching the catalog's declared platform set.
+- Keep optional add-ons out of mandatory installation and require explicit
+  consent before including optional modules in a dependency-first plan.
+- Validate optional selections and catalog consent metadata fail-closed.
+- Record component-catalog reconciliation only after Kodi confirms the full
+  required dependency graph; offer one repair flow per service/catalog version.

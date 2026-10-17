@@ -18,12 +18,11 @@ class DistributionArtifactTests(unittest.TestCase):
         self.assertEqual(hashlib.md5(payload).hexdigest(), expected_md5)
         root = ET.fromstring(payload)
         versions = {node.get("id"): node.get("version") for node in root.findall("addon")}
-        self.assertEqual(versions, {
-            "repository.actweeter": "1.0.3",
-            "skin.actweeter": "1.2.28",
-            "service.actweeter": "0.4.29",
-            "plugin.video.xstream-pro": "1.1.2.7",
-        })
+        self.assertEqual(versions["repository.actweeter"], "1.0.3")
+        self.assertEqual(versions["skin.actweeter"], "1.2.28")
+        self.assertEqual(versions["plugin.video.xstream-pro"], "1.1.2.7")
+        service_version = tuple(map(int, versions["service.actweeter"].split(".")))
+        self.assertGreaterEqual(service_version, (0, 4, 29))
 
     def test_candidate_and_rollback_packages_have_valid_crc_and_manifest_hashes(self):
         for addon in MANIFEST["addons"]:

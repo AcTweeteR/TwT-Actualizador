@@ -1,0 +1,2301 @@
+diff --git a/addon.xml b/addon.xml
+index 456e6c9b3f33a94815f4f4117812c1c937f16358..6aee68588d450d2b0b954289041fc3d69ec6abbf 100644
+--- a/addon.xml
++++ b/addon.xml
+@@ -11,7 +11,7 @@
+     </extension>
+     <extension point="xbmc.service" library="service.py" start="startup" />
+     <extension point="xbmc.addon.metadata">
+-        <reuselanguageinvoker>true</reuselanguageinvoker>
++        <reuselanguageinvoker>false</reuselanguageinvoker>
+         <summary lang="en_GB">Xstream Pro - Organised M3U &amp; Xtream player</summary>
+         <description lang="en_GB">A clean M3U &amp; Xtream player with proper sorting: PVR, Live TV, Movies, Series and Replay, TMDB, Trakt, EPG support.</description>
+         <platform>all</platform>
+diff --git a/resources/lib/addon.py b/resources/lib/addon.py
+index 880518dd074153f6ea3bee426318512d309a0896..3c4c4ad961a0a486c2d5c35ec6636f904750a6af 100644
+--- a/resources/lib/addon.py
++++ b/resources/lib/addon.py
+@@ -44,7 +44,8 @@ from downloader import (
+     count_missing_downloads,
+ )
+ from favorites import Favorites
+-from history import WatchedMovies, WatchedEpisodes, WatchHistory, ResumePoints
++from history import WatchedMovies, WatchedEpisodes, WatchHistory, ResumePoints
++import series_changes
+ 
+ _tmdb_routes = None
+ _tmdb_routes_setup = None
+@@ -1556,6 +1557,7 @@ def _enrich_movie_info(s, base_url=None, user=None, pwd=None):
+         "duration": 0,
+         "tmdb_id": "",
+         "imdb_id": "",
++        "fanart_url": "",
+     }
+ 
+     # Apply provider data from stream list item based on toggles
+@@ -1595,6 +1597,26 @@ def _enrich_movie_info(s, base_url=None, user=None, pwd=None):
+                     or info.get("stream_icon")
+                     or result["poster_url"]
+                 )
++                backdrop = (
++                    info.get("info", {}).get("backdrop_path")
++                    or info.get("backdrop_path")
++                    or s.get("backdrop_path")
++                )
++                if isinstance(backdrop, list):
++                    backdrop = next(
++                        (
++                            item.strip()
++                            for item in backdrop
++                            if isinstance(item, str) and item.strip()
++                        ),
++                        "",
++                    )
++                elif isinstance(backdrop, str):
++                    backdrop = backdrop.strip()
++                else:
++                    backdrop = ""
++                if backdrop:
++                    result["fanart_url"] = backdrop
+             if use_prov_ratings:
+                 result["year"] = str(
+                     info.get("info", {}).get("releasedate", "")
+@@ -1727,11 +1749,12 @@ def _cache_load(name):
+         return None
+ 
+ 
+-def _cache_save(name, data):
+-    profile = xbmcvfs.translatePath(addon.getAddonInfo("profile"))
++def _cache_save(name, data):
++    import uuid
++    profile = xbmcvfs.translatePath(addon.getAddonInfo("profile"))
+     os.makedirs(profile, exist_ok=True)
+     cache_file = _cache_path(name)
+-    tmp_file = cache_file + ".tmp"
++    tmp_file = cache_file + "." + uuid.uuid4().hex + ".tmp"
+     with open(tmp_file, "w", encoding="utf-8") as f:
+         json.dump(data, f)
+         # Durability: atomic rename is not enough on Android — without fsync
+@@ -2001,22 +2024,24 @@ def _get_cached_m3u_channels(m3u_url):
+     return data
+ 
+ 
+-def _get_cached_xtream_categories(url, user, pwd, stype):
++def _get_cached_xtream_categories(url, user, pwd, stype, force_refresh=False, require_fresh=False):
+     if not url or not user or not pwd:
+         return []
+     key = f"xtream_cats_{stype}"
+     cached = _cache_load(key)
+     source = f"{url}|{user}|{pwd}"
+-    if isinstance(cached, dict) and cached.get("_src") == source and _cache_valid(key):
++    if not force_refresh and isinstance(cached, dict) and cached.get("_src") == source and _cache_valid(key):
+         cached_data = cached.get("_data") or []
+         if not isinstance(cached_data, list):
+             _log("Xtream categories ({0}): cached data is not a list, re-fetching".format(stype))
+         else:
+             return cached_data
+-    try:
+-        data = IPTV.get_xtream_categories(url, user, pwd, stype)
+-    except ProviderFetchError as e:
+-        if isinstance(cached, dict) and cached.get("_src") == source:
++    try:
++        data = IPTV.get_xtream_categories(url, user, pwd, stype)
++    except ProviderFetchError as e:
++        if require_fresh:
++            raise
++        if isinstance(cached, dict) and cached.get("_src") == source:
+             stale = cached.get("_data") or []
+             if isinstance(stale, list):
+                 _log(f"Xtream categories ({stype}) fetch failed; using stale cache: {e}")
+@@ -2026,24 +2051,27 @@ def _get_cached_xtream_categories(url, user, pwd, stype):
+     return data
+ 
+ 
+-def _get_cached_xtream_streams(url, user, pwd, stype, category_id=None):
++def _get_cached_xtream_streams(url, user, pwd, stype, category_id=None,
++                               force_refresh=False, require_fresh=False):
+     if not url or not user or not pwd:
+         return []
+     key = f"xtream_streams_{stype}"
+     cached = _cache_load(key)
+     source = f"{url}|{user}|{pwd}"
+     cache_hit = False
+-    if isinstance(cached, dict) and cached.get("_src") == source and _cache_valid(key):
++    if not force_refresh and isinstance(cached, dict) and cached.get("_src") == source and _cache_valid(key):
+         data = cached.get("_data") or []
+         if not isinstance(data, list):
+             _log("Xtream streams ({0}): cached data is not a list, re-fetching".format(stype))
+         else:
+             cache_hit = True
+     if not cache_hit:
+-        try:
+-            data = IPTV.get_xtream_streams(url, user, pwd, stype, None)
+-        except ProviderFetchError as e:
+-            if isinstance(cached, dict) and cached.get("_src") == source:
++        try:
++            data = IPTV.get_xtream_streams(url, user, pwd, stype, None)
++        except ProviderFetchError as e:
++            if require_fresh:
++                raise
++            if isinstance(cached, dict) and cached.get("_src") == source:
+                 stale = cached.get("_data") or []
+                 if isinstance(stale, list):
+                     _log(f"Xtream streams ({stype}) fetch failed; using stale cache: {e}")
+@@ -11011,7 +11039,7 @@ def xtream_categories(stype, profile_num=None):
+     xbmcplugin.endOfDirectory(addon_handle, succeeded=True, updateListing=False, cacheToDisc=False)
+ 
+ 
+-def xtream_streams(stype, cat_id, page=1, adult="0", profile_num=None):
++def xtream_streams(stype, cat_id, page=1, adult="0", profile_num=None):
+     if adult == "1" and _is_adult_locked(stype):
+         if not _check_pin("Adult Content"):
+             xbmcplugin.endOfDirectory(addon_handle, succeeded=False)
+@@ -11021,7 +11049,14 @@ def xtream_streams(stype, cat_id, page=1, adult="0", profile_num=None):
+     url = creds.get("xtream_url", "")
+     user = creds.get("xtream_username", "")
+     pwd = creds.get("xtream_password", "")
+-    streams = _get_cached_xtream_streams(url, user, pwd, stype, cat_id)
++    streams = _get_cached_xtream_streams(url, user, pwd, stype, cat_id)
++    if stype == "series" and url and user and pwd:
++        try:
++            series_changes.record_catalog(
++                addon, pnum, _get_cached_xtream_streams(url, user, pwd, "series")
++            )
++        except Exception as exc:
++            _log("Series change catalogue snapshot unavailable: {0}".format(exc))
+     hidden_items = _get_hidden_items(stype, profile_num)
+     if hidden_items:
+         streams = [
+@@ -11089,7 +11124,17 @@ def xtream_streams(stype, cat_id, page=1, adult="0", profile_num=None):
+             target_name_key="name",
+             log_prefix="Live TV EPG",
+         )
+-    epg_aliases = _build_same_group_epg_aliases(streams, epg, str(cat_id or "")) if show_epg else {}
++    epg_aliases = _build_same_group_epg_aliases(streams, epg, str(cat_id or "")) if show_epg else {}
++    series_inventory_map = {}
++    series_watched_store = None
++    series_resume_entries = []
++    if stype == "series":
++        try:
++            series_inventory_map = series_changes.inventory_map(addon, pnum)
++            series_watched_store = WatchedEpisodes(addon, profile_num=pnum)
++            series_resume_entries = ResumePoints(addon, profile_num=pnum).get_all()
++        except Exception:
++            _log("Series progress adapter unavailable; leaving progress unknown")
+     for s in page_streams:
+         name = s.get("name", "Unknown")
+         if stype == "live":
+@@ -11197,8 +11242,13 @@ def xtream_streams(stype, cat_id, page=1, adult="0", profile_num=None):
+                 art["poster"] = info["poster_url"]
+             else:
+                 art["icon"] = "DefaultMovies.png"
++            if info.get("fanart_url"):
++                art["fanart"] = info["fanart_url"]
+             li.setArt(art)
+-            li.setProperty("IsPlayable", "true")
++            premium_routes = __import__('premium_routes')
++            premium_routes.content_state.apply_to_listitem(globals(), li, 'movie',
++                pnum, info.get('tmdb_id'), provider_id=sid, play_url=play_url)
++            li.setProperty("IsPlayable", "true")
+             _prepare_playback_item(li)
+             ctx = _build_favorite_ctx(
+                 sid, name, "movie", s.get("stream_icon", ""), play_url,
+@@ -11260,12 +11312,58 @@ def xtream_streams(stype, cat_id, page=1, adult="0", profile_num=None):
+                 if cast_list:
+                     info_tag.setCast(cast_list)
+             art = {}
+-            if info["poster_url"]:
+-                art["icon"] = info["poster_url"]
+-                art["thumb"] = info["poster_url"]
+-                art["poster"] = info["poster_url"]
+-            li.setArt(art)
+-            ctx = _build_favorite_ctx(
++            if info["poster_url"]:
++                art["icon"] = info["poster_url"]
++                art["thumb"] = info["poster_url"]
++                art["poster"] = info["poster_url"]
++            if addon.getSetting("provider_series_posters").lower() == "true":
++                series_meta = _cache_load(f"series_info_{sid}") or {}
++                series_meta_info = series_meta.get("info", {})
++                backdrop = (
++                    s.get("backdrop_path")
++                    or series_meta.get("backdrop_path")
++                    or series_meta_info.get("backdrop_path")
++                )
++                if isinstance(backdrop, list):
++                    backdrop = next(
++                        (
++                            item.strip()
++                            for item in backdrop
++                            if isinstance(item, str) and item.strip()
++                        ),
++                        "",
++                    )
++                elif isinstance(backdrop, str):
++                    backdrop = backdrop.strip()
++                else:
++                    backdrop = ""
++                if backdrop:
++                    art["fanart"] = backdrop
++            li.setArt(art)
++            change_status = series_changes.status(addon, pnum, sid)
++            if change_status:
++                li.setProperty("XStream.ChangeStatus", change_status)
++            if series_watched_store is not None:
++                inventory_record = series_inventory_map.get(sid)
++                cached_tmdb_id = ""
++                if not ((inventory_record or {}).get("tmdb_id") or s.get("tmdb_id") or s.get("tmdb")):
++                    try:
++                        premium_cache = _cache_load("premium_meta_series_{0}_es".format(sid)) or {}
++                        if premium_cache.get("expires", 0) > time.time():
++                            cached_tmdb_id = str((premium_cache.get("data") or {}).get("tmdb_id") or "")
++                    except Exception:
++                        pass
++                tmdb_id = series_changes.series_state.resolve_tmdb_id(
++                    inventory_record, s, cached_tmdb_id)
++                try:
++                    state = series_changes.series_state.derive_series_state(
++                        tmdb_id, sid, inventory_record, series_watched_store,
++                        series_resume_entries
++                    )
++                    series_changes.series_state.apply_to_listitem(li, state)
++                except Exception:
++                    _log("Series progress derivation unavailable; leaving progress unknown")
++            ctx = _build_favorite_ctx(
+                 sid, name, "series", s.get("stream_icon", ""), series_url,
+                 profile_num=pnum
+             )
+@@ -11301,15 +11391,23 @@ def xtream_streams(stype, cat_id, page=1, adult="0", profile_num=None):
+     xbmcplugin.endOfDirectory(addon_handle, succeeded=True, updateListing=False, cacheToDisc=False)
+ 
+ 
+-def xtream_series(series_id, profile_num=None):
++def xtream_series(series_id, profile_num=None):
+     pnum = profile_num or pm.active
+     creds = _get_credentials_for_profile(pnum)
+     url = creds.get("xtream_url", "")
+     user = creds.get("xtream_username", "")
+     pwd = creds.get("xtream_password", "")
+-    info = IPTV.get_xtream_series_info(url, user, pwd, series_id)
++    info = IPTV.get_xtream_series_info(url, user, pwd, series_id)
++    try:
++        series_changes.record_series_info(
++            addon, pnum, series_id,
++            str((info.get("info") or {}).get("name") or series_id), info
++        )
++    except Exception as exc:
++        _log("Series episode snapshot unavailable: {0}".format(exc))
+     episodes = info.get("episodes", {})
+-    xbmcplugin.setContent(addon_handle, "tvshows")
++    xbmcplugin.setContent(addon_handle, "tvshows")
++    xbmcplugin.setPluginCategory(addon_handle, "Temporadas")
+ 
+     # Provider metadata toggles for series
+     use_prov = addon.getSetting("provider_series_enabled").lower() == "true"
+@@ -11485,7 +11583,7 @@ def xtream_series(series_id, profile_num=None):
+     xbmcplugin.endOfDirectory(addon_handle, succeeded=True, updateListing=False, cacheToDisc=False)
+ 
+ 
+-def xtream_season(series_id, season_num, profile_num=None):
++def xtream_season(series_id, season_num, profile_num=None):
+     pnum = profile_num or pm.active
+     creds = _get_credentials_for_profile(pnum)
+     url = creds.get("xtream_url", "")
+@@ -11493,7 +11591,14 @@ def xtream_season(series_id, season_num, profile_num=None):
+     pwd = creds.get("xtream_password", "")
+     info = IPTV.get_xtream_series_info(url, user, pwd, series_id)
+     eps = info.get("episodes", {}).get(season_num, [])
+-    xbmcplugin.setContent(addon_handle, "episodes")
++    series_meta = info.get("info", {}) or {}
++    series_tmdb_id = str(series_meta.get("tmdb_id") or series_meta.get("tmdb") or "")
++    if not series_tmdb_id:
++        premium_cache = _cache_load("premium_meta_series_{0}_es".format(series_id)) or {}
++        if premium_cache.get("expires", 0) > time.time():
++            series_tmdb_id = str((premium_cache.get("data") or {}).get("tmdb_id") or "")
++    xbmcplugin.setContent(addon_handle, "episodes")
++    xbmcplugin.setPluginCategory(addon_handle, "Episodios")
+ 
+     # Provider metadata toggles for series
+     use_prov = addon.getSetting("provider_series_enabled").lower() == "true"
+@@ -11533,6 +11638,10 @@ def xtream_season(series_id, season_num, profile_num=None):
+         li.setProperty("IsPlayable", "true")
+         _prepare_playback_item(li)
+         play_url = IPTV.build_xtream_stream_url(url, user, pwd, ep, "series")
++        episode_number = ep.get("episode_num", "")
++        premium_routes = __import__('premium_routes')
++        premium_routes.content_state.apply_to_listitem(globals(), li, 'episode',
++            pnum, series_tmdb_id, season_num, episode_number, ep_id, series_id, play_url)
+         ctx = _build_favorite_ctx(
+             ep_id, title, "series", movie_image or "", play_url,
+             profile_num=profile_num,
+@@ -11541,5 +11650,9 @@ def xtream_season(series_id, season_num, profile_num=None):
+             episode=ep.get("episode_num", "")
+         )
++        watched_actions = (premium_routes.content_state.watched_context(
++            globals(), 'episode', series_tmdb_id, season_num, episode_number, pnum)
++            if series_tmdb_id else [])
++        premium_routes.content_state.add_context_actions(li, ctx, watched_actions)
+         series_name = info.get("info", {}).get("name", "")
+         q = {
+             "mode": "source_select",
+@@ -15293,7 +15405,13 @@ def tmdb_series_action():
+     xbmc.Player().play(playlist)
+ 
+ 
+-if mode is None:
++if mode == "premium":
++    import premium_routes
++    import pending_adapter
++    globals()["pending_adapter"] = pending_adapter
++    globals()["_series_change_status"] = lambda sid: series_changes.status(addon, pm.active, sid)
++    premium_routes.dispatch(globals(), args)
++elif mode is None:
+     main_menu()
+ elif mode == "live_menu":
+     live_menu(args.get("profile_num", [None])[0])
+@@ -16802,49 +16918,9 @@ elif mode == "fav_remove_by_type":
+             if removed:
+                 xbmcgui.Dialog().notification("Xstream Pro", _t(30814))
+             xbmc.executebuiltin("Container.Refresh")
+-elif mode == "toggle_tmdb_watched":
+-    _tw_tmdb_id = args.get("tmdb_id", [""])[0]
+-    _tw_tmdb_type = args.get("tmdb_type", [""])[0]
+-    _tw_season = args.get("season", [""])[0]
+-    _tw_episode = args.get("episode", [""])[0]
+-    _tw_pnum = int(pm.active) if pm.active and str(pm.active).isdigit() else 1
+-    if _tw_tmdb_id and _tw_tmdb_type == "movie":
+-        wm = WatchedMovies(addon, profile_num=_tw_pnum)
+-        if wm.is_watched(_tw_tmdb_id):
+-            wm.mark_unwatched(_tw_tmdb_id)
+-            xbmcgui.Dialog().notification("Xstream Pro", _t(31121))
+-        else:
+-            wm.mark_watched(_tw_tmdb_id)
+-            xbmcgui.Dialog().notification("Xstream Pro", _t(31120))
+-    elif _tw_tmdb_id and _tw_tmdb_type == "tv" and _tw_season and _tw_episode:
+-        we = WatchedEpisodes(addon, profile_num=_tw_pnum)
+-        if we.is_watched(_tw_tmdb_id, _tw_season, _tw_episode):
+-            we.mark_unwatched(_tw_tmdb_id, _tw_season, _tw_episode)
+-            xbmcgui.Dialog().notification("Xstream Pro", _t(31121))
+-        else:
+-            we.mark_watched(_tw_tmdb_id, _tw_season, _tw_episode)
+-            xbmcgui.Dialog().notification("Xstream Pro", _t(31120))
+-    elif _tw_tmdb_id and _tw_tmdb_type == "tv" and _tw_season:
+-        # Season watched toggle
+-        wm = WatchedMovies(addon, profile_num=_tw_pnum)
+-        _s_key = "season:{0}:{1}".format(_tw_tmdb_id, _tw_season)
+-        if wm.is_watched(_s_key):
+-            wm.mark_unwatched(_s_key)
+-            xbmcgui.Dialog().notification("Xstream Pro", _t(31121))
+-        else:
+-            wm.mark_watched(_s_key)
+-            xbmcgui.Dialog().notification("Xstream Pro", _t(31120))
+-    elif _tw_tmdb_id and _tw_tmdb_type == "tv":
+-        # TV show watched toggle
+-        wm = WatchedMovies(addon, profile_num=_tw_pnum)
+-        _sh_key = "tvshow:{0}".format(_tw_tmdb_id)
+-        if wm.is_watched(_sh_key):
+-            wm.mark_unwatched(_sh_key)
+-            xbmcgui.Dialog().notification("Xstream Pro", _t(31121))
+-        else:
+-            wm.mark_watched(_sh_key)
+-            xbmcgui.Dialog().notification("Xstream Pro", _t(31120))
+-    xbmc.executebuiltin("Container.Refresh")
++elif mode == "toggle_tmdb_watched":
++    from watched_actions import toggle_tmdb_watched
++    toggle_tmdb_watched(globals(), args)
+ elif mode == "tmdb_local_recent":
+     tmdb_local_recent(args.get("tmdb_type", ["movie"])[0])
+ elif mode == "tmdb_local_in_progress":
+diff --git a/resources/lib/content_state.py b/resources/lib/content_state.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..88befca768166634db06d3349ed70ed202f139f9
+--- /dev/null
++++ b/resources/lib/content_state.py
+@@ -0,0 +1,94 @@
++"""Read-only bridge from XStream stores to standard Kodi VideoInfoTag state."""
++
++
++def _number(value):
++    try:
++        return float(value)
++    except (TypeError, ValueError, OverflowError):
++        return 0.0
++
++
++def watched_state(g, stype, tmdb_id, season='', episode='', profile_num=1):
++    """Return True/False only for an exact supported identity; otherwise None."""
++    identity = str(tmdb_id or '').strip()
++    if not identity:
++        return None
++    try:
++        if stype == 'movie':
++            store = g['WatchedMovies'](g['addon'], profile_num=profile_num)
++            return bool(store.is_watched(identity))
++        if stype == 'episode' and season != '' and episode != '':
++            store = g['WatchedEpisodes'](g['addon'], profile_num=profile_num)
++            return bool(store.is_watched(identity, season, episode))
++    except Exception:
++        return None
++    return None
++
++
++def resume_entry(g, profile_num, provider_id='', series_id='', season='',
++                 episode='', play_url=''):
++    """Match exact provider IDs when stored, else exact playback URL only."""
++    try:
++        entries = g['ResumePoints'](g['addon'], profile_num=profile_num).get_all()
++    except Exception:
++        return None
++    matches = []
++    for entry in entries:
++        if not isinstance(entry, dict):
++            continue
++        exact_id = False
++        if provider_id:
++            exact_id = str(entry.get('provider_stream_id') or '') == str(provider_id)
++        if series_id and episode:
++            exact_id = exact_id or (
++                str(entry.get('provider_series_id') or '') == str(series_id)
++                and str(entry.get('provider_episode_id') or '') == str(provider_id)
++                and str(entry.get('season_num') or '') == str(season)
++                and str(entry.get('ep_id') or '') == str(episode))
++        exact_url = bool(play_url) and entry.get('url') == play_url
++        if exact_id or exact_url:
++            position = _number(entry.get('position'))
++            duration = _number(entry.get('duration'))
++            if 0 < position < duration:
++                matches.append(entry)
++    return max(matches, key=lambda row: _number(row.get('timestamp'))) if matches else None
++
++
++def apply_to_listitem(g, listitem, stype, profile_num=1, tmdb_id='', season='',
++                      episode='', provider_id='', series_id='', play_url=''):
++    """Translate existing state only; never writes, guesses, or logs identities."""
++    tag = listitem.getVideoInfoTag()
++    watched = watched_state(g, stype, tmdb_id, season, episode, profile_num)
++    if watched is not None:
++        tag.setPlaycount(1 if watched else 0)
++    resume = resume_entry(g, profile_num, provider_id, series_id, season,
++                          episode, play_url)
++    if resume:
++        position = _number(resume.get('position'))
++        duration = _number(resume.get('duration'))
++        if duration > 0 and 0 < position < duration:
++            tag.setDuration(int(duration))
++            tag.setResumePoint(position, duration)
++    return {'watched': watched, 'has_resume': bool(resume)}
++
++
++def watched_context(g, stype, tmdb_id, season='', episode='', profile_num=1):
++    """Expose XStream's existing explicit mark/unmark action where IDs are exact."""
++    state = watched_state(g, stype, tmdb_id, season, episode, profile_num)
++    if state is None:
++        return []
++    route = g['build_url']({'mode':'toggle_tmdb_watched', 'tmdb_id':str(tmdb_id),
++        'tmdb_type':'movie' if stype == 'movie' else 'tv', 'season':str(season or ''),
++        'episode':str(episode or ''), 'profile_num':str(profile_num or 1)})
++    label = g['_t'](31082 if state else 31081)
++    # Kodi also contributes a native action with this label; distinguish the
++    # plugin action so it remains visible and unambiguous in the context menu.
++    return [(label + ' (AcTweeteR)', 'RunPlugin(%s)' % route)]
++
++
++def add_context_actions(listitem, *groups):
++    """Submit all actions in one call: Kodi re-indexes context items per call."""
++    actions = [action for group in groups for action in (group or [])]
++    if actions:
++        listitem.addContextMenuItems(actions)
++    return actions
+diff --git a/resources/lib/premium_routes.py b/resources/lib/premium_routes.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..f43603caf622701aa4f1bcf8d513e49677651621
+--- /dev/null
++++ b/resources/lib/premium_routes.py
+@@ -0,0 +1,1004 @@
++"""Provider-first, bounded widget endpoints. Never returns a discovery item.
++
++Called with the existing addon's environment; playback/profile/history remain
++owned by XStream. Provider IDs, rather than fuzzy titles, bind every selection.
++"""
++import hashlib
++import json
++import os
++import re
++import time
++import unicodedata
++from urllib.parse import urlparse
++import content_state
++
++
++def backdrop(value):
++    if isinstance(value, list):
++        return next((u for u in (backdrop(v) for v in value) if u), '')
++    if isinstance(value, str):
++        value = value.strip()
++        parsed = urlparse(value)
++        if parsed.scheme in ('https', 'http') and parsed.netloc:
++            return value
++    return ''
++
++
++def number(value):
++    try:
++        return int(float(value or 0))
++    except (ValueError, TypeError, OverflowError):
++        return 0
++
++
++def premiere_year(offset=0, clock=None):
++    """Return the current/previous premiere year from an injectable clock."""
++    try:
++        now = (clock or time).localtime()
++        return int(now.tm_year) - number(offset)
++    except Exception:
++        return int(time.gmtime().tm_year) - number(offset)
++
++
++def provider_id(item, stype):
++    return str(item.get('series_id' if stype == 'series' else 'stream_id') or '')
++
++
++def resume_key(entry):
++    return hashlib.sha256((entry.get('name', '') + '||' + entry.get('url', '')).encode()).hexdigest()
++
++
++def normalized(title):
++    title = re.sub(r'\s*\(\d{4}\)\s*$', '', str(title or ''))
++    title = unicodedata.normalize('NFKD', title).casefold()
++    return ''.join(c for c in title if c.isalnum())
++
++
++def ranked_provider_items(g, items, stype, section):
++    """External ranking may order provider records, never manufacture them."""
++    key = 'premium_rank_%s_%s_es' % (stype, section)
++    cached = g['_cache_load'](key) or {}
++    if cached.get('expires', 0) > time.time():
++        ranks = cached.get('ranks', [])
++    else:
++        ranks = []
++        try:
++            import trakt
++            import tmdb
++            media = 'tv' if stype == 'series' else 'movie'
++            source = trakt.public_list(section, media).get('results', [])[:20]
++            names = {(normalized(s.get('name')), str(s.get('year') or '')) for s in items}
++            for index, entry in enumerate(source):
++                title, year = entry.get('title', ''), str(entry.get('year') or '')
++                titles = [title]
++                # Bounded localization of ranking names; not a discovery list.
++                if (normalized(title), year) not in names and index < 8:
++                    meta = tmdb.details(media, entry.get('tmdb_id'))
++                    titles.append(meta.get('title') or meta.get('name') or '')
++                ranks.append({'tmdb_id':str(entry.get('tmdb_id') or ''),
++                              'year':year, 'titles':titles})
++            g['_cache_save'](key, {'expires':time.time() + 21600, 'ranks':ranks})
++        except Exception:
++            g['_log']('Premium provider ranking unavailable; no discovery fallback')
++    result, used = [], set()
++    for rank in ranks:
++        target_id = rank.get('tmdb_id')
++        titles = {normalized(t) for t in rank.get('titles', []) if t}
++        matches = [s for s in items if (
++            target_id and str(s.get('tmdb_id') or s.get('tmdb') or '') == target_id)
++            or (rank.get('year') and str(s.get('year') or '') == rank['year']
++                and normalized(s.get('name')) in titles)]
++        # Different editions of one exact title/year are safe; ambiguous titles aren't.
++        identities = {(normalized(s.get('name')), str(s.get('year') or '')) for s in matches}
++        if len(identities) == 1:
++            item = matches[0]
++            sid = provider_id(item, stype)
++            if sid not in used:
++                result.append(item)
++                used.add(sid)
++    return result
++
++
++def enrich(g, item, stype, data, budget):
++    """Exact ID or unique exact title/year. Never adds titles to a collection."""
++    key = 'premium_meta_%s_%s_es' % (stype, provider_id(item, stype))
++    cached = g['_cache_load'](key) or {}
++    if cached.get('expires', 0) > time.time():
++        extra = cached.get('data') or {}
++    elif budget[0] > 0:
++        budget[0] -= 1
++        extra = {}
++        try:
++            import tmdb
++            media = 'tv' if stype == 'series' else 'movie'
++            tmdb_id = data.get('tmdb_id')
++            if not tmdb_id:
++                query = re.sub(r'\s*\(\d{4}\)\s*$', '', item.get('name', ''))
++                matches = [m for m in tmdb.search(media, query).get('results', [])
++                    if normalized(m.get('title')) == normalized(query)
++                    and str(m.get('year')) == str(data.get('year'))
++                    and number(data.get('year'))]
++                if len(matches) == 1:
++                    tmdb_id = matches[0].get('tmdb_id')
++            if tmdb_id:
++                meta = tmdb.details(media, tmdb_id)
++                # ID from provider is authoritative; fuzzy matches never used.
++                if meta.get('id'):
++                    extra['tmdb_id'] = str(meta['id'])
++                    extra['title'] = meta.get('title') or meta.get('name') or ''
++                    extra['plot'] = meta.get('overview') or ''
++                    extra['genre'] = ', '.join(v['name'] for v in meta.get('genres', []) if v.get('name'))
++                    extra['poster_url'] = tmdb.image_url(meta.get('poster_path'))
++                    extra['fanart_url'] = tmdb.fanart_url(meta.get('backdrop_path'))
++                    extra['imdb_id'] = meta.get('imdb_id') or meta.get('external_ids', {}).get('imdb_id') or ''
++                    extra['rating'] = meta.get('vote_average') or ''
++                    extra['tagline'] = meta.get('tagline') or ''
++                    extra['cast'] = [{'name':a.get('name', ''), 'role':a.get('character', ''),
++                                     'thumbnail':tmdb.image_url(a.get('profile_path'))}
++                                    for a in meta.get('credits', {}).get('cast', [])[:10]]
++                    videos = meta.get('videos', {}).get('results', [])
++                    trailer = next((v for v in videos if v.get('site') == 'YouTube'
++                                    and v.get('type') == 'Trailer' and v.get('official')), None)
++                    if trailer:
++                        extra['trailer'] = 'plugin://plugin.video.youtube/play/?video_id=' + trailer['key']
++            g['_cache_save'](key, {'expires':time.time() + (604800 if extra else 86400), 'data':extra})
++        except Exception:
++            # Metadata failure must not prevent provider playback.
++            g['_log']('Premium enrichment unavailable; retaining provider metadata')
++    else:
++        extra = {}
++    provider_fanart = data.get('fanart_url')
++    provider_poster = data.get('poster_url')
++    for key,value in extra.items():
++        if value:
++            data[key] = value
++    if provider_fanart:
++        data['fanart_url'] = provider_fanart
++    if not data.get('poster_url'):
++        data['poster_url'] = provider_poster
++    # Optional exact-ID artwork. One cold request per directory, no discovery.
++    if data.get('tmdb_id'):
++        art_key = 'premium_logo_%s_%s_es' % (stype, data['tmdb_id'])
++        artwork = g['_cache_load'](art_key) or {}
++        if artwork.get('expires', 0) <= time.time() and budget[1] > 0:
++            budget[1] -= 1
++            try:
++                import tmdb
++                media = 'tv' if stype == 'series' else 'movie'
++                images = tmdb._request('/%s/%s/images' % (media, data['tmdb_id']),
++                    {'include_image_language':'es,null,en'}, ttl=168)
++                logos = [a for a in images.get('logos', []) if a.get('file_path')]
++                logos.sort(key=lambda a: ({'es':0, None:1, 'en':2}.get(a.get('iso_639_1'), 3),
++                                           -float(a.get('vote_average') or 0)))
++                artwork = {'expires':time.time() + 604800,
++                           'clearlogo':tmdb.image_url(logos[0]['file_path'], 'w500') if logos else ''}
++                g['_cache_save'](art_key, artwork)
++            except Exception:
++                artwork = {'expires':time.time() + 86400, 'clearlogo':''}
++                g['_cache_save'](art_key, artwork)
++        if artwork.get('expires', 0) > time.time() and artwork.get('clearlogo'):
++            data['clearlogo_url'] = artwork['clearlogo']
++    return data
++
++
++def catalog(g, stype, pnum, *, force_refresh=False):
++    creds = g['_get_credentials_for_profile'](pnum)
++    host, user, password = (creds.get(k, '') for k in
++                            ('xtream_url', 'xtream_username', 'xtream_password'))
++    items = g['_get_cached_xtream_streams'](
++        host, user, password, stype, None,
++        force_refresh=force_refresh, require_fresh=force_refresh)
++    categories = g['_get_cached_xtream_categories'](
++        host, user, password, stype,
++        force_refresh=force_refresh, require_fresh=force_refresh)
++    hidden_cats = set(g['_get_hidden_subcats'](stype, pnum))
++    # Premium collections do not bypass parental control or hidden categories.
++    blocked = hidden_cats | {str(c.get('category_id', '')) for c in categories
++                            if g['_is_adult_category'](c.get('category_name', ''))}
++    hidden = set(g['_get_hidden_items'](stype, pnum))
++    return [s for s in items if isinstance(s, dict)
++            and provider_id(s, stype) not in hidden
++            and str(s.get('category_id', '')) not in blocked], (host, user, password)
++
++
++def metadata(g, item, stype, credentials):
++    sid = provider_id(item, stype)
++    if stype == 'movie':
++        data = g['_enrich_movie_info'](item, *credentials)
++        raw = g['_cache_load']('vod_info_' + sid) or {}
++    else:
++        data = g['_enrich_series_info'](item, *credentials)
++        raw = g['_cache_load']('series_info_' + sid) or {}
++    cached = raw.get('info') or {}
++    if not isinstance(cached, dict):
++        cached = {}
++    data['year'] = data.get('year') or item.get('year') or str(
++        item.get('releaseDate') or item.get('release_date') or '')[:4]
++    data['fanart_url'] = backdrop(data.get('fanart_url') or item.get('backdrop_path')
++                                   or cached.get('backdrop_path') or raw.get('backdrop_path'))
++    data['tmdb_id'] = str(data.get('tmdb_id') or cached.get('tmdb_id') or cached.get('tmdb')
++                          or item.get('tmdb_id') or item.get('tmdb') or '')
++    data['imdb_id'] = str(data.get('imdb_id') or cached.get('imdb_id') or '')
++    data['trailer'] = cached.get('youtube_trailer') or item.get('youtube_trailer') or ''
++    data['title'] = item.get('name', '')
++    return data
++
++
++def prepare_series_state_context(g, profile_num):
++    """Load existing read-only series stores once for a provider listing."""
++    try:
++        changes = g['series_changes']
++        return {
++            'inventory': changes.inventory_map(g['addon'], profile_num),
++            'watched': g['WatchedEpisodes'](g['addon'], profile_num=profile_num),
++            'resume': g['ResumePoints'](g['addon'], profile_num=profile_num).get_all(),
++        }
++    except Exception:
++        return None
++
++
++def listitem(g, item, stype, data, label=None, profile_num=None, play_url='',
++             series_context=None):
++    li = g['_new_listitem'](label or data['title'])
++    tag = li.getVideoInfoTag()
++    tag.setMediaType('tvshow' if stype == 'series' else 'movie')
++    tag.setTitle(data['title'])
++    tag.setPlot(data.get('plot') or '')
++    if data.get('tagline'):
++        tag.setTagLine(data['tagline'])
++    trailer = data.get('trailer')
++    if isinstance(trailer, str) and trailer:
++        if re.fullmatch(r'[A-Za-z0-9_-]{11}', trailer):
++            trailer = 'plugin://plugin.video.youtube/play/?video_id=' + trailer
++        if trailer.startswith(('plugin://plugin.video.youtube/', 'https://www.youtube.com/')):
++            tag.setTrailer(trailer)
++    if number(data.get('year')):
++        tag.setYear(number(data['year']))
++    if number(data.get('duration')):
++        tag.setDuration(number(data['duration']))
++    if data.get('genre'):
++        tag.setGenres([s.strip() for s in str(data['genre']).split(',') if s.strip()])
++    try:
++        if data.get('rating'):
++            tag.setRating(float(data['rating']))
++    except (ValueError, TypeError):
++        pass
++    actors = [g['xbmc'].Actor(a.get('name', ''), a.get('role', ''), i,
++                            a.get('thumbnail', ''))
++              for i, a in enumerate(data.get('cast') or []) if a.get('name')]
++    if actors:
++        tag.setCast(actors[:10])
++    ids = {k: str(data[k + '_id']) for k in ('tmdb', 'imdb') if data.get(k + '_id')}
++    if ids:
++        tag.setUniqueIDs(ids, 'tmdb' if 'tmdb' in ids else 'imdb')
++        for key, value in ids.items():
++            li.setProperty(key + '_id', value)
++    art = {}
++    poster = backdrop(data.get('poster_url') or item.get('cover') or item.get('stream_icon'))
++    fanart = backdrop(data.get('fanart_url'))
++    if poster:
++        art.update(poster=poster, icon=poster, thumb=poster)
++    if fanart:
++        art.update(fanart=fanart, landscape=fanart)
++    if backdrop(data.get('clearlogo_url')):
++        art['clearlogo'] = data['clearlogo_url']
++    li.setArt(art)
++    li.setProperty('XStream.ProviderID', provider_id(item, stype))
++    li.setProperty('XStream.ProviderOnly', 'true')
++    li.setProperty('IsPlayable', 'false' if stype == 'series' else 'true')
++    if stype == 'movie' and profile_num is not None:
++        content_state.apply_to_listitem(g, li, 'movie', profile_num,
++            data.get('tmdb_id'), provider_id=provider_id(item, stype), play_url=play_url)
++    elif stype == 'series' and profile_num is not None and series_context:
++        try:
++            sid = provider_id(item, stype)
++            record = series_context['inventory'].get(sid)
++            state_api = g['series_changes'].series_state
++            tmdb_id = state_api.resolve_tmdb_id(record, item, data.get('tmdb_id', ''))
++            state = state_api.derive_series_state(
++                tmdb_id, sid, record, series_context['watched'], series_context['resume'])
++            state_api.apply_to_listitem(li, state)
++        except Exception:
++            g['_log']('Premium series progress unavailable; leaving progress unknown')
++    return li
++
++
++def add_provider_item(g, item, stype, credentials, pnum, budget,
++                      series_context=None, pending=None, reconcile_pending=False):
++    data = enrich(g, item, stype, metadata(g, item, stype, credentials), budget)
++    play_url = (g['IPTV'].build_xtream_stream_url(*credentials, item, 'movie')
++                if stype == 'movie' else '')
++    li = listitem(g, item, stype, data, profile_num=pnum, play_url=play_url,
++                  series_context=series_context)
++    sid = provider_id(item, stype)
++    if reconcile_pending and pending is not None:
++        complete = (content_state.watched_state(
++            g, 'movie', data.get('tmdb_id'), profile_num=pnum) is True
++            if stype == 'movie' else
++            li.getProperty('XStream.SeriesComplete') == 'true')
++        if complete:
++            pending.reconcile_completion(stype, sid, True)
++            return
++    q = ({'mode':'xtream_series', 'series_id':sid, 'profile_num':pnum}
++         if stype == 'series' else {'mode':'premium', 'view':'play', 'stype':stype,
++                                   'id':sid, 'profile_num':pnum})
++    path = g['build_url'](q)
++    favorite_path = (g['IPTV'].build_xtream_stream_url(*credentials, item, 'movie')
++                     if stype == 'movie' else path)
++    favorite_actions = g['_build_favorite_ctx'](
++        sid, item['name'], stype, data.get('poster_url', ''), favorite_path,
++        profile_num=pnum, include_download=False)
++    watched_actions = (content_state.watched_context(
++        g, 'movie', data.get('tmdb_id'), profile_num=pnum) if stype == 'movie' else [])
++    pending_actions = []
++    if pending is not None:
++        label = ('Quitar de Pendiente' if pending.contains(stype, sid)
++                 else 'Añadir a Pendiente')
++        pending_url = g['build_url']({'mode':'premium', 'view':'pending_toggle',
++            'stype':stype, 'id':sid, 'profile_num':pnum})
++        pending_actions.append((label, 'RunPlugin(%s)' % pending_url))
++    content_state.add_context_actions(li, favorite_actions, watched_actions,
++                                      pending_actions)
++    if stype == 'series':
++        status = g['_series_change_status'](sid)
++        if status:
++            li.setProperty('XStream.ChangeStatus', status)
++    g['xbmcplugin'].addDirectoryItem(g['addon_handle'], path, li, stype == 'series')
++
++
++def _search_text(value):
++    value = unicodedata.normalize('NFKD', str(value or '')).casefold()
++    value = ''.join(char for char in value if not unicodedata.combining(char))
++    return ' '.join(re.findall(r'[a-z0-9]+', value))
++
++
++def _search_source_stamp(g, pnum, stype):
++    import os
++    previous = g['pm'].active
++    try:
++        g['pm'].active = str(pnum)
++        path = g['_cache_path']('xtream_streams_' + stype)
++        stat = os.stat(path)
++        return '%d:%d' % (stat.st_mtime_ns, stat.st_size)
++    except (OSError, AttributeError):
++        return 'missing'
++    finally:
++        g['pm'].active = previous
++
++
++def _search_filter_stamp(g, pnum):
++    def values(method, stype):
++        try:
++            return tuple(sorted(str(value) for value in method(stype, pnum)))
++        except Exception:
++            return ()
++    addon = g['addon']
++    adult = addon.getSetting('hide_adult_categories').lower() == 'true'
++    parts = [str(adult)]
++    for stype in ('movie', 'series'):
++        parts.extend((repr(values(g['_get_hidden_subcats'], stype)),
++                      repr(values(g['_get_hidden_items'], stype))))
++    return '|'.join(parts)
++
++
++def _safe_search_art(value):
++    """Do not persist artwork URLs containing provider credentials/tokens."""
++    url = backdrop(value)
++    if not url:
++        return ''
++    parsed = urlparse(url)
++    if parsed.username or parsed.password:
++        return ''
++    if re.search(r'(?:^|[?&])(username|password|token|auth|api[_-]?key)=',
++                 parsed.query, re.IGNORECASE):
++        return ''
++    return url
++
++
++def _search_index_path(g, pnum):
++    import os
++    profile = g['xbmcvfs'].translatePath(g['addon'].getAddonInfo('profile'))
++    return os.path.join(profile, 'provider_search_%s.sqlite' % pnum)
++
++
++def _ensure_search_index(g, pnum, *, force_provider_refresh=False):
++    import os
++    import sqlite3
++    profile = g['xbmcvfs'].translatePath(g['addon'].getAddonInfo('profile'))
++    os.makedirs(profile, exist_ok=True)
++    path = _search_index_path(g, pnum)
++    filter_stamp = _search_filter_stamp(g, pnum)
++    conn = sqlite3.connect(path, timeout=10)
++    conn.execute('CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT)')
++    conn.execute('''CREATE TABLE IF NOT EXISTS items (
++        stype TEXT NOT NULL, provider_id TEXT NOT NULL, title TEXT NOT NULL,
++        norm TEXT NOT NULL, year TEXT, poster TEXT, fanart TEXT, plot TEXT,
++        genre TEXT, rating TEXT, category_id TEXT, category_name TEXT,
++        PRIMARY KEY(stype, provider_id))''')
++    conn.execute('CREATE INDEX IF NOT EXISTS items_type_norm ON items(stype, norm)')
++    results = []
++    snapshots = {}
++    saved_meta = dict(conn.execute('SELECT key, value FROM meta'))
++    for stype in ('movie', 'series'):
++        source_stamp = _search_source_stamp(g, pnum, stype)
++        saved = saved_meta.get(stype)
++        saved_filters = saved_meta.get('filters')
++        if (not force_provider_refresh and saved == source_stamp
++                and saved_filters == filter_stamp and source_stamp != 'missing'):
++            results.append({'scanned':0, 'added':0, 'changed':0, 'removed':0,
++                            'status':'unchanged'})
++            continue
++        started = time.perf_counter()
++        try:
++            items, credentials = catalog(g, stype, pnum,
++                                         force_refresh=force_provider_refresh)
++        except Exception as exc:
++            g['_log']('provider search refresh type=%s status=error error_type=%s' %
++                      (stype, type(exc).__name__))
++            results.append({'scanned':0, 'added':0, 'changed':0, 'removed':0,
++                            'status':'error'})
++            continue
++        if not all(credentials) or not isinstance(items, list):
++            g['_log']('provider search refresh type=%s status=error reason=catalog_unavailable' % stype)
++            results.append({'scanned':0, 'added':0, 'changed':0, 'removed':0,
++                            'status':'error'})
++            continue
++        rows = {}
++        for item in items:
++            sid = provider_id(item, stype)
++            title = str(item.get('name') or item.get('title') or '').strip()
++            norm = _search_text(title)
++            if not sid or not title or not norm:
++                continue
++            rows[sid] = (stype, sid, title, norm,
++                str(item.get('year') or item.get('releaseDate') or '')[:4],
++                _safe_search_art(item.get('stream_icon') or item.get('cover')),
++                _safe_search_art(item.get('backdrop_path')),
++                str(item.get('plot') or ''), str(item.get('genre') or ''),
++                str(item.get('rating') or ''), str(item.get('category_id') or ''),
++                str(item.get('category_name') or ''))
++        old_ids = {str(row[0]) for row in conn.execute(
++            'SELECT provider_id FROM items WHERE stype=?', (stype,))}
++        if old_ids and not rows and saved_filters == filter_stamp:
++            g['_log']('provider search refresh type=%s status=error reason=empty_snapshot_rejected' % stype)
++            results.append({'scanned':0, 'added':0, 'changed':0, 'removed':0,
++                            'status':'error'})
++            continue
++        new_stamp = _search_source_stamp(g, pnum, stype)
++        if new_stamp == 'missing':
++            g['_log']('provider search refresh type=%s status=error reason=cache_unavailable' % stype)
++            results.append({'scanned':0, 'added':0, 'changed':0, 'removed':0,
++                            'status':'error'})
++            continue
++        snapshots[stype] = (rows, old_ids, new_stamp, started)
++
++    if any(result.get('status') == 'error' for result in results):
++        return conn, results
++
++    # Complete both provider snapshots before taking the SQLite write lock.
++    # A Movies success followed by a Series failure therefore commits neither.
++    try:
++        conn.execute('BEGIN IMMEDIATE')
++        for stype, (rows, old_ids, new_stamp, started) in snapshots.items():
++            added = changed = 0
++            for sid, row in rows.items():
++                previous = conn.execute(
++                    'SELECT stype,provider_id,title,norm,year,poster,fanart,plot,genre,rating,category_id,category_name '
++                    'FROM items WHERE stype=? AND provider_id=?', (stype, sid)).fetchone()
++                if previous is None:
++                    added += 1
++                    conn.execute('INSERT INTO items VALUES (?,?,?,?,?,?,?,?,?,?,?,?)', row)
++                elif tuple(previous) != row:
++                    changed += 1
++                    conn.execute('INSERT OR REPLACE INTO items VALUES (?,?,?,?,?,?,?,?,?,?,?,?)', row)
++            removed_ids = old_ids - set(rows)
++            if removed_ids:
++                conn.executemany('DELETE FROM items WHERE stype=? AND provider_id=?',
++                                 ((stype, sid) for sid in removed_ids))
++            conn.execute('INSERT OR REPLACE INTO meta(key,value) VALUES (?,?)',
++                         (stype, new_stamp))
++            conn.execute('INSERT OR REPLACE INTO meta(key,value) VALUES (?,?)',
++                         ('filters', filter_stamp))
++            result = {'scanned':len(rows), 'added':added, 'changed':changed,
++                      'removed':len(removed_ids),
++                      'duration_ms':int((time.perf_counter() - started) * 1000),
++                      'status':'success'}
++            results.append(result)
++            g['_log']('provider search delta type=%s scanned=%d added=%d changed=%d removed=%d ms=%d' %
++                      (stype, result['scanned'], added, changed, len(removed_ids), result['duration_ms']))
++        conn.commit()
++    except Exception:
++        conn.rollback()
++        conn.close()
++        raise
++    return conn, results
++
++
++def _search_rows(conn, query):
++    terms = _search_text(query).split()
++    if not terms:
++        return []
++    clauses = ' AND '.join('norm LIKE ?' for _ in terms)
++    phrase = ' '.join(terms)
++    rows = conn.execute(
++        'SELECT stype,provider_id,title,norm,year,poster,fanart,plot,genre,rating '
++        'FROM items WHERE ' + clauses +
++        ' ORDER BY CASE WHEN norm=? THEN 0 WHEN norm LIKE ? THEN 1 ELSE 2 END,'
++        ' title COLLATE NOCASE LIMIT 800',
++        tuple('%%%s%%' % term for term in terms) + (phrase, phrase + '%')).fetchall()
++    def rank(row):
++        title = row[3]
++        if title == ' '.join(terms):
++            score = 0
++        elif title.startswith(' '.join(terms)):
++            score = 1
++        else:
++            words = title.split()
++            score = 2 if all(any(word.startswith(term) for word in words)
++                             for term in terms) else 3
++        return score, 0 if row[0] == 'movie' else 1, title
++    return sorted(rows, key=rank)[:24]
++
++
++def _add_search_result(g, row, pnum):
++    stype, sid, title, _norm, year, poster, fanart, plot, genre, rating = row
++    item = {'stream_id' if stype == 'movie' else 'series_id': sid,
++            'name': title, 'year': year, 'stream_icon': poster, 'cover': poster,
++            'backdrop_path': fanart, 'plot': plot, 'genre': genre, 'rating': rating}
++    data = {'title': title, 'year': year, 'poster_url': poster, 'fanart_url': fanart,
++            'plot': plot, 'genre': genre, 'rating': rating}
++    raw = g['_cache_load'](('vod_info_' if stype == 'movie' else 'series_info_') + sid) or {}
++    if not isinstance(raw, dict):
++        raw = {}
++    provider_info = raw.get('info') if isinstance(raw, dict) else {}
++    if not isinstance(provider_info, dict):
++        provider_info = {}
++    provider_fanart = backdrop(item.get('backdrop_path') or
++                               provider_info.get('backdrop_path') or
++                               raw.get('backdrop_path'))
++    if provider_fanart:
++        data['fanart_url'] = provider_fanart
++    cached = g['_cache_load']('premium_meta_%s_%s_es' % (stype, sid)) or {}
++    extra = cached.get('data') if cached.get('expires', 0) > time.time() else {}
++    if isinstance(extra, dict):
++        for key in ('title', 'plot', 'year', 'genre', 'rating', 'duration', 'tagline',
++                    'cast', 'tmdb_id', 'imdb_id', 'trailer', 'poster_url', 'fanart_url',
++                    'clearlogo_url'):
++            if extra.get(key):
++                data[key] = extra[key]
++    if provider_fanart:
++        data['fanart_url'] = provider_fanart
++    if not data.get('poster_url'):
++        data['poster_url'] = poster
++    li = listitem(g, item, stype, data, profile_num=pnum)
++    if stype == 'series':
++        path = g['build_url']({'mode':'xtream_series', 'series_id':sid,
++                               'profile_num':pnum})
++        status = g['_series_change_status'](sid)
++        if status:
++            li.setProperty('XStream.ChangeStatus', status)
++    else:
++        path = g['build_url']({'mode':'premium', 'view':'play', 'stype':'movie',
++                               'id':sid, 'profile_num':pnum})
++    li.setProperty('path', path)
++    favorite_actions = g['_build_favorite_ctx'](
++        sid, title, stype, poster, path, profile_num=pnum, include_download=False)
++    watched_actions = (content_state.watched_context(
++        g, 'movie', data.get('tmdb_id'), profile_num=pnum) if stype == 'movie' else [])
++    pending_actions = []
++    pending_module = g.get('pending_adapter')
++    if pending_module is not None:
++        pending = pending_module.PendingAdapter(g['_get_profile_fav'](pnum))
++        label = ('Quitar de Pendiente' if pending.contains(stype, sid)
++                 else 'Añadir a Pendiente')
++        pending_url = g['build_url']({'mode':'premium', 'view':'pending_toggle',
++            'stype':stype, 'id':sid, 'profile_num':pnum})
++        pending_actions.append((label, 'RunPlugin(%s)' % pending_url))
++    content_state.add_context_actions(li, favorite_actions, watched_actions,
++                                      pending_actions)
++    g['xbmcplugin'].addDirectoryItem(g['addon_handle'], path, li, stype == 'series')
++
++
++def dispatch(g, params):
++    get = lambda key, default='': params.get(key, [default])[0]
++    pnum = number(get('profile_num', g['pm'].active)) or 1
++    g['pm'].active = str(pnum)
++    stype = get('stype', 'movie')
++    view = get('view', 'catalog')
++    handle, plugin = g['addon_handle'], g['xbmcplugin']
++    build = g['build_url']
++    budget = [4, 1]
++    if view in ('recent_tv', 'recent_tv_play'):
++        import recent_tv_ui
++        recent_tv_ui.dispatch(g, params, pnum, view)
++        return
++    if view == 'search_input':
++        # Use BINGIE's native search window so its provider-backed results
++        # container can refresh while the user edits the query.
++        g['xbmc'].executebuiltin('ActivateWindow(1109)')
++        return
++    if view == 'collections_root':
++        if stype not in ('movie', 'series'):
++            plugin.endOfDirectory(handle, succeeded=False, cacheToDisc=False)
++            return
++        plugin.setContent(handle, 'videos')
++        plugin.setPluginCategory(handle, 'Mis colecciones')
++        for collection, label in (('favorites', 'Favoritos'),
++                                  ('pending', 'Pendiente')):
++            li = g['_new_listitem'](label)
++            plugin.addDirectoryItem(handle, build({'mode': 'premium',
++                'view': collection, 'stype': stype, 'profile_num': pnum}), li, True)
++        plugin.endOfDirectory(handle, cacheToDisc=False)
++        return
++    if view == 'favorites_root':
++        plugin.setContent(handle, 'videos')
++        plugin.setPluginCategory(handle, 'Favoritos')
++        for kind, label in (('movie', 'Películas'), ('series', 'Series')):
++            li = g['_new_listitem'](label)
++            plugin.addDirectoryItem(handle, build({'mode':'premium',
++                'view':'favorites', 'stype':kind, 'profile_num':pnum}), li, True)
++        plugin.endOfDirectory(handle, cacheToDisc=False)
++        return
++    if view == 'pending_root':
++        plugin.setContent(handle, 'videos')
++        plugin.setPluginCategory(handle, 'Pendiente')
++        for kind, label in (('movie', 'Películas'), ('series', 'Series')):
++            li = g['_new_listitem'](label)
++            plugin.addDirectoryItem(handle, build({'mode':'premium',
++                'view':'pending', 'stype':kind, 'profile_num':pnum}), li, True)
++        plugin.endOfDirectory(handle, cacheToDisc=False)
++        return
++    if view == 'pending_toggle':
++        if stype not in ('movie', 'series'):
++            plugin.endOfDirectory(handle, succeeded=False, cacheToDisc=False)
++            return
++        sid = get('id')
++        favorites_api = g['_get_profile_fav'](pnum)
++        pending_module = g.get('pending_adapter')
++        if pending_module is None:
++            plugin.endOfDirectory(handle, succeeded=False, cacheToDisc=False)
++            return
++        pending = pending_module.PendingAdapter(favorites_api)
++        if pending.contains(stype, sid):
++            pending.remove(stype, sid)
++        else:
++            available, credentials = catalog(g, stype, pnum)
++            item = next((row for row in available if provider_id(row, stype) == sid), None)
++            if item is None:
++                plugin.endOfDirectory(handle, succeeded=False, cacheToDisc=False)
++                return
++            icon = item.get('cover') or item.get('stream_icon') or ''
++            if stype == 'movie':
++                target = g['IPTV'].build_xtream_stream_url(*credentials, item, 'movie')
++            else:
++                target = build({'mode':'xtream_series', 'series_id':sid,
++                                'profile_num':pnum})
++            pending.add(stype, {'id':sid, 'name':item.get('name', ''),
++                'stype':stype, 'icon':icon, 'url':target})
++        g['xbmc'].executebuiltin('Container.Refresh')
++        plugin.endOfDirectory(handle, cacheToDisc=False)
++        return
++    if view == 'remove_resume':
++        # Continue Watching is backed by ResumePoints only.  Keep WatchHistory
++        # untouched: it is a separate "recent/history" store, not resume state.
++        resume_points = g['ResumePoints'](g['addon'], profile_num=pnum)
++        key = get('key')
++        entries_before = resume_points.get_all()
++        entry = next((e for e in entries_before if resume_key(e) == key), None)
++        removed = False
++        if entry:
++            resume_points.remove(entry.get('name', ''), entry.get('url', ''))
++            removed = not any(resume_key(e) == key for e in resume_points.get_all())
++        g['_log']('REMOVE_CONTINUE handler_called=1 key=%s found=%s removed=%s '
++                  'resume_before=%d resume_after=%d history_untouched=1 cache=none'
++                  % (key, bool(entry), removed, len(entries_before),
++                     len(resume_points.get_all())))
++        # RunPlugin is dispatched while Kodi is still closing the context menu;
++        # Container.Refresh sent here can be ignored during that modal animation.
++        # Defer one light container refresh until the menu has closed.  Do not
++        # Container.Update to the plugin path: that can navigate away from Home.
++        g['xbmc'].executebuiltin(
++            'AlarmClock(XStreamContinueRefresh,Container.Refresh,00:00:02,silent)'
++        )
++        return
++    if view == 'search_sync':
++        started = time.perf_counter()
++        g['_log']('SEARCH_REFRESH_START profile=%s' % pnum)
++        conn = None
++        try:
++            conn, results = _ensure_search_index(g, pnum, force_provider_refresh=True)
++            if any(result.get('status') == 'error' for result in results):
++                conn.close()
++                conn = None
++                g['_log']('SEARCH_REFRESH_END status=error reason=provider_snapshot_incomplete duration_ms=%d' %
++                          int((time.perf_counter() - started) * 1000))
++                plugin.endOfDirectory(handle, succeeded=True, updateListing=False, cacheToDisc=False)
++                return
++            conn.execute('BEGIN IMMEDIATE')
++            conn.execute('INSERT OR REPLACE INTO meta(key,value) VALUES (?,?)',
++                         ('last_successful_sync', str(time.time())))
++            conn.execute('INSERT OR REPLACE INTO meta(key,value) VALUES (?,?)',
++                         ('schema_version', '1'))
++            conn.commit()
++            conn.close()
++            conn = None
++            totals = {key:sum(row.get(key, 0) for row in results)
++                      for key in ('scanned', 'added', 'changed', 'removed')}
++            g['_log']('SEARCH_REFRESH_END scanned=%d added=%d changed=%d removed=%d duration_ms=%d status=success' %
++                      (totals['scanned'], totals['added'], totals['changed'], totals['removed'],
++                       int((time.perf_counter() - started) * 1000)))
++        except Exception as exc:
++            if conn is not None:
++                conn.rollback()
++                conn.close()
++            g['_log']('SEARCH_REFRESH_END status=error error_type=%s duration_ms=%d' %
++                      (type(exc).__name__, int((time.perf_counter() - started) * 1000)))
++        plugin.endOfDirectory(handle, succeeded=True, updateListing=False, cacheToDisc=False)
++        return
++    if view == 'search':
++        query = get('query')
++        plugin.setContent(handle, 'videos')
++        plugin.setPluginCategory(handle, 'Buscar')
++        if query:
++            import os
++            import sqlite3
++            started = time.perf_counter()
++            conn = None
++            try:
++                path = _search_index_path(g, pnum)
++                if os.path.isfile(path):
++                    conn = sqlite3.connect('file:%s?mode=ro' % os.path.abspath(path),
++                                            uri=True, timeout=3)
++                    rows = _search_rows(conn, query)
++                else:
++                    rows = []
++                for row in rows:
++                    _add_search_result(g, row, pnum)
++                g['_log']('provider search query chars=%d results=%d ms=%d status=local' %
++                          (len(query), len(rows), int((time.perf_counter() - started) * 1000)))
++            except Exception as exc:
++                g['_log']('provider search query chars=%d status=error error_type=%s' %
++                          (len(query), type(exc).__name__))
++            finally:
++                if conn is not None:
++                    conn.close()
++        plugin.addSortMethod(handle, plugin.SORT_METHOD_NONE)
++        plugin.endOfDirectory(handle, cacheToDisc=False)
++        return
++    if view in ('continue', 'resume'):
++        entries = g['ResumePoints'](g['addon'], profile_num=pnum).get_all()
++        if stype != 'both':
++            entries = [e for e in entries if e.get('stype') == stype]
++        if view == 'resume':
++            entry = next((e for e in entries if resume_key(e) == get('key')), None)
++            if entry:
++                kind = entry.get('stype')
++                available = catalog(g, kind, pnum)[0] if kind in ('movie', 'series') else []
++                title = entry.get('title') or entry.get('name', '')
++                if not any(s.get('name') in (title, entry.get('name')) or entry.get('name', '').startswith(
++                        s.get('name', '') + ' - ') for s in available):
++                    entry = None
++            if entry:
++                g['play_stream'](entry['url'], entry['name'], title=entry.get('title', ''),
++                    plot=entry.get('plot', ''), icon=entry.get('icon', ''),
++                    stype=entry.get('stype', 'movie'), profile_num=pnum,
++                    series_id=entry.get('series_id', ''), season_num=entry.get('season_num', ''),
++                    ep_id=entry.get('ep_id', ''), resume_pos=entry.get('position', 0),
++                    resume_total=entry.get('duration', 0))
++            else:
++                plugin.setResolvedUrl(handle, False, g['_new_listitem'](''))
++            return
++        plugin.setContent(handle, 'videos')
++        catalogs = {}
++        limit = min(48, max(1, number(get('limit', 24))))
++        if get('actweeter_expand') == '1':
++            limit = min(20, limit)
++        page = max(1, number(get('page', 1)))
++        offset = (page - 1) * limit
++        valid_count = 0
++        has_more = False
++        for entry in entries:
++            kind = entry.get('stype')
++            if kind not in ('movie', 'series'):
++                continue
++            if kind not in catalogs:
++                catalogs[kind] = catalog(g, kind, pnum)
++            items, credentials = catalogs[kind]
++            # Require the stored identity to still belong to this provider.
++            title = entry.get('title') or entry.get('name', '')
++            candidates = [s for s in items if s.get('name') in (title, entry.get('name'))
++                          or entry.get('name', '').startswith(s.get('name', '') + ' - ')]
++            if not candidates:
++                continue
++            if valid_count < offset:
++                valid_count += 1
++                continue
++            if valid_count >= offset + limit:
++                has_more = True
++                break
++            valid_count += 1
++            item = candidates[0]
++            data = enrich(g, item, kind, metadata(g, item, kind, credentials), budget)
++            display_name = data['title']
++            if kind == 'series':
++                episode = re.search(r'(S\d+E\d+.*)$', entry.get('name', ''), re.I)
++                if episode:
++                    display_name += ' · ' + episode.group(1)
++            li = listitem(g, item, kind, data, label=display_name,
++                          profile_num=pnum, play_url=entry.get('url', ''))
++            if data.get('fanart_url'):
++                # LandscapeImage prioritizes episode thumb over landscape.
++                li.setArt({'thumb': data['fanart_url']})
++            tag = li.getVideoInfoTag()
++            tag.setMediaType('episode' if kind == 'series' else 'movie')
++            tag.setTitle(display_name)
++            tag.setDuration(number(entry.get('duration')))
++            tag.setResumePoint(float(entry.get('position') or 0), float(entry.get('duration') or 0))
++            if kind == 'series':
++                tag.setTvShowTitle(data['title'])
++                match = re.search(r'S(\d+)E(\d+)', entry.get('name', ''), re.I)
++                if match:
++                    tag.setSeason(int(match[1]))
++                    tag.setEpisode(int(match[2]))
++            li.setProperty('IsPlayable', 'true')
++            li.setProperty('ResumeTime', str(entry.get('position') or 0))
++            li.setProperty('TotalTime', str(entry.get('duration') or 0))
++            context_actions = [('Eliminar de continuar viendo',
++                'RunPlugin(%s)' % build({'mode':'premium', 'view':'remove_resume',
++                    'stype':stype, 'key':resume_key(entry), 'profile_num':pnum}))]
++            watched_actions = (content_state.watched_context(
++                g, 'movie', data.get('tmdb_id'), profile_num=pnum)
++                if kind == 'movie' else [])
++            content_state.add_context_actions(li, context_actions, watched_actions)
++            plugin.addDirectoryItem(handle, build({'mode':'premium', 'view':'resume',
++                'stype':kind, 'key':resume_key(entry), 'profile_num':pnum}), li, False)
++        if has_more and get('actweeter_expand') == '1':
++            query = {key: values[0] for key, values in params.items() if values}
++            query.pop('actweeter_expand', None)
++            query.update({'browse': '1', 'page': '1', 'limit': '48'})
++            li = g['_new_listitem']('[COLOR FFE50914]EXPANDIR[/COLOR]')
++            li.setProperty('AcTweeteR.Expand', '1')
++            plugin.addDirectoryItem(handle, build(query), li, True)
++        elif has_more and get('browse') == '1':
++            query = {key: values[0] for key, values in params.items() if values}
++            query['page'] = str(page + 1)
++            plugin.addDirectoryItem(handle, build(query),
++                                    g['_new_listitem']('Más títulos'), True)
++        plugin.endOfDirectory(handle, cacheToDisc=False)
++        return
++    if view in ('favorites', 'pending') and stype == 'both':
++        if view == 'pending':
++            plugin.endOfDirectory(handle, succeeded=False, cacheToDisc=False)
++            return
++        favorites = g['_get_profile_fav'](pnum).get_all()
++        plugin.setContent(handle, 'videos')
++        rows = []
++        for kind in ('movie', 'series'):
++            ids = {str(f.get('id')) for f in favorites if f.get('stype') == kind}
++            if not ids:
++                continue
++            items, credentials = catalog(g, kind, pnum)
++            series_context = prepare_series_state_context(g, pnum) if kind == 'series' else None
++            rows.extend((kind, item, credentials, series_context)
++                        for item in items if provider_id(item, kind) in ids)
++        limit = min(48, max(1, number(get('limit', 24))))
++        if get('actweeter_expand') == '1':
++            limit = min(20, limit)
++        page = max(1, number(get('page', 1)))
++        offset = (page - 1) * limit
++        selected = rows[offset:offset + limit]
++        for kind, item, credentials, series_context in selected:
++            add_provider_item(g, item, kind, credentials, pnum, budget,
++                              series_context=series_context)
++        if len(rows) > offset + len(selected) and get('actweeter_expand') == '1':
++            query = {key: values[0] for key, values in params.items() if values}
++            query.pop('actweeter_expand', None)
++            query.update({'browse': '1', 'page': '1', 'limit': '48'})
++            li = g['_new_listitem']('[COLOR FFE50914]EXPANDIR[/COLOR]')
++            li.setProperty('AcTweeteR.Expand', '1')
++            plugin.addDirectoryItem(handle, build(query), li, True)
++        elif len(rows) > offset + len(selected) and get('browse') == '1':
++            query = {key: values[0] for key, values in params.items() if values}
++            query['page'] = str(page + 1)
++            plugin.addDirectoryItem(handle, build(query),
++                                    g['_new_listitem']('Más títulos'), True)
++        plugin.addSortMethod(handle, plugin.SORT_METHOD_NONE)
++        plugin.endOfDirectory(handle, cacheToDisc=False)
++        return
++    if stype not in ('movie', 'series'):
++        plugin.endOfDirectory(handle, succeeded=False)
++        return
++    items, credentials = catalog(g, stype, pnum)
++    if view == 'play':
++        item = next((s for s in items if provider_id(s, stype) == get('id')), None)
++        if not item or stype != 'movie':
++            plugin.setResolvedUrl(handle, False, g['_new_listitem'](''))
++            return
++        data = metadata(g, item, stype, credentials)
++        url = g['IPTV'].build_xtream_stream_url(*credentials, item, 'movie')
++        g['play_stream'](url, item['name'], title=data['title'], plot=data.get('plot', ''),
++                         icon=data.get('poster_url', ''), stype='movie', profile_num=pnum,
++                         tmdb_id=data.get('tmdb_id', ''))
++        return
++    pending_module = g.get('pending_adapter')
++    pending = (pending_module.PendingAdapter(g['_get_profile_fav'](pnum))
++               if pending_module is not None else None)
++    if view == 'favorites':
++        favorites = g['_get_profile_fav'](pnum).get_all()
++        ids = {str(f.get('id')) for f in favorites if f.get('stype') == stype}
++        items = [s for s in items if provider_id(s, stype) in ids]
++    elif view == 'pending':
++        if pending is None:
++            plugin.endOfDirectory(handle, succeeded=False, cacheToDisc=False)
++            return
++        ids = {str(row.get('id')) for row in pending.list_items(stype)}
++        items = [s for s in items if provider_id(s, stype) in ids]
++    elif view == 'series_recent' and stype == 'series':
++        events = g['series_changes'].recent(g['addon'], pnum, 50)
++        by_id = {provider_id(item, stype):item for item in items}
++        ordered = []
++        for event in events:
++            item = by_id.get(str(event.get('series_id')))
++            if item:
++                ordered.append(item)
++        items = ordered
++    elif view in ('trending', 'popular'):
++        items = ranked_provider_items(g, items, stype, view)
++    elif view == 'recent':
++        # Series last_modified is NOT an addition date. No invented recency.
++        items = [s for s in items if number(s.get('added')) > 0]
++        items.sort(key=lambda s: number(s.get('added')), reverse=True)
++    elif view in ('year', 'premiere'):
++        year = str(premiere_year(get('offset'))) if view == 'premiere' else get('year')
++        items = [s for s in items if str(s.get('year') or '') == year]
++        if view == 'premiere':
++            plugin.setPluginCategory(handle, 'Estrenos ' + year)
++    elif view == 'genre':
++        genre = get('genre').casefold()
++        items = [s for s in items if genre and genre in str(s.get('genre') or '').casefold()]
++    if get('cat_id'):
++        items = [s for s in items if str(s.get('category_id')) == get('cat_id')]
++    if get('id'):
++        items = [s for s in items if provider_id(s, stype) == get('id')]
++    if get('browse') != '1' and not get('id'):
++        # One card per exact title/year; retain the first provider edition.
++        seen = set()
++        unique = []
++        for item in items:
++            identity = (normalized(item.get('name')), str(item.get('year') or ''))
++            if identity not in seen:
++                seen.add(identity)
++                unique.append(item)
++        items = unique
++    page = max(1, number(get('page', 1)))
++    limit = min(48, max(1, number(get('limit', 24))))
++    offset = (page - 1) * limit
++    selected = items[offset:offset + limit]
++    if stype == 'movie':
++        g['_prefetch_vod_info_batch'](selected, *credentials)
++    plugin.setContent(handle, 'movies' if stype == 'movie' else 'tvshows')
++    series_context = (prepare_series_state_context(g, pnum)
++                      if stype == 'series' and selected else None)
++    for item in selected:
++        add_provider_item(g, item, stype, credentials, pnum, budget,
++                          series_context=series_context, pending=pending,
++                          reconcile_pending=(view == 'pending'))
++    expandable_views = {'catalog', 'recent', 'popular', 'trending', 'favorites',
++                        'pending', 'continue', 'series_recent', 'year', 'premiere', 'genre'}
++    if (get('actweeter_expand') == '1' and stype in ('movie', 'series')
++            and view in expandable_views and len(items) > len(selected)):
++        query = {key: values[0] for key, values in params.items() if values}
++        query.pop('actweeter_expand', None)
++        query['browse'] = '1'
++        query['page'] = '1'
++        query['limit'] = '48'
++        li = g['_new_listitem']('[COLOR FFE50914]EXPANDIR[/COLOR]')
++        li.setProperty('AcTweeteR.Expand', '1')
++        plugin.addDirectoryItem(handle, build(query), li, True)
++    if get('browse') == '1' and offset + limit < len(items):
++        q = {key:values[0] for key,values in params.items()}
++        q['page'] = page + 1
++        li = g['_new_listitem']('Más títulos')
++        plugin.addDirectoryItem(handle, build(q), li, True)
++    plugin.addSortMethod(handle, plugin.SORT_METHOD_NONE)
++    plugin.endOfDirectory(handle, cacheToDisc=False)
+diff --git a/resources/lib/recent_tv_native.py b/resources/lib/recent_tv_native.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..1111d7eb2b7271af9f09d68bf14f4749a525745d
+--- /dev/null
++++ b/resources/lib/recent_tv_native.py
+@@ -0,0 +1,119 @@
++"""Portable MRU membership: full derived M3U, no duplicate rows or PVR restarts."""
++import json
++import os
++import re
++import time
++
++
++def channel_uid(name, url):
++    value = 0
++    for byte in (name + url).encode('utf-8'):
++        value = ((value * 33) + (byte if byte < 128 else byte - 256)) & 0xffffffff
++    return abs(value if value < 0x80000000 else value - 0x100000000)
++
++
++def transform(source, recent):
++    lines = source.splitlines(keepends=True)
++    count = 0
++    changed = 0
++    for index, line in enumerate(lines):
++        if not line.startswith('#EXTINF'):
++            continue
++        count += 1
++        following = next((v.strip() for v in lines[index + 1:]
++                          if v.strip() and not v.startswith('#')), '')
++        name = line.rsplit(',', 1)[-1].strip()
++        if channel_uid(name, following) not in recent:
++            continue
++        def membership(match):
++            groups = match.group(1).split(';')
++            if 'Últimos Vistos' not in groups:
++                groups.append('Últimos Vistos')
++            return 'group-title="' + ';'.join(groups) + '"'
++        lines[index] = re.sub(r'group-title="([^"]*)"', membership, line, count=1)
++        changed += 1
++    return ''.join(lines), count, changed
++
++
++class RecentTV:
++    def __init__(self, profile, kodi):
++        self.kodi = kodi
++        self.state_path = os.path.join(profile, 'recent_tv_mru.json')
++        self.source = os.path.join(profile, 'pvr_live_xstream_pro_p1.m3u8')
++        self.target = os.path.join(profile, 'pvr_recent_native.m3u8')
++        self.current = None
++        self.pending = 0
++        self.ui_refresh_pending = False
++        self.source_stamp = None
++        try:
++            with open(self.state_path, encoding='utf-8') as stream:
++                self.recent = json.load(stream)['channels'][:25]
++        except (OSError, ValueError, KeyError, TypeError):
++            self.recent = []
++        self.pending = time.monotonic() - 16
++
++    def call(self, method, params):
++        result = json.loads(self.kodi.executeJSONRPC(json.dumps(
++            {'jsonrpc': '2.0', 'id': 1, 'method': method, 'params': params})))
++        return result.get('result', {})
++
++    def tick(self):
++        try:
++            source_stat = os.stat(self.source)
++            stamp = (source_stat.st_mtime_ns, source_stat.st_size)
++            if stamp != self.source_stamp:
++                self.source_stamp = stamp
++                self.pending = time.monotonic()
++        except OSError:
++            pass
++        players = self.call('Player.GetActivePlayers', {})
++        active = next((p['playerid'] for p in players if p.get('type') == 'video'), None)
++        uid = None
++        if active is not None:
++            item = self.call('Player.GetItem', {'playerid': active}).get('item', {})
++            if item.get('type') == 'channel':
++                detail = self.call('PVR.GetChannelDetails', {
++                    'channelid': item['id'], 'properties': ['uniqueid']})
++                uid = detail.get('channeldetails', {}).get('uniqueid')
++        if uid and uid != self.current:
++            self.recent = [int(uid)] + [v for v in self.recent if v != int(uid)]
++            self.recent = self.recent[:25]
++            self._atomic(self.state_path, json.dumps({'channels': self.recent}, sort_keys=True))
++            self.pending = time.monotonic()
++            token = '%d-%d' % (int(uid), int(time.monotonic() * 1000))
++            self.kodi.executebuiltin('SetProperty(Premium.RecentTVRefresh,%s,home)' % token)
++            self.ui_refresh_pending = True
++        self.current = uid
++        if self.ui_refresh_pending and active is None:
++            try:
++                if self.kodi.getCondVisibility('Window.IsActive(home)'):
++                    self.kodi.executebuiltin('Container.Refresh')
++                    self.ui_refresh_pending = False
++            except Exception:
++                pass
++        # Flush only while idle, not during a zap or playback. IPTV Simple polls normally.
++        if active is None and self.pending and time.monotonic() - self.pending >= 15:
++            try:
++                with open(self.source, encoding='utf-8') as stream:
++                    original = stream.read()
++                derived, count, changed = transform(original, set(self.recent))
++                if count < 1:
++                    return
++                existing = ''
++                if os.path.exists(self.target):
++                    with open(self.target, encoding='utf-8') as stream:
++                        existing = stream.read()
++                if derived != existing:
++                    self._atomic(self.target, derived)
++                    self.kodi.log('[Xstream Pro] Recent TV membership refreshed: %d unique history entries' % len(self.recent), self.kodi.LOGINFO)
++                self.pending = 0
++            except OSError:
++                self.kodi.log('[Xstream Pro] Recent TV playlist unavailable; original remains intact', self.kodi.LOGWARNING)
++
++    @staticmethod
++    def _atomic(path, content):
++        temporary = path + '.tmp'
++        with open(temporary, 'w', encoding='utf-8') as stream:
++            stream.write(content)
++        os.chmod(temporary, 0o600)
++        os.replace(temporary, path)
+diff --git a/resources/lib/recent_tv_ui.py b/resources/lib/recent_tv_ui.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..cfdc8f201b01ef74f30175a395ef08cadfc131f9
+--- /dev/null
++++ b/resources/lib/recent_tv_ui.py
+@@ -0,0 +1,146 @@
++"""Read-only XStream MRU presentation adapter backed by Kodi PVR identity."""
++import json
++import os
++
++
++def ordered_channels(uids, channels):
++    """Join MRU UIDs to Kodi channels, preserving order and removing duplicates."""
++    by_uid = {}
++    for channel in channels or []:
++        if not isinstance(channel, dict):
++            continue
++        uid = channel.get('uniqueid')
++        if uid is None or channel.get('channeltype', 'tv') != 'tv' or channel.get('hidden'):
++            continue
++        by_uid.setdefault(str(uid), channel)
++    result, seen = [], set()
++    for raw_uid in uids or []:
++        if isinstance(raw_uid, bool):
++            continue
++        try:
++            uid = str(int(raw_uid))
++        except (TypeError, ValueError, OverflowError):
++            continue
++        if uid in seen:
++            continue
++        seen.add(uid)
++        channel = by_uid.get(uid)
++        if channel and channel.get('channelid') is not None:
++            result.append(channel)
++    return result
++
++
++def _mru_path(g):
++    profile = g['addon'].getAddonInfo('profile')
++    profile = g['xbmcvfs'].translatePath(profile)
++    return os.path.join(profile, 'recent_tv_mru.json')
++
++
++def _read_uids(g):
++    try:
++        with open(_mru_path(g), encoding='utf-8') as stream:
++            data = json.load(stream)
++        values = data.get('channels', []) if isinstance(data, dict) else []
++        return values if isinstance(values, list) else []
++    except (OSError, ValueError, TypeError):
++        return []
++
++
++def _rpc(g, method, params):
++    request = {'jsonrpc':'2.0', 'id':1, 'method':method, 'params':params}
++    try:
++        response = json.loads(g['xbmc'].executeJSONRPC(json.dumps(request)))
++        if response.get('error'):
++            g['_log']('Recent TV Kodi API failed method=%s code=%s' %
++                      (method, response['error'].get('code', 'unknown')))
++            return None
++        return response.get('result')
++    except Exception as exc:
++        g['_log']('Recent TV Kodi API failed method=%s error_type=%s' %
++                  (method, type(exc).__name__))
++        return None
++
++
++def _channel_listitem(g, channel, pnum):
++    name = str(channel.get('channel') or channel.get('label') or '')
++    channel_id = int(channel['channelid'])
++    uid = int(channel['uniqueid'])
++    li = g['_new_listitem'](name)
++    number = channel.get('channelnumber')
++    if number not in (None, 0, ''):
++        li.setLabel2(str(number))
++    art = channel.get('thumbnail') or channel.get('icon') or ''
++    if art:
++        li.setArt({'thumb':art, 'icon':art})
++    tag = li.getVideoInfoTag()
++    tag.setTitle(name)
++    tag.setMediaType('video')
++    now = channel.get('broadcastnow') or {}
++    next_program = channel.get('broadcastnext') or {}
++    if now.get('plot'):
++        tag.setPlot(now['plot'])
++    if now.get('genre'):
++        tag.setGenres([now['genre']])
++    if now.get('title'):
++        li.setProperty('PVR.BroadcastNow', str(now['title']))
++    if next_program.get('title'):
++        li.setProperty('PVR.BroadcastNext', str(next_program['title']))
++    li.setProperty('PVR.ChannelId', str(channel_id))
++    li.setProperty('PVR.ChannelUID', str(uid))
++    li.setProperty('IsPlayable', 'true')
++    path = g['build_url']({'mode':'premium', 'view':'recent_tv_play',
++                           'channelid':channel_id, 'profile_num':pnum})
++    return path, li
++
++
++def _directory(g, pnum):
++    response = _rpc(g, 'PVR.GetChannels', {
++        'channelgroupid':'alltv',
++        'properties':['channel', 'channeltype', 'channelnumber', 'uniqueid',
++                      'thumbnail', 'icon', 'hidden', 'broadcastnow', 'broadcastnext'],
++        'limits':{'start':0, 'end':10000},
++    })
++    channels = ordered_channels(_read_uids(g), response.get('channels', [])) \
++        if isinstance(response, dict) else []
++    plugin, handle = g['xbmcplugin'], g['addon_handle']
++    plugin.setContent(handle, 'livetv')
++    plugin.setPluginCategory(handle, 'Últimos vistos')
++    for channel in channels:
++        path, li = _channel_listitem(g, channel, pnum)
++        plugin.addDirectoryItem(handle, path, li, False)
++    plugin.addSortMethod(handle, plugin.SORT_METHOD_NONE)
++    plugin.endOfDirectory(handle, succeeded=True, updateListing=False, cacheToDisc=False)
++
++
++def _play(g, params):
++    get = lambda key, default='': params.get(key, [default])[0]
++    try:
++        channel_id = int(get('channelid'))
++    except (TypeError, ValueError, OverflowError):
++        channel_id = 0
++    uid = None
++    if channel_id > 0:
++        detail = _rpc(g, 'PVR.GetChannelDetails', {
++            'channelid':channel_id, 'properties':['uniqueid', 'channeltype', 'hidden']})
++        channel = detail.get('channeldetails', {}) if isinstance(detail, dict) else {}
++        if channel.get('channeltype', 'tv') == 'tv' and not channel.get('hidden'):
++            try:
++                uid = int(channel.get('uniqueid'))
++            except (TypeError, ValueError, OverflowError):
++                uid = None
++    if uid is None or uid not in set(_read_uids(g)):
++        g['xbmcplugin'].setResolvedUrl(g['addon_handle'], False, g['_new_listitem'](''))
++        return
++    result = _rpc(g, 'Player.Open', {'item':{'channelid':channel_id}})
++    if result is None:
++        g['xbmcplugin'].setResolvedUrl(g['addon_handle'], False, g['_new_listitem'](''))
++        return
++    g['xbmcplugin'].endOfDirectory(g['addon_handle'], succeeded=True,
++                                   updateListing=False, cacheToDisc=False)
++
++
++def dispatch(g, params, pnum, view):
++    if view == 'recent_tv':
++        _directory(g, pnum)
++    else:
++        _play(g, params)
+diff --git a/resources/lib/series_changes.py b/resources/lib/series_changes.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..c40ae712cee58327c5022756a1b074ca274ebae6
+--- /dev/null
++++ b/resources/lib/series_changes.py
+@@ -0,0 +1,135 @@
++"""Small provider-only snapshot for XStream series and episode changes."""
++import json
++import os
++import time
++
++import xbmcvfs
++import series_state
++
++
++WINDOW_SECONDS = 30 * 86400
++MAX_EVENTS = 50
++CATALOG_INTERVAL = 6 * 3600
++
++
++def _path(addon, profile_num):
++    profile = xbmcvfs.translatePath(addon.getAddonInfo("profile"))
++    return os.path.join(profile, "series_changes_p%d.json" % int(profile_num))
++
++
++def _read(addon, profile_num):
++    try:
++        with open(_path(addon, profile_num), "r", encoding="utf-8") as stream:
++            data = json.load(stream)
++        return data if isinstance(data, dict) else {}
++    except (OSError, ValueError, TypeError):
++        return {}
++
++
++def _write(addon, profile_num, data):
++    target = _path(addon, profile_num)
++    os.makedirs(os.path.dirname(target), exist_ok=True)
++    temporary = target + ".tmp"
++    with open(temporary, "w", encoding="utf-8") as stream:
++        json.dump(data, stream, ensure_ascii=False, separators=(",", ":"))
++        stream.flush()
++    os.replace(temporary, target)
++
++
++def _trim(data):
++    cutoff = time.time() - WINDOW_SECONDS
++    data["events"] = sorted(
++        (event for event in data.get("events", [])
++         if float(event.get("changed", 0) or 0) >= cutoff),
++        key=lambda event: float(event.get("changed", 0) or 0), reverse=True
++    )[:MAX_EVENTS]
++
++
++def record_catalog(addon, profile_num, items, force=False):
++    """Baseline once; later provider catalogue refreshes detect newly seen IDs."""
++    now = time.time()
++    data = _read(addon, profile_num)
++    if not force and now - float(data.get("catalog_checked", 0) or 0) < CATALOG_INTERVAL:
++        return
++    if not isinstance(items, list):
++        return
++    current = {str(item.get("series_id")): str(item.get("name") or "")
++               for item in items if isinstance(item, dict) and item.get("series_id")}
++    known = data.get("catalog_ids")
++    if known is None:
++        data["catalog_ids"] = sorted(current)
++    else:
++        known_ids = set(str(value) for value in known)
++        events = data.setdefault("events", [])
++        existing = {str(event.get("series_id")) for event in events}
++        for series_id in current.keys() - known_ids:
++            if series_id not in existing:
++                events.append({"series_id": series_id, "title": current[series_id],
++                               "status": "NUEVA SERIE", "changed": now})
++        data["catalog_ids"] = sorted(known_ids | set(current))
++    data["catalog_checked"] = now
++    _trim(data)
++    _write(addon, profile_num, data)
++
++
++def record_series_info(addon, profile_num, series_id, title, response):
++    """Refresh compact inventory only when XStream naturally loads series detail."""
++    if not isinstance(response, dict):
++        return
++    episodes = response.get("episodes")
++    if not isinstance(episodes, dict):
++        return
++    inventory, inventory_complete = series_state.normalize_inventory(episodes)
++    episode_ids = {row["provider_id"] for row in inventory}
++    now = time.time()
++    data = _read(addon, profile_num)
++    stored_inventories = data.get("episode_inventory")
++    if not isinstance(stored_inventories, dict):
++        stored_inventories = {}
++        data["episode_inventory"] = stored_inventories
++    info = response.get("info")
++    info = info if isinstance(info, dict) else {}
++    stored_inventories[str(series_id)] = {
++        "checked_at": now,
++        "complete": bool(inventory_complete),
++        "tmdb_id": str(info.get("tmdb_id") or info.get("tmdb") or ""),
++        "episodes": inventory,
++    }
++    inventories = data.setdefault("episode_ids", {})
++    key = str(series_id)
++    previous = set(str(value) for value in inventories.get(key, []))
++    if episode_ids and key in inventories:
++        new_ids = episode_ids - previous
++        if new_ids:
++            events = data.setdefault("events", [])
++            is_new_series = any(
++                str(event.get("series_id")) == key
++                and event.get("status") == "NUEVA SERIE"
++                and now - float(event.get("changed", 0) or 0) <= WINDOW_SECONDS
++                for event in events if isinstance(event, dict))
++            if not is_new_series:
++                events = [event for event in events
++                          if str(event.get("series_id")) != key]
++                events.append({"series_id": key, "title": str(title or ""),
++                               "status": "NUEVOS CAPÍTULOS", "changed": now})
++                data["events"] = events
++    if episode_ids:
++        inventories[key] = sorted(episode_ids)
++    _trim(data)
++    _write(addon, profile_num, data)
++
++
++def inventory_map(addon, profile_num):
++    """Return the existing per-profile series inventory snapshot (no new store)."""
++    data = _read(addon, profile_num)
++    inventories = data.get("episode_inventory", {})
++    return inventories if isinstance(inventories, dict) else {}
++
++
++def status(addon, profile_num, series_id):
++    now = time.time()
++    for event in _read(addon, profile_num).get("events", []):
++        if str(event.get("series_id")) == str(series_id) and now - float(event.get("changed", 0) or 0) <= WINDOW_SECONDS:
++            return str(event.get("status") or "")
++    return ""
++
++
++def recent(addon, profile_num, limit=24):
++    now = time.time()
++    events = [event for event in _read(addon, profile_num).get("events", [])
++              if now - float(event.get("changed", 0) or 0) <= WINDOW_SECONDS]
++    return sorted(events, key=lambda event: float(event.get("changed", 0) or 0),
++                  reverse=True)[:max(1, min(int(limit), 50))]
+diff --git a/resources/lib/series_state.py b/resources/lib/series_state.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..6031feb5a7fb33cba429c00b746fb5302adbf987
+--- /dev/null
++++ b/resources/lib/series_state.py
+@@ -0,0 +1,174 @@
++"""Fail-closed, read-only series progress derived from XStream state."""
++
++import time
++
++
++INVENTORY_MAX_AGE_SECONDS = 14 * 24 * 60 * 60
++
++
++def _positive_int(value, allow_zero=False):
++    try:
++        number = int(value)
++    except (TypeError, ValueError, OverflowError):
++        return None
++    if number < 0 or (number == 0 and not allow_zero):
++        return None
++    return number
++
++
++def normalize_inventory(episodes_by_season):
++    """Normalize an Xtream get_series_info response; malformed means incomplete."""
++    if not isinstance(episodes_by_season, dict):
++        return [], False
++    complete = bool(episodes_by_season)
++    by_number = {}
++    for season_raw, episodes in episodes_by_season.items():
++        season = _positive_int(season_raw, allow_zero=True)
++        if season is None or not isinstance(episodes, list):
++            complete = False
++            continue
++        for episode_data in episodes:
++            if not isinstance(episode_data, dict):
++                complete = False
++                continue
++            episode = _positive_int(episode_data.get("episode_num", episode_data.get("num")))
++            provider_id = str(episode_data.get("id") or episode_data.get("episode_id") or "").strip()
++            if episode is None or not provider_id:
++                complete = False
++                continue
++            key = (season, episode)
++            entry = {"season": season, "episode": episode, "provider_id": provider_id}
++            previous = by_number.get(key)
++            if previous and previous["provider_id"] != provider_id:
++                complete = False
++                continue
++            by_number[key] = entry
++    inventory = sorted(by_number.values(), key=lambda row: (row["season"], row["episode"], row["provider_id"]))
++    if not inventory:
++        complete = False
++    return inventory, complete
++
++
++def _valid_stored_inventory(entries):
++    if not isinstance(entries, list):
++        return [], False
++    by_number = {}
++    complete = bool(entries)
++    for entry in entries:
++        if not isinstance(entry, dict):
++            complete = False
++            continue
++        season = _positive_int(entry.get("season"), allow_zero=True)
++        episode = _positive_int(entry.get("episode"))
++        provider_id = str(entry.get("provider_id") or "").strip()
++        if season is None or episode is None or not provider_id:
++            complete = False
++            continue
++        key = (season, episode)
++        previous = by_number.get(key)
++        if previous and previous["provider_id"] != provider_id:
++            complete = False
++            continue
++        by_number[key] = {"season": season, "episode": episode, "provider_id": provider_id}
++    rows = sorted(by_number.values(), key=lambda row: (row["season"], row["episode"], row["provider_id"]))
++    if not rows:
++        complete = False
++    return rows, complete
++
++
++def _resume_episode(entries, series_id, inventory):
++    inventory_by_provider_id = {row["provider_id"]: row for row in inventory}
++    candidates = []
++    for entry in entries or []:
++        if not isinstance(entry, dict) or str(entry.get("series_id") or "") != str(series_id):
++            continue
++        provider_id = str(entry.get("ep_id") or "")
++        episode = inventory_by_provider_id.get(provider_id)
++        resume_season = _positive_int(entry.get("season_num"), allow_zero=True)
++        if not episode or resume_season != episode["season"]:
++            continue
++        try:
++            position = float(entry.get("position", 0) or 0)
++            duration = float(entry.get("duration", 0) or 0)
++            timestamp = float(entry.get("timestamp", 0) or 0)
++        except (TypeError, ValueError, OverflowError):
++            continue
++        if 0 < position < duration:
++            candidates.append((timestamp, episode))
++    return max(candidates, key=lambda pair: pair[0])[1] if candidates else None
++
++
++def resolve_tmdb_id(inventory_record, stream_item, cached_tmdb_id=""):
++    """Use an already-resolved local identity; never perform catalog discovery."""
++    inventory_record = inventory_record if isinstance(inventory_record, dict) else {}
++    stream_item = stream_item if isinstance(stream_item, dict) else {}
++    value = (inventory_record.get("tmdb_id") or inventory_record.get("tmdb")
++             or stream_item.get("tmdb_id") or stream_item.get("tmdb")
++             or cached_tmdb_id or "")
++    return str(value).strip()
++
++
++def derive_series_state(tmdb_id, series_id, inventory_record, watched_store,
++                        resume_entries=None, now=None):
++    """Derive state without writes; unknown identity/inventory never means complete."""
++    result = {"known": False, "total": 0, "watched": 0, "unwatched": 0,
++              "complete": None, "next": None, "progress_label": ""}
++    if not str(tmdb_id or "").strip() or not str(series_id or "").strip() or not isinstance(inventory_record, dict):
++        return result
++    inventory, structurally_complete = _valid_stored_inventory(inventory_record.get("episodes"))
++    if not inventory:
++        return result
++    try:
++        now = float(now if now is not None else time.time())
++        checked = float(inventory_record.get("checked_at", 0) or 0)
++        fresh = 0 <= now - checked <= INVENTORY_MAX_AGE_SECONDS
++    except (TypeError, ValueError, OverflowError):
++        fresh = False
++
++    watched_rows = []
++    try:
++        for row in inventory:
++            watched_rows.append(bool(watched_store.is_watched(
++                str(tmdb_id), str(row["season"]), str(row["episode"]))))
++    except Exception:
++        return result
++
++    watched_count = sum(1 for value in watched_rows if value)
++    unwatched_count = len(inventory) - watched_count
++    inventory_complete = bool(inventory_record.get("complete")) and structurally_complete and fresh
++    complete = bool(inventory_complete and inventory and unwatched_count == 0)
++    resume = _resume_episode(resume_entries, series_id, inventory)
++    next_row = None
++    if not complete and resume:
++        resume_index = inventory.index(resume)
++        if not watched_rows[resume_index]:
++            next_row = resume
++    if not complete and next_row is None:
++        next_row = next((row for row, watched in zip(inventory, watched_rows) if not watched), None)
++    if next_row:
++        next_label = "T{0} · E{1:02d}".format(next_row["season"], next_row["episode"])
++        progress_label = "{0}  {1}/{2}".format(next_label, watched_count, len(inventory))
++    elif not complete:
++        progress_label = "{0}/{1}".format(watched_count, len(inventory))
++    else:
++        progress_label = "COMPLETA"
++    result.update({"known": True, "total": len(inventory), "watched": watched_count,
++                   "unwatched": unwatched_count, "complete": complete if inventory_complete else None,
++                   "next": next_row, "progress_label": progress_label})
++    return result
++
++
++def apply_to_listitem(listitem, state):
++    """Expose only derived display fields; do not mutate any source state."""
++    if not state or not state.get("known"):
++        return False
++    label = str(state.get("progress_label") or "")
++    if label:
++        listitem.setProperty("XStream.SeriesProgressLabel", label)
++    next_row = state.get("next")
++    if next_row:
++        listitem.setProperty("XStream.SeriesNextSeason", str(next_row["season"]))
++        listitem.setProperty("XStream.SeriesNextEpisode", str(next_row["episode"]))
++    if state.get("complete") is True:
++        listitem.setProperty("XStream.SeriesComplete", "true")
++    return True
+diff --git a/resources/lib/pending_adapter.py b/resources/lib/pending_adapter.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..0000000000000000000000000000000000000000
+--- /dev/null
++++ b/resources/lib/pending_adapter.py
+@@ -0,0 +1,58 @@
++"""AcTweeteR Pending semantics over XStream's existing Favorites folders.
++
++No second membership database is created. Dedicated Movie and Series folders
++prevent cross-type ID collisions; provider availability and completion remain
++read-only inputs owned by XStream's catalog/state adapters.
++"""
++
++FOLDERS = {"movie": "AcTweeteR Pending - Movies",
++           "series": "AcTweeteR Pending - Series"}
++
++
++def _kind(kind):
++    value = str(kind or "").strip().lower()
++    if value not in FOLDERS:
++        raise ValueError("unsupported Pending media kind")
++    return value
++
++
++class PendingAdapter:
++    """Thin adapter around the installed XStream Favorites API."""
++
++    def __init__(self, favorites):
++        self.favorites = favorites
++
++    def list_items(self, kind):
++        normalized = _kind(kind)
++        return [dict(item) for item in self.favorites.get_all(FOLDERS[normalized])
++                if str(item.get("stype", "")).lower() == normalized]
++
++    def contains(self, kind, provider_id):
++        normalized = _kind(kind)
++        wanted = str(provider_id or "").strip()
++        if not wanted:
++            return False
++        return any(str(item.get("id")) == wanted
++                   for item in self.list_items(normalized))
++
++    def add(self, kind, item):
++        normalized = _kind(kind)
++        if str((item or {}).get("stype", "")).lower() != normalized:
++            raise ValueError("Pending item media type does not match folder")
++        if not str((item or {}).get("id") or "").strip():
++            raise ValueError("Pending requires a stable provider ID")
++        return bool(self.favorites.add(item, FOLDERS[normalized]))
++
++    def remove(self, kind, provider_id):
++        normalized = _kind(kind)
++        wanted = str(provider_id or "").strip()
++        if not wanted or not self.contains(normalized, wanted):
++            return False
++        return bool(self.favorites.remove(wanted, FOLDERS[normalized]))
++
++    def reconcile_completion(self, kind, provider_id, complete):
++        """Remove only on positive completion; later inventory never re-adds."""
++        normalized = _kind(kind)
++        if complete is not True:
++            return False
++        return self.remove(normalized, provider_id)
+diff --git a/resources/lib/watched_actions.py b/resources/lib/watched_actions.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..eab1cfb01d6ffd9a86304d2b63035e85a2562c89
+--- /dev/null
++++ b/resources/lib/watched_actions.py
+@@ -0,0 +1,58 @@
++"""Thin testable dispatch for XStream's existing watched toggle."""
++
++
++def toggle_tmdb_watched(g, args):
++    """Run the same profile-scoped XStream watched toggle used by its route."""
++    tmdb_id = args.get("tmdb_id", [""])[0]
++    tmdb_type = args.get("tmdb_type", [""])[0]
++    season = args.get("season", [""])[0]
++    episode = args.get("episode", [""])[0]
++    profile = g["pm"].active
++    profile_num = int(profile) if profile and str(profile).isdigit() else 1
++    state = None
++
++    if tmdb_id and tmdb_type == "movie":
++        store = g["WatchedMovies"](g["addon"], profile_num=profile_num)
++        if store.is_watched(tmdb_id):
++            store.mark_unwatched(tmdb_id)
++            g["xbmcgui"].Dialog().notification("Xstream Pro", g["_t"](31121))
++            state = False
++        else:
++            store.mark_watched(tmdb_id)
++            g["xbmcgui"].Dialog().notification("Xstream Pro", g["_t"](31120))
++            state = True
++    elif tmdb_id and tmdb_type == "tv" and season and episode:
++        store = g["WatchedEpisodes"](g["addon"], profile_num=profile_num)
++        if store.is_watched(tmdb_id, season, episode):
++            store.mark_unwatched(tmdb_id, season, episode)
++            g["xbmcgui"].Dialog().notification("Xstream Pro", g["_t"](31121))
++            state = False
++        else:
++            store.mark_watched(tmdb_id, season, episode)
++            g["xbmcgui"].Dialog().notification("Xstream Pro", g["_t"](31120))
++            state = True
++    elif tmdb_id and tmdb_type == "tv" and season:
++        store = g["WatchedMovies"](g["addon"], profile_num=profile_num)
++        key = "season:{0}:{1}".format(tmdb_id, season)
++        if store.is_watched(key):
++            store.mark_unwatched(key)
++            g["xbmcgui"].Dialog().notification("Xstream Pro", g["_t"](31121))
++            state = False
++        else:
++            store.mark_watched(key)
++            g["xbmcgui"].Dialog().notification("Xstream Pro", g["_t"](31120))
++            state = True
++    elif tmdb_id and tmdb_type == "tv":
++        store = g["WatchedMovies"](g["addon"], profile_num=profile_num)
++        key = "tvshow:{0}".format(tmdb_id)
++        if store.is_watched(key):
++            store.mark_unwatched(key)
++            g["xbmcgui"].Dialog().notification("Xstream Pro", g["_t"](31121))
++            state = False
++        else:
++            store.mark_watched(key)
++            g["xbmcgui"].Dialog().notification("Xstream Pro", g["_t"](31120))
++            state = True
++
++    g["xbmc"].executebuiltin("Container.Refresh")
++    return state
+diff --git a/service.py b/service.py
+index d2239a19aa59f70b3ee3ad69041334c0f58e9958..9427f1c90eb65b6a2848ec15f7e985ce55eed278 100644
+--- a/service.py
++++ b/service.py
+@@ -1,6 +1,9 @@
+ # -*- coding: utf-8 -*-
+ import os
+ import sys
++import datetime
++import xbmcaddon
++import xbmcvfs
+ 
+ import xbmc
+ 
+@@ -27,7 +30,34 @@ except Exception as exc:
+ 
+ 
+ monitor = xbmc.Monitor()
++try:
++    from recent_tv_native import RecentTV
++    recent_tv = RecentTV(xbmcvfs.translatePath(xbmcaddon.Addon().getAddonInfo('profile')), xbmc)
++except Exception:
++    recent_tv = None
++    xbmc.log('[Xstream Pro] Recent TV service unavailable', xbmc.LOGWARNING)
++last_year_check = None
++resume_signature = None
++resume_path = os.path.join(xbmcvfs.translatePath(xbmcaddon.Addon().getAddonInfo('profile')), 'resume_points_p1.json')
+ while not monitor.abortRequested():
++    if recent_tv is not None:
++        try:
++            recent_tv.tick()
++        except Exception:
++            xbmc.log('[Xstream Pro] Recent TV polling warning', xbmc.LOGWARNING)
++    now = datetime.datetime.now()
++    year_key = (now.year, now.day)
++    if year_key != last_year_check:
++        xbmc.executebuiltin("SetProperty(Premium.PreviousYear,{0},home)".format(now.year - 1))
++        last_year_check = year_key
++    try:
++        stat = os.stat(resume_path)
++        signature = (stat.st_mtime_ns, stat.st_size)
++    except OSError:
++        signature = (0, 0)
++    if signature != resume_signature:
++        xbmc.executebuiltin('SetProperty(Premium.ContinueRefresh,{0},home)'.format(signature[0]))
++        resume_signature = signature
+     if remember_current_pvr_group is not None:
+         try:
+             remember_current_pvr_group()
+

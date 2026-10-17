@@ -38,7 +38,7 @@ jobs:
             --service-zip "$RUNNER_TEMP/actweeter-rebuild/service.actweeter-0.4.29.zip" \
             --xstream-zip "$RUNNER_TEMP/actweeter-rebuild/plugin.video.xstream-pro-1.1.2.7.zip" \
             --output-dir "$RUNNER_TEMP/actweeter-rebuild/index"
-      - name: Compare rebuilt packages and index with published files
+      - name: Compare rebuilt historical packages with published artifacts
         run: |
           set -eu
           tmp="$RUNNER_TEMP/actweeter-rebuild"
@@ -46,5 +46,6 @@ jobs:
           cmp "$tmp/skin.actweeter-1.2.28.zip" repo/skin.actweeter/skin.actweeter-1.2.28.zip
           cmp "$tmp/service.actweeter-0.4.29.zip" repo/service.actweeter/service.actweeter-0.4.29.zip
           cmp "$tmp/plugin.video.xstream-pro-1.1.2.7.zip" repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.7.zip
-          cmp "$tmp/index/addons.xml" repo/addons.xml
-          cmp "$tmp/index/addons.xml.md5" repo/addons.xml.md5
+          # This workflow rebuilds the immutable 0.4.29 snapshot. The root
+          # Kodi feed advances independently; its current index/hash and
+          # versions are checked by the current-distribution workflow.
