@@ -1,6 +1,6 @@
 # AcTweeteR Beta widget-navigation source snapshot
 
-The current Beta adds skin `1.2.29~beta1` to the isolated testing feed while
+The current Beta adds skin `1.2.29~beta2` to the isolated testing feed while
 retaining the service 0.4.33 migration described below. See the root
 `BETA_WIDGET_NAVIGATION.md` for source-confirmed corrections and runtime gates.
 The stable skin package and stable index are unchanged.

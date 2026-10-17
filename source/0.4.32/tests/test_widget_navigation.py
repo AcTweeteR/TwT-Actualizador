@@ -48,9 +48,27 @@ class WidgetNavigationTests(unittest.TestCase):
         actions = bingie.find("include[@name='ContainerShowInfoOnclick']").findall("onclick")
         self.assertTrue(any(n.text == "Action(info)" for n in actions))
         widgets = ET.parse(XML / "IncludesHomeWidgets.xml").getroot()
-        container = widgets.find("include[@name='widget_base_normal']/control")
+        container = widgets.find("include[@name='widget_base_normal']/definition/control")
         self.assertEqual(container.findtext("movement"), "7")
         self.assertEqual(container.findtext("orientation"), "$PARAM[position]")
+
+    def test_expansion_literal_selects_21_without_infolabel_lookup(self):
+        root = ET.parse(XML / "IncludesHomeWidgets.xml").getroot()
+        base = root.find("include[@name='widget_base_normal']")
+        self.assertEqual(base.find("param[@name='widgetExpandable']").get("default"), "false")
+        container = base.find("definition/control")
+        branches = [n for n in container.findall("include")
+                    if n.get("content", "").startswith("widget_base_content_")]
+        self.assertEqual([(n.get("content"), n.get("condition")) for n in branches], [
+            ("widget_base_content_expandable", "$PARAM[widgetExpandable]"),
+            ("widget_base_content_$PARAM[contentStyle]", "!$PARAM[widgetExpandable]")])
+        self.assertEqual(root.find("include[@name='widget_base_content_expandable']/content").get("limit"), "21")
+        self.assertEqual(root.find("include[@name='widget_base_content_normal']/content").get("limit"), "20")
+        template = ET.parse(XML.parent / "shortcuts/template.xml").getroot()
+        flags = list(template.iterfind(".//param[@name='widgetExpandable']"))
+        self.assertEqual(len(flags), 3)
+        for flag in flags:
+            self.assertEqual(flag.get("value"), "$PYTHON['true' if widgetExpandable == 'true' else 'false']")
 
 
 if __name__ == "__main__":

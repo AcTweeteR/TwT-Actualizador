@@ -665,6 +665,8 @@
     </include>
 
     <include name="widget_base">
+        <param name="widgetExpandable" default="false" />
+        <definition>
         <include content="widget_base_normal">
             <param name="contentStyle" value="$PARAM[contentStyle]" />
 			<param name="container" value="$PARAM[container]" />
@@ -682,6 +684,7 @@
             <param name="widgetLimit" value="$PARAM[widgetLimit]" />
             <param name="widgetStyle" value="$PARAM[widgetStyle]" />
         </include>
+        </definition>
     </include>
 
     <include name="WidgetBaseBingieIncludes">
@@ -703,6 +706,8 @@
     </include>
 
     <include name="widget_base_normal">
+        <param name="widgetExpandable" default="false" />
+        <definition>
         <control type="$PARAM[container]" id="$PARAM[widgetid]">
             <!-- Align Kodi's fixed-list hit-test origin with the poster artwork. -->
             <include content="left">
@@ -729,7 +734,8 @@
 				<param name="height" value="$PARAM[height]" />
             </include>
             <!-- Eligible AcTweeteR routes return up to 20 provider entries plus one EXPANDIR folder. -->
-            <include content="widget_base_content_expandable" condition="String.IsEqual($PARAM[widgetExpandable],true)">
+            <!-- The parameter is a boolean literal, not an InfoLabel. -->
+            <include content="widget_base_content_expandable" condition="$PARAM[widgetExpandable]">
                 <param name="widgetid" value="$PARAM[widgetid]" />
                 <param name="submenuid" value="$PARAM[submenuid]" />
                 <param name="widgetTarget" value="$PARAM[widgetTarget]" />
@@ -738,7 +744,7 @@
                 <param name="widgetSortOrder" value="$PARAM[widgetSortOrder]" />
                 <param name="widgetLimit" value="$PARAM[widgetLimit]" />
             </include>
-            <include content="widget_base_content_$PARAM[contentStyle]" condition="!String.IsEqual($PARAM[widgetExpandable],true)">
+            <include content="widget_base_content_$PARAM[contentStyle]" condition="!$PARAM[widgetExpandable]">
                 <param name="widgetid" value="$PARAM[widgetid]" />
                 <param name="submenuid" value="$PARAM[submenuid]" />
                 <param name="widgetTarget" value="$PARAM[widgetTarget]" />
@@ -748,6 +754,7 @@
                 <param name="widgetLimit" value="$PARAM[widgetLimit]" />
             </include>
         </control>
+        </definition>
     </include>
 	
 	<include name="widget_base_categories">

@@ -68,7 +68,7 @@
                 <param name="widgetTags" value="$SKINSHORTCUTS[widgetTags]" />
                 <param name="widgetTarget" value="$SKINSHORTCUTS[widgetTarget]" />
                 <param name="widgetPath" value="$SKINSHORTCUTS[widgetPath]" />
-                <param name="widgetExpandable" value="$SKINSHORTCUTS[widgetExpandable]" />
+                <param name="widgetExpandable" value="$PYTHON['true' if widgetExpandable == 'true' else 'false']" />
                 <param name="widgetStyle" value="widget_layout_$SKINSHORTCUTS[widgetStyle]" />
                 <param name="widgetSortBy" value="$SKINSHORTCUTS[widgetSortBy]" />
                 <param name="widgetSortOrder" value="$SKINSHORTCUTS[widgetSortOrder]" />
@@ -377,7 +377,7 @@
                 <param name="widgetTags" value="$SKINSHORTCUTS[widgetTags]" />
                 <param name="widgetTarget" value="$SKINSHORTCUTS[widgetTarget]" />
                 <param name="widgetPath" value="$SKINSHORTCUTS[widgetPath]" />
-                <param name="widgetExpandable" value="$SKINSHORTCUTS[widgetExpandable]" />
+                <param name="widgetExpandable" value="$PYTHON['true' if widgetExpandable == 'true' else 'false']" />
                 <param name="widgetStyle" value="widget_layout_$SKINSHORTCUTS[widgetStyle]" />
                 <param name="widgetSortBy" value="$SKINSHORTCUTS[widgetSortBy]" />
                 <param name="widgetSortOrder" value="$SKINSHORTCUTS[widgetSortOrder]" />
@@ -450,7 +450,7 @@
                 <param name="widgetTags" value="$SKINSHORTCUTS[widgetTags]" />
                 <param name="widgetTarget" value="$SKINSHORTCUTS[widgetTarget]" />
                 <param name="widgetPath" value="$SKINSHORTCUTS[widgetPath]" />
-                <param name="widgetExpandable" value="$SKINSHORTCUTS[widgetExpandable]" />
+                <param name="widgetExpandable" value="$PYTHON['true' if widgetExpandable == 'true' else 'false']" />
                 <param name="widgetStyle" value="widget_layout_$SKINSHORTCUTS[widgetStyle]" />
                 <param name="widgetSortBy" value="$SKINSHORTCUTS[widgetSortBy]" />
                 <param name="widgetSortOrder" value="$SKINSHORTCUTS[widgetSortOrder]" />
