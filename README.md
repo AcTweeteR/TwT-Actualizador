@@ -1,5 +1,7 @@
 # TwT-Actualizador — distribución de AcTweeteR
 
+> **Desarrollo y organización:** [Mapa del workspace, fuente Beta activa y archivo histórico](docs/development/WORKSPACE_LAYOUT.md). No usar el Git de la carpeta contenedora ni los worktrees archivados.
+
 Canal oficial para Kodi 21.3 Omega.
 
 ## Canal oficial — AcTweeteR 0.4.30
