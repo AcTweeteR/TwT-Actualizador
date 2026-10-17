@@ -1,0 +1,8 @@
+AcTweeteR 1.2.7 — reproducción directa desde widgets y reanudación
+
+- Los elementos reproducibles de XStream en Home ya no son interceptados por
+  la acción opcional de abrir información; Kodi ejecuta la ruta plugin:// del
+  elemento.
+- Continuar viendo reutiliza únicamente ResumePoints existentes de XStream y
+  al seleccionar conserva la URL, posición y duración guardadas.
+- Sin puntos de reanudación disponibles no se inventan elementos ni progreso.

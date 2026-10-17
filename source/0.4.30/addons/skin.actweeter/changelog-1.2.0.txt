@@ -1,0 +1,11 @@
+AcTweeteR 1.2.0 — private development build
+
+- Consolidates AcTweeteR identity while preserving required upstream notices
+  and compatible legacy identifiers.
+- Integrates the local AcTweeteR introduction assets and skin settings.
+- Supports SlyGuy Trailers for manual trailers and serialized automatic
+  previews; provider availability remains installation-dependent.
+- Includes AcTweeteR setup/service integration and Kodi 21 Omega metadata.
+
+This changelog describes the repository build. It is not a public release or
+distribution notice.

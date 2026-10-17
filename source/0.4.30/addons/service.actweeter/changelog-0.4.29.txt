@@ -1,0 +1,3 @@
+0.4.29
+- Migrate owned Skin Shortcuts data to carry explicit expansion metadata.
+- Preserve existing user-customized shortcut files unless the user consents.

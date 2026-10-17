@@ -1,0 +1,8 @@
+{
+  "release": "0.4.30",
+  "source_base_commit": "af4f905ba14d73f140fe32800ee294f1c8436ec1",
+  "upstream_source_commit": "9c418a8b84a0a88b5a5aac627f28a0287f1e196a",
+  "profile_generated_cache_included": false,
+  "official_artifacts_rebuilt_and_hash_matched": true,
+  "xstream_package_reused_unchanged": true
+}

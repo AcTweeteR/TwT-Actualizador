@@ -1,0 +1,63 @@
+diff --git a/resources/lib/addon.py b/resources/lib/addon.py
+index 880518dd074153f6ea3bee426318512d309a0896..0000000000000000000000000000000000000000 100644
+--- a/resources/lib/addon.py
++++ b/resources/lib/addon.py
+@@ -5627,6 +5627,7 @@ def _refresh_profile_data(profile_num):
+     progress.create(_t(30012), _t(30749, profile_name))
+     original_active = pm.active
+     pm.active = str(profile_num)
++    refresh_ok = False
+ 
+     try:
+         progress.update(10, _t(30750))
+@@ -5642,5 +5643,6 @@ def _refresh_profile_data(profile_num):
+             log_prefix="Refresh",
+         )
++        refresh_ok = bool(ok)
+ 
+        if ok:
+            _rebuild_provider_availability_cache(show_progress=False)
+@@ -5700,3 +5702,4 @@ def _refresh_profile_data(profile_num):
+             _log(f"PVR favorites progress close warning: {e}")
+         pm.active = original_active
++    return refresh_ok
+ 
+@@ -15450,6 +15453,38 @@ elif mode == "refresh_data":
+     refresh_data()
+ elif mode == "refresh_profile_menu":
+     refresh_profile_menu()
++elif mode == "actweeter_refresh_profile":
++    # Private AcTweeteR onboarding entry point: refresh the explicitly selected
++    # profile without an extra profile chooser. Kodi still owns progress UI.
++    try:
++        pnum = int(args.get("pnum", ["1"])[0])
++    except (ValueError, TypeError):
++        pnum = 0
++    callback = args.get("actweeter_callback", [""])[0]
++    refreshed = False
++    if 1 <= pnum <= 10 and addon.getSetting(f"profile_{pnum}_enabled") == "true":
++        try:
++            refreshed = bool(_refresh_profile_data(pnum))
++        except Exception as e:
++            _log(f"AcTweeteR catalog refresh failed: {type(e).__name__}")
++        if (refreshed and _is_pvr_profile(pnum)
++                and addon.getSetting("auto_sync_pvr").lower() == "true"):
++            try:
++                if not _sync_pvr_force():
++                    xbmcgui.Dialog().notification(
++                        "Xstream Pro", "PVR sync is still pending; retry it in Xstream settings.",
++                        xbmcgui.NOTIFICATION_WARNING, 5000)
++            except Exception as e:
++                _log(f"AcTweeteR PVR sync warning: {type(e).__name__}")
++    else:
++        xbmcgui.Dialog().notification("Xstream Pro", "Profile is unavailable.")
++    if (len(callback) == 32
++            and all(char in "0123456789abcdef" for char in callback.lower())):
++        result = "success" if refreshed else "error"
++        xbmc.executebuiltin(
++            "RunScript(service.actweeter,catalog_refresh_result,%s,%s)" %
++            (callback, result), False)
++    xbmcplugin.endOfDirectory(addon_handle, succeeded=False)
+ elif mode == "sports_refresh_profile_menu":
+     sports_refresh_profile_menu()
+ elif mode == "profile_menu":

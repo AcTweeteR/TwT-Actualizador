@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- AcTweeteR adaptation of the upstream Skin Shortcuts data format. -->
+<shortcuts>
+  <shortcut>
+    <label>Catálogo de películas</label>
+    <label2 />
+    <defaultID>actweeter-movies-catalog</defaultID>
+    <icon>shortcuts/clapperboard.png</icon>
+    <action>ActivateWindow(Videos,"plugin://plugin.video.xstream-pro/?mode=movies_menu",return)</action>
+    <visible>System.HasAddon(plugin.video.xstream-pro)</visible>
+  </shortcut>
+</shortcuts>

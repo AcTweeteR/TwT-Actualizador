@@ -1,0 +1,9 @@
+repository.actweeter 1.0.2
+
+- Read the live Omega add-on index from the original Matke BINGIE repository.
+- Remove the dependency on AcTweeteR-hosted snapshot metadata so upstream
+  dependency versions continue to follow their original repository.
+- Continue downloading all third-party packages directly from their upstream
+  datadir; no third-party package or fork is included.
+- Keep the existing AcTweeteR index and package endpoint unchanged.
+- No upload or publication is performed by the build.

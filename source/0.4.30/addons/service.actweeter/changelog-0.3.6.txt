@@ -1,0 +1,5 @@
+AcTweeteR Service 0.3.6 — validar con el transporte de XStream
+
+* Usa el User-Agent configurado en XStream Pro, o su valor predeterminado, para comprobar el proveedor.
+* Mantiene autenticación directa por HTTPS validado después del preflight sin credenciales.
+* Conserva la migración limitada del perfil y el consentimiento explícito para proveedores HTTP-only.

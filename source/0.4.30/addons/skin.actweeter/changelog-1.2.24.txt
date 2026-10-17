@@ -1,0 +1,9 @@
+AcTweeteR Skin 1.2.24 — restore detail action controls
+
+- Restore the Kodi-native Play, Resume and Trailer radiobutton controls from
+  the 1.2.22 implementation after the 1.2.23 button/group prototype regressed
+  detail actions on Android and Apple TV.
+- Preserve the existing action stacks, visibility rules, dimensions, artwork,
+  focus links, and all unrelated skin features.
+- Remove the temporary detail-action trace toggle from the skin settings.
+- Runtime behavior remains pending owner validation on Android and tvOS.
