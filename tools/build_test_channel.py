@@ -44,7 +44,8 @@ def addon_from_zip(path: Path, addon_id: str, version: str) -> ET.Element:
     return addon
 
 
-def build(repository_source: Path, service_zip: Path, output: Path) -> tuple[Path, Path, Path]:
+def build(repository_source: Path, service_zip: Path, output: Path,
+          skin_zip: Path | None = None) -> tuple[Path, Path, Path]:
     if service_zip.name != f"{SERVICE_ID}-{SERVICE_VERSION}.zip":
         raise ValueError("candidate service ZIP filename does not match its Kodi identity/version")
     repo_addon = ET.parse(repository_source / "addon.xml").getroot()
@@ -61,6 +62,14 @@ def build(repository_source: Path, service_zip: Path, output: Path) -> tuple[Pat
         raise ValueError("test repository feed endpoints are not isolated as expected")
 
     service = addon_from_zip(service_zip, SERVICE_ID, SERVICE_VERSION)
+    skin = None
+    if skin_zip is not None:
+        with zipfile.ZipFile(skin_zip) as archive:
+            skin = ET.fromstring(archive.read("skin.actweeter/addon.xml"))
+        skin_version = skin.get("version", "")
+        if "~beta" not in skin_version or skin_zip.name != f"skin.actweeter-{skin_version}.zip":
+            raise ValueError("test skin must have a versioned Beta filename")
+        skin = addon_from_zip(skin_zip, "skin.actweeter", skin_version)
     metadata = repo_addon.find("./extension[@point='xbmc.addon.metadata']")
     if metadata is None:
         raise ValueError("test repository metadata extension missing")
@@ -83,9 +92,15 @@ def build(repository_source: Path, service_zip: Path, output: Path) -> tuple[Pat
     service_package = output / "repo" / SERVICE_ID / service_zip.name
     service_package.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(service_zip, service_package)
+    if skin is not None:
+        skin_package = output / "repo" / "skin.actweeter" / skin_zip.name
+        skin_package.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(skin_zip, skin_package)
 
     index_root = ET.Element("addons")
     index_root.extend((repo_addon, service))
+    if skin is not None:
+        index_root.append(skin)
     payload = ET.tostring(index_root, encoding="utf-8", xml_declaration=True) + b"\n"
     index = output / "repo" / "addons.xml"
     checksum = output / "repo" / "addons.xml.md5"
@@ -109,9 +124,11 @@ def main() -> None:
     parser.add_argument("--repository-source", type=Path,
                         default=ROOT / "testing" / TEST_REPOSITORY_ID)
     parser.add_argument("--service-zip", required=True, type=Path)
+    parser.add_argument("--skin-zip", type=Path)
     parser.add_argument("--output", type=Path, default=ROOT / "docs" / "testing")
     args = parser.parse_args()
-    repo_zip, index, checksum = build(args.repository_source, args.service_zip, args.output)
+    repo_zip, index, checksum = build(args.repository_source, args.service_zip, args.output,
+                                     args.skin_zip)
     print(f"test repository bootstrap: {repo_zip}")
     print(f"test feed: {index}")
     print(f"test feed md5: {checksum}")

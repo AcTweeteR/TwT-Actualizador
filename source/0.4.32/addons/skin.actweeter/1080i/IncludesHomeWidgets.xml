@@ -254,7 +254,9 @@
                 <width>240</width>
                 <height>340</height>
                 <control type="image">
-                    <visible>![Skin.HasSetting(EnableFixedFrameWidgets) + [Window.IsActive(Home) | $EXP[IsBingieHubsActive]]] | Window.IsActive(1114)</visible>
+                    <!-- movement permits selection away from the first slot;
+                         the focus border must travel with the selected item. -->
+                    <visible>true</visible>
                     <include>PosterThumbFO_DefsBingie</include>
                     <include>thumbsborder_focused</include>
                 </control>

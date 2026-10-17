@@ -94,6 +94,9 @@
              omit the subitem argument so Kodi preserves the item hit by the tap. -->
         <onclick condition="[String.IsEqual(Container($PARAM[widgetid]).ListItem.DBType,movie) | String.IsEqual(Container($PARAM[widgetid]).ListItem.DBType,tvshow)]">SetFocus($PARAM[widgetid])</onclick>
         <onclick condition="[String.IsEqual(Container($PARAM[widgetid]).ListItem.DBType,movie) | String.IsEqual(Container($PARAM[widgetid]).ListItem.DBType,tvshow)]">Action(info)</onclick>
+        <!-- Diagnostic onclick actions suppress Kodi's provider fallback. Keep
+             the existing provider folder route explicit for EXPANDIR. -->
+        <onclick condition="String.IsEqual(Container($PARAM[widgetid]).ListItem.Property(AcTweeteR.Expand),1)">ActivateWindow(Videos,$INFO[Container($PARAM[widgetid]).ListItem.FileNameAndPath],return)</onclick>
     </include>
 
     <include name="CustomBingieWinProps">

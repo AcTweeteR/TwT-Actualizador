@@ -1,4 +1,9 @@
-# AcTweeteR 0.4.33 test-candidate source snapshot
+# AcTweeteR Beta widget-navigation source snapshot
+
+The current Beta adds skin `1.2.29~beta1` to the isolated testing feed while
+retaining the service 0.4.33 migration described below. See the root
+`BETA_WIDGET_NAVIGATION.md` for source-confirmed corrections and runtime gates.
+The stable skin package and stable index are unchanged.
 
 This source snapshot is based on official `main` at commit
 `01800e6c7a2c189787e0295d1faa96829d98f693` (merged 0.4.32 test channel),
@@ -11,9 +16,9 @@ materialized shortcuts, and performs a second native build before validating
 `widgetExpandable` in the active XML. Defaults absent from the current build
 are deferred; active expandable widgets remain a hard validation gate.
 
-The candidate changes only `service.actweeter` (0.4.33). Skin 1.2.28,
-repository 1.0.3, and XStream Pro 1.1.2.7 remain byte-identical to the 0.4.31
-official packages. This snapshot does not include Kodi profile data or
+The migration candidate changed only `service.actweeter` (0.4.33). This Beta
+also builds the skin named above. Repository 1.0.3 and XStream Pro 1.1.2.7
+remain byte-identical to the 0.4.31 official packages. This snapshot does not include Kodi profile data or
 generated per-user menu caches.
 
 `overrides.xml` `<propertydefault>` is intended to initialize defaults when

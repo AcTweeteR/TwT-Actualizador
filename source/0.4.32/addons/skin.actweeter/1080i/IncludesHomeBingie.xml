@@ -829,7 +829,8 @@
          			
 			<!-- Fixed Focus Frame -->
 			<control type="group">
-				<include condition="Skin.HasSetting(EnableFixedFrameWidgets) + [Window.IsActive(Home) | $EXP[IsBingieHubsActive2]]">Bingie_Screens_Fixed_Focus_Frame</include>
+				<!-- Focus is drawn by each widget's focusedlayout; a screen-fixed
+                     frame disagrees with the cursor range used by movement. -->
 			</control>
 				<!-- gradient overlays on widgets -->
                 <include>Bingie_Left_Gradient</include>
