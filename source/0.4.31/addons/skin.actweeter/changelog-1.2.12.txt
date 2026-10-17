@@ -1,0 +1,6 @@
+AcTweeteR Skin 1.2.12
+- TV abre directamente la guía y conserva acceso separado a canales recientes.
+- Películas destaca Todas las películas y Géneros y categorías del proveedor.
+- Seleccionar películas o series en Home abre la ficha; la reproducción permanece como acción explícita.
+- Sinopsis con texto ligeramente menor y más espacio visible en Home y fichas.
+- Añade «Actualizar Catálogo» debajo de Ajustes; el resultado depende del callback verificado de XStream.

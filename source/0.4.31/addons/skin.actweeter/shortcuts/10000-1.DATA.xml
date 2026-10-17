@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- AcTweeteR provider-only defaults; no per-installation data. -->
+<shortcuts>
+    <shortcut><label>Continuar viendo</label><label2 /><icon /><thumb /><action>plugin://plugin.video.xstream-pro/?mode=premium&amp;view=continue&amp;stype=both&amp;reload=$INFO[Window(Home).Property(Premium.ContinueRefresh)]</action></shortcut>
+    <shortcut><label>Añadidas recientemente</label><label2 /><icon /><thumb /><action>plugin://plugin.video.xstream-pro/?mode=premium&amp;view=recent&amp;stype=movie</action></shortcut>
+    <shortcut><label>Tendencias</label><label2 /><icon /><thumb /><action>plugin://plugin.video.xstream-pro/?mode=premium&amp;view=trending&amp;stype=movie</action></shortcut>
+    <shortcut><label>Películas</label><label2 /><icon /><thumb /><action>plugin://plugin.video.xstream-pro/?mode=premium&amp;stype=movie</action></shortcut>
+    <shortcut><label>Series</label><label2 /><icon /><thumb /><action>plugin://plugin.video.xstream-pro/?mode=premium&amp;stype=series</action></shortcut>
+    <shortcut><label>Favoritos</label><label2 /><icon /><thumb /><action>plugin://plugin.video.xstream-pro/?mode=premium&amp;view=favorites&amp;stype=both</action></shortcut>
+</shortcuts>

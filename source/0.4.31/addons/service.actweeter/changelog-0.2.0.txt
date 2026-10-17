@@ -1,0 +1,9 @@
+AcTweeteR Service 0.2.0 — private development build
+
+- Provides secret-free first-run and on-demand service-status flows.
+- Coordinates AcTweeteR search integration and SlyGuy automatic-preview
+  lifecycle without storing provider credentials.
+- Retains settings and authorization in the official Kodi add-ons.
+
+This changelog describes the repository build. It is not a public release or
+distribution notice.

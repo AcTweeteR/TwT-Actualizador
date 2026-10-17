@@ -1,0 +1,5 @@
+0.4.30
+- Run pending Skin Shortcuts layout migrations independently of the once-per-process first-run wizard.
+- Preserve user customization consent and per-device migration backups.
+- Retry failed or deferred generation explicitly without a repeated Home refresh loop.
+- No changes to provider credentials, XStream data, playback progress, favorites, or skin controls.

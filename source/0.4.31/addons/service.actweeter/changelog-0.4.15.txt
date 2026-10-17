@@ -1,0 +1,6 @@
+AcTweeteR Service 0.4.15
+
+- Declare authorized Kodi repository IDs in the module catalog and derive
+  mandatory-repair and optional-settings sources from that catalog.
+- New modules can resolve their source repositories from declarative metadata
+  instead of requiring a parallel source table in the setup flow.

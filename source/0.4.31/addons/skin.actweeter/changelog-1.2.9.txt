@@ -1,0 +1,7 @@
+1.2.9 — Interfaz del proveedor en instalación nueva
+
+Conecta Inicio con el grupo inicio-1 que Skin Shortcuts genera para su etiqueta.
+Incluye filas reales de películas y series, categorías, favoritos y estrenos
+del año actual y anterior. Mantiene las rutas de reproducción del proveedor.
+Spotlight obtiene hasta doce registros del proveedor, sin imágenes ficticias.
+El paquete inicia con un menú seguro; Skin Shortcuts genera sus includes en Kodi.

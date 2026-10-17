@@ -1,0 +1,4 @@
+0.4.31
+- Fix widgetExpandable migration using Skin Shortcuts 2.x custom properties.
+- Preserve unrelated Skin Shortcuts properties and verify the native generated include.
+- Bump the interface migration to v11. No IPTV credentials or user content changed.

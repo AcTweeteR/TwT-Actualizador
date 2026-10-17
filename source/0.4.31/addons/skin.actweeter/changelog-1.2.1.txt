@@ -1,0 +1,10 @@
+AcTweeteR 1.2.1 — first-start reliability correction
+
+- Make first-run and intro claims safe against concurrent Home activation.
+- Keep the startup mask owned by the intro until playback terminates.
+- Use player lifecycle callbacks instead of a short fixed playback cutoff.
+- Show a localized Spotlight empty state with local AcTweeteR artwork.
+- Preserve the existing provider, VOD, series, PVR, and navigation routes.
+
+Private corrective candidate. Android TV and tvOS runtime validation remains
+required; this changelog does not indicate a public release.

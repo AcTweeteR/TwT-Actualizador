@@ -1,0 +1,10 @@
+AcTweeteR Service 0.2.1 — first-start reliability correction
+
+- Serialize process-scoped startup claims and fail closed if they cannot be
+  persisted.
+- Record secret-free first-run decision and intro lifecycle events.
+- Close the intro mask on its own Kodi player terminal callback; the startup
+  watchdog never interrupts active video.
+
+Private corrective candidate. Android TV and tvOS runtime validation remains
+required; this changelog does not indicate a public release.

@@ -1,0 +1,6 @@
+repository.actweeter 1.0.3
+
+- Adds the SlyGuy upstream Kodi add-on index as a live repository directory.
+- Preserves the AcTweeteR and Matke Omega feeds and their original download endpoints.
+- Supports native Kodi dependency resolution for SlyGuy Trailers without repacking its add-ons.
+- The private beta index contains an attributed, locally patched XStream Pro 1.1.2 candidate; this third-party package is not included in public releases without separate license/publication review.

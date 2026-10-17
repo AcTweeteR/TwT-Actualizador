@@ -1,0 +1,7 @@
+AcTweeteR Service 0.2.9 — guided XStream profile setup
+
+- Adds a Kodi-native three-field Xtream connection flow.
+- Validates credentials against the entered provider before saving.
+- Stores accepted values only in XStream Pro 1.1.2 native settings.
+- Refuses redirects and does not log credentials or provider URLs.
+- Keeps setup incomplete until catalogs, TV, EPG, trailers, and UI are verified.

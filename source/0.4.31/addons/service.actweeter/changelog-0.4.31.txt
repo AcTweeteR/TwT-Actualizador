@@ -1,0 +1,7 @@
+0.4.31
+- Store widgetExpandable in Skin Shortcuts' supported profile-local custom-property data.
+- Use stable shortcut defaultIDs so the marker survives generated XML builds and localized labels.
+- Merge only AcTweeteR-owned property rows; preserve unrelated Skin Shortcuts customizations.
+- Back up the properties file with the existing layout migration before writing.
+- Bump the interface layout migration to v11 and require generated-XML confirmation.
+- No changes to IPTV credentials, progress, favorites, XStream, Trakt, or skin controls.

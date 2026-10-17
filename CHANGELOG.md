@@ -1,5 +1,17 @@
 # Changelog AcTweeteR
 
+## AcTweeteR 0.4.31 — corrección de propiedad expandible en Skin Shortcuts
+
+- Skin Shortcuts 2.0.3 carga propiedades personalizadas desde su archivo de
+  propiedades del perfil y no promueve los `<property>` arbitrarios puestos
+  dentro de un DATA shortcut. La migración v11 ahora escribe `widgetExpandable`
+  mediante el formato soportado y `defaultID` estable.
+- La actualización respalda y añade únicamente filas propias, preservando
+  las propiedades ajenas. La confirmación sigue dependiendo de los includes
+  generados por Kodi en runtime.
+- Este candidato no modifica controles táctiles ni afirma resolver tráiler,
+  scroll, colecciones o distintivos; esas pruebas siguen pendientes.
+
 ## AcTweeteR 0.4.30 — migración de interfaz al actualizar
 
 - El servicio 0.4.30 vuelve a comprobar la migración de Skin Shortcuts aunque

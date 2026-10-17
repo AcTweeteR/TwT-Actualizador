@@ -1,0 +1,6 @@
+AcTweeteR Service 0.3.5 — HTTPS directo y seguro para Xtream
+
+* Comprueba el endpoint TLS del mismo host y puerto sin enviar credenciales.
+* Migra solo la URL del perfil XStream existente si el preflight HTTPS es válido.
+* Rechaza downgrades y redirecciones a otro host; HTTP-only requiere consentimiento explícito.
+* No registra credenciales ni valores de configuración.

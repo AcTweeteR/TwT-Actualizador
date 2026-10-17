@@ -1,0 +1,9 @@
+AcTweeteR Service 0.4.20 — candidato privado, no publicado.
+
+- Makes Trakt optional; skipping it no longer blocks IPTV/setup completion.
+- Keeps script.trakt as the optional Kodi scrobbler; never reads its private token.
+- Adds idempotent Skin Shortcuts v6 migration for native XStream recommendation rows.
+- Gates those rows on XStream's provider-availability filter and offers a safe
+  route refresh action after XStream is authorized in its own settings.
+- Preserves the existing v5 widget order and migration backups.
+- Does not embed XStream OAuth secrets or claim recommendation runtime success.

@@ -1,0 +1,8 @@
+AcTweeteR Skin 1.2.19
+
+- Improves touch targets on the movie and series information sheet while
+  preserving Kodi's native focus and remote-control navigation.
+- Adds a full-synopsis action that opens Kodi's existing paginated text viewer.
+- Gives Home, Spotlight, and information-sheet plot previews more vertical
+  room so longer descriptions are easier to read.
+- Uses Kodi-native scaling; adaptive portrait reflow is not claimed.

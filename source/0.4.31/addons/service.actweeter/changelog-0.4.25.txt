@@ -1,0 +1,7 @@
+AcTweeteR Service 0.4.25
+
+- Avoid repeatedly parsing generated Skin Shortcuts XML while the menu build
+  is still running; validate immediately after completion and retry at most
+  twice per second if the generated snapshot is not ready yet.
+- Keep the existing 30-second build deadline, abort behavior, provider routes,
+  profile-local backups and migration verification unchanged.
