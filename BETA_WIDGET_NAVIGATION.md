@@ -66,6 +66,15 @@ limit-20 branch. Beta2 normalizes generated flags to true/false and evaluates
 the include parameter directly, with a false default for non-generated callers.
 The migration and the four-field property format are unchanged.
 
+Beta2 was rejected by Skin Shortcuts 2.0.3 at runtime: its optional property was
+absent from the expression evaluator's names for some default rows, raising
+simpleeval.NameNotDefined. Beta3 uses the generator's native ordered property
+fallback: take the existing tagged property first, otherwise the literal false.
+This avoids Python evaluation entirely. The installed get_properties method is
+tested locally against missing, empty, false and true fixtures using
+`tools/verify_skinshortcuts_template.py`; no device profile is used in this test.
+Beta2 is not a recommended or accepted build.
+
 Install this version through repository.actweeter.testing only. Record live
 counts and positions before/during/after a horizontal gesture, compare D-pad
 navigation, reach item 21 where a route actually has more than 20 matches,

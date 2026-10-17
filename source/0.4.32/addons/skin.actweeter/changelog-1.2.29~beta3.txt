@@ -1,0 +1,6 @@
+1.2.29~beta3 - Skin Shortcuts optional-property compatibility
+
+- Supply the false fallback through Skin Shortcuts' native ordered property declarations.
+- Avoid evaluating an absent property in Python on non-expandable/default rows.
+- Retain direct boolean selection of limit 21, the native folder action and focus diagnostics.
+- Service 0.4.33 and its migration are unchanged.

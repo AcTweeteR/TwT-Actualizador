@@ -29,6 +29,7 @@
         <property name="widgetLimit" tag="property" attribute="name|widgetLimit" />
         <property name="widgetLimit">$INFO[Skin.String(WidgetsGlobalLimit)]</property>	
 		<property name="widgetExpandable" tag="property" attribute="name|widgetExpandable" />
+		<property name="widgetExpandable">false</property>
 		<property name="mainmenuid" tag="property" attribute="name|mainmenuid" />	
 			<property name="widgetid" tag="property" attribute="name|id" value="$NUMBER[1]">1</property>
             <property name="widgetid" tag="property" attribute="name|id" value="$NUMBER[2]">2</property>
@@ -68,7 +69,7 @@
                 <param name="widgetTags" value="$SKINSHORTCUTS[widgetTags]" />
                 <param name="widgetTarget" value="$SKINSHORTCUTS[widgetTarget]" />
                 <param name="widgetPath" value="$SKINSHORTCUTS[widgetPath]" />
-                <param name="widgetExpandable" value="$PYTHON['true' if widgetExpandable == 'true' else 'false']" />
+                <param name="widgetExpandable" value="$SKINSHORTCUTS[widgetExpandable]" />
                 <param name="widgetStyle" value="widget_layout_$SKINSHORTCUTS[widgetStyle]" />
                 <param name="widgetSortBy" value="$SKINSHORTCUTS[widgetSortBy]" />
                 <param name="widgetSortOrder" value="$SKINSHORTCUTS[widgetSortOrder]" />
@@ -344,6 +345,7 @@
         <property name="widgetLimit" tag="property" attribute="name|widgetLimit" />
         <property name="widgetLimit">$INFO[Skin.String(WidgetsGlobalLimit)]</property>	
 		<property name="widgetExpandable" tag="property" attribute="name|widgetExpandable" />
+		<property name="widgetExpandable">false</property>
 			<property name="widgetid" tag="property" attribute="name|id" value="$NUMBER[1]">1</property>
             <property name="widgetid" tag="property" attribute="name|id" value="$NUMBER[2]">2</property>
             <property name="widgetid" tag="property" attribute="name|id" value="$NUMBER[3]">3</property>
@@ -377,7 +379,7 @@
                 <param name="widgetTags" value="$SKINSHORTCUTS[widgetTags]" />
                 <param name="widgetTarget" value="$SKINSHORTCUTS[widgetTarget]" />
                 <param name="widgetPath" value="$SKINSHORTCUTS[widgetPath]" />
-                <param name="widgetExpandable" value="$PYTHON['true' if widgetExpandable == 'true' else 'false']" />
+                <param name="widgetExpandable" value="$SKINSHORTCUTS[widgetExpandable]" />
                 <param name="widgetStyle" value="widget_layout_$SKINSHORTCUTS[widgetStyle]" />
                 <param name="widgetSortBy" value="$SKINSHORTCUTS[widgetSortBy]" />
                 <param name="widgetSortOrder" value="$SKINSHORTCUTS[widgetSortOrder]" />
@@ -417,6 +419,7 @@
         <property name="widgetLimit" tag="property" attribute="name|widgetLimit" />
         <property name="widgetLimit">$INFO[Skin.String(WidgetsGlobalLimit)]</property>	
 		<property name="widgetExpandable" tag="property" attribute="name|widgetExpandable" />
+		<property name="widgetExpandable">false</property>
 			<property name="widgetid" tag="property" attribute="name|id" value="$NUMBER[1]">1</property>
             <property name="widgetid" tag="property" attribute="name|id" value="$NUMBER[2]">2</property>
             <property name="widgetid" tag="property" attribute="name|id" value="$NUMBER[3]">3</property>
@@ -450,7 +453,7 @@
                 <param name="widgetTags" value="$SKINSHORTCUTS[widgetTags]" />
                 <param name="widgetTarget" value="$SKINSHORTCUTS[widgetTarget]" />
                 <param name="widgetPath" value="$SKINSHORTCUTS[widgetPath]" />
-                <param name="widgetExpandable" value="$PYTHON['true' if widgetExpandable == 'true' else 'false']" />
+                <param name="widgetExpandable" value="$SKINSHORTCUTS[widgetExpandable]" />
                 <param name="widgetStyle" value="widget_layout_$SKINSHORTCUTS[widgetStyle]" />
                 <param name="widgetSortBy" value="$SKINSHORTCUTS[widgetSortBy]" />
                 <param name="widgetSortOrder" value="$SKINSHORTCUTS[widgetSortOrder]" />

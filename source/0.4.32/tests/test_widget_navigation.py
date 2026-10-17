@@ -68,7 +68,14 @@ class WidgetNavigationTests(unittest.TestCase):
         flags = list(template.iterfind(".//param[@name='widgetExpandable']"))
         self.assertEqual(len(flags), 3)
         for flag in flags:
-            self.assertEqual(flag.get("value"), "$PYTHON['true' if widgetExpandable == 'true' else 'false']")
+            self.assertEqual(flag.get("value"), "$SKINSHORTCUTS[widgetExpandable]")
+        for group in template:
+            declarations = group.findall("property[@name='widgetExpandable']")
+            if declarations:
+                self.assertEqual(len(declarations), 2)
+                self.assertEqual(declarations[0].get("tag"), "property")
+                self.assertIsNone(declarations[1].get("tag"))
+                self.assertEqual(declarations[1].text, "false")
 
 
 if __name__ == "__main__":
