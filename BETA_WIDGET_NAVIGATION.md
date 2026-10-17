@@ -409,3 +409,51 @@ installed. Android runtime acceptance is pending installation from
 `repository.actweeter.testing`. Do not promote to Stable until
 Spotlight-origin and row-origin vertical pan, horizontal navigation, remote
 navigation, and separate functional gates are rechecked on Lenovo.
+
+### Lenovo Beta6 follow-up — deployment and runtime observations, 2026-10-18
+
+Correction to the preceding preparation status: the Beta6 Testing feed was
+subsequently deployed, and Kodi installed it using the native repository
+updater. The official merge commit is `af8f095a3b441ed2729642654f35636f4600a6e2`.
+Public Beta index and ZIP hashes were verified against the locally generated
+artifacts; Stable was not changed.
+
+Installed Kodi 21.3 process PID 32140 was foreground on the authorized Lenovo
+TB330FU; the skin manifest reported `1.2.29~beta6`. Home first showed Spotlight
+without materialized rows. After waiting/navigation, Spotlight, Continue
+Watching and additional movie rows appeared; the recent-movies diagnostic
+reported 21 items. The initial blank state was transient in this run, not
+evidence that the provider had no catalogue. Its exact delay/root trigger is
+still undetermined.
+
+The first Home parse in the available log had four invalid Skin Shortcuts
+include warnings and `GetDirectory - Error getting include` at 00:34:18; these
+did not recur in later sampled Home loads. `Trying to add unsupported control
+type 7` recurred, but its origin and relation to Home/touch remain unattributed.
+No causal link between the earlier Skin Shortcuts busy/build events and the
+delayed rows was established.
+
+| Lenovo interaction | Result | Evidence |
+| --- | --- | --- |
+| Tap second poster in Continue Watching | PASS_RUNTIME, sampled | Overlay source `6041`, position `1`, `same-spotlight=no`; the opened detail matched the tapped poster while Spotlight differed. |
+| Tap a poster in the long recent-movies row | PASS_RUNTIME, sampled | Overlay source `6042`, position `1`, `same-spotlight=no`; the opened information sheet matched that poster, not Spotlight. |
+| Horizontal swipe on recent-movies row | PASS_RUNTIME, one row/sample | Diagnostic item changed `1 → 7` with count `21` and the rendered row advanced. Vertical parent also changed row, so clean axis isolation is not proven. |
+| Vertical swipe from a widget poster | PASS_RUNTIME, one traversal sample | Without opening a detail, parent diagnostic changed `item=3/cursor=4 → item=2/cursor=2` and the preceding row entered the viewport. This is not proof of smooth/continuous scrolling or all start regions. |
+| Vertical swipe from Spotlight | PARTIAL / NOT_ACCEPTED | Parent state changed toward the first row while Spotlight focus/artwork changed; this does not isolate native vertical pan or prove intuitive direction. |
+| Touch “Reproducir tráiler” in a detail sheet | FAIL_RUNTIME, one attempt | Tap around `(300,860)` left the sheet and action diagnostic unchanged after four seconds; no trailer playback occurred. The active receiver is not exposed by the current overlay. |
+| Reproducir / Continuar | NOT_TESTED | Not activated, to avoid mutating playback progress/history. |
+
+The current overlay reports XML action source ID, focus before/after, container
+position and a boolean Spotlight comparison when a card onclick runs. It cannot
+identify the hit-tested receiver for arbitrary touch motion or prove which
+control received a missed tap. Kodi skin XML has no supported generic callback
+for raw touch/hit-test telemetry; do not infer receiver identity from focus.
+
+Home/catalog is now visibly available after deferred loading. Sampled poster
+taps resolve independently from Spotlight; horizontal motion works on at least
+one long row; vertical traversal has one successful sample but needs
+direction/axis-isolation checks; trailer touch remains a runtime failure.
+EXPANDIR across rows, badges, collections, profile isolation, autoplay and
+remote regression gates were not newly validated. No device files were edited,
+no playback started and no provider-artwork screenshots were added to Git.
+Stable remains unchanged; do not promote Beta6 based on these partial results.
