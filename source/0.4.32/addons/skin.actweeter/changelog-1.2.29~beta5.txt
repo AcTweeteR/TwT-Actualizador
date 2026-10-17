@@ -1,0 +1,6 @@
+1.2.29~beta5 - Fit Home widget viewport to the active screen
+
+- Replace the fixed 2070-unit Home widget viewport with a responsive width.
+- Prevent the final EXPANDIR poster from being clipped on 1920-wide Kodi UI.
+- No changes to widget routes, item limits, controls, or focus behavior.
+- Vertical touch gestures beginning over carousel cards remain under investigation.
