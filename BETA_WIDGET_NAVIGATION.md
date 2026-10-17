@@ -236,7 +236,6 @@ horizontal pan and remote navigation after the viewport change; widget taps;
 EXPANDIR clipping/reachability; detail touch buttons; automatic trailers;
 series badges; collections/profile isolation; Skin Shortcuts race. No Stable
 promotion is permitted on these results.
-
 ## Beta5 candidate — coalesce repeated Skin Shortcuts migration triggers, 2026-10-17
 
 Candidate service `0.4.34`; skin remains `1.2.29~beta4` and is byte-identical
