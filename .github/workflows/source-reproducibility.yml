@@ -8,7 +8,10 @@ on:
 
 jobs:
   rebuild:
-    runs-on: ubuntu-latest
+    # The published XStream package was built with the macOS patch utility.
+    # GNU patch on Ubuntu handles the pinned upstream CRLF source differently
+    # and rejects a valid context hunk, so use the matching build environment.
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -19,7 +22,7 @@ jobs:
           curl --fail --location --silent --show-error \
             https://github.com/Pesicp/XStreamPro/releases/download/1.1.2/plugin.video.xstream-pro-1.1.2.zip \
             --output "$RUNNER_TEMP/xstream-upstream.zip"
-          echo '915f45708670d07e789bb73b7390a7b5cf30175f818ef5da8ea18c9f13f537fe  '"$RUNNER_TEMP/xstream-upstream.zip" | sha256sum --check
+          echo '915f45708670d07e789bb73b7390a7b5cf30175f818ef5da8ea18c9f13f537fe  '"$RUNNER_TEMP/xstream-upstream.zip" | shasum -a 256 --check
       - name: Rebuild add-on ZIPs and Kodi index
         working-directory: source/0.4.28
         run: |
