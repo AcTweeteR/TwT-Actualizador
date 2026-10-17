@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class CandidateSourceMetadataTests(unittest.TestCase):
-    def test_only_service_version_changes_for_this_migration(self):
+    def test_beta_skin_preserves_verified_service_and_dependencies(self):
         service = ET.parse(ROOT / "addons/service.actweeter/addon.xml").getroot()
         skin = ET.parse(ROOT / "addons/skin.actweeter/addon.xml").getroot()
         repository = ET.parse(ROOT / "addons/repository.actweeter/addon.xml").getroot()
@@ -16,7 +16,7 @@ class CandidateSourceMetadataTests(unittest.TestCase):
         self.assertEqual((service.get("id"), service.get("version")),
                          ("service.actweeter", "0.4.33"))
         self.assertEqual((skin.get("id"), skin.get("version")),
-                         ("skin.actweeter", "1.2.28"))
+                         ("skin.actweeter", "1.2.29~beta1"))
         self.assertEqual((repository.get("id"), repository.get("version")),
                          ("repository.actweeter", "1.0.3"))
         self.assertEqual(xstream["distribution_version"], "1.1.2.7")

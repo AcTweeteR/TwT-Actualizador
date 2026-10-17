@@ -15,6 +15,27 @@ import build_test_channel  # noqa: E402
 
 
 class OfficialTestChannelTests(unittest.TestCase):
+    def test_beta_skin_is_only_in_testing_feed_and_does_not_change_stable(self):
+        import subprocess
+        stable = (ROOT / "repo/addons.xml").read_bytes()
+        with tempfile.TemporaryDirectory() as temp:
+            temp_root = Path(temp)
+            service = temp_root / "service.actweeter-0.4.33.zip"
+            skin = temp_root / "skin.actweeter-1.2.29~beta1.zip"
+            for builder, package in (("build_service_package.py", service),
+                                     ("build_skin_package.py", skin)):
+                subprocess.run([sys.executable, str(ROOT / "source/0.4.32/tools" / builder),
+                                "--output", str(package)], check=True, capture_output=True)
+            _, index, checksum = build_test_channel.build(
+                ROOT / "testing/repository.actweeter.testing", service,
+                temp_root / "testing", skin)
+            versions = {n.get("id"): n.get("version") for n in ET.parse(index).getroot()}
+            self.assertEqual(versions["skin.actweeter"], "1.2.29~beta1")
+            copied = index.parent / "skin.actweeter" / skin.name
+            self.assertEqual(copied.read_bytes(), skin.read_bytes())
+            self.assertEqual(checksum.read_text().strip(), hashlib.md5(index.read_bytes()).hexdigest())
+            self.assertEqual((ROOT / "repo/addons.xml").read_bytes(), stable)
+
     def test_test_feed_is_separate_and_stable_index_remains_stable(self) -> None:
         stable_index = (ROOT / "repo" / "addons.xml").read_bytes()
         with tempfile.TemporaryDirectory() as temp:

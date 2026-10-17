@@ -1,0 +1,6 @@
+1.2.29~beta1 - Beta widget-navigation diagnosis
+
+- Draw the poster focus border on the selected item, matching movement=7.
+- Preserve native EXPANDIR folder navigation when action diagnostics are enabled.
+- Show optional non-personal live control, item-count and cursor diagnostics in movie/series hubs.
+- No gesture correction or runtime acceptance is claimed. Service 0.4.33 migration is unchanged.

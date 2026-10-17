@@ -32,15 +32,15 @@
             <right>20</right>
             <top>20</top>
             <width>600</width>
-            <height>170</height>
+            <height>260</height>
             <control type="image">
                 <width>100%</width><height>100%</height>
                 <texture colordiffuse="EE000000">colors/color_white.png</texture>
             </control>
             <control type="label">
-                <left>10</left><width>580</width><height>160</height>
+                <left>10</left><width>580</width><height>250</height>
                 <font>Reg24</font><textcolor>white</textcolor>
-                <label>TOUCH DIAG: $INFO[Window(Home).Property(AcTweeteRTouchTime)][CR]action=$INFO[Window(Home).Property(AcTweeteRTouchAction)] source=$INFO[Window(Home).Property(AcTweeteRTouchSource)][CR]focus-before=$INFO[Window(Home).Property(AcTweeteRTouchFocusBefore)] now=$INFO[System.CurrentControlId][CR]position=$INFO[Window(Home).Property(AcTweeteRTouchPosition)] same-spotlight=$INFO[Window(Home).Property(AcTweeteRTouchSameSpotlight)]</label>
+                <label>TOUCH DIAG: $INFO[Window(Home).Property(AcTweeteRTouchTime)][CR]action=$INFO[Window(Home).Property(AcTweeteRTouchAction)] source=$INFO[Window(Home).Property(AcTweeteRTouchSource)][CR]focus-before=$INFO[Window(Home).Property(AcTweeteRTouchFocusBefore)] now=$INFO[System.CurrentControlId][CR]position=$INFO[Window(Home).Property(AcTweeteRTouchPosition)] same-spotlight=$INFO[Window(Home).Property(AcTweeteRTouchSameSpotlight)][CR]live: item=$INFO[Container.CurrentItem] count=$INFO[Container.NumItems] cursor=$INFO[Container.Position][CR]recent movies: item=$INFO[Container(6042).CurrentItem] count=$INFO[Container(6042).NumItems] cursor=$INFO[Container(6042).Position][CR]vertical: item=$INFO[Container(77777).CurrentItem] cursor=$INFO[Container(77777).Position]</label>
             </control>
         </control>
     </include>
