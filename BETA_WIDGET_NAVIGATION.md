@@ -236,7 +236,6 @@ horizontal pan and remote navigation after the viewport change; widget taps;
 EXPANDIR clipping/reachability; detail touch buttons; automatic trailers;
 series badges; collections/profile isolation; Skin Shortcuts race. No Stable
 promotion is permitted on these results.
-
 ## Beta5 candidate — responsive Home viewport and current Lenovo follow-up, 2026-10-17
 
 Base branch: `codex/beta-widget-horizontal-navigation`, base commit
