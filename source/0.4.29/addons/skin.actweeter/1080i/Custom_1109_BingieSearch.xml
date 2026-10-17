@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- BINGIE -->
+<window id="1109">
+    <defaultcontrol always="true">987</defaultcontrol>
+    <menucontrol>900</menucontrol>
+	<onload>SetFocus(987)</onload>
+	<onunload condition="!String.IsEmpty(Window(Home).Property(BaseWindow)) + String.IsEmpty(Window(Home).Property(ListItem.TVShowID)) + !Player.HasVideo">AlarmClock(loadinfo,Action(Info),00:00,silent)</onunload>
+	<onunload>ClearProperty(KeepSuggestions)</onunload>
+    <backgroundcolor>$VAR[BingiePanelColor]</backgroundcolor>
+    <include>CustomBingieWinProps</include>
+    <onload>SetProperty(CustomSearch,1,home)</onload>
+	<onload condition="String.IsEmpty(Window.Property(SearchPosterAnimation))">SetProperty(SearchPosterAnimation,1)</onload>
+	<onload>ClearProperty(CurrentSearchWidgetID,Home)</onload>
+    <include>BingieViews_WindowOpen_Fade</include>
+	<controls>
+	<control type="group">
+		<visible>!Window.IsActive(DialogVideoInfo.xml)</visible>
+		<include>Animation_Right_Home</include>
+		<include>HideWindowOnStartupAndDialogInfoLoad</include>
+		<include>Defs_TMDbBingieHelper_Loader</include>
+        <!-- Now Playing -->
+        <include>NowPlayingBackground</include>
+        <!-- Hidden Submenu -->
+        <include condition="!Skin.HasSetting(DisableAllSubmenus)">hiddenSubmenu</include>
+		
+        <!-- The Kodi edit control is the only query source; its text-change action refreshes the local indexed route. -->
+
+        <!-- Auto-Complete & Static Suggestions List -->
+        <include content="Search_Suggestions_Container">
+            <include>No_Circular_Left</include>
+            <include>SearchSuggestionsAnim</include>
+            <param name="id" value="1007" />
+            <param name="top" value="150" />
+            <param name="width" value="421" />
+            <param name="height" value="1360" />
+            <param name="onitemfocus" value="SetProperty(SuggestionPath,$ESCINFO[ListItem.Property(path)])" />
+            <param name="onitemfocus2" value="SetProperty(CustomSearch,1,home)" />
+            <param name="onup" value="987" />
+            <param name="onback" value="900" />
+            <onleft>SetProperty(KeepSuggestions,1)</onleft>
+            <onfocus>ClearProperty(KeepSuggestions)</onfocus>
+            <visible>!$EXP[IsActualKeyboardActive]</visible>          
+            <content>plugin://plugin.video.xstream-pro/?mode=premium&amp;view=search&amp;stype=both&amp;profile_num=1&amp;query=$INFO[Control.GetLabel(987).index(1)]</content>
+			<include condition="[Library.HasContent(Movies) | Library.HasContent(TVShows)] + !Skin.HasSetting(DisableSearchSuggestions)">Search_Suggestions_Content</include>
+			<!-- Provider-only mode: do not show TMDb/Trakt discovery when query is empty. -->
+        </include>
+
+        <!--- ########## Right Layout ########## -->
+        <control type="group" id="9900">
+            <left>652</left>
+            <top>32</top>
+            <height>70</height>
+            <width>1215</width>
+            <onleft>SetFocus(900,$INFO[Window(Home).Property(menupos)])</onleft>
+            <onback>SetFocus(900,$INFO[Window(Home).Property(menupos)])</onback>
+            <ondown condition="Integer.IsGreater(Container(77777).NumItems,0)">77777</ondown>
+            <ondown condition="!Integer.IsGreater(Container(77777).NumItems,0)">1007</ondown>
+			<!-- Single canonical query field. SELECT opens Kodi's standard keyboard on remote-only devices. -->
+			<control type="edit" id="987">
+                <top>0</top>
+                <left>0</left>
+                <width>1215</width>
+                <height>70</height>
+                <font>Reg34</font>
+                <align>left</align>
+                <aligny>center</aligny>
+                <textoffsetx>30</textoffsetx>
+                <textoffsety>0</textoffsety>
+                <textcolor>$INFO[Skin.String(BingieButtonTextColor)]</textcolor>
+                <focusedcolor>FFFFFFFF</focusedcolor>
+                <texturefocus colordiffuse="FF30343A" border="20">diffuse/panel.png</texturefocus>
+                <texturenofocus colordiffuse="ff1b1b1b" border="20">diffuse/panel.png</texturenofocus>
+                <hinttext>Buscar películas y series…</hinttext>
+                <onleft>SetFocus(900,$INFO[Window(Home).Property(menupos)])</onleft>
+                <ondown condition="Integer.IsGreater(Container(77777).NumItems,0)">77777</ondown>
+                <ondown condition="!Integer.IsGreater(Container(77777).NumItems,0)">1007</ondown>
+                <onback>SetFocus(900,$INFO[Window(Home).Property(menupos)])</onback>
+                <ontextchange>SetProperty(CustomSearch,1,home)</ontextchange>
+            </control>
+			<control type="image">
+				<left>12</left>
+				<top>22</top>
+				<width>24</width>
+				<height>24</height>
+				<aspectratio>keep</aspectratio>
+				<texture colordiffuse="$INFO[Skin.String(BingieButtonTextColor)]">shortcuts/search.png</texture>
+				<visible>Control.IsVisible(987)</visible>
+			</control>
+			<!-- Search Term -->
+			<control type="multiimage">
+                <width>100%</width>
+                <height>32</height>
+                <top>22</top>
+				<left>0</left>
+                <include>widget_header_leftalign</include>
+                <aspectratio align="left">keep</aspectratio>
+                <imagepath background="true">spinner/widgets_busy_loader/</imagepath>
+                <timeperimage>85</timeperimage>
+                <colordiffuse>$INFO[Skin.String(WidgetSpinnerTextureColor)]</colordiffuse>
+                <fadetime>0</fadetime>
+                <visible>[Container(5041).IsUpdating | Container(5042).IsUpdating | Container(5043).IsUpdating | Container(5044).IsUpdating | Container(5045).IsUpdating | Container(5046).IsUpdating | Container(5047).IsUpdating | Container(5048).IsUpdating | 
+			Container(5049).IsUpdating | Container(5050).IsUpdating | Container(5051).IsUpdating | Container(5052).IsUpdating | Container(5053).IsUpdating | Container(5054).IsUpdating | Container(5055).IsUpdating | Container(5056).IsUpdating | Container(5057).IsUpdating | Container(5058).IsUpdating | Container(5059).IsUpdating | Container(5060).IsUpdating] + !String.IsEmpty(Control.GetLabel(987).index(1))</visible>
+            </control>
+			<control type="multiimage">
+                <width>100%</width>
+                <height>32</height>
+                <top>18</top>
+				<left>0</left>
+                <include>widget_header_leftalign</include>
+                <aspectratio align="left">keep</aspectratio>
+                <imagepath background="true">spinner/widgets_busy_loader/</imagepath>
+                <timeperimage>85</timeperimage>
+                <colordiffuse>$INFO[Skin.String(WidgetSpinnerTextureColor)]</colordiffuse>
+                <fadetime>0</fadetime>
+                <visible>!String.IsEmpty(Window.Property(SearchPosterAnimation)) + [Container(500).IsUpdating + Control.IsVisible(500)]</visible>
+            </control>
+        </control>
+		
+        <!-- Initial Msg / No Results Label -->
+        <control type="label">
+            <top>280</top>
+            <left>620</left>
+            <width>1220</width>
+            <height>auto</height>
+            <font>Reg42</font>
+            <align>center</align>
+            <aligny>top</aligny>
+            <wrapmultiline>true</wrapmultiline>
+            <textcolor>$INFO[Skin.String(BingiePrimaryTextColor)]</textcolor>
+            <label>$VAR[EmptySearchResultsString]</label>
+            <visible>!Container(77777).IsUpdating + !Integer.IsGreater(Container(77777).NumItems,0)</visible>
+        </control>
+		
+		<!-- Results -->
+		<control type="grouplist" id="77777">
+            <top>107</top>
+            <left>645</left>
+			<include>Fixed_Focus_Bottom</include>
+            <itemgap>1</itemgap>
+            <orientation>vertical</orientation>
+            <pagecontrol>666</pagecontrol>
+            <onright>666</onright>
+			<onup>987</onup>
+			<ondown>noop</ondown>
+            <onleft condition="String.IsEmpty(Control.GetLabel(987).index(1)) + !String.IsEmpty(Window.Property(SuggestionPath))">1007</onleft>
+			<onleft condition="!String.IsEmpty(Control.GetLabel(987).index(1))">987</onleft>
+            <onback condition="String.IsEmpty(Control.GetLabel(987).index(1)) + !String.IsEmpty(Window.Property(SuggestionPath))">1007</onback>
+			<onback condition="!String.IsEmpty(Control.GetLabel(987).index(1))">987</onback>
+			<include condition="Library.HasContent(Movies) | Library.HasContent(TVShows)">skinshortcuts-template-search</include>
+			<include condition="!Library.HasContent(Movies) + !Library.HasContent(TVShows)">skinshortcuts-template-tmdbsearch</include>
+			<!-- Suggestions Result -->
+            <include content="SearchResultWidget">
+                <param name="id" value="500" />
+                <param name="layout">PosterPanelBingie</param>
+                <param name="layoutwidth">search_widget_thumb_width</param>
+                <param name="orientation" value="vertical" />
+                <param name="allow_showinfo_onclick" value="true" />
+                <param name="visibility" value="String.IsEmpty(Control.GetLabel(987).index(1)) + !String.IsEmpty(Window.Property(SuggestionPath))" />
+                <onleft>1007</onleft>
+                <visible>ControlGroup(77777).HasFocus() | Control.HasFocus(1007) | [Control.HasFocus(900) + !String.IsEmpty(Window.Property(KeepSuggestions))]</visible>
+                <content browse="never" limit="100" target="videos">$INFO[Window.Property(SuggestionPath)]</content>
+            </include>
+        </control>
+		
+	</control>
+        <include content="Dim_Overlay">
+            <param name="visibility" value="$EXP[IsMainMenuOpened]" />
+        </include>
+        <!-- Main Menu -->
+        <include>BingieSideBladeMainMenu</include>
+		<!-- Snow Effect -->
+        <include condition="Skin.HasSetting(EnableSnowAnimation)">SnowAnimation</include>
+		<control type="videowindow">
+            <visible>!String.IsEmpty(Window(Home).Property(PlaySearchTrailer))</visible>
+        </control>
+	</controls>
+</window>

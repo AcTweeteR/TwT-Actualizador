@@ -1,0 +1,7 @@
+AcTweeteR Service 0.4.24
+
+- Throttle idle XStream refresh-state checks to one every five minutes while
+  preserving minute-level Spotlight rotation and pending-refresh observation.
+- Add opt-in, bounded performance counters and timings; disabled by default.
+- Metrics contain only allow-listed names and numeric aggregates, never URLs,
+  credentials, titles, profile names, or provider records.

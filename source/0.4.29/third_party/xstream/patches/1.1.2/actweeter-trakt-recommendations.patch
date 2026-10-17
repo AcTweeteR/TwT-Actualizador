@@ -1,0 +1,69 @@
+diff --git a/resources/lib/addon.py b/resources/lib/addon.py
+index 880518dd074153f6ea3bee426318512d309a0896..f5e2363f3fe0e4c34174a6a5b800f8a58d8408b 100644
+--- a/resources/lib/addon.py
++++ b/resources/lib/addon.py
+@@ -2270,3 +2270,21 @@
+     if not cache:
+         return []
+     return [item for item in (items or []) if _provider_availability_item_available(item, cache)]
++
++def _filter_provider_trakt_recommendations(items):
++    """Fail closed: require an exact TMDb ID in the provider inventory."""
++    # Never fetch or rebuild the provider inventory inside a widget directory
++    # request: catalogue refresh owns that work and updates this cache.
++    cache = _load_provider_availability_cache()
++    if not cache:
++        return []
++    filtered = []
++    for item in items or []:
++        media_type = item.get("tmdb_type")
++        if media_type not in ("movie", "tv"):
++            continue
++        tmdb_id = str(item.get("tmdb_id") or "").strip()
++        if tmdb_id and tmdb_id in _provider_tmdb_id_set(cache, media_type):
++            filtered.append(item)
++    return filtered
++
+@@ -9432,3 +9432,4 @@
+         "_filter_provider_available_items": _filter_provider_available_items,
+         "_filter_provider_available_items_strict": _filter_provider_available_items_strict,
++        "_filter_provider_trakt_recommendations": _filter_provider_trakt_recommendations,
+         "_provider_item_available_for_tmdb": _provider_item_available_for_tmdb,
+diff --git a/resources/lib/tmdb_routes.py b/resources/lib/tmdb_routes.py
+index c41dcb201962d2f1e90e9342eb915e1f8e4a0da9..c1c6f3ec74db60f8e8769cd35e29d27613562722 100644
+--- a/resources/lib/tmdb_routes.py
++++ b/resources/lib/tmdb_routes.py
+@@ -686,3 +686,13 @@
+     except Exception as exc:
+         c("_log")("Provider-only TMDB filter failed: {0}".format(exc))
+     return results
++
++def _filter_provider_trakt_recommendations(results):
++    """Use XStream's exact-TMDb provider matcher and fail closed."""
++    try:
++        fn = _CTX.get("_filter_provider_trakt_recommendations")
++        return fn(results or []) if fn else []
++    except Exception:
++        c("_log")("Trakt recommendation provider filter failed")
++        return []
++
+@@ -2521,6 +2521,19 @@
+         tmdb_type = _param(params, "tmdb_type", "movie")
+         page = _int_param(params, "page")
+         data = trakt.media_list(section, tmdb_type, page=page)
++        if section == "recommendations":
++            data["results"] = _filter_provider_trakt_recommendations(data.get("results", []))
++            content = "tvshows" if tmdb_type == "tv" else ("videos" if tmdb_type == "both" else "movies")
++            if not data["results"]:
++                xbmcplugin.setContent(c("addon_handle"), content)
++                xbmcplugin.endOfDirectory(c("addon_handle"), succeeded=True,
++                                          updateListing=False, cacheToDisc=False)
++                return
++            data["results"] = _hydrate_trakt_items(data.get("results", []), sync_limit=4)
++            _render_media_page(data, params,
++                               None if tmdb_type == "both" else tmdb_type,
++                               content, filter_provider=False)
++            return
+         content = "videos" if tmdb_type == "both" else ("tvshows" if tmdb_type == "tv" else "movies")
+         data["results"] = _hydrate_trakt_items(data.get("results", []), sync_limit=4)
+         _render_media_page(data, params, None if tmdb_type == "both" else tmdb_type, content)

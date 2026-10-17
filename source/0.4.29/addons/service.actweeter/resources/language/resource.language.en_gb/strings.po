@@ -1,0 +1,12 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: English\n"
+
+msgctxt "#32000"
+msgid "Diagnostics"
+msgstr "Diagnostics"
+
+msgctxt "#32001"
+msgid "Enable performance metrics (restart required)"
+msgstr "Enable performance metrics (restart required)"

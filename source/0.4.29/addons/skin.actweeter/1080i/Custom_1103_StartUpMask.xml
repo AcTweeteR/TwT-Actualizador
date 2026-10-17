@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- BINGIE -->
+<window type="dialog" id="1103">
+	<defaultcontrol always="true">10</defaultcontrol>
+	<zorder>999</zorder>
+	<onload condition="String.IsEqual(Skin.String(splash_screen),bingie_default)">PlayMedia($INFO[Skin.String(SplashAnimationResolution),special://skin/extras/media/bingie_intro_,.mp4],1)</onload>
+	<onload condition="String.IsEqual(Skin.String(splash_screen),actweeter_video)">SetProperty(AcTweeteRIntroPlayback,1,Home)</onload>
+	<onload condition="String.IsEqual(Skin.String(splash_screen),actweeter_video)">PlayMedia(special://skin/extras/media/actweeter_intro_Kodi.mp4,1)</onload>
+	<onload condition="String.IsEqual(Skin.String(splash_screen),bingie_image)">AlarmClock(startup,ClearProperty(StartupMask,home),00:10,silent)</onload>
+	<onload condition="String.IsEqual(Skin.String(splash_screen),actweeter_image)">AlarmClock(actweeter_splash_clear,ClearProperty(StartupMask,home),00:00:04,silent)</onload>
+	<onload condition="String.IsEqual(Skin.String(splash_screen),actweeter_image)">AlarmClock(actweeter_splash_close,Dialog.Close(1103,true),00:00:05,silent)</onload>
+	<!-- A bounded fallback handles a local asset/decoder that never starts; active video is never cut by a duration timer. -->
+	<onload condition="String.IsEqual(Skin.String(splash_screen),actweeter_video)">AlarmClock(actweeter_intro_watchdog,RunScript(service.actweeter,intro_watchdog),00:00:15,silent)</onload>
+	<onload condition="String.IsEqual(Skin.String(splash_screen),none)">AlarmClock(startup,ClearProperty(StartupMask,home),00:00,silent)</onload>	
+	<visible>!String.IsEmpty(Window(Home).Property(StartupMask))</visible>	
+	<onunload>CancelAlarm(actweeter_intro_watchdog,silent)</onunload>
+	<onunload>CancelAlarm(actweeter_splash_clear,silent)</onunload>
+	<onunload>CancelAlarm(actweeter_splash_close,silent)</onunload>
+	<onunload condition="!String.IsEmpty(Window(Home).Property(AcTweeteRIntroPlayback)) + Player.HasMedia + String.EndsWith(VideoPlayer.Filenameandpath,actweeter_intro_Kodi.mp4)">PlayerControl(Stop)</onunload>
+	<!-- Back remains a recovery path if the decoder/player never reports a terminal event. -->
+	<control type="button" id="10">
+		<include>HiddenObject</include>
+		<onback>Dialog.Close(1103,true)</onback>
+	</control>
+	<onunload>ClearProperty(AcTweeteRIntroPlayback,Home)</onunload>
+	<onunload>ClearProperty(StartupMask,home)</onunload>
+	<onunload>ClearProperty(AcTweeteRStartupIntroActive,Home)</onunload>
+	<onunload condition="String.IsEqual(Window(Home).Property(AcTweeteRFirstRunPending),1)">RunScript(service.actweeter,first_run_resume)</onunload>
+	<controls>
+		<!-- intro -->
+		<control type="group">
+			<visible>Player.HasVideo</visible>
+			<control type="image">
+				<include>FullscreenDimensions</include>
+				<texture>colors/color_black.png</texture>
+			</control>
+			<control type="videowindow">
+				<include>FullscreenDimensions</include>
+			</control>
+		</control>
+        <!-- image -->
+        <control type="image">
+		    <visible>!Player.HasVideo + [String.IsEqual(Skin.String(splash_screen),bingie_image) | String.IsEqual(Skin.String(splash_screen),actweeter_image) | String.IsEqual(Skin.String(splash_screen),actweeter_video)]</visible>
+			<animation effect="fade" end="0" time="500">WindowClose</animation>
+            <include>FullscreenDimensions</include>
+            <aspectratio>scale</aspectratio>
+			<texture background="true">$VAR[StartupSplashTexture]</texture>
+			<fadetime>1000</fadetime>
+        </control>
+		<!-- block input button -->
+		<!-- busy spinner -->
+		<include content="Busy_Spinner">
+			<animation delay="300" time="500" effect="fade" start="0" end="100">Visible</animation>
+			<param name="centerleft" value="50%" />
+			<param name="centertop" value="85%"/>
+			<param name="visibility" value="String.Contains(VideoPlayer.Title,bingie_intro) + !Integer.IsLess(Player.TimeRemaining(ss),6)"/>
+			<param name="size" value="80"/>
+		</include>
+		<!-- busy spinner -->
+		<include content="Busy_Spinner">
+			<animation delay="300" time="500" effect="fade" start="0" end="100">Visible</animation>
+			<param name="centerleft" value="50%" />
+			<param name="centertop" value="85%"/>
+			<param name="visibility" value="System.HasAlarm(startup) + String.IsEqual(Skin.String(splash_screen),bingie_image)"/>
+			<param name="size" value="80"/>
+		</include>
+		<!-- Snow Effect -->
+		<include condition="Skin.HasSetting(EnableSnowAnimation)">SnowAnimation</include>
+	</controls>
+</window>

@@ -1,0 +1,7 @@
+AcTweeteR Service 0.3.7
+
+Setup completion now depends on real component, provider, movie/series catalog,
+and configured live-TV/PVR readiness. EPG presence and playback/search/surface
+checks remain independent optional verifications and do not block setup.
+Kodi JSON-RPC checks inspect category entries, TV groups/channels, and a minimal
+EPG sample without persisting titles, identifiers, paths, or provider secrets.

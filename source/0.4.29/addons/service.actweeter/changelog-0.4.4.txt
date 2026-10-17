@@ -1,0 +1,8 @@
+0.4.4 — Preparación automática de la interfaz AcTweeteR
+
+Genera DATA de Skin Shortcuts v2 para el perfil activo y solicita la
+regeneración nativa. Hace backup verificable antes de escribir y conserva
+personalizaciones salvo consentimiento explícito. Reintentos idempotentes.
+Publica el año actual y anterior sin rutas personales ni credenciales.
+Spotlight recorre el catálogo del proveedor desde el coordinador existente,
+respetando reproducción e interacción del usuario.

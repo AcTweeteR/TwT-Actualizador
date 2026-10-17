@@ -1,0 +1,6 @@
+AcTweeteR Service 0.3.8
+
+- Use XStream Pro's supported PVR synchronization route from service verification.
+- Verify live TV readiness from Kodi's PVR groups and channels after the sync.
+- Keep EPG and media playback checks separate from installation completion.
+- Continue preserving the configured HTTPS provider profile.

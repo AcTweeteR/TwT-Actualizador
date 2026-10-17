@@ -1,0 +1,7 @@
+AcTweeteR Service 0.4.19
+
+- Adds interface layout migration v5 for the ordered movie and series hub rows.
+- Backs up managed Skin Shortcuts DATA before migration, preserves user-edited
+  layouts unless consent is given, and remains idempotent after generation.
+- Keeps Trakt authorization/scrobbling owned by Kodi's official script.trakt;
+  no token sharing or second scrobble path is introduced.

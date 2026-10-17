@@ -1,0 +1,10 @@
+AcTweeteR Skin 1.2.21
+
+- Spotlight movie and series selection now opens the shared Kodi information
+  sheet; playback stays on the explicit Play action.
+- Home, Spotlight, and library detail views no longer start trailer playback
+  from focus/hover events. Automatic-preview controls are hidden because Kodi
+  does not distinguish mouse hover from remote/touch focus; manual trailer
+  actions remain available.
+- Kodi-native mouse focus and touch gesture handling are unchanged. Android
+  touch and trailer runtime validation remain pending.

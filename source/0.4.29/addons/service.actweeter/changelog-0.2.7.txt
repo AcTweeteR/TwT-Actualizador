@@ -1,0 +1,12 @@
+AcTweeteR Service 0.2.7 — elegibilidad XStream en tvOS
+
+- XStream Pro se ofrece en tvOS solo cuando Kodi informa IPTV Simple instalado,
+  habilitado y con versión 21.4.0 o posterior.
+- Si IPTV Simple falta, está deshabilitado, su versión es antigua o no se puede
+  leer, el asistente explica el requisito y no inicia una instalación inválida.
+- Habilitar IPTV Simple requiere consentimiento explícito; XStream sigue usando
+  el flujo ZIP oficial elegido por el usuario y Kodi confirma instalación antes
+  de mostrarla como completada.
+- El paquete PVR tvOS 21.11.0 preparado se valida por separado; no se incorpora
+  al ZIP del servicio ni se afirma que esté integrado o probado en un Apple TV.
+- No cambia la skin, sus dependencias, las credenciales ni la configuración IPTV.
