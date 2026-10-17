@@ -57,15 +57,23 @@ class WidgetNavigationTests(unittest.TestCase):
         viewport = home.find("include[@name='HomeVerticalScrollViewport']")
         self.assertEqual((viewport.findtext("top"), viewport.findtext("bottom")),
                          ("0", "0"))
+        hub_viewport = home.find("include[@name='BingieHubVerticalScrollViewport']")
+        self.assertEqual((hub_viewport.findtext("top"), hub_viewport.findtext("bottom")),
+                         ("564", "0"))
 
         window = home.find("include[@name='HomeBingie']")
         group = window.find(".//control[@type='grouplist'][@id='77777']")
-        self.assertEqual(group.findtext("top"), "564")
-        self.assertEqual(group.findtext("bottom"), "0")
+        # Home must not retain a literal top=564 before the included top=0.
+        # Kodi's control factory reads the first expanded <top> element.
+        self.assertIsNone(group.find("top"))
+        self.assertIsNone(group.find("bottom"))
         self.assertEqual(group.findtext("width"), "100%",
                          "Home viewport must track screen width to avoid clipping item 21")
         self.assertTrue(any(node.text == "HomeVerticalScrollViewport"
                             and node.get("condition") == "Window.IsActive(Home)"
+                            for node in group.findall("include")))
+        self.assertTrue(any(node.text == "BingieHubVerticalScrollViewport"
+                            and node.get("condition") == "!Window.IsActive(Home)"
                             for node in group.findall("include")))
         bottom_overrides = [node for node in group.findall("include")
                             if node.text == "Fixed_Focus_Bottom"]
@@ -84,8 +92,13 @@ class WidgetNavigationTests(unittest.TestCase):
         self.assertLess(children.index(spacer), children.index(spotlight))
 
         scrollbar = window.find(".//control[@type='scrollbar'][@id='317']")
+        self.assertIsNone(scrollbar.find("top"))
+        self.assertIsNone(scrollbar.find("bottom"))
         self.assertTrue(any(node.text == "HomeVerticalScrollViewport"
                             and node.get("condition") == "Window.IsActive(Home)"
+                            for node in scrollbar.findall("include")))
+        self.assertTrue(any(node.text == "BingieHubVerticalScrollViewport"
+                            and node.get("condition") == "!Window.IsActive(Home)"
                             for node in scrollbar.findall("include")))
 
         bingie = ET.parse(XML / "IncludesBingie.xml").getroot()

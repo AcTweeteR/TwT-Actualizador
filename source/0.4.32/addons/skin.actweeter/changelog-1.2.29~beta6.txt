@@ -1,0 +1,8 @@
+AcTweeteR 1.2.29~beta6
+
+- Fix Home vertical pan viewport: avoid a preceding top=564 value overriding
+  the included Home top=0 in Kodi's first-child geometry parser.
+- Keep the legacy top=564 viewport for hub windows.
+- No changes to widget routes, limits, actions, focus rules, or user data.
+- Runtime validation on Lenovo is pending installation from the official
+  Testing repository.
