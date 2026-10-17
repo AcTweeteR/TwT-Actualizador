@@ -1,0 +1,13 @@
+AcTweeteR Service 0.4.17 — candidato privado, no publicado.
+
+- Añade Conectar Trakt al flujo inicial y a Ajustes de AcTweeteR.
+- Instala script.trakt >=3.9.0 mediante Kodi, previa autorización.
+- Delega el código de dispositivo al complemento oficial; no copia tokens.
+- Permite posponer Trakt sin bloquear IPTV y conserva el estado al reanudar.
+- Distingue autorización local de validación de red y reproducción real.
+- Conserva preferencias existentes; para Trakt recién instalado desactiva
+  coincidencias por título y sincronización global automática.
+- Mantiene todas las correcciones de primera ejecución de 0.4.16.
+- Requiere la revisión XStream 1.1.2.1 para entregar las correcciones de
+  actualización de catálogo mediante Kodi, sin sustituir un ZIP con igual versión.
+- Publicación bloqueada por la incidencia crítica de cierre pendiente.

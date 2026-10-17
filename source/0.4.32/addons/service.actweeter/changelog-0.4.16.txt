@@ -1,0 +1,9 @@
+AcTweeteR Service 0.4.16
+
+- Sequence first-run onboarding after the startup mask/intro instead of
+  allowing two modal flows to race during Home initialization.
+- Make "Ahora no" a resumable, process-scoped deferral; incomplete legacy
+  first-run state is offered again after updating.
+- Apply Spanish only when Kodi still marks English as its factory default.
+- Verify the language change through Kodi JSON-RPC and preserve explicit
+  user language preferences.

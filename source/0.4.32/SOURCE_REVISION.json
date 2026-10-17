@@ -1,0 +1,12 @@
+{
+  "release": "0.4.32",
+  "source_base_commit": "739a57b9e0a9d9165c9066c707842eeb5a603fd6",
+  "source_base_release": "0.4.31",
+  "profile_generated_cache_included": false,
+  "skin_version": "1.2.28",
+  "service_version": "0.4.32",
+  "xstream_version": "1.1.2.7",
+  "repository_version": "1.0.3",
+  "xstream_package_reused_unchanged": true,
+  "runtime_acceptance_required": true
+}

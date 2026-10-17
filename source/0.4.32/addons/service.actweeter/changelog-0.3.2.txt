@@ -1,0 +1,6 @@
+AcTweeteR Service 0.3.2 — Kodi add-on reactivation
+
+- Re-enable already-installed add-ons and repositories using Kodi's
+  Addons.SetAddonEnabled JSON-RPC method, then verify their enabled state.
+- Keep Kodi's native InstallAddon transaction for missing or outdated packages.
+- Add regression coverage for disabled add-ons and repositories.

@@ -1,0 +1,11 @@
+AcTweeteR Skin 1.2.27
+
+- Align Home widget fixed-list hit testing with the poster artwork and set
+  Kodi's fixed-list movement range for pointer/touch item selection.
+- Keep the Spotlight focus proxy aligned while Home rows move.
+- Cap provider-backed widgets at 20 content entries and reserve an additional
+  EXPANDIR tile only for the verified AcTweeteR XStream expansion routes.
+- Keep Favorites and Pending in typed Movies/Series collections and retain the
+  small red/white series update badges.
+- Touch behavior still requires owner validation on Android; runtime status is
+  not claimed by static tests.

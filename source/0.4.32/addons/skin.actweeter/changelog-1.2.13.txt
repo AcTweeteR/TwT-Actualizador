@@ -1,0 +1,3 @@
+AcTweeteR Skin 1.2.13
+- Fix strict XML syntax in trailer actions and inherited rating comments.
+- Remove whitespace before the XML declaration in the video-info includes.

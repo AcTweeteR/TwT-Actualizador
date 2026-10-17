@@ -1,0 +1,7 @@
+AcTweeteR Service 0.3.4 — validación segura de redirecciones Xtream
+
+- Permite redirecciones del endpoint IPTV únicamente al mismo host por HTTPS.
+- Mantiene bloqueadas las redirecciones a otros hosts, puertos inseguros y
+  destinos que reduzcan la seguridad del transporte.
+- Añade regresiones para redirección HTTPS de mismo origen, actualización
+  HTTP a HTTPS y rechazo de destinos ajenos o inseguros.

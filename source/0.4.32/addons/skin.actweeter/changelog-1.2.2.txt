@@ -1,0 +1,8 @@
+AcTweeteR 1.2.2 — corrective update for first start
+
+- Keep Home navigable when a fresh installation has no configured widget rows.
+- Show a localized, focus-accessible setup path on an empty Home.
+- Route initial and side-menu focus away from an empty widget container.
+- Preserve existing media, trailer, VOD, series, and PVR routes.
+
+Android TV and tvOS runtime validation remains pending.

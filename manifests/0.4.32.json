@@ -1,0 +1,59 @@
+{
+  "release": "0.4.32",
+  "release_kind": "private candidate; not published",
+  "source_snapshot": "source/0.4.32",
+  "source_base_commit": "739a57b9e0a9d9165c9066c707842eeb5a603fd6",
+  "kodi_baseline": "21.3 Omega",
+  "addons": [
+    {
+      "id": "repository.actweeter",
+      "version": "1.0.3",
+      "sha256": "74620e81ff9a161bb7b0650f01e94406ccc9fa9366210ebb36e58872bb4995e8",
+      "changed": false
+    },
+    {
+      "id": "skin.actweeter",
+      "version": "1.2.28",
+      "sha256": "665701c48f2fd9e5f7d070cefd2708c06b2dee839cd12ab4ed41f1fc35386561",
+      "changed": false
+    },
+    {
+      "id": "service.actweeter",
+      "version": "0.4.32",
+      "sha256": "c84a4206ad3f8c332c2a6957492015593a5c2426e2367b9ccdc2794238585f9b",
+      "changed": true
+    },
+    {
+      "id": "plugin.video.xstream-pro",
+      "version": "1.1.2.7",
+      "sha256": "d90257ba7a197142e6a9146b9d3e1c9601e72b67c42f45152e0f6fb9a34eff34",
+      "changed": false,
+      "license": "CC BY-NC 4.0"
+    }
+  ],
+  "candidate_index": {
+    "sha256": "eae6945b3ff6ca1d5a3582b6e597b260e4418a01ade32badb5d4676af0dbda1c",
+    "md5": "2ed098184a2b6220ba57b12b5d6e83ff"
+  },
+  "automated_tests": {
+    "pass": 32,
+    "failures": 0,
+    "runtime_status": "PENDING"
+  },
+  "package_integrity": "Service ZIP rebuilt reproducibly from source; repository, skin and XStream ZIPs reused unchanged from official 0.4.31. ZIP CRC, Python AST, candidate index XML and MD5 verified locally.",
+  "upgrade_from": "0.4.31; non-destructive layout migration with verified profile-local backup",
+  "runtime_status": {
+    "baseline_installed_versions": {
+      "skin.actweeter": "1.2.28",
+      "service.actweeter": "0.4.31",
+      "script.skinshortcuts": "2.0.3"
+    },
+    "baseline_xml_property": "FAIL_RUNTIME; 26 widgetExpandable params are empty",
+    "candidate_build": "NOT_TESTED_ON_LENOVO",
+    "expand_visible": "NOT_TESTED",
+    "expand_reachable": "NOT_TESTED",
+    "expand_category_open": "NOT_TESTED",
+    "repository_update": "NOT_TESTED"
+  },
+  "publication_status": "NOT_PUBLISHED; stable release blocked until candidate runtime gates pass"
+}

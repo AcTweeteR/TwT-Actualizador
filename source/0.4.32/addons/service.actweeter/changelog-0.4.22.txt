@@ -1,0 +1,6 @@
+AcTweeteR Service 0.4.22
+
+- Requires the corrected, syntax-validated XStream Pro distribution 1.1.2.3.
+- Keeps Trakt optional and retains XStream's native recommendation filtering.
+- Adds no credential, progress, or user-profile migration.
+- XStream's pinned upstream source remains 1.1.2; its CC BY-NC 4.0 license and attribution are retained in the package.

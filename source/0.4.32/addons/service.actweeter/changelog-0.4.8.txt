@@ -1,0 +1,7 @@
+AcTweeteR Service 0.4.8
+
+- Prepara los ajustes públicos de metadatos XStream en español cuando conservan
+  sus valores ingleses de fábrica; respeta otros idiomas personalizados.
+- Copia previamente preferencias y caché de metadatos de la integración.
+- Refresca únicamente esa caché al cambiar idioma; conserva progreso,
+  favoritos, proveedor y credenciales.

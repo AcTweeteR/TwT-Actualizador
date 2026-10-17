@@ -1,0 +1,12 @@
+AcTweeteR Service 0.2.8 — completion gates for required setup
+
+- Treat IPTV/XStream, PVR, trailer provider and YouTube as required setup
+  components in the service-status UI.
+- Persist only allowlisted setup check statuses; never persist credential data.
+- Do not mark setup complete merely because XStream settings fields exist.
+- Require runtime evidence for provider authentication, catalogs, live TV/EPG,
+  trailer search/resolution/playback and skin integration before completion.
+- Keep incomplete setup resumable and preserve legacy step labels on upgrade.
+- Clarify that YouTube may require user-owned API/OAuth configuration.
+- Remove automatic Master-profile credential and structural-settings reuse from
+  the service runtime; users configure their own profile through Kodi/add-ons.

@@ -1,0 +1,6 @@
+AcTweeteR 1.2.4 — guided optional dependencies
+
+- Require service.actweeter 0.2.3 for the guarded first-run install flow and
+  one-shot Home diagnostics.
+- Preserve the deterministic empty Home and existing optional-service behavior.
+- Android TV and tvOS runtime validation remains pending.
