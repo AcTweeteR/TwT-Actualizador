@@ -48,6 +48,24 @@ Engine references (Kodi 21.3-Omega):
 
 ## Acceptance still required
 
+### Beta1 runtime observations and Beta2 correction
+
+The native test-repository install of skin 1.2.29~beta1 succeeded. The live
+recent-movies counter showed count=20 and its final item was a movie. A rightward
+touch drag from that confirmed endpoint changed CurrentItem 20 -> 16 and changed
+the rendered posters. Therefore horizontal touch does process on this row;
+leftward attempts at its final boundary cannot advance. Repeated movie artwork
+and the stale first-slot frame obscured the earlier visual diagnosis.
+
+There is a separate source-level defect in the expansion branch:
+`String.IsEqual($PARAM[widgetExpandable],true)` becomes `String.IsEqual(true,true)`.
+Kodi 21.3 `CGUIInfoManager::TranslateSingleString` translates its first argument
+as an InfoLabel (SYSTEM_ALWAYS_TRUE here), whereas string evaluation reads it
+as an image/label. This is not literal boolean equality and chooses the ordinary
+limit-20 branch. Beta2 normalizes generated flags to true/false and evaluates
+the include parameter directly, with a false default for non-generated callers.
+The migration and the four-field property format are unchanged.
+
 Install this version through repository.actweeter.testing only. Record live
 counts and positions before/during/after a horizontal gesture, compare D-pad
 navigation, reach item 21 where a route actually has more than 20 matches,

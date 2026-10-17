@@ -323,7 +323,8 @@ class ExpandableWidgetMetadataTests(unittest.TestCase):
         include_text = include_file.read_text(encoding="utf-8")
         template_text = template_file.read_text(encoding="utf-8")
         self.assertNotIn("String.Contains($PARAM[widgetPath]", include_text)
-        self.assertIn('String.IsEqual($PARAM[widgetExpandable],true)', include_text)
+        self.assertIn('condition="$PARAM[widgetExpandable]"', include_text)
+        self.assertNotIn('String.IsEqual($PARAM[widgetExpandable],true)', include_text)
         self.assertIn('name="widgetExpandable"', template_text)
 
     def test_generated_layout_requires_route_and_template_expansion_metadata(self):

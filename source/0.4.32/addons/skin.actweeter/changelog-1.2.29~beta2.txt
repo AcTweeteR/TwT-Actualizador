@@ -1,0 +1,6 @@
+1.2.29~beta2 - EXPANDIR boolean selection
+
+- Evaluate widgetExpandable as a boolean include parameter; normalize absent flags to false.
+- Keep 20 provider items plus one folder on expandable rows; retain limit 20 on other rows.
+- Retain Beta1 native folder actions, selected-item focus border and optional diagnostics.
+- Service 0.4.33 and its verified migration remain unchanged. Runtime acceptance remains required.
