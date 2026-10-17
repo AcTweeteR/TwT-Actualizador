@@ -162,3 +162,77 @@ Automated validation: 41 unit tests PASS plus 12 cases using the installed
 Skin Shortcuts 2.0.3 get_properties implementation. XML/CRC and reproducible
 ZIP checks PASS. These do not replace device interaction. Stable feeds and
 bootstrap remain byte-for-byte unchanged; no stable tag/release was created.
+
+## Beta4 candidate — native Home vertical-scroll prototype, 2026-10-17
+
+Base: branch `codex/beta-widget-horizontal-navigation`, commit `d15d365`.
+Candidate skin is `1.2.29~beta4`; service remains `0.4.33`. This is a
+Beta-only source/package candidate and is not runtime accepted.
+
+### Diagnosis and source change
+
+Kodi 21.3 Omega engine source confirms that
+`CGUIControlGroupList::OnMouseEvent` changes the scroll offset by the
+container's own orientation and clamps it to `m_totalSize - Size()`;
+`CGUIControlGroupList::SendMouseEvent` visits children first and only then
+offers an unhandled gesture to the group itself. See the 21.3-Omega source
+references below. In AcTweeteR Home, the parent `grouplist` is anchored at
+`top=564` while `Fixed_Focus_Bottom` expands its viewport to `-100000` and its
+rows are separately translated by `Fixed_Focus_Navigation`. This is
+consistent with two observed defects: no useful vertical overflow to scroll,
+and no parent hit area for a gesture starting above y=564. Runtime cannot
+identify the exact receiving control through the existing skin diagnostic
+overlay, so hit-test interception remains an inference, not a claimed event
+trace.
+
+The Beta4 source experiment is limited to Home:
+
+- `HomeVerticalScrollViewport` gives the Home parent and page-control a
+  bounded full-screen viewport; hub windows keep their existing bounds.
+- A transparent 564px spacer is inserted before the Spotlight focus proxy to
+  preserve the prior vertical origin of visible rows.
+- Home uses native vertical grouplist movement rather than legacy row
+  translation animations; hub animations and Home wrap fades remain.
+- Horizontal fixedlists, movement=7, item actions, focus navigation and
+  Spotlight layout remain unchanged in source.
+
+This is a technically motivated experiment, not a confirmed fix. In
+particular, whether Kodi lets an empty spacer fall through to the underlying
+Spotlight click target must be checked at runtime.
+
+### Current Lenovo availability and candidate checks
+
+ADB confirms the authorized Lenovo TB330FU and Kodi foreground. Installed
+manifests still report skin `1.2.29~beta3` and service `0.4.33`. After more
+than five minutes of 15-second observations, visible Home remains in its
+empty-state; the Home diagnostic reports the sampled recent-movies widget
+count as zero. One native navigation to Películas also leaves an empty
+provider state and a zero-item Continue row. Thus there are no visible rows
+to scroll or posters to tap; vertical/horizontal runtime acceptance,
+detail-button tests and EXPANDIR interaction are NOT_TESTED in this session.
+This records the observed state after the requested wait and does not assume
+earlier catalog tests were invalid.
+
+Kodi logs in the same interval show layout-update workers repeatedly
+encountering `PREPARATION_BUSY`, repeated Skin Shortcuts builds/Home reloads,
+and `Trying to add unsupported control type 7`. The latter is not yet tied to
+the gesture defect. The repeated layout activity is a concrete concurrent
+build symptom; its trigger and ownership are still under investigation. No
+locks, caches or profile data were changed.
+
+Automated validation on source: 46 tests PASS, including a new structural
+contract for the bounded Home viewport, preserved spacer geometry, Hub
+compatibility and no Home row-translation animation. Deterministic local
+Beta4 skin/service/test-feed artifacts build successfully. These checks are
+not runtime proof. The candidate feed has not been published or installed;
+Stable and Kodi Master remain untouched.
+
+Kodi 21.3 source references:
+- [CGUIControlGroupList.cpp — SendMouseEvent and orientation-bounded pan](https://raw.githubusercontent.com/xbmc/xbmc/21.3-Omega/xbmc/guilib/GUIControlGroupList.cpp)
+- [GUIBaseContainer.cpp — container gesture handling](https://raw.githubusercontent.com/xbmc/xbmc/21.3-Omega/xbmc/guilib/GUIBaseContainer.cpp)
+
+Runtime gates still open: Home vertical pan from Spotlight and rows;
+horizontal pan and remote navigation after the viewport change; widget taps;
+EXPANDIR clipping/reachability; detail touch buttons; automatic trailers;
+series badges; collections/profile isolation; Skin Shortcuts race. No Stable
+promotion is permitted on these results.

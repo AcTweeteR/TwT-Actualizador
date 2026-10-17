@@ -21,7 +21,7 @@ class OfficialTestChannelTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             temp_root = Path(temp)
             service = temp_root / "service.actweeter-0.4.33.zip"
-            skin = temp_root / "skin.actweeter-1.2.29~beta3.zip"
+            skin = temp_root / "skin.actweeter-1.2.29~beta4.zip"
             for builder, package in (("build_service_package.py", service),
                                      ("build_skin_package.py", skin)):
                 subprocess.run([sys.executable, str(ROOT / "source/0.4.32/tools" / builder),
@@ -30,7 +30,7 @@ class OfficialTestChannelTests(unittest.TestCase):
                 ROOT / "testing/repository.actweeter.testing", service,
                 temp_root / "testing", skin)
             versions = {n.get("id"): n.get("version") for n in ET.parse(index).getroot()}
-            self.assertEqual(versions["skin.actweeter"], "1.2.29~beta3")
+            self.assertEqual(versions["skin.actweeter"], "1.2.29~beta4")
             copied = index.parent / "skin.actweeter" / skin.name
             self.assertEqual(copied.read_bytes(), skin.read_bytes())
             self.assertEqual(checksum.read_text().strip(), hashlib.md5(index.read_bytes()).hexdigest())

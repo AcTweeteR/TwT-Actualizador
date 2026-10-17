@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- BINGIE -->
 <includes>
+    <!-- Home uses Kodi's bounded grouplist scroller. The transparent first
+         child keeps the existing 564px visual offset while extending the
+         vertical gesture hit area over Spotlight. -->
+    <include name="HomeVerticalScrollViewport">
+        <top>0</top>
+        <bottom>0</bottom>
+    </include>
     <include name="HomeBingie">
         <include content="Bingie_Base_BG">
             <param name="visibility" value="!$EXP[IsPlayingRecognizedContent]" />
@@ -785,8 +792,9 @@
 				<animation effect="slide" end="0,42" time="0" condition="Window.IsActive(1114)">Conditional</animation>
                 <usecontrolcoords>true</usecontrolcoords>
 				<top>564</top>
-                <include condition="Window.IsActive(Home) | $EXP[IsBingieHubsActive]">Fixed_Focus_Bottom</include>
+                <include condition="$EXP[IsBingieHubsActive]">Fixed_Focus_Bottom</include>
                 <bottom>0</bottom>
+                <include condition="Window.IsActive(Home)">HomeVerticalScrollViewport</include>
                 <include condition="Window.IsActive(Home) | $EXP[IsBingieHubsActive]">Fixed_Focus_Itemgap</include>
                 <itemgap>2</itemgap>
                 <pagecontrol>317</pagecontrol>
@@ -796,6 +804,16 @@
 				<onback condition="$EXP[IsBingieViewsActive]">SetFocus(900,$INFO[Window(Home).Property(menupos)])</onback>
                 <onback condition="$EXP[IsPlayingRecognizedContent]">SetFocus(509)</onback>
                 <onleft condition="$EXP[IsBingieViewsActive] + $EXP[IsPlayingUnrecognizedContent]">SetProperty(KeepPlayingPreview,1,Home)</onleft>
+                <!-- Non-focusable spacer preserves the old row origin while the
+                     Home grouplist viewport starts at the top of the screen. -->
+                <control type="image" id="77776">
+                    <visible>Window.IsActive(Home)</visible>
+                    <left>0</left>
+                    <top>0</top>
+                    <width>1</width>
+                    <height>564</height>
+                    <texture>colors/color_transparent.png</texture>
+                </control>
                 <include content="BingieSpotlightWidget" condition="[Window.IsActive(Home) | $EXP[IsBingieHubsActive2]] + !Skin.HasSetting(DisableSpotlightContent)">
                     <param name="widgetid" value="1508"/>
                 </include>
@@ -815,6 +833,7 @@
 				<right>20</right>
 				<top>564</top>
 				<bottom>0</bottom>
+				<include condition="Window.IsActive(Home)">HomeVerticalScrollViewport</include>
 				<!-- Keep a usable touch target while retaining Kodi's native scrollbar. -->
 				<width>48</width>
 				<orientation>vertical</orientation>

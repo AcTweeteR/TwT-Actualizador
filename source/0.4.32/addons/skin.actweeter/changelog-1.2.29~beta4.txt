@@ -1,0 +1,7 @@
+1.2.29~beta4 - Home bounded vertical touch-scroll experiment
+
+- Use Kodi's native bounded vertical grouplist viewport on Home.
+- Preserve the existing row origin with a transparent layout spacer.
+- Disable focus-driven row translation on Home so native scrolling owns
+  vertical movement; keep the prior hub behavior and remote navigation.
+- Runtime validation is pending; this is not a Stable release.
