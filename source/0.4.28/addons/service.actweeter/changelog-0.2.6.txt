@@ -1,0 +1,14 @@
+AcTweeteR Service 0.2.6 — instalación con confirmación y reintento
+
+- Verifica que los complementos solicitados por el instalador nativo de Kodi
+  terminan instalados y habilitados.
+- Puede habilitar un repositorio ya instalado pero deshabilitado, solo tras
+  consentimiento explícito; nunca instala repositorios nuevos en segundo plano.
+- Permite un reintento explícito dentro de la misma sesión; limita cada acción
+  a dos intentos para evitar ciclos de instalación.
+- Ejecuta como máximo un flujo externo Install-from-ZIP por sesión del
+  asistente; el usuario puede volver para continuar con otras fuentes.
+- No ofrece XStream Pro en tvOS porque declara IPTV Simple como dependencia y
+  no hay paquete Kodi Omega compatible verificado para tvOS.
+- Mantiene SlyGuy, XStream, YouTube, Trakt y PVR fuera de los ZIP de AcTweeteR;
+  las instalaciones/configuraciones siguen siendo consentidas e independientes.

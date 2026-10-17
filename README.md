@@ -21,11 +21,15 @@ runtime tampoco se probaron.
 Paquetes: [skin 1.2.27](repo/skin.actweeter/skin.actweeter-1.2.27.zip),
 [servicio 0.4.28](repo/service.actweeter/service.actweeter-0.4.28.zip),
 [XStream Pro 1.1.2.7](repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.7.zip).
-El bootstrap usa el repositorio 1.0.3. Suite automatizada: 605 PASS. Consulta
+El bootstrap usa el repositorio 1.0.3. Suite automatizada: 606 PASS y 285 subtests.
+Consulta
 [notas 0.4.28](RELEASE_NOTES_0.4.28.md), [manifiesto](manifests/0.4.28.json)
 y [avisos de terceros](THIRD_PARTY_NOTICES.md). XStream solo se redistribuye
 bajo CC BY-NC 4.0 para uso no comercial, con licencia, atribución y avisos
-preservados. La versión 0.4.27 permanece disponible para rollback.
+preservados. Las fuentes y los comandos para reconstruir exactamente estos
+paquetes están en [source/0.4.28](source/0.4.28/README.md); la automatización
+compara sus hashes con los artefactos publicados. La versión 0.4.27 permanece
+disponible para rollback.
 
 ## Canal estable — AcTweeteR 0.4.27 (hotfix)
 

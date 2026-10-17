@@ -1,0 +1,3 @@
+1.2.8
+- Preserve Kodi's native playback action for playable XStream Home and resume cards.
+- Keep the Information action for non-playable movie, series, episode, and add-on items.

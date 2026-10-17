@@ -1,0 +1,6 @@
+AcTweeteR Skin 1.2.10
+
+- Conserva la interfaz del proveedor de 1.2.9 y sus años dinámicos.
+- Evita que el Stop genérico heredado de Home interrumpa SlyGuy al abrir
+  reproducción fullscreen; la parada de previews sigue controlada por ownership.
+- Requiere el servicio 0.4.8 para preparar metadatos predeterminados en español.

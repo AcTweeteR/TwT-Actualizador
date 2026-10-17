@@ -1,0 +1,8 @@
+AcTweeteR Service 0.4.0
+
+- Add read-only Kodi diagnostics retrievable through the authenticated JSON-RPC
+  Files.GetDirectory endpoint; no Kodi file source or separate server is used.
+- Report installed add-on metadata, declared dependencies, PVR method error
+  codes, XStream credential-presence booleans, and sanitized relevant log lines.
+- Never export add-on setting values, profile paths, raw URLs, or credentials.
+- Add local read-only inventory and diagnostic retrieval tools.

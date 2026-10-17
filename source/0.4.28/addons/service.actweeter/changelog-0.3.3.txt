@@ -1,0 +1,5 @@
+AcTweeteR Service 0.3.3 — conservar proveedor y corregir asistente
+
+- Corrige la semántica y etiquetas de Dialog.yesno al conservar el perfil Xtream existente.
+- Valida el perfil activo y actualiza sus catálogos sin volver a guardar usuario, contraseña ni URL.
+- Si la validación falla, informa del estado sin modificar los ajustes de XStream.

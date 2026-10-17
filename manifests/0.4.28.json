@@ -1,7 +1,9 @@
 {
   "release": "0.4.28",
   "release_kind": "official distribution update",
-  "source_commit": "9c418a8b84a0a88b5a5aac627f28a0287f1e196a",
+  "source_commit": "494d43b653fe14e9e893d5bc29a15cd4a23ded8c",
+  "source_snapshot": "source/0.4.28",
+  "source_snapshot_policy": "Public profile-neutral source/build snapshot; generated Skin Shortcuts cache omitted and replaced by a neutral build slot.",
   "kodi_baseline": "21.3 Omega",
   "addons": [
     {
@@ -36,7 +38,8 @@
     }
   ],
   "automated_tests": {
-    "pass": 605,
+    "pass": 606,
+    "subtests_pass": 285,
     "failures": 0,
     "runtime_status": "NOT_TESTED"
   },

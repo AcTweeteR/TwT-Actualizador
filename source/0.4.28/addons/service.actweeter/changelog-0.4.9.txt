@@ -1,0 +1,9 @@
+AcTweeteR Service 0.4.9
+
+- Conecta el bridge de preview ya existente al servicio oficial de SlyGuy
+  0.2.1, exclusivamente con consentimiento y hashes de fuente reconocidos.
+- Copia y verifica los dos archivos antes del parche local y reinicia solo
+  el complemento mediante Kodi. Reintentos idempotentes y rollback ante fallo.
+- No redistribuye archivos de SlyGuy ni modifica sus preferencias.
+- Las futuras instalaciones pueden autorizarlo desde Reparar interfaz o el
+  configurador. Las versiones de SlyGuy desconocidas no se modifican.
