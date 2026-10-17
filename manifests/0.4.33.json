@@ -1,0 +1,37 @@
+{
+  "release": "0.4.33",
+  "release_kind": "private candidate; not published",
+  "source_snapshot": "source/0.4.32",
+  "source_base_commit": "84411b9ed9539711a8ba7aa1bf9ef8c69e70d184",
+  "kodi_baseline": "21.3 Omega",
+  "addons": [
+    {"id": "repository.actweeter", "version": "1.0.3", "changed": false},
+    {"id": "skin.actweeter", "version": "1.2.28", "changed": false},
+    {"id": "service.actweeter", "version": "0.4.33", "sha256": "c958d81e4deadb3198d13617c2d8d66651495da5d9926a6e1c23ce36baa1fd35", "changed": true},
+    {"id": "plugin.video.xstream-pro", "version": "1.1.2.7", "changed": false,
+     "license": "CC BY-NC 4.0"}
+  ],
+  "automated_tests": {"pass": 35, "failures": 0, "runtime_status": "PENDING"},
+  "test_channel": {
+    "repository_id": "repository.actweeter.testing",
+    "repository_version": "1.0.0",
+    "bootstrap_path": "docs/testing/bootstrap/",
+    "feed_path": "docs/testing/repo/",
+    "stable_feed_modified": false,
+    "index_sha256": "27402c8d0aa3b9ac43c1925f70cc8b644cac6f0e460651dddf6b90126795ba86",
+    "index_md5": "f486000ede2eb0837af89a1330167a7e",
+    "index_md5_file_sha256": "5a68901ce4fe9fd5a71f5bd18416fea8426c34a214dcc4f6e549904b87e23b76",
+    "service_zip_sha256": "c958d81e4deadb3198d13617c2d8d66651495da5d9926a6e1c23ce36baa1fd35",
+    "publication_status": "PENDING_TEST_CANDIDATE_DEPLOYMENT"
+  },
+  "runtime_status": {
+    "0.4.32_runtime": "FAIL: first native Skin Shortcuts build completed, property persistence raised ValueError; 20 of 26 defaults were materialized, six from source group 10000-1 were absent",
+    "candidate_build": "NOT_TESTED_ON_LENOVO",
+    "widget_property_generation": "PENDING",
+    "expand_visible": "NOT_TESTED",
+    "expand_reachable": "NOT_TESTED",
+    "expand_category_open": "NOT_TESTED",
+    "repository_update": "NOT_TESTED"
+  },
+  "publication_status": "NOT_PUBLISHED; stable release blocked until candidate runtime gates pass"
+}

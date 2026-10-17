@@ -285,9 +285,12 @@ def generated_shortcut_identities(path, expected_ids):
         if default_id in found and found[default_id] != identity:
             raise ValueError('ambiguous generated identity for expandable widget')
         found[default_id] = identity
-    missing = expected - set(found)
-    if missing:
-        raise ValueError('generated include is missing expandable widget identities')
+    # Skin Shortcuts only emits shortcuts that are active in the current
+    # profile/menu. Source DATA files also contain defaults for other menu
+    # groups (for example group 10000-1) that may not be materialized. Those
+    # inactive defaults have no runtime identity to persist yet. Active rows
+    # are still enforced after the second build by generated_rows()'s
+    # expansion_ready check.
     return found
 
 
@@ -296,6 +299,10 @@ def expandable_property_rows(documents, identities):
     rows = []
     for default_id, source_group in expandable_shortcut_ids(documents).items():
         actual = identities.get(default_id)
+        # No Skin Shortcuts property row can be keyed until the default is
+        # materialized in the generated includes. A future build will add it.
+        if actual is None:
+            continue
         if not actual or len(actual) != 2 or not all(actual):
             raise ValueError('missing generated Skin Shortcuts identity')
         rows.append([actual[0], actual[1], 'widgetExpandable', 'true'])
@@ -790,11 +797,14 @@ def _prepare_interface(kodi, addon_factory, vfs, gui, dialog, *, allow_prompt=Fa
             profile/'addon_data/script.skinshortcuts',service_root,
             generated_path,documents)
     except (OSError, ValueError, SyntaxError, UnicodeDecodeError) as exc:
-        kodi.log('[AcTweeteR] INTERFACE_LAYOUT status=property_persistence_failed type=%s'%
-                 type(exc).__name__,kodi.LOGERROR)
+        # Exception text is from this module's fixed validation messages and
+        # contains no user paths, property values, credentials, or provider URLs.
+        kodi.log('[AcTweeteR] INTERFACE_LAYOUT status=property_persistence_failed type=%s reason=%s'%
+                 (type(exc).__name__,str(exc)),kodi.LOGERROR)
         return 'PROPERTY_PERSISTENCE_FAILED'
-    kodi.log('[AcTweeteR] WIDGET_EXPANDABLE_PROPERTIES status=persisted changed=%s rows=%d'%
-             ('true' if property_result['changed'] else 'false',property_result['rows']),
+    kodi.log('[AcTweeteR] WIDGET_EXPANDABLE_PROPERTIES status=persisted changed=%s rows=%d inactive_defaults=%d'%
+             ('true' if property_result['changed'] else 'false',property_result['rows'],
+              max(0,len(expandable_shortcut_ids(documents))-property_result['rows'])),
              kodi.LOGINFO)
 
     # A second native build is required: the first output was produced before

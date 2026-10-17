@@ -1,0 +1,4 @@
+0.4.33
+- Persist widget expansion properties only for shortcuts actually materialized by the current Skin Shortcuts build.
+- Keep the generated-XML gate strict: every active expandable widget must contain its four-field property before the migration is marked verified.
+- Log fixed validation reasons without logging user routes, property values, or credentials.

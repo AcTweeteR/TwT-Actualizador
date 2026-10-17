@@ -125,6 +125,43 @@ class ExpandableWidgetMetadataTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "group or labelID"):
                 interface_layout.generated_shortcut_identities(path, {"expand-1"})
 
+    def test_unmaterialized_default_shortcuts_are_skipped_until_active(self):
+        documents = interface_layout.source_documents(ROOT / "addons/skin.actweeter")
+        expected = interface_layout.expandable_shortcut_ids(documents)
+        active_id = next(iter(expected))
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "generated.xml"
+            root = ET.Element("includes")
+            item = ET.SubElement(root, "item")
+            for name, value in (("defaultID", active_id),
+                                ("group", "inicio.1"),
+                                ("labelID", "continuarviendo")):
+                ET.SubElement(item, "property", name=name).text = value
+            path.write_bytes(ET.tostring(root))
+
+            identities = interface_layout.generated_shortcut_identities(
+                path, set(expected))
+            self.assertEqual(set(identities), {active_id})
+            rows = interface_layout.expandable_property_rows(documents, identities)
+            self.assertEqual(rows, [["inicio.1", "continuarviendo",
+                                     "widgetExpandable", "true"]])
+
+    def test_active_generated_widget_without_expansion_property_is_not_ready(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "generated.xml"
+            root = ET.Element("includes")
+            template = ET.SubElement(root, "include", name="skinshortcuts-template-Widgets")
+            item = ET.SubElement(template, "include", name="widget-row")
+            ET.SubElement(item, "param", name="widgetPath", value=(
+                "plugin://plugin.video.xstream-pro/?mode=premium&view=popular&stype=movie"
+                "&actweeter_expand=1&limit=20"))
+            ET.SubElement(item, "param", name="widgetExpandable", value="")
+            path.write_bytes(ET.tostring(root))
+
+            rows = interface_layout.generated_rows(path)
+            self.assertEqual(len(rows["Widgets"]), 1)
+            self.assertFalse(rows["Widgets"][0]["expansion_ready"])
+
     def test_legacy_five_field_row_is_preserved_and_correct_four_field_row_added(self):
         legacy = ["inicio-1", "", "widgetExpandable", "true", "expand-1"]
         existing = json.dumps([legacy]).encode("utf-8")
