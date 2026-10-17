@@ -49,7 +49,7 @@
     <license>GPL-2.0-or-later</license>
     <news>changelog-0.4.33.txt</news>
   </extension>
-</addon><addon id="skin.actweeter" version="1.2.29~beta2" name="AcTweeteR" provider-name="AcTweeteR maintainers">
+</addon><addon id="skin.actweeter" version="1.2.29~beta3" name="AcTweeteR" provider-name="AcTweeteR maintainers">
 	<requires>
 		<import version="5.17.0" addon="xbmc.gui" />
 		<import addon="script.bingie.helper" version="1.1.2" />
@@ -78,7 +78,7 @@
 		<description lang="es_MX">AcTweeteR - tu espacio de películas, series y televisión.</description>
 		<platform>all</platform>
 		<license>GPL v2.0</license>
-		<news>changelog-1.2.29~beta2.txt</news>
+		<news>changelog-1.2.29~beta3.txt</news>
 		<forum />
 		<source />
 		<assets>
