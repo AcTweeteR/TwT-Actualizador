@@ -236,6 +236,66 @@ horizontal pan and remote navigation after the viewport change; widget taps;
 EXPANDIR clipping/reachability; detail touch buttons; automatic trailers;
 series badges; collections/profile isolation; Skin Shortcuts race. No Stable
 promotion is permitted on these results.
+## Beta5 candidate — responsive Home viewport and current Lenovo follow-up, 2026-10-17
+
+Base branch: `codex/beta-widget-horizontal-navigation`, base commit
+`0753a117d8b7db656771a5dc3fe76c20eef271f7`. Installed Lenovo remains on
+skin `1.2.29~beta4` and service `0.4.34`; no package was installed during
+this follow-up.
+
+### Confirmed evidence
+
+- Kodi is foreground on the authorized Lenovo test device.
+- The current Home render showed Spotlight artwork/actions but no materialized
+  widget rows; the diagnostics label reported the vertical container as
+  `item=-1`, with the recent-movies count blank. We waited through successive
+  15- and 30-second checks. This is a current observation, not a conclusion
+  that the provider has no catalogue; the five-minute delayed-load gate was
+  not exhausted in this follow-up.
+- On a content details sheet, a tap at `(310,906)` over the visible
+  “Reproducir Tráiler” control left the screen and diagnostic action unchanged
+  after four seconds. This confirms the touch failure for that control in this
+  observed state, but does not identify whether the click missed the control
+  or a later action failed. Do not change the trailer route based on this alone.
+- Earlier runtime testing on this same installed Beta generation did reach the
+  21st EXPANDIR folder and opened its provider category. The last tile was
+  visibly clipped at the right edge; category return worked. That evidence
+  applies to the tested widget(s), not every row/profile.
+- The installed service manifest reads `0.4.34`; the installed skin manifest
+  reads `1.2.29~beta4`. Recent log reads show no new
+  `INTERFACE_LAYOUT_UPDATE`/`SKINSHORTCUTS_BUILD` entries after the prior
+  build burst around 22:13. An XStream `search_sync` request took 60,019 ms
+  at 22:53 and completed; no causal link to missing Home rows is established.
+
+### Kodi input model and bounded correction
+
+In Kodi 21.3 Omega, `CGUIControlGroup::SendMouseEvent` checks children in
+reverse render order and returns as soon as one child handles/focuses the
+event. `CGUIBaseContainer::OnMouseEvent` advertises pan support according to
+its orientation and pans only that axis. This makes a horizontal child
+carousel a plausible reason a vertical swipe begun on its card does not reach
+the Home vertical parent; it is consistent with the observed runtime failure,
+but the skin diagnostics do not expose the actual event receiver. No
+`movement`-only or overlay workaround is claimed to fix this arbitration.
+
+The independently demonstrated right-edge clipping has a concrete source
+correlate: Home grouplist `77777` used a fixed width of 2070 while the Lenovo
+Kodi viewport is 1920 pixels wide. The Beta5 candidate changes only this Home
+viewport width to `100%`, adds a regression assertion, and advances the skin
+package from `1.2.29~beta4` to `1.2.29~beta5`. It does not change widget routes,
+limits, card actions, control types, or focus. This is structurally justified
+but still requires package-on-device visual/runtime confirmation.
+
+Kodi engine references (21.3-Omega):
+- [GUIBaseContainer.cpp: gesture direction and pan](https://github.com/xbmc/xbmc/blob/21.3-Omega/xbmc/guilib/GUIBaseContainer.cpp#L3523-L3603)
+- [GUIControlGroup.cpp: child-first reverse hit testing](https://github.com/xbmc/xbmc/blob/21.3-Omega/xbmc/guilib/GUIControlGroup.cpp#L1886-L1933)
+
+Automated suite: 47 PASS; skin XML parse: PASS; Beta5 skin ZIP built with
+CRC PASS, SHA-256 `26f04ee5ea58777ddd7e6f8d8229b2a4fd72a1033078ec217c1b17f19ca1a965`.
+No runtime result has been recorded for Beta5 yet. Vertical pan from a widget,
+trailer touch, autoplay, badges, collections/profile separation and the
+remaining concurrent Skin Shortcuts conditions stay open. Stable feed,
+Kodi Master Mac and Apple TV remain untouched.
 ## Beta5 candidate — coalesce repeated Skin Shortcuts migration triggers, 2026-10-17
 
 Candidate service `0.4.34`; skin remains `1.2.29~beta4` and is byte-identical

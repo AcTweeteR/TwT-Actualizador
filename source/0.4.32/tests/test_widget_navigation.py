@@ -62,6 +62,8 @@ class WidgetNavigationTests(unittest.TestCase):
         group = window.find(".//control[@type='grouplist'][@id='77777']")
         self.assertEqual(group.findtext("top"), "564")
         self.assertEqual(group.findtext("bottom"), "0")
+        self.assertEqual(group.findtext("width"), "100%",
+                         "Home viewport must track screen width to avoid clipping item 21")
         self.assertTrue(any(node.text == "HomeVerticalScrollViewport"
                             and node.get("condition") == "Window.IsActive(Home)"
                             for node in group.findall("include")))

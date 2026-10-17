@@ -798,7 +798,10 @@
                 <include condition="Window.IsActive(Home) | $EXP[IsBingieHubsActive]">Fixed_Focus_Itemgap</include>
                 <itemgap>2</itemgap>
                 <pagecontrol>317</pagecontrol>
-                <width>2070</width>
+                <!-- Keep the Home viewport within the active display bounds;
+                     a fixed 2070-unit width clipped the final EXPANDIR tile
+                     on the Lenovo's 1920-unit Kodi viewport. -->
+                <width>100%</width>
 				<onback condition="$EXP[IsBingieViewsActive]">900</onback>
 				<onleft condition="$EXP[IsBingieViewsActive]">SetFocus(900,$INFO[Window(Home).Property(menupos)])</onleft>
 				<onback condition="$EXP[IsBingieViewsActive]">SetFocus(900,$INFO[Window(Home).Property(menupos)])</onback>
