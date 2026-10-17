@@ -1,0 +1,9 @@
+AcTweeteR Service 0.4.28
+
+- Require and support XStream distribution revision 1.1.2.7, which preserves
+  the provider route while returning 20 content items plus EXPANDIR when more
+  verified provider results exist.
+- Preserve the existing XStream provider identity, profile, sorting, and page
+  parameters for category expansion.
+- No user settings, credentials, playback progress, or database schema are
+  removed or migrated by this update.

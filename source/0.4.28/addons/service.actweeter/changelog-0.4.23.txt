@@ -1,0 +1,6 @@
+AcTweeteR Service 0.4.23
+
+- Requires the metadata-compatible XStream Pro distribution 1.1.2.4.
+- Keeps Trakt optional and leaves playback scrobbling to script.trakt.
+- No provider credentials, resume data, or watch-history migration is introduced.
+- Runtime scrobbling has not been validated on a Kodi device.

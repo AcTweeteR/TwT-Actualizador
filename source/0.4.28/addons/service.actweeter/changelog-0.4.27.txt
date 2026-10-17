@@ -1,0 +1,6 @@
+AcTweeteR Service 0.4.27
+
+- Add a versioned, backed-up Skin Shortcuts migration for typed collection
+  entries in the Movies and Series hubs.
+- Preserve existing user edits through the existing conflict/consent flow.
+- Require the corresponding XStream distribution revision 1.1.2.6.

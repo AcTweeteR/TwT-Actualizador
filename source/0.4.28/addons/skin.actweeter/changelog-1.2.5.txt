@@ -1,0 +1,12 @@
+AcTweeteR 1.2.5 — Home vacío en instalaciones nuevas
+
+- Determinar el Home vacío por la visibilidad de sus listas de contenido, no
+  por el número de controles hijos del grouplist.
+- Mantener visible y enfocable el estado de inicio cuando los widgets existen
+  pero sus proveedores opcionales no están instalados o no devuelven contenido.
+- Recuperar el foco del menú al volver desde un estado Home sin widgets visibles.
+- No cambiar servicios, credenciales, configuración de usuario ni rutas de
+  reproducción.
+
+La corrección está validada estáticamente y mediante pruebas automatizadas.
+Pendiente validación runtime en Google TV y tvOS.

@@ -1,0 +1,8 @@
+AcTweeteR Service 0.3.0 — native component orchestration
+
+- Requests required add-ons through Kodi's native repository resolver and verifies installed/enabled state before advancing.
+- Uses the AcTweeteR repository's live Kodi and SlyGuy catalog feeds; no repository ZIP or trust prompt is bypassed.
+- Keeps YouTube as a secondary integration; SlyGuy Trailers is the required primary trailer provider.
+- Adds a profile-specific XStream 1.1.2 refresh action to avoid the upstream profile chooser after setup.
+- Uses six concise setup stages and keeps completion gated on runtime/provider checks.
+- Does not store credentials outside XStream's own settings or mark IPTV, EPG, or trailer playback as verified without evidence.

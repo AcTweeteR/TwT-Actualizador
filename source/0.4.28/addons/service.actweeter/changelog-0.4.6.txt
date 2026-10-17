@@ -1,0 +1,6 @@
+AcTweeteR Service 0.4.6
+
+- Utiliza Kodi VFS para los XML de perfil, que tvOS puede almacenar en
+  NSUserDefaults sin un archivo POSIX correspondiente.
+- Comprueba por lectura posterior el backup y cada escritura de DATA.
+- Conserva personalizaciones, credenciales y configuración del proveedor.

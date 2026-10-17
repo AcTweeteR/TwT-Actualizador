@@ -1,0 +1,23 @@
+0.4.3 — Configuración y diagnóstico All-in-One (versión estable)
+
+Todos los componentes del catálogo forman parte de la preparación obligatoria.
+Instalación secuencial de la cadena oficial SlyGuy, sin redistribuir sus paquetes.
+Comprobación de versiones y habilitación para todo el catálogo.
+Configuración inicial secuencial con reintento y conservación del proveedor.
+Los estados completados antiguos se revisan frente al nuevo contrato.
+Las actualizaciones pendientes utilizan la pantalla nativa de Kodi: InstallAddon
+no actualiza complementos ya instalados en Kodi 21.3.
+Autenticación vigente antes de una nueva decisión de configuración completa.
+PVR verifica que sus fuentes locales pertenecen al perfil activo de XStream;
+los canales de otra instancia no acreditan la configuración de AcTweeteR.
+Los ajustes booleanos de perfiles nuevos usan getBool/setBool, como exige la API
+tipada de Kodi 21.3, con verificación y rollback de los valores previos.
+La limpieza de respuestas HTTPError evita fallos al cerrar errores sin cuerpo
+de respuesta.
+
+Calidad: 416 pruebas automatizadas PASS. La evidencia funcional comunicada de
+sesiones QA anteriores cubre asistente, proveedor IPTV, películas/VOD,
+episodios, televisión/PVR, EPG, persistencia y trailers manuales. No se repitió
+en esta publicación porque la instancia de Kodi QA no llegó a inicializarse.
+La instalación limpia aislada sigue pendiente; esta publicación no afirma
+validación runtime nueva ni compatibilidad runtime verificada en tvOS/Android TV.

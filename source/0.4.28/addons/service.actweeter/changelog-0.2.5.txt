@@ -1,0 +1,9 @@
+AcTweeteR Service 0.2.5 — instalación guiada de complementos
+
+- Abre el instalador ZIP nativo de Kodi bajo consentimiento explícito para
+  fuentes autorizadas que requieren instalación manual del repositorio.
+- Explica los pasos oficiales para SlyGuy Trailers y XStream Pro; no añade
+  fuentes, credenciales ni complementos de terceros automáticamente.
+- Evita intentar instalar PVR IPTV Simple en tvOS, donde Kodi Omega no publica
+  un paquete compatible.
+- Conserva la instalación opcional y la configuración oficial de cada addon.

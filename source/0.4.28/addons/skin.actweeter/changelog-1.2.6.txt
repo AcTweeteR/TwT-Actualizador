@@ -1,0 +1,6 @@
+AcTweeteR 1.2.6 — completar instalación tras actualizar
+
+- Requiere el servicio 0.2.4 para ofrecer a instalaciones existentes una
+  revisión única de complementos opcionales ausentes.
+- Mantiene las dependencias de la skin mediante el mecanismo nativo de Kodi;
+  los servicios opcionales no son necesarios para Home.

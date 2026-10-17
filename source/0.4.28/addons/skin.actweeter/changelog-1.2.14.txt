@@ -1,0 +1,6 @@
+AcTweeteR Skin 1.2.14
+
+- Improve the contrast and clarity of the empty Home state.
+- Keep the setup action visible and usable from the empty state.
+- Require the Spanish language resource used by factory-default localization.
+- Preserve user-selected Kodi languages.
