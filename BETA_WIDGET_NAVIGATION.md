@@ -348,3 +348,59 @@ native Beta repository, then observe whether repeated Home/build events stop
 and whether the user catalog/widgets materialize. If they do not, continue
 diagnosing the independent content-loading issue without clearing profile
 data or weakening the remaining runtime gates. Stable remains unchanged.
+
+## Beta6 candidate — correct Home viewport geometry, 2026-10-18
+
+Base commit: `3ed2447c7b8a781359099b46fa5c8281aee49b67`. Active source is
+the clean Beta worktree; no archive/admin checkout was used. Lenovo ADB is
+connected through its authorized mDNS serial, with Kodi foreground. Installed
+manifests observed before this candidate: skin `1.2.29~beta5`, service
+`0.4.34`.
+
+### Runtime observations before the source change
+
+- Home initially rendered Spotlight before the rows. After waiting for the
+  rows to materialize, real widget rows appeared; an initially sparse screen
+  is therefore not evidence that the provider has no catalogue.
+- With rows visible, vertical swipe from Spotlight and a long vertical swipe
+  initiated within a poster row produced no visible vertical movement in the
+  captured before/after screens. These are sampled `FAIL_RUNTIME` observations.
+- Two horizontal swipe attempts within the visible row did not produce a
+  visually measurable change in this follow-up. Earlier Beta3 tests moved
+  cards on selected rows; horizontal behavior is consequently inconsistent
+  across observed runs and is not declared fixed or globally broken.
+- Dragging the native vertical scrollbar moved its thumb and changed the
+  visible content. The viewport is scrollable by page control; this does not
+  prove touch-pan works.
+- A sampled poster tap previously opened the corresponding information sheet.
+  This does not generalize to all widgets or resolve the touch-button issue.
+- The overlay's recent-movies diagnostics still refer to container `6042`,
+  while the current sampled widget source was `13003`. The overlay also asks
+  `Container(77777)` for state although `77777` is the parent grouplist. Those
+  fields are not reliable event-receiver telemetry; Kodi skin XML does not
+  expose the hit-tested receiver ID for arbitrary touch motion.
+
+### Confirmed geometry cause and minimal source correction
+
+The Home grouplist `77777` and page-control `317` each declared a literal
+`<top>564</top>` before including `HomeVerticalScrollViewport`, whose `<top>`
+is zero. In Kodi 21.3's `CGUIControlFactory::GetPosition`, geometry is read
+with `FirstChildElement("top")`; the first expanded value wins, so the Home
+viewport remained anchored at 564 rather than starting over Spotlight. This
+is a source-confirmed geometry defect matching the failed upper-screen pan.
+The candidate removes the unconditional geometry children and selects one
+mutually exclusive viewport include: top=0 for Home, top=564 for hub windows.
+The grouplist's existing transparent spacer preserves row layout. No widget
+routes, action logic, focus behavior, or profile data are changed.
+
+Kodi source reference (21.3-Omega), `GUIControlFactory.cpp`,
+`GetPosition` / `GetDimensions`:
+https://github.com/xbmc/xbmc/blob/21.3-Omega/xbmc/guilib/GUIControlFactory.cpp#L186-L195
+
+The automated regression test now rejects literal geometry before either
+viewport include on both controls and checks the Home/hub branches. This
+establishes the source geometry contract only; Android runtime acceptance is
+pending rebuilding and installing Beta6 from `repository.actweeter.testing`.
+Do not promote to Stable until Spotlight-origin and row-origin vertical pan,
+horizontal navigation, remote navigation, and separate functional gates are
+rechecked on Lenovo.

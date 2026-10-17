@@ -8,6 +8,12 @@
         <top>0</top>
         <bottom>0</bottom>
     </include>
+    <!-- Hub windows keep the legacy row start. Keep this separate from the
+         Home viewport: Kodi reads the first top element after includes expand. -->
+    <include name="BingieHubVerticalScrollViewport">
+        <top>564</top>
+        <bottom>0</bottom>
+    </include>
     <include name="HomeBingie">
         <include content="Bingie_Base_BG">
             <param name="visibility" value="!$EXP[IsPlayingRecognizedContent]" />
@@ -791,10 +797,9 @@
 				<animation effect="slide" end="0,38" time="300" condition="$EXP[IsCurrentWidgetSpotlight]">Conditional</animation>
 				<animation effect="slide" end="0,42" time="0" condition="Window.IsActive(1114)">Conditional</animation>
                 <usecontrolcoords>true</usecontrolcoords>
-				<top>564</top>
                 <include condition="$EXP[IsBingieHubsActive]">Fixed_Focus_Bottom</include>
-                <bottom>0</bottom>
                 <include condition="Window.IsActive(Home)">HomeVerticalScrollViewport</include>
+				<include condition="!Window.IsActive(Home)">BingieHubVerticalScrollViewport</include>
                 <include condition="Window.IsActive(Home) | $EXP[IsBingieHubsActive]">Fixed_Focus_Itemgap</include>
                 <itemgap>2</itemgap>
                 <pagecontrol>317</pagecontrol>
@@ -834,9 +839,8 @@
 			<control type="scrollbar" id="317">
 				<visible>Integer.IsGreater(Container(77777).NumItems,1) + [Window.IsActive(Home) | $EXP[IsBingieHubsActive]]</visible>
 				<right>20</right>
-				<top>564</top>
-				<bottom>0</bottom>
 				<include condition="Window.IsActive(Home)">HomeVerticalScrollViewport</include>
+				<include condition="!Window.IsActive(Home)">BingieHubVerticalScrollViewport</include>
 				<!-- Keep a usable touch target while retaining Kodi's native scrollbar. -->
 				<width>48</width>
 				<orientation>vertical</orientation>
