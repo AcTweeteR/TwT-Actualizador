@@ -1,8 +1,10 @@
 # AcTweeteR Beta widget-navigation source snapshot
 
-The current Beta feed contains skin `1.2.29~beta4` and service `0.4.34`.
-Service 0.4.34 coalesces repeated Home-triggered Skin Shortcuts migrations
-after a bounded attempt. See the root
+The next Beta candidate contains skin `1.2.29~beta7` and service `0.4.35`.
+Service 0.4.35 coalesces competing preparation requests and avoids a second
+Skin Shortcuts build when the first output and stored properties already
+verify. The Home XML delegates all build ownership to the service. This
+candidate is not runtime-accepted. See the root
 `BETA_WIDGET_NAVIGATION.md` for source-confirmed corrections and runtime gates.
 The stable skin package and stable index are unchanged.
 
@@ -17,9 +19,9 @@ materialized shortcuts, and performs a second native build before validating
 `widgetExpandable` in the active XML. Defaults absent from the current build
 are deferred; active expandable widgets remain a hard validation gate.
 
-The current service candidate is `service.actweeter` 0.4.34; it retains the
-0.4.33 property migration and adds session-scoped coalescing. The skin remains
-the beta4 candidate named above. Repository 1.0.3 and XStream Pro 1.1.2.7
+The service candidate is `service.actweeter` 0.4.35; it retains the
+0.4.33 property migration and adds session-scoped coalescing. The skin is
+candidate `1.2.29~beta7`. Repository 1.0.3 and XStream Pro 1.1.2.7
 remain byte-identical to the 0.4.31 official packages. This snapshot does not include Kodi profile data or
 generated per-user menu caches.
 
@@ -44,10 +46,10 @@ snapshot.
 Use Python 3 and the standard library. Build the service from this directory:
 
 ```sh
-python3 tools/build_service_package.py --output /tmp/service.actweeter-0.4.34.zip
+python3 tools/build_service_package.py --output /tmp/service.actweeter-0.4.35.zip
 ```
 
-The distribution index builder accepts the 0.4.34 service ZIP together with
+The distribution index builder accepts the 0.4.35 service ZIP together with
 the unchanged 0.4.31 skin, repository and XStream ZIPs. Candidate output must
 remain separate from the official stable feed until all gates pass.
 
