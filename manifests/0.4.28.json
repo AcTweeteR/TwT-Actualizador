@@ -1,0 +1,55 @@
+{
+  "release": "0.4.28",
+  "release_kind": "official distribution update",
+  "source_commit": "9c418a8b84a0a88b5a5aac627f28a0287f1e196a",
+  "kodi_baseline": "21.3 Omega",
+  "addons": [
+    {
+      "id": "repository.actweeter",
+      "version": "1.0.3",
+      "file": "repo/repository.actweeter/repository.actweeter-1.0.3.zip",
+      "sha256": "74620e81ff9a161bb7b0650f01e94406ccc9fa9366210ebb36e58872bb4995e8",
+      "changed": false
+    },
+    {
+      "id": "skin.actweeter",
+      "version": "1.2.27",
+      "file": "repo/skin.actweeter/skin.actweeter-1.2.27.zip",
+      "sha256": "897a602696dd71cbb1f98590c662470bc0721021d85324cf11f5457cd50e182b",
+      "changed": true
+    },
+    {
+      "id": "service.actweeter",
+      "version": "0.4.28",
+      "file": "repo/service.actweeter/service.actweeter-0.4.28.zip",
+      "sha256": "7839066da6a2f8b48e9a95609856ea04d11907963d3815f4f59394f3654ff7e5",
+      "changed": true
+    },
+    {
+      "id": "plugin.video.xstream-pro",
+      "version": "1.1.2.7",
+      "file": "repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.7.zip",
+      "sha256": "d90257ba7a197142e6a9146b9d3e1c9601e72b67c42f45152e0f6fb9a34eff34",
+      "changed": true,
+      "license": "CC BY-NC 4.0",
+      "upstream_commit": "1aa3e67da7c03c6acc3ec7e1ca579a7f645220f4"
+    }
+  ],
+  "automated_tests": {
+    "pass": 605,
+    "failures": 0,
+    "runtime_status": "NOT_TESTED"
+  },
+  "package_integrity": "Reproducible ZIPs, ZIP CRC, XML/index and MD5 verified; SHA-256 recorded per artifact.",
+  "upgrade_from": "0.4.27",
+  "rollback": "0.4.27 packages and release remain available.",
+  "runtime_status": {
+    "clean_install": "NOT_TESTED",
+    "upgrade_persistence": "NOT_TESTED",
+    "android_touch": "NOT_TESTED",
+    "android_detail_buttons": "NOT_TESTED",
+    "android_vertical_scroll": "NOT_TESTED",
+    "tvos_runtime": "NOT_TESTED",
+    "playback": "NOT_TESTED"
+  }
+}

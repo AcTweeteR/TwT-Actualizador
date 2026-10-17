@@ -2,6 +2,31 @@
 
 Canal oficial para Kodi 21.3 Omega.
 
+## Canal oficial — AcTweeteR 0.4.28
+
+- Skin: `skin.actweeter 1.2.27`
+- Servicio: `service.actweeter 0.4.28`
+- XStream Pro: `plugin.video.xstream-pro 1.1.2.7` (CC BY-NC 4.0)
+- Repositorio Kodi: `repository.actweeter 1.0.3` (sin cambios)
+
+Los widgets compatibles presentan como máximo 20 contenidos del proveedor y
+un `EXPANDIR` rojo adicional solo cuando existe una ruta de expansión
+verificada. Favoritos y Pendientes se mantienen en Mis colecciones para
+Películas y Series, con aislamiento por perfil/tipo y distintivos rojos de
+novedades. La skin integra cambios estructurales de hit testing derivados de
+touch10; no se afirma que tacto, scroll, botones de fichas ni navegación hayan
+sido validados en runtime Android o tvOS. Instalación limpia y actualización
+runtime tampoco se probaron.
+
+Paquetes: [skin 1.2.27](repo/skin.actweeter/skin.actweeter-1.2.27.zip),
+[servicio 0.4.28](repo/service.actweeter/service.actweeter-0.4.28.zip),
+[XStream Pro 1.1.2.7](repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.7.zip).
+El bootstrap usa el repositorio 1.0.3. Suite automatizada: 605 PASS. Consulta
+[notas 0.4.28](RELEASE_NOTES_0.4.28.md), [manifiesto](manifests/0.4.28.json)
+y [avisos de terceros](THIRD_PARTY_NOTICES.md). XStream solo se redistribuye
+bajo CC BY-NC 4.0 para uso no comercial, con licencia, atribución y avisos
+preservados. La versión 0.4.27 permanece disponible para rollback.
+
 ## Canal estable — AcTweeteR 0.4.27 (hotfix)
 
 - Skin: `skin.actweeter 1.2.24`

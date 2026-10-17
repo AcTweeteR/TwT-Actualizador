@@ -1,5 +1,20 @@
 # Changelog AcTweeteR
 
+## AcTweeteR 0.4.28
+
+- Skin 1.2.27 y servicio 0.4.28; repository.actweeter 1.0.3 sin cambios.
+- Widgets elegibles limitados a 20 contenidos, con `EXPANDIR` rojo adicional
+  únicamente en rutas cuya expansión está verificada.
+- Favoritos/Pendientes en Mis colecciones para Películas y Series; distintivos
+  de novedades con fondo rojo y texto blanco.
+- Integra en las fuentes distribuidas los cambios estructurales de hit testing
+  y movimiento de touch10, sin afirmar que el tacto esté validado en runtime.
+- XStream Pro 1.1.2.7 conserva licencia y atribuciones CC BY-NC 4.0; solo uso
+  no comercial.
+- 605 pruebas automatizadas PASS. Instalación limpia, actualización y
+  navegación runtime en Lenovo/tvOS no probadas.
+- La versión 0.4.27 permanece disponible para rollback.
+
 ## AcTweeteR 0.4.27 — hotfix de controles de ficha
 
 - Revierte el prototipo de controles `button` de la skin 1.2.23. En ambos
