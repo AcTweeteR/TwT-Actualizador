@@ -182,8 +182,31 @@ class InterfaceMigrationTriggerTests(unittest.TestCase):
                       if isinstance(node, ast.FunctionDef)
                       and node.name == "_run_pending_interface_migration")
         helper_source = ast.unparse(helper)
-        self.assertIn("RETRYABLE_INTERFACE_RESULTS", helper_source)
-        self.assertIn("window.clearProperty(marker_name)", helper_source)
+        self.assertIn("retry_interface_preparation", helper_source)
+        self.assertIn("window.setProperty(marker_name, marker)", helper_source)
+        result_branch = next(node for node in ast.walk(helper)
+                             if isinstance(node, ast.If)
+                             and isinstance(node.test, ast.Compare)
+                             and isinstance(node.test.left, ast.Name)
+                             and node.test.left.id == "result"
+                             and len(node.test.comparators) == 1
+                             and isinstance(node.test.comparators[0], ast.Constant)
+                             and node.test.comparators[0].value == "GENERATED")
+        result_branch_source = ast.unparse(result_branch)
+        self.assertIn("window.setProperty(marker_name, marker)", result_branch_source)
+        self.assertNotIn("window.clearProperty(marker_name)", result_branch_source)
+
+    def test_home_reload_cannot_relaunch_a_completed_or_deferred_migration(self):
+        source = (ROOT / "addons/service.actweeter/setup.py").read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        helper = next(node for node in tree.body
+                      if isinstance(node, ast.FunctionDef)
+                      and node.name == "_run_pending_interface_migration")
+        helper_source = ast.unparse(helper)
+        self.assertIn('window.getProperty(marker_name) == marker', helper_source)
+        self.assertGreaterEqual(helper_source.count('window.setProperty(marker_name, marker)'), 2)
+        self.assertIn('if explicit', helper_source)
+        self.assertIn('window.clearProperty(marker_name)', helper_source)
 
     def test_stale_lock_removed_only_when_owner_is_proven_gone_and_unchanged(self):
         with tempfile.TemporaryDirectory() as temp:

@@ -236,3 +236,55 @@ horizontal pan and remote navigation after the viewport change; widget taps;
 EXPANDIR clipping/reachability; detail touch buttons; automatic trailers;
 series badges; collections/profile isolation; Skin Shortcuts race. No Stable
 promotion is permitted on these results.
+## Beta5 candidate — coalesce repeated Skin Shortcuts migration triggers, 2026-10-17
+
+Candidate service `0.4.34`; skin remains `1.2.29~beta4` and is byte-identical
+to the Beta4 package. This change is limited to the Beta feed; the Stable
+`repo/` tree is not modified.
+
+### New runtime evidence
+
+After Beta4 had been installed through Kodi's Testing repository and Home had
+been observed for over five minutes, ADB-readable Kodi logs showed repeated
+Home.xml loads roughly every 6–15 seconds. Home.xml invokes both the native
+Skin Shortcuts build and `service.actweeter,first_run`; the latter logs
+`session_claimed` and then still enters the pending layout-migration path.
+Across those reloads the service repeatedly requested a Skin Shortcuts build
+and logged `PREPARATION_BUSY` / `BUILD_NOT_CONFIRMED`. This establishes a
+repeated-trigger/rebuild loop in the service's per-session suppression, but
+does not establish that it is the cause of Home's empty provider widgets.
+Home remained in its empty state, and no poster targets were visible. The
+unrelated `Trying to add unsupported control type 7` log line remains
+unattributed.
+
+### Candidate change and guardrails
+
+`_run_pending_interface_migration` already performs a bounded retry sequence.
+Previously it cleared its window marker after `GENERATED` and after retryable
+deferred outcomes, allowing every Skin Shortcuts-triggered Home reload to
+start another worker. Service 0.4.34 now marks the migration attempt for the
+current Kodi session after either a verified success or a bounded deferred
+result. An explicit repair action still clears that session marker first; a
+new Kodi session may retry deferred work. This avoids deleting locks, caches,
+or profile state and does not change the established four-field widget
+property migration.
+
+The service package was built reproducibly (SHA-256
+`08ab9a8ec4f4756a7364de5ccbce255272ba2f68c646e978faacac96e3df41f2`); the
+unchanged Beta4 skin package hash remains
+`3e3aef0ba5c8ce544fa733639c4bdbbf35987a02976db4c005d8d53e2cef8283`.
+Automated service/source tests: 47 PASS. This is not device validation of
+the loop fix.
+
+### Runtime status and next gate
+
+The Beta4 Home viewport change has not yet received a meaningful scroll or
+poster-selection test on this run because Home exposed zero visible items.
+Horizontal/vertical touch, widget tap identity, EXPANDIR, detail buttons,
+trailers, badges, and collections remain NOT_TESTED in the Beta4 runtime
+state. Do not treat this service-only Beta5 as validation of those functions.
+Publish only to the separate Testing feed, update the Lenovo through Kodi's
+native Beta repository, then observe whether repeated Home/build events stop
+and whether the user catalog/widgets materialize. If they do not, continue
+diagnosing the independent content-loading issue without clearing profile
+data or weakening the remaining runtime gates. Stable remains unchanged.

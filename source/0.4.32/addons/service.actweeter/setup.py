@@ -74,7 +74,6 @@ from dependency_graph import inspect_graph
 from pvr_binding import profile_is_bound
 from interface_layout import (LAYOUT_VERSION, interface_migration_due,
                               prepare_interface, backup_interface,
-                              RETRYABLE_INTERFACE_RESULTS,
                               retry_interface_preparation)
 from factory_defaults import preferred_factory_language
 from catalog_refresh import (begin_refresh, finish_refresh, new_request_id,
@@ -1612,9 +1611,10 @@ def _prepare_product_interface(dialog, *, allow_prompt=False):
 def _run_pending_interface_migration(dialog, *, explicit=False):
     """Run a layout update independently of the once-per-process wizard.
 
-    A dismissed/failed migration is not retried on every Home refresh in the
-    same Kodi session. The existing explicit repair action remains available
-    and bypasses that per-session suppression.
+    Home can be reloaded by Skin Shortcuts while its native build is running.
+    The bounded retry loop belongs to this invocation; a deferred or completed
+    attempt is suppressed for the rest of this Kodi session. A later Kodi
+    session or the explicit repair action can safely try again.
     """
     window = xbmcgui.Window(10000)
     marker = str(LAYOUT_VERSION)
@@ -1646,18 +1646,17 @@ def _run_pending_interface_migration(dialog, *, explicit=False):
         monitor.waitForAbort, on_attempt=log_attempt, on_retry=log_retry)
 
     if result != "GENERATED":
-        # PREPARATION_BUSY and build uncertainty are temporary: do not claim
-        # this migration for the process lifetime. A later setup/Home trigger
-        # can retry, while this call itself remains bounded to six attempts.
-        if result not in RETRYABLE_INTERFACE_RESULTS:
-            window.setProperty(marker_name, marker)
-        else:
-            window.clearProperty(marker_name)
+        # This call already performed its bounded retry policy. Clearing the
+        # marker for retryable outcomes lets each Skin Shortcuts-triggered
+        # Home reload launch another competing migration/build worker.
+        window.setProperty(marker_name, marker)
         xbmc.log("[AcTweeteR] INTERFACE_LAYOUT_UPDATE status=deferred result=%s" %
                  result, xbmc.LOGWARNING)
         return result
 
-    window.clearProperty(marker_name)
+    # Suppress redundant native builds after success too. Skin Shortcuts can
+    # reload Home after a build, and Home.xml invokes first_run on every load.
+    window.setProperty(marker_name, marker)
     xbmc.log("[AcTweeteR] INTERFACE_LAYOUT_UPDATE status=verified target=%d" %
              LAYOUT_VERSION, xbmc.LOGINFO)
     return result

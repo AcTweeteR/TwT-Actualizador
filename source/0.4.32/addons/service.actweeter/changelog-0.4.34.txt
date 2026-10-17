@@ -1,0 +1,4 @@
+0.4.34
+- Coalesce repeated Home-triggered Skin Shortcuts migrations within one Kodi session.
+- Keep retryable build failures deferred after the bounded retry sequence; retry on a later session or explicit repair instead of starting competing rebuild workers on every Home reload.
+- Suppress redundant native rebuilds after successful migration verification.

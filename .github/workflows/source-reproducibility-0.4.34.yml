@@ -1,4 +1,4 @@
-name: Verify AcTweeteR 0.4.33 test-feed reproducibility
+name: Verify AcTweeteR 0.4.34 test-feed reproducibility
 
 on:
   push:
@@ -17,27 +17,27 @@ jobs:
       - name: Run candidate tests and build isolated feed
         run: |
           set -eu
-          tmp="$RUNNER_TEMP/actweeter-0.4.33"
+          tmp="$RUNNER_TEMP/actweeter-0.4.34"
           mkdir -p "$tmp"
           python3 -m unittest discover -s source/0.4.32/tests -v
           python3 source/0.4.32/tools/build_service_package.py \
-            --output "$tmp/service.actweeter-0.4.33.zip"
+            --output "$tmp/service.actweeter-0.4.34.zip"
           python3 source/0.4.32/tools/build_skin_package.py \
             --output "$tmp/skin.actweeter-1.2.29~beta4.zip"
           python3 tools/build_test_channel.py \
-            --service-zip "$tmp/service.actweeter-0.4.33.zip" \
+            --service-zip "$tmp/service.actweeter-0.4.34.zip" \
             --skin-zip "$tmp/skin.actweeter-1.2.29~beta4.zip" \
             --output "$tmp/testing"
       - name: Compare official test-channel artifacts
         run: |
           set -eu
-          tmp="$RUNNER_TEMP/actweeter-0.4.33/testing"
+          tmp="$RUNNER_TEMP/actweeter-0.4.34/testing"
           cmp "$tmp/bootstrap/repository.actweeter.testing-1.0.0.zip" \
             docs/testing/bootstrap/repository.actweeter.testing-1.0.0.zip
           cmp "$tmp/repo/repository.actweeter.testing/repository.actweeter.testing-1.0.0.zip" \
             docs/testing/repo/repository.actweeter.testing/repository.actweeter.testing-1.0.0.zip
-          cmp "$tmp/repo/service.actweeter/service.actweeter-0.4.33.zip" \
-            docs/testing/repo/service.actweeter/service.actweeter-0.4.33.zip
+          cmp "$tmp/repo/service.actweeter/service.actweeter-0.4.34.zip" \
+            docs/testing/repo/service.actweeter/service.actweeter-0.4.34.zip
           cmp "$tmp/repo/skin.actweeter/skin.actweeter-1.2.29~beta4.zip" \
             docs/testing/repo/skin.actweeter/skin.actweeter-1.2.29~beta4.zip
           cmp "$tmp/repo/addons.xml" docs/testing/repo/addons.xml
