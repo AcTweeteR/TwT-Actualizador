@@ -1,6 +1,6 @@
 # Changelog AcTweeteR
 
-## AcTweeteR 0.4.29 — candidato de reparación
+## AcTweeteR 0.4.29 — actualización oficial de feed
 
 - Skin 1.2.28 y servicio 0.4.29 corrigen la selección del layout expandible:
   deja de evaluarse una URL `plugin://` dinámica como expresión booleana y
@@ -15,8 +15,9 @@
   validación runtime. Instalación/actualización, EXPANDIR, widgets, tráilers,
   distintivos, colecciones y navegación táctil en Lenovo: NOT_TESTED después
   de esta candidata.
-- Mantener 0.4.28 disponible para rollback; no publicar como release estable
-  hasta completar el flujo de actualización oficial y su comprobación.
+- Publicado en el feed oficial de Kodi desde el commit `76428bf`; los paquetes
+  0.4.28 siguen disponibles para rollback. La instalación/actualización real
+  en Lenovo aún debe comprobarse mediante Kodi.
 
 ## AcTweeteR 0.4.28
 

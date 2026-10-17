@@ -1,6 +1,7 @@
 {
   "release": "0.4.29",
-  "release_kind": "candidate; not published",
+  "release_kind": "official Kodi repository distribution update",
+  "distribution_commit": "76428bf51301d78dc61d91d083a5517ea2147e26",
   "source_base_commit": "a62264ffa5f5dbfa3f5d7e9d1a82c231dc9ea496",
   "source_snapshot": "source/0.4.29",
   "kodi_baseline": "21.3 Omega",

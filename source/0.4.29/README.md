@@ -1,7 +1,7 @@
 # AcTweeteR 0.4.29 source snapshot
 
 This folder is the public, profile-neutral source/build snapshot for the
-0.4.29 candidate. It derives from the official 0.4.28 source snapshot at
+0.4.29 official Kodi repository distribution. It derives from the 0.4.28 source snapshot at
 `a62264f` and records its pinned upstream XStream source and contextual patch
 set. Candidate artifacts are built from this directory; Kodi runtime behavior
 must still be validated separately.

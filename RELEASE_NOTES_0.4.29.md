@@ -1,4 +1,4 @@
-# AcTweeteR 0.4.29 — candidato de reparación
+# AcTweeteR 0.4.29 — actualización oficial de feed
 
 Esta candidata corrige el selector de contenido expandible de widgets. En
 1.2.27 el skin comprobaba `String.Contains` sobre la ruta completa del widget,
@@ -27,5 +27,7 @@ marcan como expandibles.
   NOT_TESTED después de esta candidata.
 - No se declara soporte táctil, runtime ni instalación limpia como validado.
 
-Esta versión no está publicada. La 0.4.28 sigue siendo la versión oficial y
-permanece disponible para rollback.
+Esta actualización está disponible en el feed oficial de Kodi desde el commit
+`76428bf51301d78dc61d91d083a5517ea2147e26`. El artefacto de 0.4.28 permanece
+disponible para rollback. La instalación y validación runtime en Lenovo aún
+no se han completado; la disponibilidad pública no equivale a PASS_RUNTIME.
