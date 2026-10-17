@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<addon id="repository.actweeter.testing" name="AcTweeteR Testing Repository" version="1.0.0" provider-name="AcTweeteR">
+	<extension point="xbmc.addon.repository" name="AcTweeteR Testing Repository">
+		<requires>
+			<import addon="xbmc.addon" version="12.0.0" />
+		</requires>
+		<dir minversion="20.9.1">
+			<info compressed="false">https://actweeter.github.io/TwT-Actualizador/testing/repo/addons.xml</info>
+			<checksum>https://actweeter.github.io/TwT-Actualizador/testing/repo/addons.xml.md5</checksum>
+			<datadir zip="true">https://actweeter.github.io/TwT-Actualizador/testing/repo/</datadir>
+		</dir>
+		<dir minversion="20.9.1">
+			<info compressed="false">https://raw.githubusercontent.com/AcTweeteR/TwT-Actualizador/main/repo/addons.xml</info>
+			<checksum>https://raw.githubusercontent.com/AcTweeteR/TwT-Actualizador/main/repo/addons.xml.md5</checksum>
+			<datadir zip="true">https://raw.githubusercontent.com/AcTweeteR/TwT-Actualizador/main/repo/</datadir>
+		</dir>
+	</extension>
+	<extension point="xbmc.addon.metadata">
+		<summary lang="en_GB">AcTweeteR test-only add-on feed</summary>
+		<summary lang="es_ES">Canal de pruebas de AcTweeteR</summary>
+		<description lang="en_GB">Explicit test channel. It exposes prerelease candidates only after this repository is deliberately installed.</description>
+		<description lang="es_ES">Canal explícito de pruebas. Solo muestra candidatos prerelease si se instala deliberadamente este repositorio.</description>
+		<platform>all</platform>
+		<license>MIT</license>
+		<news>changelog-1.0.0.txt</news>
+	</extension>
+</addon>

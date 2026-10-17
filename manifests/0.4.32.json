@@ -36,9 +36,23 @@
     "md5": "2ed098184a2b6220ba57b12b5d6e83ff"
   },
   "automated_tests": {
-    "pass": 32,
+    "pass": 33,
     "failures": 0,
     "runtime_status": "PENDING"
+  },
+  "test_channel": {
+    "repository_id": "repository.actweeter.testing",
+    "repository_version": "1.0.0",
+    "bootstrap_path": "docs/testing/bootstrap/",
+    "feed_path": "docs/testing/repo/",
+    "stable_feed_modified": false,
+    "publication_status": "PENDING_PR_AND_PAGES_DEPLOYMENT",
+    "artifacts": {
+      "bootstrap_sha256": "72a7b30b9f6fa4ff8a05261f7e92330ad30a7cfb743cfd164b10e421707ab5e1",
+      "test_index_sha256": "6ef6f65643b5ae664c3701bd185e2d2b56521b6ae1c2254a60bf3dea9283d434",
+      "test_index_md5": "60541b5ee03064a601bb675756097946",
+      "service_sha256": "c84a4206ad3f8c332c2a6957492015593a5c2426e2367b9ccdc2794238585f9b"
+    }
   },
   "package_integrity": "Service ZIP rebuilt reproducibly from source; repository, skin and XStream ZIPs reused unchanged from official 0.4.31. ZIP CRC, Python AST, candidate index XML and MD5 verified locally.",
   "upgrade_from": "0.4.31; non-destructive layout migration with verified profile-local backup",
