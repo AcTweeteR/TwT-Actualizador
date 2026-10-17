@@ -69,18 +69,29 @@
 
     <!-- Fixed Focus Navigation Factory -->
     <include name="Fixed_Focus_Navigation_Factory">
-		<include content="Fixed_Focus_Navigation" condition="String.IsEqual(Skin.String(widgetstyle),landscape)">
+		<include content="Fixed_Focus_Navigation" condition="!Window.IsActive(Home) + String.IsEqual(Skin.String(widgetstyle),landscape)">
             <param name="widgetid" value="$PARAM[widgetid]"/>
             <param name="FixedAnimationHeight" value="-383"/>
         </include>
-        <include content="Fixed_Focus_Navigation" condition="String.IsEqual(Skin.String(widgetstyle),poster)">
+        <include content="Fixed_Focus_Navigation" condition="!Window.IsActive(Home) + String.IsEqual(Skin.String(widgetstyle),poster)">
             <param name="widgetid" value="$PARAM[widgetid]"/>
             <param name="FixedAnimationHeight" value="-383"/>
         </include>
-		<include content="Fixed_Focus_Navigation" condition="String.IsEqual(Skin.String(widgetstyle),square)">
+		<include content="Fixed_Focus_Navigation" condition="!Window.IsActive(Home) + String.IsEqual(Skin.String(widgetstyle),square)">
             <param name="widgetid" value="$PARAM[widgetid]"/>
             <param name="FixedAnimationHeight" value="-383"/>
         </include>
+        <!-- Home now uses native bounded grouplist scrolling instead of the
+             legacy row-translation animations. Keep the independent wrap fades. -->
+        <include content="Fixed_Focus_Navigation_Home" condition="Window.IsActive(Home)">
+            <param name="widgetid" value="$PARAM[widgetid]"/>
+        </include>
+    </include>
+
+    <include name="Fixed_Focus_Navigation_Home">
+        <animation effect="fade" start="100" end="0" time="250" condition="Integer.IsGreater(Window(Home).Property(CurrentWidgetID), $PARAM[widgetid])">Conditional</animation>
+        <animation effect="fade" start="0" end="100" delay="300" time="300" reversible="false" condition="Integer.IsGreater(Container(77777).NumItems,2) + String.IsEqual(Window(Home).Property(PrevWidgetPos),1) + String.IsEqual(Window(Home).Property(CurrentWidgetPos),Container(77777).NumItems)">Conditional</animation>
+        <animation effect="fade" start="0" end="100" delay="300" time="300" reversible="false" condition="Integer.IsGreater(Container(77777).NumItems,2) + String.IsEqual(Window(Home).Property(PrevWidgetPos),Container(77777).NumItems) + String.IsEqual(Window(Home).Property(CurrentWidgetPos),1)">Conditional</animation>
     </include>
 
     <include name="ContainerShowInfoOnclick">

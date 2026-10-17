@@ -23,10 +23,10 @@ jobs:
           python3 source/0.4.32/tools/build_service_package.py \
             --output "$tmp/service.actweeter-0.4.33.zip"
           python3 source/0.4.32/tools/build_skin_package.py \
-            --output "$tmp/skin.actweeter-1.2.29~beta3.zip"
+            --output "$tmp/skin.actweeter-1.2.29~beta4.zip"
           python3 tools/build_test_channel.py \
             --service-zip "$tmp/service.actweeter-0.4.33.zip" \
-            --skin-zip "$tmp/skin.actweeter-1.2.29~beta3.zip" \
+            --skin-zip "$tmp/skin.actweeter-1.2.29~beta4.zip" \
             --output "$tmp/testing"
       - name: Compare official test-channel artifacts
         run: |
@@ -38,8 +38,8 @@ jobs:
             docs/testing/repo/repository.actweeter.testing/repository.actweeter.testing-1.0.0.zip
           cmp "$tmp/repo/service.actweeter/service.actweeter-0.4.33.zip" \
             docs/testing/repo/service.actweeter/service.actweeter-0.4.33.zip
-          cmp "$tmp/repo/skin.actweeter/skin.actweeter-1.2.29~beta3.zip" \
-            docs/testing/repo/skin.actweeter/skin.actweeter-1.2.29~beta3.zip
+          cmp "$tmp/repo/skin.actweeter/skin.actweeter-1.2.29~beta4.zip" \
+            docs/testing/repo/skin.actweeter/skin.actweeter-1.2.29~beta4.zip
           cmp "$tmp/repo/addons.xml" docs/testing/repo/addons.xml
           cmp "$tmp/repo/addons.xml.md5" docs/testing/repo/addons.xml.md5
           cmp "$tmp/bootstrap/index.html" docs/testing/bootstrap/index.html

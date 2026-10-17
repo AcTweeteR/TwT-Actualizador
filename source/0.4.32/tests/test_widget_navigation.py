@@ -52,6 +52,54 @@ class WidgetNavigationTests(unittest.TestCase):
         self.assertEqual(container.findtext("movement"), "7")
         self.assertEqual(container.findtext("orientation"), "$PARAM[position]")
 
+    def test_home_vertical_scroll_uses_bounded_native_viewport_without_row_translation(self):
+        home = ET.parse(XML / "IncludesHomeBingie.xml").getroot()
+        viewport = home.find("include[@name='HomeVerticalScrollViewport']")
+        self.assertEqual((viewport.findtext("top"), viewport.findtext("bottom")),
+                         ("0", "0"))
+
+        window = home.find("include[@name='HomeBingie']")
+        group = window.find(".//control[@type='grouplist'][@id='77777']")
+        self.assertEqual(group.findtext("top"), "564")
+        self.assertEqual(group.findtext("bottom"), "0")
+        self.assertTrue(any(node.text == "HomeVerticalScrollViewport"
+                            and node.get("condition") == "Window.IsActive(Home)"
+                            for node in group.findall("include")))
+        bottom_overrides = [node for node in group.findall("include")
+                            if node.text == "Fixed_Focus_Bottom"]
+        self.assertEqual(len(bottom_overrides), 1)
+        self.assertEqual(bottom_overrides[0].get("condition"),
+                         "$EXP[IsBingieHubsActive]")
+
+        children = list(group)
+        spacer = group.find("control[@type='image'][@id='77776']")
+        spotlight = group.find("include[@content='BingieSpotlightWidget']")
+        self.assertIsNotNone(spacer)
+        self.assertEqual(spacer.findtext("visible"), "Window.IsActive(Home)")
+        self.assertEqual((spacer.findtext("top"), spacer.findtext("height"),
+                          spacer.findtext("texture")),
+                         ("0", "564", "colors/color_transparent.png"))
+        self.assertLess(children.index(spacer), children.index(spotlight))
+
+        scrollbar = window.find(".//control[@type='scrollbar'][@id='317']")
+        self.assertTrue(any(node.text == "HomeVerticalScrollViewport"
+                            and node.get("condition") == "Window.IsActive(Home)"
+                            for node in scrollbar.findall("include")))
+
+        bingie = ET.parse(XML / "IncludesBingie.xml").getroot()
+        factory = bingie.find("include[@name='Fixed_Focus_Navigation_Factory']")
+        hub_animations = factory.findall("include[@content='Fixed_Focus_Navigation']")
+        self.assertEqual(len(hub_animations), 3)
+        self.assertTrue(all("!Window.IsActive(Home)" in node.get("condition", "")
+                            for node in hub_animations))
+        home_animations = factory.find(
+            "include[@content='Fixed_Focus_Navigation_Home']")
+        self.assertEqual(home_animations.get("condition"), "Window.IsActive(Home)")
+        home_fades = bingie.find("include[@name='Fixed_Focus_Navigation_Home']")
+        self.assertEqual(len(home_fades.findall("animation")), 3)
+        self.assertTrue(all(node.get("effect") == "fade"
+                            for node in home_fades.findall("animation")))
+
     def test_expansion_literal_selects_21_without_infolabel_lookup(self):
         root = ET.parse(XML / "IncludesHomeWidgets.xml").getroot()
         base = root.find("include[@name='widget_base_normal']")
