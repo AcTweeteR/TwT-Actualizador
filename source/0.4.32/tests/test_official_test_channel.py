@@ -20,8 +20,8 @@ class OfficialTestChannelTests(unittest.TestCase):
         stable = (ROOT / "repo/addons.xml").read_bytes()
         with tempfile.TemporaryDirectory() as temp:
             temp_root = Path(temp)
-            service = temp_root / "service.actweeter-0.4.34.zip"
-            skin = temp_root / "skin.actweeter-1.2.29~beta6.zip"
+            service = temp_root / "service.actweeter-0.4.35.zip"
+            skin = temp_root / "skin.actweeter-1.2.29~beta7.zip"
             for builder, package in (("build_service_package.py", service),
                                      ("build_skin_package.py", skin)):
                 subprocess.run([sys.executable, str(ROOT / "source/0.4.32/tools" / builder),
@@ -30,7 +30,7 @@ class OfficialTestChannelTests(unittest.TestCase):
                 ROOT / "testing/repository.actweeter.testing", service,
                 temp_root / "testing", skin)
             versions = {n.get("id"): n.get("version") for n in ET.parse(index).getroot()}
-            self.assertEqual(versions["skin.actweeter"], "1.2.29~beta6")
+            self.assertEqual(versions["skin.actweeter"], "1.2.29~beta7")
             copied = index.parent / "skin.actweeter" / skin.name
             self.assertEqual(copied.read_bytes(), skin.read_bytes())
             self.assertEqual(checksum.read_text().strip(), hashlib.md5(index.read_bytes()).hexdigest())
@@ -40,7 +40,7 @@ class OfficialTestChannelTests(unittest.TestCase):
         stable_index = (ROOT / "repo" / "addons.xml").read_bytes()
         with tempfile.TemporaryDirectory() as temp:
             temp_root = Path(temp)
-            candidate_service = temp_root / "service.actweeter-0.4.34.zip"
+            candidate_service = temp_root / "service.actweeter-0.4.35.zip"
             # Build the same deterministic service ZIP that the test-feed builder publishes.
             import subprocess
             subprocess.run([
@@ -56,7 +56,7 @@ class OfficialTestChannelTests(unittest.TestCase):
             versions = {node.get("id"): node.get("version") for node in root.findall("addon")}
             self.assertEqual(versions, {
                 "repository.actweeter.testing": "1.0.0",
-                "service.actweeter": "0.4.34",
+                "service.actweeter": "0.4.35",
             })
             feed_addon = ET.parse(ROOT / "testing" / "repository.actweeter.testing" / "addon.xml").getroot()
             endpoints = [node.findtext("info", "") for node in feed_addon.findall(

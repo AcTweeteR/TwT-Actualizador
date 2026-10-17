@@ -33,7 +33,10 @@ EXPANDABLE_PREMIUM_VIEWS = {
 EXPANSION_QUERY = '&actweeter_expand=1&limit=20'
 BUILD_RETRY_DELAYS = (1.0, 2.0, 4.0, 8.0, 15.0)
 RETRYABLE_INTERFACE_RESULTS = frozenset({
-    'PREPARATION_BUSY', 'BUILD_BUSY', 'BUILD_NOT_CONFIRMED', 'BUILD_TIMEOUT',
+    # PREPARATION_BUSY means another AcTweeteR coordinator owns the exclusive
+    # profile lock. Retrying it would queue a second complete build behind the
+    # first one; the active owner is responsible for finishing this operation.
+    'BUILD_BUSY', 'BUILD_NOT_CONFIRMED', 'BUILD_TIMEOUT',
     'BUILD_OUTPUT_INVALID', 'GENERATED_XML_PROPERTY_MISSING',
     'GENERATED_IDENTITY_INVALID',
 })
@@ -502,6 +505,41 @@ def generated_rows(path):
     return result
 
 
+def generated_layout_ready(path, shortcuts_root, documents):
+    """Verify materialized widgets and their profile properties before reuse.
+
+    This is deliberately stricter than checking that an include file exists:
+    a routine Home startup may skip Skin Shortcuts only when the active output
+    contains every expected widget group, safe provider routes, expansion
+    metadata, and the matching four-field properties in Skin Shortcuts' store.
+    """
+    rows = generated_rows(path)
+    if (not all(len(rows.get(group, [])) >= count for group, count in
+                (('Widgets', 6), ('moviehub', 10), ('tvshowhub', 10)))
+            or not all(row['provider_only'] and row['expansion_ready']
+                       for group in rows.values() for row in group)):
+        return False, rows
+    try:
+        identities = generated_shortcut_identities(
+            path, expandable_shortcut_ids(documents))
+    except ValueError:
+        return False, rows
+    return verify_expandable_property_store(
+        shortcuts_root, documents, identities), rows
+
+
+def can_reuse_generated_layout(layout_status, metadata_refreshed, ready,
+                               migration_verified):
+    """Only reuse output when source, prior migration, and generated XML verify."""
+    return (layout_status == 'CURRENT' and not metadata_refreshed
+            and bool(ready) and bool(migration_verified))
+
+
+def second_layout_build_needed(properties_changed, first_output_ready):
+    """A second build is needed only if persistence changed or output is stale."""
+    return bool(properties_changed) or not bool(first_output_ready)
+
+
 def persist_generated_expandable_properties(shortcuts_root, service_root,
                                             generated_path, documents):
     """Backup and persist properties using identities from a completed build."""
@@ -581,8 +619,10 @@ def verify_expandable_property_store(shortcuts_root, documents, identities):
 
 def request_skinshortcuts_build(kodi, window, monitor, generated_path,
                                 *, timeout=30.0, start_timeout=5.0,
-                                poll_interval=0.05):
+                                poll_interval=0.05, phase='unspecified',
+                                correlation_id=None):
     """Request and observe one native build; Kodi builtins have no result value."""
+    correlation_id = correlation_id or uuid.uuid4().hex[:12]
     if window.getProperty('skinshortcuts-isrunning') == 'True':
         return 'BUILD_BUSY'
     before = None
@@ -590,7 +630,8 @@ def request_skinshortcuts_build(kodi, window, monitor, generated_path,
         before = digest(as_path(generated_path).read_bytes())
     except OSError:
         pass
-    kodi.log('[AcTweeteR] SKINSHORTCUTS_BUILD status=requested', kodi.LOGINFO)
+    kodi.log('[AcTweeteR] SKINSHORTCUTS_BUILD status=requested phase=%s id=%s' %
+             (phase, correlation_id), kodi.LOGINFO)
     kodi.executebuiltin(BUILD_COMMAND, False)
     started_at = time.monotonic()
     deadline = started_at + timeout
@@ -606,8 +647,9 @@ def request_skinshortcuts_build(kodi, window, monitor, generated_path,
                 after = digest(as_path(generated_path).read_bytes())
             except OSError:
                 pass
-            kodi.log('[AcTweeteR] SKINSHORTCUTS_BUILD status=finished output_changed=%s' %
-                     ('true' if after is not None and after != before else 'false'),
+            kodi.log('[AcTweeteR] SKINSHORTCUTS_BUILD status=finished phase=%s id=%s output_changed=%s' %
+                     (phase, correlation_id,
+                      'true' if after is not None and after != before else 'false'),
                      kodi.LOGINFO)
             return 'BUILD_FINISHED'
         else:
@@ -617,17 +659,20 @@ def request_skinshortcuts_build(kodi, window, monitor, generated_path,
             except OSError:
                 pass
             if after is not None and before is not None and after != before:
-                kodi.log('[AcTweeteR] SKINSHORTCUTS_BUILD status=finished_without_running_signal output_changed=true',
+                kodi.log('[AcTweeteR] SKINSHORTCUTS_BUILD status=finished_without_running_signal phase=%s id=%s output_changed=true' %
+                         (phase, correlation_id),
                          kodi.LOGINFO)
                 return 'BUILD_FINISHED'
             if time.monotonic() >= start_deadline:
-                kodi.log('[AcTweeteR] SKINSHORTCUTS_BUILD status=start_not_observed',
+                kodi.log('[AcTweeteR] SKINSHORTCUTS_BUILD status=start_not_observed phase=%s id=%s' %
+                         (phase, correlation_id),
                          kodi.LOGWARNING)
                 return 'BUILD_NOT_CONFIRMED'
         if monitor.waitForAbort(poll_interval):
             return 'ABORTED'
-    kodi.log('[AcTweeteR] SKINSHORTCUTS_BUILD status=timeout observed_running=%s' %
-             ('true' if observed_running else 'false'), kodi.LOGWARNING)
+    kodi.log('[AcTweeteR] SKINSHORTCUTS_BUILD status=timeout phase=%s id=%s observed_running=%s' %
+             (phase, correlation_id,
+              'true' if observed_running else 'false'), kodi.LOGWARNING)
     return 'BUILD_TIMEOUT' if observed_running else 'BUILD_NOT_CONFIRMED'
 
 
@@ -776,7 +821,22 @@ def _prepare_interface(kodi, addon_factory, vfs, gui, dialog, *, allow_prompt=Fa
     if result['status']=='APPLIED' or metadata_result.get('refreshed_metadata_entries',0):
         window.setProperty('skinshortcuts-reloadmainmenu','True')
     generated_path=snapshots['generated-includes.xml']
-    first_build=request_skinshortcuts_build(kodi,window,monitor,generated_path)
+    documents=source_documents(skin_root,
+                               recommendations_enabled=recommendations_enabled)
+    current_ready, _current_rows = generated_layout_ready(
+        generated_path, profile/'addon_data/script.skinshortcuts', documents)
+    current_state=load_state(service_root/'interface_layout_state.json')
+    if can_reuse_generated_layout(
+            result['status'], metadata_result.get('refreshed_metadata_entries',0),
+            current_ready, not interface_migration_due(current_state)):
+        window.setProperty('AcTweeteR.InterfaceReady','1')
+        kodi.log('[AcTweeteR] INTERFACE_LAYOUT status=verified_reused reason=current_inputs_and_generated_xml',
+                 kodi.LOGINFO)
+        return 'GENERATED'
+
+    build_id=uuid.uuid4().hex[:12]
+    first_build=request_skinshortcuts_build(
+        kodi,window,monitor,generated_path,phase='identity',correlation_id=build_id)
     if first_build!='BUILD_FINISHED':
         kodi.log('[AcTweeteR] INTERFACE_LAYOUT status=build_not_confirmed phase=identity result=%s'%
                  first_build,kodi.LOGWARNING)
@@ -784,8 +844,6 @@ def _prepare_interface(kodi, addon_factory, vfs, gui, dialog, *, allow_prompt=Fa
 
     # First native build materializes the real Skin Shortcuts group/labelID
     # identities. Source DATA names (such as inicio-1) are not runtime groups.
-    documents=source_documents(skin_root,
-                               recommendations_enabled=recommendations_enabled)
     first_rows=generated_rows(generated_path)
     if (not all(len(first_rows.get(group,[]))>=count for group,count in
                 (('Widgets',6),('moviehub',10),('tvshowhub',10)))
@@ -807,15 +865,25 @@ def _prepare_interface(kodi, addon_factory, vfs, gui, dialog, *, allow_prompt=Fa
               max(0,len(expandable_shortcut_ids(documents))-property_result['rows'])),
              kodi.LOGINFO)
 
-    # A second native build is required: the first output was produced before
-    # the dynamic four-field properties were persisted.
-    window.setProperty('skinshortcuts-reloadmainmenu','True')
-    second_build=request_skinshortcuts_build(kodi,window,monitor,generated_path)
-    if second_build!='BUILD_FINISHED':
-        kodi.log('[AcTweeteR] INTERFACE_LAYOUT status=build_not_confirmed phase=property result=%s'%
-                 second_build,kodi.LOGWARNING)
-        return second_build
-    rows=generated_rows(generated_path)
+    first_ready, first_rows = generated_layout_ready(
+        generated_path, profile/'addon_data/script.skinshortcuts', documents)
+    if second_layout_build_needed(property_result['changed'], first_ready):
+        # The second pass is necessary only when writing the dynamic properties
+        # changed Skin Shortcuts' input or the first generated output still
+        # lacks a verified expansion property. A no-op first pass with already
+        # materialized, verified properties must not trigger another Home reload.
+        window.setProperty('skinshortcuts-reloadmainmenu','True')
+        second_build=request_skinshortcuts_build(
+            kodi,window,monitor,generated_path,phase='property',correlation_id=build_id)
+        if second_build!='BUILD_FINISHED':
+            kodi.log('[AcTweeteR] INTERFACE_LAYOUT status=build_not_confirmed phase=property result=%s'%
+                     second_build,kodi.LOGWARNING)
+            return second_build
+        rows=generated_rows(generated_path)
+    else:
+        rows=first_rows
+        kodi.log('[AcTweeteR] SKINSHORTCUTS_BUILD status=skipped phase=property reason=unchanged_and_verified',
+                 kodi.LOGINFO)
     if (not all(len(rows.get(group,[]))>=count for group,count in
                 (('Widgets',6),('moviehub',10),('tvshowhub',10)))
             or not all(row['provider_only'] and row['expansion_ready']

@@ -12,12 +12,12 @@
 	<onload condition="!Skin.HasSetting(EnableRatings)">Skin.SetBool(TMDbBingieHelper.DisableRatings)</onload>
     <onload condition="Skin.HasSetting(EnableRatings)">Skin.Reset(TMDbBingieHelper.DisableRatings)</onload>
 	
-	<!-- Build Menu -->
-    <onload>RunScript(script.skinshortcuts,type=buildxml&amp;mainmenuID=900&amp;levels=1&amp;group=mainmenu|powermenu|searchmenu|tmdbsearchmenu|moviehub|tvshowhub|newhub|musichub|customhub|somethinghub|mylisthub)</onload>
     <onload condition="String.IsEmpty(Window(Home).Property(widgetstyle))">SetProperty(widgetstyle,$INFO[Skin.String(widgetstyle)])</onload>
 	<onload>Skin.TimerStart(spotlightanimation)</onload>
 
     <!-- One AcTweeteR first-run flow; legacy BINGIE dialogs remain available only as compatibility code. -->
+	<!-- The service owns interface preparation and Skin Shortcuts builds. A
+         second native Home build here races that coordinator on every load. -->
 	<onload>RunScript(service.actweeter,first_run)</onload>
     <onunload>SetProperty(SectionBackground,$ESCINFO[Control.GetLabel(99004)])</onunload>
     <onunload condition="System.HasAlarm(preview_delay)">CancelAlarm(preview_delay,silent)</onunload>

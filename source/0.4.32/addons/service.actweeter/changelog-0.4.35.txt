@@ -1,0 +1,5 @@
+0.4.35 Beta
+- Coalesce competing Skin Shortcuts preparation requests instead of queueing duplicate builds.
+- Reuse only a current generated layout whose widget routes, expansion metadata, and profile properties verify.
+- Skip the second native build when property persistence made no change and the first output is already verified.
+- Add phase/correlation identifiers to native build diagnostics.

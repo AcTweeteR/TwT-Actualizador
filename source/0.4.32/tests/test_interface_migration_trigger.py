@@ -4,14 +4,44 @@ import unittest
 import ast
 from unittest import mock
 from pathlib import Path
+from xml.etree import ElementTree as ET
 
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "addons/service.actweeter/resources/lib"))
 import interface_layout  # noqa: E402
+import first_run  # noqa: E402
 
 
 class InterfaceMigrationTriggerTests(unittest.TestCase):
+    def test_home_has_one_service_owned_build_coordinator(self):
+        home = ET.parse(ROOT / "addons/skin.actweeter/1080i/Home.xml").getroot()
+        onloads = [node.text or "" for node in home.findall("onload")]
+        self.assertFalse(any("script.skinshortcuts" in action for action in onloads))
+        self.assertEqual(sum("RunScript(service.actweeter,first_run)" in action
+                             for action in onloads), 1)
+
+    def test_interface_migration_session_claim_is_atomic_and_process_scoped(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "interface_migration_session.json"
+            self.assertTrue(first_run.claim_process_session(path, 4101))
+            self.assertFalse(first_run.claim_process_session(path, 4101))
+            self.assertTrue(first_run.claim_process_session(path, 4102))
+            self.assertTrue(first_run.release_process_session(path, 4102))
+
+    def test_migration_coordinator_claims_before_running_preparation(self):
+        source = (ROOT / "addons/service.actweeter/setup.py").read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        helper = next(node for node in tree.body
+                      if isinstance(node, ast.FunctionDef)
+                      and node.name == "_run_pending_interface_migration")
+        statements = [ast.unparse(node) for node in helper.body]
+        claim_index = next(index for index, statement in enumerate(statements)
+                           if "claim_process_session" in statement)
+        prepare_index = next(index for index, statement in enumerate(statements)
+                             if "retry_interface_preparation" in statement)
+        self.assertLess(claim_index, prepare_index)
+
     def test_previous_verified_layout_still_requires_update_migration(self):
         state = {
             "layout_version": interface_layout.LAYOUT_VERSION - 1,
@@ -74,7 +104,7 @@ class InterfaceMigrationTriggerTests(unittest.TestCase):
         self.assertIn("_prepare_product_interface(dialog, allow_prompt=True)", branch_source)
 
     def test_preparation_busy_retries_then_confirms_success(self):
-        results = iter(("PREPARATION_BUSY", "BUILD_BUSY", "GENERATED"))
+        results = iter(("BUILD_BUSY", "BUILD_NOT_CONFIRMED", "GENERATED"))
         waits = []
         attempts = []
         result, count = interface_layout.retry_interface_preparation(
@@ -84,14 +114,31 @@ class InterfaceMigrationTriggerTests(unittest.TestCase):
         self.assertEqual(waits, [1.0, 2.0])
         self.assertEqual(attempts, [(1, 6), (2, 6), (3, 6)])
 
-    def test_preparation_busy_retry_is_bounded_and_not_marked_complete(self):
+    def test_preparation_busy_is_coalesced_without_queued_rebuild(self):
         attempts = []
         result, count = interface_layout.retry_interface_preparation(
             lambda: "PREPARATION_BUSY", lambda _delay: False,
             on_attempt=lambda attempt, _maximum: attempts.append(attempt))
-        self.assertEqual((result, count), ("PREPARATION_BUSY", 6))
-        self.assertEqual(attempts, [1, 2, 3, 4, 5, 6])
-        self.assertIn("PREPARATION_BUSY", interface_layout.RETRYABLE_INTERFACE_RESULTS)
+        self.assertEqual((result, count), ("PREPARATION_BUSY", 1))
+        self.assertEqual(attempts, [1])
+        self.assertNotIn("PREPARATION_BUSY", interface_layout.RETRYABLE_INTERFACE_RESULTS)
+
+    def test_verified_current_generated_layout_is_reused_without_build(self):
+        self.assertTrue(interface_layout.can_reuse_generated_layout(
+            "CURRENT", False, True, True))
+        self.assertFalse(interface_layout.can_reuse_generated_layout(
+            "APPLIED", False, True, True))
+        self.assertFalse(interface_layout.can_reuse_generated_layout(
+            "CURRENT", True, True, True))
+        self.assertFalse(interface_layout.can_reuse_generated_layout(
+            "CURRENT", False, False, True))
+        self.assertFalse(interface_layout.can_reuse_generated_layout(
+            "CURRENT", False, True, False))
+
+    def test_second_build_only_when_properties_changed_or_output_unverified(self):
+        self.assertFalse(interface_layout.second_layout_build_needed(False, True))
+        self.assertTrue(interface_layout.second_layout_build_needed(True, True))
+        self.assertTrue(interface_layout.second_layout_build_needed(False, False))
 
     def test_skinshortcuts_build_requires_observed_run_and_completion(self):
         class FakeWindow:

@@ -457,3 +457,73 @@ EXPANDIR across rows, badges, collections, profile isolation, autoplay and
 remote regression gates were not newly validated. No device files were edited,
 no playback started and no provider-artwork screenshots were added to Git.
 Stable remains unchanged; do not promote Beta6 based on these partial results.
+
+### Beta7 preparation — Skin Shortcuts single ownership and trailer touch, 2026-10-18
+
+The active Lenovo manifests now report skin `1.2.29~beta6` and service
+`0.4.34`. The `UseBingieInfoDialog` setting is true, so the active detail
+layout is `BingieInfo`, not `BingieAltInfo`. Runtime screenshot bounds for the
+visible trailer radiobutton were approximately x=139–689, y=948–1028 for a
+1920×1200 capture; the source tree confirms it is nested in three vertical
+grouplists (`IncludesDialogVideoInfo.xml`, include `BingieInfo`, inner control
+8000). The box inherits 550×72. One ADB touchscreen tap within that visible
+box did not change the action snapshot or start playback, while a remote OK on
+control 54 did invoke the shared trailer action and the test trailer played.
+A second tap with focus moved to another detail control likewise did not focus
+or activate trailer. This confirms a touch-dispatch/hit-region failure in the
+active layout, but Kodi's skin layer exposes no hit-tested receiver ID; the
+exact intercepting control/coordinate transform remains undetermined. No
+trailer command or radiobutton type was changed. Any playback started here was
+the explicit short trailer validation and was stopped immediately; user VOD
+state was not touched.
+
+The independent log sample from 2026-10-17 shows a no-change preparation
+sequence: the first native build finished with `output_changed=false`,
+property persistence reported `changed=false`, and the code nevertheless
+requested another build. This log was collected while an earlier Beta skin was
+installed, so it is historical evidence, not a Beta6 runtime confirmation.
+Source inspection also found an uncoordinated Skin Shortcuts build in Home.xml
+alongside the service's preparation/migration coordinator. The Beta7 source
+candidate removes that competing Home invocation; the service now reuses an
+already verified current XML/property store, skips the second build only when
+the first generated output is already complete, logs correlated build phase
+IDs, and treats `PREPARATION_BUSY` as a coalesced outcome instead of queuing a
+second preparation. A later read-only ADB log sample from the installed Beta6
+runtime contains repeated `INTERFACE_LAYOUT_UPDATE` starts on distinct Kodi
+script threads within the same short window. Multiple workers reach
+`PREPARATION_BUSY`, while the active worker reports two native builds with
+`output_changed=false` and Home reloads between them. This supports two
+separate defects: a direct Skin-Shortcuts Home onload competing with the
+service, and a check-then-set session marker that was not an atomic claim. It
+does not prove every trigger origin or establish that the long provider query
+caused Home delay.
+
+Beta7 now atomically claims the migration session before reading state or
+requesting a native build. The existing profile preparation lock remains in
+place. This change is static/unit-tested but not installed on Lenovo yet.
+
+The 60.053-second `service.search_refresh` completion is not the provider
+scan's measured duration: the trace records the query separately, and the
+service observes completion on a 60-second pending-check cadence. Other scans
+in the sampled log took approximately 17.9 and 45.3 seconds. Home loads in
+that excerpt occurred at other times; the evidence does not show that those
+queries blocked Home.
+
+`unsupported control type 7` is Kodi's numeric BUTTON type rejected as a
+child in a `CGUIListGroup` item layout; the decorative no-op new-episode tag
+buttons in the poster and landscape layout includes are candidate sources.
+The warning does not identify the particular instance, so this remains a
+source-supported attribution, not an exact runtime attribution. The
+`GetDirectory` failures are separate: logs contain both `include` and literal
+`ActivateWindow(Settings)` failures. The latter is present as an action in
+Skin Shortcuts data; without a matching click/path trace neither is changed or
+attributed to a specific widget.
+
+Beta7 local artifacts were built twice reproducibly:
+
+- Service `0.4.35`: SHA-256 `562009204db0fd63c651890ec9fad35541db46b5c148b14a5f5230c698c84e59`.
+- Skin `1.2.29~beta7`: SHA-256 `a97177a4039b873b00eb9fd3fca216f842873f204614e55c4be8bf5bec38c34c`.
+- Test index: SHA-256 `ea1901d0b9cebad8155241f81e29b0f3c9936b1f86ea885d45570667edc7056f`; MD5 verified.
+- Bootstrap repository ZIP: SHA-256 `72a7b30b9f6fa4ff8a05261f7e92330ad30a7cfb743cfd164b10e421707ab5e1`.
+
+The automated suite passes 56 tests (51 existing plus 5 new coordination/build-policy tests). The Beta7 packages are currently local branch artifacts, not yet deployed or installed. Trailer touch remains FAIL_RUNTIME on Beta6. The Beta7 coordinator change still needs a native Beta install and runtime log confirmation; no Stable feed was changed.

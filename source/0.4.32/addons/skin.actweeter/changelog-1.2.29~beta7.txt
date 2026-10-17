@@ -1,0 +1,3 @@
+1.2.29~beta7
+- Delegate Home Skin Shortcuts generation to the AcTweeteR service coordinator to avoid a competing native build.
+- Preserve the Netflix/BINGIE layout, focus rules, navigation, and existing widgets.

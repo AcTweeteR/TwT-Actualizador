@@ -126,6 +126,12 @@ def _first_run_session_path():
     return os.path.join(profile, "first_run_session.json")
 
 
+def _interface_migration_session_path():
+    profile = xbmcvfs.translatePath(ADDON.getAddonInfo("profile"))
+    xbmcvfs.mkdirs(profile)
+    return os.path.join(profile, "interface_migration_session.json")
+
+
 def _intro_blocks_first_run(*, resume_from_mask=False):
     """Do not put onboarding over AcTweeteR's modal startup animation."""
     window = xbmcgui.Window(10000)
@@ -1619,10 +1625,22 @@ def _run_pending_interface_migration(dialog, *, explicit=False):
     window = xbmcgui.Window(10000)
     marker = str(LAYOUT_VERSION)
     marker_name = "AcTweeteR.InterfaceMigrationAttempted"
+    session_path = _interface_migration_session_path()
     if explicit:
         window.clearProperty(marker_name)
+        release_process_session(session_path, os.getpid())
     elif window.getProperty(marker_name) == marker:
         return "ATTEMPTED_THIS_SESSION"
+
+    # Claim before inspecting migration state or starting any Kodi build. Home
+    # reloads can launch several first_run scripts concurrently; a marker set
+    # only after completion lets every contender pass the initial check.
+    if not claim_process_session(session_path, os.getpid()):
+        window.setProperty(marker_name, marker)
+        xbmc.log("[AcTweeteR] INTERFACE_LAYOUT_UPDATE status=coalesced reason=session_claimed",
+                 xbmc.LOGINFO)
+        return "ATTEMPTED_THIS_SESSION"
+    window.setProperty(marker_name, marker)
 
     profile = xbmcvfs.translatePath(ADDON.getAddonInfo("profile"))
     state_path = os.path.join(profile, "interface_layout_state.json")
