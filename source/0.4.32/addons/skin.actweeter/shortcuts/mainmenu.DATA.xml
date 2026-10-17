@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- AcTweeteR defaults; Skin Shortcuts still owns runtime generation. -->
+<shortcuts>
+    <shortcut><label>Inicio</label><label2 /><defaultID>home</defaultID><icon>shortcuts/home.png</icon><action>ActivateWindow(home,return)</action></shortcut>
+    <shortcut><label>TV</label><label2 /><defaultID>livetv</defaultID><icon>shortcuts/tv.png</icon><action>ActivateWindow(TVGuide,return)</action></shortcut>
+    <shortcut><label>Canales recientes</label><label2 /><defaultID>actweeter-recent-channels</defaultID><icon>shortcuts/tv.png</icon><action>ActivateWindow(Videos,&quot;plugin://plugin.video.xstream-pro/?mode=premium&amp;view=recent_tv&quot;,return)</action></shortcut>
+    <shortcut><label>Películas</label><label2 /><defaultID>movies</defaultID><icon>shortcuts/clapperboard.png</icon><action>ActivateWindow(1111,return)</action></shortcut>
+    <shortcut><label>Series</label><label2 /><defaultID>shows</defaultID><icon>shortcuts/tv.png</icon><action>ActivateWindow(1110,return)</action></shortcut>
+    <shortcut><label>Buscar</label><label2 /><defaultID>search</defaultID><icon>shortcuts/search.png</icon><action>ActivateWindow(1109,return)</action></shortcut>
+    <shortcut><label>Ajustes</label><label2 /><defaultID>settings</defaultID><icon>common/settings1.png</icon><action>ActivateWindow(Settings)</action></shortcut>
+    <shortcut><label>Actualizar Catálogo</label><label2 /><defaultID>actweeter-catalog-refresh</defaultID><icon>common/settings1.png</icon><action>RunScript(service.actweeter,catalog_refresh)</action></shortcut>
+
+</shortcuts>

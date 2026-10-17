@@ -1,0 +1,7 @@
+AcTweeteR Service 0.4.21 — candidato privado, no publicado.
+
+- Trakt sigue siendo opcional para completar la instalación IPTV.
+- La fila nativa de recomendaciones se incluye también en instalaciones limpias y actualizaciones.
+- Migra el diseño de widgets v6 a v7 con backup, detección de personalizaciones e idempotencia.
+- Actualiza el inventario de XStream tras refrescos completados para mantener el filtrado IPTV de recomendaciones.
+- Requiere XStream Pro 1.1.2.2 con filtrado estricto por ID TMDb.

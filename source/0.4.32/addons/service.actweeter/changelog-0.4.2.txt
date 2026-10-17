@@ -1,0 +1,10 @@
+AcTweeteR Service 0.4.2
+
+- Add an in-Kodi sanitized installation diagnostic and optional export through
+  Kodi's folder picker; the local UI path uses no JSON-RPC or network upload.
+- Install SlyGuy Trailers through Kodi's native resolver in upstream order:
+  repository.slyguy, slyguy.dependencies, script.module.slyguy, trailers.
+- Record the modular add-on catalog, provenance, license status, platform
+  verification boundary, update owner and recovery guidance.
+- Keep SlyGuy packages upstream-hosted and leave trailer playback as a
+  separate runtime verification.

@@ -1,0 +1,8 @@
+AcTweeteR Skin 1.2.26
+
+- Move Favorites and Pending into the typed “Mis colecciones” entries in
+  the Movies and Series hubs; remove their duplicate primary-menu entries.
+- Enforce a 20-item ceiling for the managed provider widget containers.
+- Add a provider-backed red EXPANDIR tile to eligible default movie and
+  series rows when the source has additional items.
+- Retain existing navigation design; runtime touch behavior remains unverified.

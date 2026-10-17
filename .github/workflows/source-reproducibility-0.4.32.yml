@@ -1,0 +1,40 @@
+name: Verify AcTweeteR 0.4.32 test-feed reproducibility
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  rebuild:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run candidate tests and build isolated feed
+        run: |
+          set -eu
+          tmp="$RUNNER_TEMP/actweeter-0.4.32"
+          mkdir -p "$tmp"
+          python3 -m unittest discover -s source/0.4.32/tests -v
+          python3 source/0.4.32/tools/build_service_package.py \
+            --output "$tmp/service.actweeter-0.4.32.zip"
+          python3 tools/build_test_channel.py \
+            --service-zip "$tmp/service.actweeter-0.4.32.zip" \
+            --output "$tmp/testing"
+      - name: Compare official test-channel artifacts
+        run: |
+          set -eu
+          tmp="$RUNNER_TEMP/actweeter-0.4.32/testing"
+          cmp "$tmp/bootstrap/repository.actweeter.testing-1.0.0.zip" \
+            docs/testing/bootstrap/repository.actweeter.testing-1.0.0.zip
+          cmp "$tmp/repo/repository.actweeter.testing/repository.actweeter.testing-1.0.0.zip" \
+            docs/testing/repo/repository.actweeter.testing/repository.actweeter.testing-1.0.0.zip
+          cmp "$tmp/repo/service.actweeter/service.actweeter-0.4.32.zip" \
+            docs/testing/repo/service.actweeter/service.actweeter-0.4.32.zip
+          cmp "$tmp/repo/addons.xml" docs/testing/repo/addons.xml
+          cmp "$tmp/repo/addons.xml.md5" docs/testing/repo/addons.xml.md5
+          cmp "$tmp/bootstrap/index.html" docs/testing/bootstrap/index.html

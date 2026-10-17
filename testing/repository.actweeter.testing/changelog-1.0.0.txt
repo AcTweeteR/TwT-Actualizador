@@ -1,0 +1,3 @@
+AcTweeteR isolated test feed bootstrap.
+- Uses a distinct repository ID and testing-only index.
+- Keeps the stable repository index and package paths unchanged.

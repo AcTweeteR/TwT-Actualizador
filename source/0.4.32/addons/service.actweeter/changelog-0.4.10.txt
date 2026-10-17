@@ -1,0 +1,6 @@
+AcTweeteR Service 0.4.10
+
+- Lee el estado de interfaz y metadatos explícitamente en UTF-8, independiente
+  de la configuración regional de Python en tvOS.
+- Conserva integración de previews con consentimiento, backups y rollback.
+- Evita descartar silenciosamente el estado que contiene «Español».

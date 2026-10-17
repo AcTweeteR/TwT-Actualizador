@@ -1,0 +1,8 @@
+AcTweeteR 1.2.3 — deterministic factory Home
+
+- Start first Home focus on the always-available main menu instead of a widget group that may only be visible while updating.
+- Keep widget navigation explicit and suppress empty/updating GroupList focus fall-through.
+- Show the AcTweeteR empty/setup surface while Home widgets are still updating.
+- Add Settings to the packaged default main menu for clean installations.
+- Preserve previously generated Skin Shortcuts menus and all personal settings on upgrade.
+- Android TV and tvOS runtime validation remains pending.

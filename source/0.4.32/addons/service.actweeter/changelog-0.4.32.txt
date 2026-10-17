@@ -1,0 +1,5 @@
+0.4.32
+- Build Skin Shortcuts twice so AcTweeteR stores widgetExpandable with the generated runtime group and labelID.
+- Use the Skin Shortcuts 2.0.3 four-field custom-property format and preserve unrelated and legacy user rows.
+- Do not mark PREPARATION_BUSY or unconfirmed builds complete; retry transient preparation/build states at most six times with bounded backoff.
+- Re-read the four-field property store and verify non-empty widgetExpandable values in generated active includes before marking the migration verified.

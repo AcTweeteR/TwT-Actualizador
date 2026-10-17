@@ -1,0 +1,7 @@
+AcTweeteR Service 0.4.5
+
+- Mantiene la preparación segura de interfaz de 0.4.4.
+- Expone el backup de interfaz por la entrada nativa del plugin para
+  complementos multipunto: RunAddon de Kodi prioriza plugins sobre scripts.
+- Guarda la copia dentro del dispositivo y exporta solo su manifiesto.
+- No modifica credenciales, proveedores ni datos personales.

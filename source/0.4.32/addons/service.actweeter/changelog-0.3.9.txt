@@ -1,0 +1,7 @@
+AcTweeteR Service 0.3.9
+
+- Make SlyGuy Trailers an optional Kodi dependency so its upstream dependency
+  chain cannot block installation of the AcTweeteR skin and service.
+- Keep trailer installation available on demand from the service wizard.
+- Treat a missing SlyGuy provider as an optional feature state, not a core
+  installation failure.

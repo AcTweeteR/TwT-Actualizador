@@ -1,0 +1,4 @@
+AcTweeteR Service 0.4.11
+- Registra una migración de Skin Shortcuts versionada, verificable y con backup.
+- Aplica el seed actualizado al primer arranque; pide consentimiento ante personalizaciones.
+- Añade una acción de actualización del catálogo con estados correlacionados; requiere el callback del XStream parcheado y no muestra éxito sin confirmación.

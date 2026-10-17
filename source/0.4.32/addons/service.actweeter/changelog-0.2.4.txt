@@ -1,0 +1,10 @@
+AcTweeteR Service 0.2.4 — completar instalación de complementos
+
+- Ofrecer una revisión única de complementos ausentes después de actualizar
+  instalaciones que ya habían completado el asistente.
+- Instalar únicamente tras consentimiento explícito, usando el instalador
+  modal de Kodi y repositorios previamente habilitados.
+- Separar instalación y configuración; las credenciales permanecen en los
+  ajustes oficiales de cada complemento.
+- Explicar los pasos externos de XStream Pro y SlyGuy sin redistribuirlos ni
+  bloquear Home si se omiten.

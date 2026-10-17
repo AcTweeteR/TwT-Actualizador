@@ -1,0 +1,11 @@
+PRIVATE TOUCH INVESTIGATION CANDIDATE — NOT A RELEASE
+
+Bind the receiving widget/Spotlight container before Action(info), without
+resetting its selected item. Keep Play/Resume/Trailer radiobutton contracts.
+Add opt-in, content-free action/focus overlay to Home and the information sheet.
+No provider, playback, PVR, Trakt, personal data or default menu changes.
+
+This is NOT a confirmed Android touch fix. Android and remote runtime remain
+unvalidated. Scroll geometry/dual-axis dispatch and detail button failures are
+still under investigation. No installation or publication is authorized here.
+The ~touch1 version is private and separate from concurrent 1.2.25 menu work.
