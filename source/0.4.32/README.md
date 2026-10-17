@@ -1,12 +1,17 @@
-# AcTweeteR 0.4.32 candidate source snapshot
+# AcTweeteR 0.4.33 test-candidate source snapshot
 
 This source snapshot is based on official `main` at commit
-`739a57b9e0a9d9165c9066c707842eeb5a603fd6` (0.4.31). It contains a service
+`01800e6c7a2c189787e0295d1faa96829d98f693` (merged 0.4.32 test channel),
+which includes the 0.4.31 baseline at `739a57b9e0a9d9165c9066c707842eeb5a603fd6`.
+The 0.4.32 candidate failed on Lenovo because six inactive defaults did not
+have generated identities. This 0.4.33 test candidate corrects that and contains a service
 migration for Skin Shortcuts 2.0.3 that resolves widget identities from native
-generated includes, persists four-field custom-property records, and performs
-a second native build before validating `widgetExpandable` in the active XML.
+generated includes, persists four-field custom-property records for currently
+materialized shortcuts, and performs a second native build before validating
+`widgetExpandable` in the active XML. Defaults absent from the current build
+are deferred; active expandable widgets remain a hard validation gate.
 
-The candidate changes only `service.actweeter` (0.4.32). Skin 1.2.28,
+The candidate changes only `service.actweeter` (0.4.33). Skin 1.2.28,
 repository 1.0.3, and XStream Pro 1.1.2.7 remain byte-identical to the 0.4.31
 official packages. This snapshot does not include Kodi profile data or
 generated per-user menu caches.
@@ -18,7 +23,8 @@ profiles are user-owned shortcut records, and their actual `group` and
 Skin Shortcuts to build, reads those runtime identities, appends only missing
 four-field rows to the profile property store, then requests and verifies a
 second build. This avoids replacing custom shortcuts or relying on localized
-labels/default IDs as property keys.
+labels/default IDs as property keys. It also avoids failing a user's build on
+defaults from groups that Skin Shortcuts did not materialize for that profile.
 
 Static/unit tests and reproducible package checks are not runtime proof. The
 Lenovo acceptance gates still require the official feed to install this
@@ -31,10 +37,10 @@ snapshot.
 Use Python 3 and the standard library. Build the service from this directory:
 
 ```sh
-python3 tools/build_service_package.py --output /tmp/service.actweeter-0.4.32.zip
+python3 tools/build_service_package.py --output /tmp/service.actweeter-0.4.33.zip
 ```
 
-The distribution index builder accepts the 0.4.32 service ZIP together with
+The distribution index builder accepts the 0.4.33 service ZIP together with
 the unchanged 0.4.31 skin, repository and XStream ZIPs. Candidate output must
 remain separate from the official stable feed until all gates pass.
 
