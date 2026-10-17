@@ -398,9 +398,14 @@ Kodi source reference (21.3-Omega), `GUIControlFactory.cpp`,
 https://github.com/xbmc/xbmc/blob/21.3-Omega/xbmc/guilib/GUIControlFactory.cpp#L186-L195
 
 The automated regression test now rejects literal geometry before either
-viewport include on both controls and checks the Home/hub branches. This
-establishes the source geometry contract only; Android runtime acceptance is
-pending rebuilding and installing Beta6 from `repository.actweeter.testing`.
-Do not promote to Stable until Spotlight-origin and row-origin vertical pan,
-horizontal navigation, remote navigation, and separate functional gates are
-rechecked on Lenovo.
+viewport include on both controls and checks the Home/hub branches. The
+deterministic Beta6 skin ZIP was rebuilt twice with matching SHA-256
+`a94845d87ff9aa33c05340a6578de1e8c53b41af9e539e03cfdf1fc8ed42835b` and
+passes ZIP CRC. The locally generated Testing index SHA-256 is
+`5b64c22618f6622e897d0da83d6b002b70d6a34b47257124255bcdb68099de37`, MD5
+`23de2ce6ce751d0ce51651228080cd13`; the stable `/repo/` tree remains
+unchanged. The Beta6 feed is prepared locally, not yet publicly deployed or
+installed. Android runtime acceptance is pending installation from
+`repository.actweeter.testing`. Do not promote to Stable until
+Spotlight-origin and row-origin vertical pan, horizontal navigation, remote
+navigation, and separate functional gates are rechecked on Lenovo.
