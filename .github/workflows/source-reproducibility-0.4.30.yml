@@ -3,7 +3,19 @@ name: Verify AcTweeteR 0.4.30 reproducibility
 on:
   push:
     branches: [main]
+    paths:
+      - "source/0.4.30/**"
+      - "repo/repository.actweeter/repository.actweeter-1.0.3.zip"
+      - "repo/skin.actweeter/skin.actweeter-1.2.28.zip"
+      - "repo/service.actweeter/service.actweeter-0.4.30.zip"
+      - "repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.7.zip"
   pull_request:
+    paths:
+      - "source/0.4.30/**"
+      - "repo/repository.actweeter/repository.actweeter-1.0.3.zip"
+      - "repo/skin.actweeter/skin.actweeter-1.2.28.zip"
+      - "repo/service.actweeter/service.actweeter-0.4.30.zip"
+      - "repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.7.zip"
   workflow_dispatch:
 
 jobs:
