@@ -213,6 +213,15 @@ in the active profile. This proves an in-process port collision, but does not
 identify which add-on opened the existing socket. No port or proxy setting was
 changed. The conflict remains a pre-existing runtime issue pending attribution.
 
+The same live log contains AcTweeteR/SlyGuy preview handoff traces: SlyGuy
+reports `decode_rejected` for the received preview notification, while the
+AcTweeteR service records some focus notifications as rejected for ownership.
+Those entries establish that preview signaling is occurring but do not prove
+which component causes a manual trailer failure. The log also records
+`unsupported control type 7` during a Home/TV-hub skin load, but the message
+does not identify the XML control or establish a trailer regression. Neither
+issue was changed as part of the setup-gate correction.
+
 Process identity needs confirmation before additional installed-file writes:
 the running executable is under `/Applications/AcTweeteR QA Kodi 21.3 0.4.11/`,
 while Kodi maps `special://home` to the standard
