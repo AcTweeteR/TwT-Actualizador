@@ -348,3 +348,35 @@ the two tested manual paths. It does not establish universal trailer health or
 justify changing the Master trailer implementation. Keep the existing Master
 skin actions, SlyGuy bridge, and service preview modules intact unless a new,
 specific regression is reproduced.
+
+### Post-restart service and UI follow-up (2026-10-18)
+
+The owner-authorized orderly restart completed successfully. The new process is
+PID `32594`, launched from `/Applications/Kodi.app`; it is the process holding
+port `8095`. The Kodi log was updated at `2026-10-18 16:18:22` and was 129,696
+bytes at inspection. This startup produced no `Traceback`, no `Address already
+in use`, and no `AttributeError` referring to `recent` in the inspected log.
+These are bounded observations of this log snapshot, not proof that every
+service path is healthy.
+
+The following AcTweeteR startup markers were present: service instance,
+coordinator, automatic-preview coordinator, and first-run flow. The log records
+`FIRST_RUN_WIZARD status=skipped reason=prompted` twice. Thus the startup hook
+ran, but the wizard UI was deliberately skipped due to persisted prompt state;
+the wizard's interactive steps and the no-SlyGuy scenario remain
+`NOT_TESTED`. SlyGuy is installed, so it was not removed merely to emulate an
+optional-dependency case. Settings navigation was inspected and exited without
+changing settings; Kodi was returned to the populated Home screen.
+
+After the restart, Home with Spotlight and content rows was visibly present
+(`PASS_RUNTIME`). The installed service remains version `0.3.8`, and the
+installed `addon.xml`, `setup.py`, and `first_run.py` hashes still match the
+values recorded above. No personal profile data was changed. The workspace
+guard and full automated suite were rerun on the active integration branch:
+`86 tests`, all passing. JSON-RPC on localhost port `9090` was unavailable in
+this run, so no claims below depend on JSON-RPC inspection.
+
+Trailer lifecycle evidence remains limited to the two manual playback paths
+documented above. Automatic-preview cancellation/ownership, manual trailer
+from a detail-dialog control, and audio/source identity are still
+`NOT_TESTED`; do not promote the trailer gate to full PASS.
