@@ -64,7 +64,7 @@
 
     <!-- Auto Trailer Function -->
     <include name="Bingie_Default_AutoPreview">
-        <!-- Automatic playback from focus is intentionally disabled. -->
+        <!-- Automatic playback is dispatched from focus when configured. -->
         <onfocus condition="!String.IsEmpty(Window(Home).Property(KeepPlayingPreview))">ClearProperty(KeepPlayingPreview,Home)</onfocus>
         <onunfocus condition="System.HasAlarm(preview_delay)">CancelAlarm(preview_delay,silent)</onunfocus>
         <onunfocus condition="System.HasAddon(slyguy.trailers)">RunScript(service.actweeter,preview_cancel,$PARAM[widgetid])</onunfocus>
@@ -75,7 +75,7 @@
 		<onfocus condition="String.IsEmpty(Window(Home).Property(SpotlightTrailerInterval)) + [Window.IsVisible(1103) | !String.IsEmpty(Window(Home).Property(StartupMask))] + String.IsEqual(Skin.String(splash_screen),bingie_default) + [String.IsEqual(Skin.String(SplashAnimationResolution),2160p) | String.IsEqual(Skin.String(SplashAnimationResolution),1080p)]">SetProperty(SpotlightTrailerInterval,7,Home)</onfocus>		
 		<onfocus condition="String.IsEmpty(Window(Home).Property(SpotlightTrailerInterval)) + [Window.IsVisible(1103) | !String.IsEmpty(Window(Home).Property(StartupMask))] + String.IsEqual(Skin.String(splash_screen),bingie_image)">SetProperty(SpotlightTrailerInterval,7,Home)</onfocus>
         <onfocus condition="String.IsEmpty(Window(Home).Property(SpotlightTrailerInterval)) + !Window.IsVisible(1103) + String.IsEmpty(Window(Home).Property(StartupMask))">SetProperty(SpotlightTrailerInterval,1,Home)</onfocus>
-        <!-- Spotlight playback is started only by its explicit Play action. -->
+        <!-- Spotlight preview is triggered by the focused Spotlight list. -->
         <onfocus condition="!String.IsEmpty(Window(Home).Property(KeepPlayingPreview))">ClearProperty(KeepPlayingPreview,Home)</onfocus>
         <onunfocus condition="System.HasAlarm(preview_delay)">CancelAlarm(preview_delay,silent)</onunfocus>
         <onunfocus condition="System.HasAddon(slyguy.trailers)">RunScript(service.actweeter,preview_cancel,$PARAM[widgetid])</onunfocus>
@@ -110,6 +110,7 @@
         <onclick condition="String.IsEmpty(ListItem.UniqueID(imdb)) + !String.IsEmpty(ListItem.UniqueID(tmdb)) + System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) + String.IsEqual(ListItem.DBType,movie)">SetProperty(SLYGUY_TRAILER_RETURN_ID,tmdb:$INFO[ListItem.UniqueID(tmdb)],Home)</onclick>
         <onclick condition="String.IsEmpty(ListItem.UniqueID(imdb)) + String.IsEmpty(ListItem.UniqueID(tmdb)) + !String.IsEmpty(ListItem.DBID) + System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) + String.IsEqual(ListItem.DBType,movie)">SetProperty(SLYGUY_TRAILER_RETURN_ID,dbid:$INFO[ListItem.DBID],Home)</onclick>
         <onclick condition="System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb)">RunScript(slyguy.trailers)</onclick>
+        <onclick condition="System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb)">Action(FullScreen)</onclick>
     </include>
 
 	<include name="Bingie_Spotlight_Trailer_Action">
