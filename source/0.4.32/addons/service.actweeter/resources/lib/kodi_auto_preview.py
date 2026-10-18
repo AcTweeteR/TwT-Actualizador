@@ -51,6 +51,7 @@ class KodiAutoPreviewCoordinator:
         self.stop_inflight = set()
         self.stop_timeline = {}
         self.last_terminal_at = None
+        self.refocus_after_stop = None
         self.closed = False
         self.wake = self.scheduler.condition
         self.worker = threading.Thread(target=self._work,
@@ -717,20 +718,61 @@ class KodiAutoPreviewCoordinator:
         except (ValueError, TypeError):
             return False
 
+    def _refocus_current_card(self, previous):
+        """Request the newly selected poster after the old owned trailer stops."""
+        if not self.kodi.getCondVisibility("Window.IsActive(%d)" % previous.window):
+            return
+        try:
+            focus = int(self.kodi.getInfoLabel("System.CurrentControlId") or "-1")
+            position = int(self.kodi.getInfoLabel(
+                "Container(%d).CurrentItem" % previous.container) or "-1")
+        except (TypeError, ValueError):
+            return
+        if focus != previous.focus or position < 0:
+            return
+        prefix = "Container(%d).ListItem." % previous.container
+        media_type = self.kodi.getInfoLabel(prefix + "DBType").lower()
+        if media_type != "movie":
+            return
+        payload = {
+            "window": previous.window, "container": previous.container,
+            "focus": focus, "position": position, "media_type": media_type,
+            "imdb": self.kodi.getInfoLabel(prefix + "UniqueID(imdb)"),
+            "tmdb": self.kodi.getInfoLabel(prefix + "UniqueID(tmdb)"),
+            "dbid": self.kodi.getInfoLabel(prefix + "DBID"),
+            "title": self.kodi.getInfoLabel(prefix + "Title"),
+            "year": self.kodi.getInfoLabel(prefix + "Year"),
+            "trailer_id": "", "delay": 3.0,
+        }
+        if stable_identity(payload) != previous.identity:
+            self._log("CARD_REFOCUS", container=previous.container,
+                      position=position)
+            self._focus(payload)
+
     def _work(self):
         while not self.closed:
             with self.wake:
                 active = self.scheduler.active
             if active is not None and not self._active_focus_still_matches(active):
                 self._log("FOCUS_CHANGED", generation=active.generation)
+                self.refocus_after_stop = active
                 self._preempt({"owner": "OTHER"})
+            if self.refocus_after_stop is not None:
+                try:
+                    playing = self.kodi.getCondVisibility("Player.HasMedia")
+                except Exception:
+                    playing = True
+                if not playing:
+                    previous = self.refocus_after_stop
+                    self.refocus_after_stop = None
+                    self._refocus_current_card(previous)
             with self.wake:
                 now = self.clock()
                 has_media = getattr(self.kodi, "getCondVisibility", None)
                 player_active = bool(has_media("Player.HasMedia")) if has_media else False
                 request = self._take_ready(now, player_active=player_active)
                 if request is None:
-                    timeout = 0.25 if self.scheduler.active is not None else 1.0
+                    timeout = 0.25 if self.scheduler.active is not None or self.refocus_after_stop is not None else 1.0
                     if self.scheduler.delay_deadline is not None:
                         timeout = min(timeout, max(0.01, self.scheduler.delay_deadline - now))
                     self.wake.wait(timeout)
