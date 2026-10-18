@@ -38,6 +38,22 @@ class OptionalTrailerSetupTests(unittest.TestCase):
         service = module_catalog.all_addons()["service.actweeter"]
         self.assertNotIn("slyguy.trailers", service["dependencies"])
 
+    def test_missing_slyguy_is_reported_as_optional_in_service_status(self):
+        rows = first_run.service_rows({"required": True, "slyguy": False})
+        by_name = {row["service"]: row for row in rows}
+
+        self.assertTrue(by_name["SlyGuy Trailers"]["optional"])
+        self.assertEqual(by_name["SlyGuy Trailers"]["status"], "OPTIONAL_MISSING")
+        self.assertTrue(by_name["Previews automáticos"]["optional"])
+        self.assertEqual(by_name["Previews automáticos"]["status"], "OPTIONAL_MISSING")
+
+    def test_installed_slyguy_is_not_reported_as_runtime_validated(self):
+        rows = first_run.service_rows({"required": True, "slyguy": True})
+        by_name = {row["service"]: row for row in rows}
+
+        self.assertEqual(by_name["SlyGuy Trailers"]["status"], "INSTALLED_NOT_CHECKED")
+        self.assertEqual(by_name["Previews automáticos"]["status"], "INTEGRATION_NOT_CHECKED_NOW")
+
     def test_runtime_gate_does_not_readiness_gate_optional_addons(self):
         setup_path = ROOT / "addons/service.actweeter/setup.py"
         tree = ast.parse(setup_path.read_text(encoding="utf-8"))

@@ -380,3 +380,40 @@ Trailer lifecycle evidence remains limited to the two manual playback paths
 documented above. Automatic-preview cancellation/ownership, manual trailer
 from a detail-dialog control, and audio/source identity are still
 `NOT_TESTED`; do not promote the trailer gate to full PASS.
+
+### Follow-up: optional trailer status and orderly restart (2026-10-18)
+
+The checked-out source's first-run status table incorrectly represented
+SlyGuy Trailers as required, despite the module catalog and setup completion
+gate treating it as optional. I changed only `service_rows()` so a missing
+SlyGuy add-on and its automatic-preview integration are both reported as
+`OPTIONAL_MISSING`/`optional=True`. Two regression tests cover absent and
+installed SlyGuy; the installed state remains `INSTALLED_NOT_CHECKED`, not a
+claim of validated playback. No preview behavior, player actions, credentials,
+or profile state changed.
+
+Before restart, the installed Master `first_run.py` had SHA-256
+`3d5395ed189b464b9d1d51a1d3e9d259ee035d9d30bd95e5cd4fdf7c23128221`. Exact
+pre-change and post-change recovery copies are retained outside Git under
+`/private/tmp/actweeter-master-first_run-recovery-20261018/`; the reconstructed
+pre-change copy matches that original hash, and the installed/post-change file
+matches `6816f4eb2c636b7d121e89a629dffe56897a712de669dd4c9a11ab18947b2c48`.
+The repository's current `first_run.py` is substantially newer than the
+installed Master implementation, so it was deliberately not copied wholesale.
+
+After the owner-authorized orderly restart at approximately 16:25, Kodi 21.3
+loaded the regular profile, AcTweeteR skin 1.2.0, service 0.3.8, populated
+Spotlight/Home, and visible content rows (`PASS_RUNTIME`). The startup log
+records `FIRST_RUN_WIZARD status=skipped reason=prompted`; consequently the
+interactive status screen and behavior with SlyGuy absent remain
+`NOT_TESTED`. SlyGuy was left installed. The log confirms the preview bridge
+and SlyGuy shared service started and the proxy announced its loopback endpoint
+on 8095; it does not itself validate a trailer playback lifecycle.
+
+The same startup log contains `GetDirectory - Error getting 1111`, and a
+`Kodi is not playing any file/item` exception adjacent to the preview terminal
+callback. Their origin is not established by this snapshot and neither is
+attributed to the optional-status change. Do not change the trailer pipeline
+or custom-window routing until a discriminating reproduction identifies the
+caller. Automated validation now reports 88 tests passing, Python compilation
+and `git diff --check` passing. No Beta/Stable publication or push occurred.
