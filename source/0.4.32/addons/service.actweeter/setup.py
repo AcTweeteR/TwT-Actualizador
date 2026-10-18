@@ -962,7 +962,7 @@ def _show_status(dialog):
         "Series: " + ("%d categorías comprobadas" % evidence["series"] if passed("series_catalog") else "catálogo pendiente"),
         "Televisión: " + ("%d canales sincronizados" % pvr["channels"] if passed("pvr_configuration") else "sincronización pendiente"),
         "Guía: " + ("programación comprobada" if passed("epg_ready_or_not_provided") else "programación todavía no comprobada"),
-        "Tráilers: " + ("componentes preparados" if passed("trailer_addon_ready") else "componentes pendientes"),
+        "Tráilers: " + ("componentes preparados" if passed("trailer_addon_ready") else "opcionales pendientes"),
         "Trakt: opcional; puedes conectarlo desde los ajustes de sus complementos.",
         "La reproducción se comprueba por separado. El detalle técnico está en Diagnosticar instalación.",
     ]

@@ -59,10 +59,10 @@ SETUP_CHECK_STATUSES = {
 # EPG is optional: a provider may not supply guide data.
 MANDATORY_SETUP_CHECKS = (
     "mandatory_addons", "provider_authentication", "movies_catalog",
-    "series_catalog", "live_tv_ready", "pvr_configuration", "trailer_addon_ready",
+    "series_catalog", "live_tv_ready", "pvr_configuration",
 )
 OPTIONAL_SETUP_CHECKS = (
-    "epg_ready_or_not_provided", "trailer_search",
+    "epg_ready_or_not_provided", "trailer_addon_ready", "trailer_search",
     "trailer_resolution", "trailer_playback", "home_widgets", "spotlight", "search",
     "script_trakt_authorization", "xstream_trakt_authorization",
 )
