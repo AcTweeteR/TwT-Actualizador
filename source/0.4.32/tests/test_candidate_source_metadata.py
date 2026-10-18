@@ -14,7 +14,7 @@ class CandidateSourceMetadataTests(unittest.TestCase):
         repository = ET.parse(ROOT / "addons/repository.actweeter/addon.xml").getroot()
         xstream = json.loads((ROOT / "third_party/xstream/upstream.json").read_text())
         self.assertEqual((service.get("id"), service.get("version")),
-                         ("service.actweeter", "0.4.35"))
+                         ("service.actweeter", "0.4.36"))
         self.assertEqual((skin.get("id"), skin.get("version")),
                          ("skin.actweeter", "1.2.29~beta7"))
         self.assertEqual((repository.get("id"), repository.get("version")),

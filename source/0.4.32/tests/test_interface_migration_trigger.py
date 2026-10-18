@@ -29,6 +29,14 @@ class InterfaceMigrationTriggerTests(unittest.TestCase):
             self.assertTrue(first_run.claim_process_session(path, 4102))
             self.assertTrue(first_run.release_process_session(path, 4102))
 
+    def test_interface_migration_claim_retries_changed_output_in_same_process(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "interface_migration_session.json"
+            self.assertTrue(first_run.claim_process_session(path, 4101, "digest-a"))
+            self.assertFalse(first_run.claim_process_session(path, 4101, "digest-a"))
+            self.assertTrue(first_run.claim_process_session(path, 4101, "digest-b"))
+            self.assertFalse(first_run.claim_process_session(path, 4101, "digest-b"))
+
     def test_migration_coordinator_claims_before_running_preparation(self):
         source = (ROOT / "addons/service.actweeter/setup.py").read_text(encoding="utf-8")
         tree = ast.parse(source)
@@ -74,6 +82,44 @@ class InterfaceMigrationTriggerTests(unittest.TestCase):
         }
         self.assertFalse(interface_layout.interface_migration_due(verified))
 
+    def test_verified_migration_repairs_stale_generated_skin_output(self):
+        verified_state = {
+            "layout_version": interface_layout.LAYOUT_VERSION,
+            "build_status": "GENERATED",
+            "migration_history": [{
+                "id": interface_layout.LAYOUT_MIGRATION_ID,
+                "status": "VERIFIED",
+            }],
+        }
+        self.assertFalse(interface_layout.interface_migration_due(verified_state))
+        self.assertTrue(interface_layout.interface_preparation_needed(
+            interface_layout.interface_migration_due(verified_state), False))
+        self.assertFalse(interface_layout.interface_preparation_needed(
+            interface_layout.interface_migration_due(verified_state), True))
+
+    def test_generated_output_attempt_signature_tracks_skin_generation(self):
+        signature = interface_layout.interface_attempt_signature(
+            12, "1.2.29~beta7", "generated-xml-hash")
+        self.assertEqual(signature, interface_layout.interface_attempt_signature(
+            12, "1.2.29~beta7", "generated-xml-hash"))
+        self.assertNotEqual(signature, interface_layout.interface_attempt_signature(
+            12, "1.2.29~beta8", "generated-xml-hash"))
+        self.assertNotEqual(signature, interface_layout.interface_attempt_signature(
+            12, "1.2.29~beta7", "replaced-skin-output-hash"))
+
+    def test_coordinator_validates_generated_output_before_session_marker(self):
+        source = (ROOT / "addons/service.actweeter/setup.py").read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        helper = next(node for node in tree.body
+                      if isinstance(node, ast.FunctionDef)
+                      and node.name == "_run_pending_interface_migration")
+        statements = [ast.unparse(node) for node in helper.body]
+        readiness_index = next(index for index, statement in enumerate(statements)
+                               if "interface_preparation_needed" in statement)
+        marker_index = next(index for index, statement in enumerate(statements)
+                            if "window.getProperty(marker_name)" in statement)
+        self.assertLess(readiness_index, marker_index)
+
     def test_absent_or_malformed_layout_state_fails_toward_repair(self):
         self.assertTrue(interface_layout.interface_migration_due({}))
         self.assertTrue(interface_layout.interface_migration_due({
@@ -92,6 +138,22 @@ class InterfaceMigrationTriggerTests(unittest.TestCase):
                       and "not" in ast.unparse(node.test))
         branch_source = ast.unparse(branch)
         self.assertIn("_run_pending_interface_migration(dialog)", branch_source)
+
+    def test_interface_migration_claim_uses_output_fingerprint(self):
+        source = (ROOT / "addons/service.actweeter/setup.py").read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        helper = next(node for node in tree.body
+                      if isinstance(node, ast.FunctionDef)
+                      and node.name == "_run_pending_interface_migration")
+        claim = next(node for node in ast.walk(helper)
+                     if isinstance(node, ast.Call)
+                     and isinstance(node.func, ast.Name)
+                     and node.func.id == "claim_process_session")
+        self.assertEqual(len(claim.args), 2)
+        self.assertTrue(any(keyword.arg == "claim_key"
+                            and isinstance(keyword.value, ast.Name)
+                            and keyword.value.id == "marker"
+                            for keyword in claim.keywords))
 
     def test_explicit_repair_bypasses_migration_version_gate(self):
         source = (ROOT / "addons/service.actweeter/setup.py").read_text(encoding="utf-8")

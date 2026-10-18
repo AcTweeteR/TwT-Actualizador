@@ -11,7 +11,7 @@
 
 ## Canonical versioned source
 
-`source/0.4.32/addons/` is the current **Beta candidate** source snapshot (service 0.4.33, skin 1.2.29~beta3). Historical `source/0.4.28`–`source/0.4.31` are intentionally retained as reproducibility snapshots. They are NOT competing live development trees. Do not rename/move their contents or flatten them into a new `addons/` until the reproducibility workflows are migrated and verified. This prevents invalidating versioned release provenance.
+`source/0.4.32/addons/` is the current **Beta candidate** source snapshot (service 0.4.36, skin 1.2.29~beta7). Historical `source/0.4.28`–`source/0.4.31` are intentionally retained as reproducibility snapshots. They are NOT competing live development trees. Do not rename/move their contents or flatten them into a new `addons/` until the reproducibility workflows are migrated and verified. This prevents invalidating versioned release provenance.
 
 ## Channel boundaries
 

@@ -355,11 +355,13 @@ def intro_mode_for_selection(selection):
     return INTRO_OPTIONS[selection][1]
 
 
-def claim_process_session(path, process_id):
+def claim_process_session(path, process_id, claim_key=None):
     """Atomically claim one process-scoped startup action across Home loads.
 
     Failure to persist is fail-closed: skipping a cosmetic intro is safer than
-    starting it twice or leaving a second modal over the Home screen.
+    starting it twice or leaving a second modal over the Home screen. A caller
+    may supply a non-sensitive claim key when a changed input fingerprint must
+    be retried within the same Kodi process.
     """
     if isinstance(process_id, bool) or not isinstance(process_id, int) or process_id <= 0:
         return False
@@ -379,14 +381,16 @@ def claim_process_session(path, process_id):
         except (OSError, ValueError, TypeError):
             previous = None
         if (isinstance(previous, dict) and previous.get("schema_version") == 1 and
-                previous.get("process_id") == process_id):
+                previous.get("process_id") == process_id and
+                previous.get("claim_key") == claim_key):
             return False
 
         descriptor, temporary_name = tempfile.mkstemp(
             prefix=destination.name + ".tmp-", dir=str(destination.parent))
         temporary = Path(temporary_name)
         with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-            json.dump({"schema_version": 1, "process_id": process_id}, handle)
+            json.dump({"schema_version": 1, "process_id": process_id,
+                       "claim_key": claim_key}, handle)
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(temporary, destination)

@@ -72,9 +72,13 @@ from module_catalog import installation_plan
 from platform_support import detect_platform
 from dependency_graph import inspect_graph
 from pvr_binding import profile_is_bound
-from interface_layout import (LAYOUT_VERSION, interface_migration_due,
+from interface_layout import (LAYOUT_VERSION, KodiPath, digest,
+                              generated_layout_ready,
+                              interface_attempt_signature,
+                              interface_migration_due,
+                              interface_preparation_needed,
                               prepare_interface, backup_interface,
-                              retry_interface_preparation)
+                              retry_interface_preparation, source_documents)
 from factory_defaults import preferred_factory_language
 from catalog_refresh import (begin_refresh, finish_refresh, new_request_id,
                              refresh_trace)
@@ -1623,30 +1627,77 @@ def _run_pending_interface_migration(dialog, *, explicit=False):
     session or the explicit repair action can safely try again.
     """
     window = xbmcgui.Window(10000)
-    marker = str(LAYOUT_VERSION)
     marker_name = "AcTweeteR.InterfaceMigrationAttempted"
     session_path = _interface_migration_session_path()
     if explicit:
         window.clearProperty(marker_name)
         release_process_session(session_path, os.getpid())
-    elif window.getProperty(marker_name) == marker:
+
+    # A skin update can replace Skin Shortcuts' generated output while Kodi
+    # remains in the same process.  The schema migration may still be marked
+    # verified, so validate the active output before deciding to reuse it.
+    # This is read-only; no DATA/property files are changed by the check.
+    active_skin_version = "unknown"
+    generated_digest = "missing"
+    properties_digest = "missing"
+    generated_ready = False
+    output_inspection_complete = False
+    try:
+        skin = xbmcaddon.Addon("skin.actweeter")
+        active_skin_version = skin.getAddonInfo("version") or "unknown"
+        skin_root = xbmcvfs.translatePath(skin.getAddonInfo("path"))
+        generated_path = KodiPath(
+            os.path.join(skin_root, "1080i", "script-skinshortcuts-includes.xml"),
+            xbmcvfs,
+        )
+        shortcuts_root = KodiPath(
+            "special://profile/addon_data/script.skinshortcuts", xbmcvfs)
+        documents = source_documents(skin_root)
+        generated_bytes = generated_path.read_bytes() if generated_path.is_file() else b""
+        generated_digest = digest(generated_bytes)
+        properties_path = shortcuts_root / "skin.actweeter.properties"
+        properties_digest = digest(
+            properties_path.read_bytes() if properties_path.is_file() else b"")
+        generated_ready, _rows = generated_layout_ready(
+            generated_path, shortcuts_root, documents)
+        output_inspection_complete = True
+    except Exception as exc:
+        xbmc.log("[AcTweeteR] INTERFACE_LAYOUT_OUTPUT status=inspection_failed type=%s" %
+                 type(exc).__name__, xbmc.LOGWARNING)
+
+    if not output_inspection_complete:
+        return "OUTPUT_INSPECTION_FAILED"
+
+    state_path = os.path.join(
+        xbmcvfs.translatePath(ADDON.getAddonInfo("profile")),
+        "interface_layout_state.json")
+    state = load_state(state_path)
+    migration_due = interface_migration_due(state)
+    if not interface_preparation_needed(migration_due, generated_ready):
+        window.setProperty("AcTweeteR.InterfaceReady", "1")
+        return "CURRENT"
+
+    marker = interface_attempt_signature(
+        LAYOUT_VERSION, active_skin_version,
+        generated_digest + ":" + properties_digest)
+    if not explicit and window.getProperty(marker_name) == marker:
+        xbmc.log("[AcTweeteR] INTERFACE_LAYOUT_UPDATE status=coalesced reason=same_stale_output",
+                 xbmc.LOGINFO)
         return "ATTEMPTED_THIS_SESSION"
 
     # Claim before inspecting migration state or starting any Kodi build. Home
     # reloads can launch several first_run scripts concurrently; a marker set
     # only after completion lets every contender pass the initial check.
-    if not claim_process_session(session_path, os.getpid()):
+    if not claim_process_session(session_path, os.getpid(), claim_key=marker):
         window.setProperty(marker_name, marker)
         xbmc.log("[AcTweeteR] INTERFACE_LAYOUT_UPDATE status=coalesced reason=session_claimed",
                  xbmc.LOGINFO)
         return "ATTEMPTED_THIS_SESSION"
     window.setProperty(marker_name, marker)
 
-    profile = xbmcvfs.translatePath(ADDON.getAddonInfo("profile"))
-    state_path = os.path.join(profile, "interface_layout_state.json")
-    state = load_state(state_path)
-    if not interface_migration_due(state):
-        return "CURRENT"
+    xbmc.log("[AcTweeteR] INTERFACE_LAYOUT_OUTPUT status=%s skin_version=%s migration_due=%s" %
+             ("verified" if generated_ready else "stale",
+              active_skin_version, str(migration_due).lower()), xbmc.LOGINFO)
 
     xbmc.log("[AcTweeteR] INTERFACE_LAYOUT_UPDATE status=started target=%d" %
              LAYOUT_VERSION, xbmc.LOGINFO)
