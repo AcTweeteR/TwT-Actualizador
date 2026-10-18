@@ -688,6 +688,11 @@
     </include>
 
     <include name="WidgetBaseBingieIncludes">
+        <!-- Generic Home rows (including Continue Watching) did not dispatch
+             the SlyGuy coordinator after the Beta merge. Only movie rows are
+             eligible; other media types never preempt external playback. -->
+        <onfocus condition="Window.IsActive(Home) + System.HasAddon(slyguy.trailers) + String.IsEqual(Container($PARAM[widgetid]).ListItem.DBType,movie)">RunScript(service.actweeter,preview_focus,$PARAM[widgetid],3)</onfocus>
+        <onunfocus condition="Window.IsActive(Home) + System.HasAddon(slyguy.trailers)">RunScript(service.actweeter,preview_cancel,$PARAM[widgetid])</onunfocus>
         <onunfocus condition="System.HasAlarm(preview_delay)">CancelAlarm(preview_delay,silent)</onunfocus>
         <onunfocus condition="!System.HasAddon(slyguy.trailers) + Skin.HasSetting(BingieAutoTrailer) + $EXP[IsPlayingUnrecognizedContent] + String.IsEmpty(Window(Home).Property(KeepPlayingPreview))">PlayerControl(Stop)</onunfocus>
         <onfocus condition="!String.IsEmpty(Window(Home).Property(KeepPlayingPreview))">ClearProperty(KeepPlayingPreview,home)</onfocus>
