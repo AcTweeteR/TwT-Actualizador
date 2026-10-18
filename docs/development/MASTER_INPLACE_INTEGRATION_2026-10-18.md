@@ -123,3 +123,32 @@ data. Do not force-quit Kodi or delete the backup.
    reproduction instead of speculative XML changes.
 5. Once these gates pass, build a **reproducible official** integrated package
    and update channel. Do not claim a v1.0 release or cross-platform parity yet.
+
+## Final Kodi Master restart after commit ddd1693
+
+After the small legacy wizard-compatibility patch, Kodi was shut down and
+relaunched on the **same Master profile**. At 20:01 local time, Kodi
+identified exactly service 0.4.37, skin 1.2.29~beta10 and XStream 1.1.2.8;
+AcTweeteR service/preview bridge started and the intro ended, with no Python
+traceback in the inspected log. All **580 source files** still match their
+installed versions and the generated UI + actual GUI preferences still match
+the pre-install backup (excluding normal total-uptime changes). Kodi remains
+running on the updated Master profile.
+
+The log shows `FIRST_RUN_FLOW status=entered` followed by
+`DialogConfirm.xml` loading. The interface migration source confirms one
+important potential prompt in this path: **"Hay ajustes de interfaz
+personalizados. ¿Aplicar las filas del proveedor y los años dinámicos?"**,
+with **Conservar** and **Aplicar diseño** options. We cannot establish the
+currently displayed dialog text from the log alone because this remote agent
+cannot capture the Mac display. **Do not auto-accept replacement of customized
+rows.** Prefer **Conservar** until those exact profile rows can be reconciled
+with new provider rows without losing user's custom categories. This blocks
+claiming full interactive-menu/widget migration acceptance. The earlier
+`GetDirectory - Error getting 1111` still occurs.
+
+Final result: `MASTER_CODE_INTEGRATED=PASS_STATIC`,
+`MASTER_ADDONS_LOADED=PASS_RUNTIME_STARTUP`,
+`MASTER_USER_DATA_PRESERVED=PASS_HASH_AND_XML`,
+`MASTER_FULL_UI_AND_PLAYBACK_ACCEPTANCE=NOT_TESTED`.
+No user credentials have been uploaded or logged to Git.
