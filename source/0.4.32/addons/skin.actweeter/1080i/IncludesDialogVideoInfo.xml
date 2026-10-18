@@ -2327,7 +2327,9 @@
 					<top>1031</top>
                     <posx>145</posx>
                     <height>340</height>
-					<width>1775</width>
+					<!-- The panel shifts right by 550px while expanded, leaving 1225px
+					     visible through the 1920px skin viewport. -->
+					<width>1225</width>
 					<onclick condition="String.IsEmpty(Window(Home).Property(SetCustomAddon))">Close</onclick>
 					<onclick condition="String.IsEmpty(Window(Home).Property(SetCustomAddon))">SetProperty(CloseInfoDialog,1,Home)</onclick>					
                     <onclick condition="String.IsEmpty(Window(Home).Property(SetCustomAddon))">RunScript(plugin.video.tmdb.bingie.helper,add_path=$INFO[ListItem.FolderPath],call_auto=1190)</onclick>

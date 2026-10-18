@@ -105,7 +105,7 @@ class InterfaceMigrationTriggerTests(unittest.TestCase):
         self.assertNotEqual(signature, interface_layout.interface_attempt_signature(
             12, "1.2.29~beta8", "generated-xml-hash"))
         self.assertNotEqual(signature, interface_layout.interface_attempt_signature(
-            12, "1.2.29~beta7", "replaced-skin-output-hash"))
+            12, "1.2.29~beta8", "replaced-skin-output-hash"))
 
     def test_coordinator_validates_generated_output_before_session_marker(self):
         source = (ROOT / "addons/service.actweeter/setup.py").read_text(encoding="utf-8")

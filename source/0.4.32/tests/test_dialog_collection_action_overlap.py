@@ -41,6 +41,17 @@ class DialogCollectionActionOverlapTests(unittest.TestCase):
         self.assertEqual(action_list.findtext("width"), "550")
         self.assertEqual(action_list.findtext("height"), "320")
 
+        # All coordinates are in the skin's 1920-wide design space. The
+        # collection list starts 6px beyond the 550px action column, and its
+        # shifted right edge must remain on the screen instead of clipping.
+        collection_left = int(collection.findtext("posx"))
+        collection_width = int(collection.findtext("width"))
+        shift_x = int(slide.get("end").split(",")[0])
+        action_left = 139  # Collection/action controls share this dialog origin.
+        action_width = int(action_list.findtext("width"))
+        self.assertGreaterEqual(collection_left + shift_x, action_left + action_width)
+        self.assertEqual(collection_left + shift_x + collection_width, 1920)
+
 
 if __name__ == "__main__":
     unittest.main()

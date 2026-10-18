@@ -583,3 +583,21 @@ No current Home-load/query causality has been established.
 - Bootstrap repository ZIP: SHA-256 `72a7b30b9f6fa4ff8a05261f7e92330ad30a7cfb743cfd164b10e421707ab5e1`.
 
 The automated suite passes 56 tests (51 existing plus 5 new coordination/build-policy tests). The Beta7 packages are currently local branch artifacts, not yet deployed or installed. Trailer touch remains FAIL_RUNTIME on Beta6. The Beta7 coordinator change still needs a native Beta install and runtime log confirmation; no Stable feed was changed.
+
+## Beta8 detail-dialog collection clearance — 2026-10-18
+
+Starting from commit `cf1335a0b1839461d1aedd551af8ae03dcbfd25f`, the
+`BingieInfo` collection group shifts by `(550,-312)` when list control 353
+has focus. Its list begins at x=145 and the action column begins at x=139
+with width 550. The prior 1775px list therefore ended at x=2470 after the
+shift, outside the 1920px skin canvas. Beta8 sets the expanded list viewport
+to 1225px: shifted start 695, end 1920, leaving a 6px gap after the action
+column. The collection backdrop remains full-canvas and moves with that
+group; the unexpanded dialog is not repositioned. This is a source-geometry
+calculation, not a visual/runtime assertion.
+
+Candidate skin: `1.2.29~beta8`; service stays `0.4.36`. Static contract and
+the full suite pass locally. Normal versus expanded dialog layout, touch and
+remote interaction, and the separate trailer no-op with a clear row still
+require Lenovo runtime verification from the official Beta Kodi feed. Stable
+artifacts/feed remain unchanged; no Stable promotion is authorized.

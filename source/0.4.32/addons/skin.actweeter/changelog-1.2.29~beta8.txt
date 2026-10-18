@@ -1,0 +1,4 @@
+1.2.29~beta8
+- Keep the expanded collection panel clear of the video-info action column without clipping its list at the right edge.
+- Preserve the existing BINGIE dialog actions and layout when the collection panel is not expanded.
+- Touch behavior of detail actions remains pending Lenovo runtime validation.
