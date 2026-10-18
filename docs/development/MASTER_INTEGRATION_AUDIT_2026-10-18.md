@@ -154,14 +154,45 @@ validation passed. This package is a local candidate only: it has not been
 installed in Master, added to a repository feed, or released. The change must
 still pass a clean-profile consent/install test before distribution.
 
+### Master follow-up: optional-add-on completion gate
+
+Inspection of the actual installed service `0.3.8` found a second, older
+gate not present in the current Beta implementation: `slyguy.trailers` was in
+`REQUIRED_EXTERNAL_ADDON_MINIMUMS`, and `_mandatory_addons_ready()` separately
+required both SlyGuy Trailers and YouTube after checking the core add-ons. This
+made the Master wizard's runtime completion status depend on an optional
+trailer integration. The separate YouTube dependency remains required by the
+current service contract for explicit fallback/search actions; this correction
+does not remove it.
+
+I changed only those two installed source conditions: removed SlyGuy from the
+required-version map and made the helper return success after the remaining
+required add-on/version checks pass. Before writing, both target files were
+copied to a private restore point and SHA-256 verified. The patch is limited to
+one removed map entry and one removed optional-readiness condition; no settings,
+credentials, profile data, preview modules, skin XML, or SlyGuy files changed.
+The equivalent behavior is represented in the repository candidate's
+`first_run.py` and `module_catalog.py`.
+
+Validation of the installed files: Python AST parse PASS. The installed
+`_mandatory_addons_ready()` function was extracted and exercised with stubs:
+missing optional SlyGuy did not block completion, while a missing required
+core add-on did block it. This verifies the edited function's contract, but
+Kodi has not reloaded or invoked that helper in its live Python runtime yet;
+therefore `MASTER_SETUP_GATE=PASS_STATIC` and `MASTER_SETUP_GATE_RUNTIME=NOT_TESTED`.
+The repository suite now has 85 tests PASS, including a regression contract
+that the default readiness gate does not inspect optional add-ons.
+
 ## Checkpoint decision
 
-`MASTER_INTEGRATION=PARTIAL` — audit and read-only runtime checks only.
+`MASTER_INTEGRATION=PARTIAL` — one selective low-risk Master service-source
+  correction is installed; broader feature integration remains pending.
 `MASTER_TRAILERS_REGRESSION=NOT_TESTED` — moving Spotlight preview is visibly
 active, but the complete manual/automatic lifecycle remains unverified.
 `TRAKT_INTEGRATION=PARTIAL` — Beta code exists, Master has no
 `script.trakt`, and no account authorization or remote sync was attempted.
-`INITIAL_INSTALLER=NOT_TESTED` — no clean profile was created or run yet.
+`INITIAL_INSTALLER=PARTIAL` — the optional trailer gate is corrected in
+installed Master source, but not reloaded in Kodi and no clean profile was run.
 `BETA_REPRODUCIBILITY=PARTIAL` — the 84-test suite passes; a complete
 cross-component package/feed rebuild was not performed in this checkpoint.
 `STABLE_UNCHANGED=PASS` — stable source/feed untouched.

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 import unittest
+import ast
 from pathlib import Path
 
 
@@ -17,8 +18,21 @@ class OptionalTrailerSetupTests(unittest.TestCase):
     def test_trailers_are_not_a_core_setup_gate(self):
         self.assertNotIn("trailer_addon_ready", first_run.MANDATORY_SETUP_CHECKS)
         self.assertIn("trailer_addon_ready", first_run.OPTIONAL_SETUP_CHECKS)
+        self.assertNotIn("slyguy.trailers", first_run.REQUIRED_EXTERNAL_ADDON_MINIMUMS)
         service = module_catalog.all_addons()["service.actweeter"]
         self.assertNotIn("slyguy.trailers", service["dependencies"])
+
+    def test_runtime_gate_does_not_readiness_gate_optional_addons(self):
+        setup_path = ROOT / "addons/service.actweeter/setup.py"
+        tree = ast.parse(setup_path.read_text(encoding="utf-8"))
+        function = next(node for node in tree.body
+                        if isinstance(node, ast.FunctionDef)
+                        and node.name == "_mandatory_addons_ready")
+        referenced_names = {node.id for node in ast.walk(function)
+                            if isinstance(node, ast.Name)}
+        self.assertNotIn("OPTIONAL_ADDONS", referenced_names)
+        self.assertIn("installation_plan", referenced_names)
+        self.assertIn("_installed_dependency_graph", referenced_names)
 
     def test_trailer_stack_requires_consent_and_is_not_in_default_install_plan(self):
         entries = module_catalog.all_addons()
