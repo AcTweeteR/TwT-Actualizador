@@ -202,3 +202,42 @@ cross-component package/feed rebuild was not performed in this checkpoint.
 Next integration should proceed in small, non-trailer blocks only after the
 trailer baseline is repeatable. Keep the installed Master and the private
 restore point unchanged until a concrete source patch is ready for review.
+
+## Follow-up evidence: SlyGuy listener and XStream delta
+
+Read-only inspection of the active Kodi log records SlyGuy's proxy failing to
+bind its configured default port `8095` with `Address already in use`. `lsof`
+shows that the listener is owned by the active Kodi process. Kodi's own
+JSON-RPC listener is on loopback `9090`; its built-in HTTP webserver is disabled
+in the active profile. This proves an in-process port collision, but does not
+identify which add-on opened the existing socket. No port or proxy setting was
+changed. The conflict remains a pre-existing runtime issue pending attribution.
+
+Process identity needs confirmation before additional installed-file writes:
+the running executable is under `/Applications/AcTweeteR QA Kodi 21.3 0.4.11/`,
+while Kodi maps `special://home` to the standard
+`~/Library/Application Support/Kodi/` profile used by the Master add-ons. The
+profile is the expected one, but the executable's QA-labelled app path is an
+ambiguity; only read-only diagnosis and repository-side work should continue
+until the owner confirms this is the authorized Master instance.
+
+The installed XStream manifest is 1.1.2. Its current `series_recent` route
+calls `series_changes.recent(...)`, and the runtime-populated series row
+confirms that path is present in this build. The 1.1.2.7 package delta is
+concrete rather than a version-only upgrade: it adds the `script.trakt.ids`
+playback-metadata bridge needed to expose validated movie/episode IDs to the
+official `script.trakt` add-on, and adds strict, fail-closed provider-catalog
+filtering for personalized Trakt recommendations. The installed build has
+neither that bridge module nor the strict recommendation filter/route. These
+features require a corresponding XStream update; ordinary catalogs,
+`series_recent`, profile refresh, and existing Trakt account routes do not by
+themselves justify upgrading. `script.trakt` is not installed in Master, so no
+scrobbling or account-history test has been attempted.
+
+The official Beta service manifest already marks `slyguy.trailers` as an
+optional Kodi dependency. The installed Master service manifest still declares
+it as required even though its Python setup gate was selectively corrected.
+The source test suite now checks this manifest contract as well as the setup
+gate. Focused test: 6 PASS; complete suite: 86 PASS. The manifest mismatch is
+not yet changed on disk because the active executable identity above needs
+owner confirmation.

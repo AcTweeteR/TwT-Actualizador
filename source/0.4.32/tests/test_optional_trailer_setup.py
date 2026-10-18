@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys
 import unittest
 import ast
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
@@ -15,6 +16,21 @@ import module_catalog  # noqa: E402
 
 
 class OptionalTrailerSetupTests(unittest.TestCase):
+    def test_slyguy_trailers_manifest_dependency_is_optional(self):
+        manifest = ROOT / "addons/service.actweeter/addon.xml"
+        tree = ET.parse(manifest)
+        imports = {
+            node.get("addon"): node
+            for node in tree.findall("./requires/import")
+        }
+
+        self.assertIn("slyguy.trailers", imports)
+        self.assertEqual(imports["slyguy.trailers"].get("optional"), "true")
+        self.assertNotIn("slyguy.trailers", {
+            addon_id for addon_id, item in module_catalog.all_addons().items()
+            if item.get("required", True)
+        })
+
     def test_trailers_are_not_a_core_setup_gate(self):
         self.assertNotIn("trailer_addon_ready", first_run.MANDATORY_SETUP_CHECKS)
         self.assertIn("trailer_addon_ready", first_run.OPTIONAL_SETUP_CHECKS)
