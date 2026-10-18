@@ -291,3 +291,60 @@ restarted cleanly so SlyGuy can bind; only then can manual/automatic playback,
 cancellation, and return be tested. Because the two processes concurrently
 hold the same databases, neither was terminated or restarted during this
 inspection. Runtime trailer status remains `NOT_TESTED` for the full lifecycle.
+
+## Owner clarification and corrected Master runtime (2026-10-18)
+
+The owner explicitly corrected the earlier process attribution: the old
+`/Applications/AcTweeteR QA Kodi 21.3 0.4.11/` installation had been deleted
+and was never the authorized Master. That directory is absent. The only
+authorized application is `/Applications/Kodi.app`, using the standard
+`~/Library/Application Support/Kodi/` profile. The prior paragraphs that
+attribute a running Master process to the deleted QA-labeled application, or
+claim two concurrent Kodi processes during the current session, are historical
+diagnostic mistakes and are superseded by this addendum. No old installation
+was recreated or used.
+
+After a user-authorized orderly quit and relaunch through the Kodi app UI:
+
+- The visible Kodi window is the AcTweeteR Home screen with populated Spotlight
+  and content rows (`PASS_RUNTIME`).
+- PID 30639 is the Kodi process whose executable is
+  `/Applications/Kodi.app/Contents/MacOS/Kodi`; `lsof` shows that same process
+  holding the active profile databases and TCP listener `*:8095`. The process
+  list API itself was unavailable in this shell session, so the single-instance
+  conclusion is based on the listener owner plus the active executable and
+  database handles, not on `pgrep`.
+- A current aggregate scan of `~/Library/Logs/kodi.log` found zero occurrences
+  of `Address already in use`. This only means no such message was present in
+  the inspected log at that time; it does not identify the add-on that owns
+  the socket or prove the proxy's internal health.
+- Installed manifests still report skin 1.2.0, service 0.3.8, XStream 1.1.2,
+  and repository 1.0.3; `script.trakt` is not installed. The three installed
+  service files retain the hashes recorded above. No profile or add-on files
+  were changed during this follow-up.
+
+### Manual trailer regression checks after the clean relaunch
+
+Using Kodi's keyboard/DPAD navigation (no playback of the main VOD):
+
+- **Spotlight movie manual trailer — `PASS_RUNTIME`:** on Home, the selected
+  movie's `Tráiler` action was invoked. A trailer-like video clip visibly
+  started. Escape returned to Home. This validates that one manual Spotlight
+  movie-trailer path starts and can be cancelled/returned from in this run.
+- **Series manual trailer — `PASS_RUNTIME`:** opened the VisionQuest series
+  details, navigated to `Reproducir Tráiler`, and selected it. A video clip
+  visibly played; Escape returned to the series/Home interface. No episode was
+  started and no watch-progress action was selected.
+- **Home after return — `PASS_RUNTIME`:** the Spotlight and `Continuar viendo`
+  row remained visible after leaving the trailer player.
+- Audio characteristics, trailer identity/URL, automatic preview ownership,
+  cancellation timing, duplicate-playback prevention, and a complete detail
+  dialog manual-trailer path remain `NOT_TESTED`. The on-screen Spotlight
+  preview changed frames, but that observation alone does not prove its launch
+  path or audio behavior.
+
+This runtime evidence supersedes the earlier inconclusive mouse-only probe for
+the two tested manual paths. It does not establish universal trailer health or
+justify changing the Master trailer implementation. Keep the existing Master
+skin actions, SlyGuy bridge, and service preview modules intact unless a new,
+specific regression is reproduced.
