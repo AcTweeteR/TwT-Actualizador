@@ -1798,7 +1798,7 @@ new file mode 100644
 index 0000000000000000000000000000000000000000..c40ae712cee58327c5022756a1b074ca274ebae6
 --- /dev/null
 +++ b/resources/lib/series_changes.py
-@@ -0,0 +1,135 @@
+@@ -0,0 +1,142 @@
 +"""Small provider-only snapshot for XStream series and episode changes."""
 +import json
 +import os
