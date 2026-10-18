@@ -2285,7 +2285,9 @@
 			<animation effect="fade" start="0" end="100" time="300" delay="600">WindowOpen</animation>
 			<animation effect="fade" start="0" end="100" time="300" delay="600">Visible</animation>
 			<animation effect="fade" start="100" end="0" time="0">WindowClose</animation>
-			<animation effect="slide" start="0,0" end="0,-312" time="300" delay="0" condition="Control.HasFocus(353)">Conditional</animation>
+			<!-- Keep the expanded collection's hit area out of the left-side action column.
+			     550 matches Bingie_InfoDialog_Button_Default_Defs width. -->
+			<animation effect="slide" start="0,0" end="550,-312" time="300" delay="0" condition="Control.HasFocus(353)">Conditional</animation>
 				<control type="group">
 					<visible>Integer.IsGreater(Container(353).NumItems,0)</visible>
 					<top>970</top>
