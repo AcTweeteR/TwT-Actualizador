@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import json
+import math
 import threading
 import time
 import uuid
@@ -281,7 +282,11 @@ class KodiAutoPreviewCoordinator:
             focus = int(payload["focus"])
             position = int(payload["position"])
             delay = self.delay_parser(payload.get("delay", 3))
-        except (TypeError, ValueError):
+            if not math.isfinite(delay):
+                raise ValueError("non-finite preview delay")
+        except (KeyError, TypeError, ValueError):
+            # A partially delivered/foreign notification must not raise from
+            # Kodi Monitor; reject it before changing player ownership.
             self._log("FOCUS_REJECT", reason="invalid_payload")
             return False
         if payload.get("media_type") != "movie" or window not in (10000, 11111):
