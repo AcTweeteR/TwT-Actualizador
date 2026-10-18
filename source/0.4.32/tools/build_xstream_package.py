@@ -229,6 +229,9 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             "The local search index reconciliation uses one prior-row scan per "
             "content type instead of a SELECT per provider item; transaction and "
             "provider-ID semantics are retained.\n"
+            "Beta 11 corrects the unified-diff line count for the series-change "
+            "provider so the series_recent route is included in the distributed "
+            "runtime package.\n"
             f"AcTweeteR distribution revision: {distribution_version}; upstream remains 1.1.2.\n"
             "The Kodi add-on version is advanced solely to deliver these documented\n"
             "changes through the native repository updater.\n"
@@ -257,6 +260,13 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
     with zipfile.ZipFile(output) as archive:
         if archive.testzip() is not None:
             raise ValueError("built XStream ZIP CRC failed")
+        for relative, expected_hash in data.get("local_runtime_sha256", {}).items():
+            member = f"{UPSTREAM_ROOT}/{relative}"
+            if member not in archive.namelist():
+                raise ValueError(f"patched runtime file missing from ZIP: {relative}")
+            actual_hash = hashlib.sha256(archive.read(member)).hexdigest()
+            if actual_hash != expected_hash:
+                raise ValueError(f"patched runtime hash mismatch: {relative}")
         validate_python_archive(archive)
         if f"{UPSTREAM_ROOT}/ACTWEETER_MODIFICATIONS.txt" not in archive.namelist():
             raise ValueError("modification attribution missing")
@@ -276,6 +286,11 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
                 or b"setTvShowTitle" not in metadata_source
                 or b"setUniqueIDs" not in metadata_source):
             raise ValueError("Kodi playback metadata bridge is incomplete")
+        series_changes = f"{UPSTREAM_ROOT}/resources/lib/series_changes.py"
+        series_tree = ast.parse(archive.read(series_changes), filename=series_changes)
+        if not any(isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+                   and node.name == "recent" for node in series_tree.body):
+            raise ValueError("series_changes.recent route provider is missing")
     return {"upstream_sha256": actual, "candidate_sha256": sha256(output),
             "version": str(data["distribution_version"]), "file": output.name}
 

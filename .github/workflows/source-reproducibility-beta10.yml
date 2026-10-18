@@ -28,7 +28,7 @@ jobs:
             --service-zip "$tmp/service.actweeter-0.4.37.zip" \
             --skin-zip "$tmp/skin.actweeter-1.2.29~beta10.zip" \
             --output "$tmp/testing"
-      - name: Compare official test-channel artifacts
+      - name: Compare Beta 10 package artifacts and historical index hashes
         run: |
           set -eu
           tmp="$RUNNER_TEMP/actweeter-beta10/testing"
@@ -40,6 +40,13 @@ jobs:
             docs/testing/repo/service.actweeter/service.actweeter-0.4.37.zip
           cmp "$tmp/repo/skin.actweeter/skin.actweeter-1.2.29~beta10.zip" \
             docs/testing/repo/skin.actweeter/skin.actweeter-1.2.29~beta10.zip
-          cmp "$tmp/repo/addons.xml" docs/testing/repo/addons.xml
-          cmp "$tmp/repo/addons.xml.md5" docs/testing/repo/addons.xml.md5
           cmp "$tmp/bootstrap/index.html" docs/testing/bootstrap/index.html
+          python3 - "$tmp/repo/addons.xml" "$tmp/repo/addons.xml.md5" <<'PY'
+          import hashlib, json, pathlib, sys
+          manifest = json.loads(pathlib.Path("manifests/0.4.37-beta10.json").read_text())
+          payload = pathlib.Path(sys.argv[1]).read_bytes()
+          md5_file = pathlib.Path(sys.argv[2]).read_text().strip()
+          assert hashlib.sha256(payload).hexdigest() == manifest["testing_index"]["sha256"]
+          assert hashlib.md5(payload).hexdigest() == manifest["testing_index"]["md5"]
+          assert md5_file == manifest["testing_index"]["md5"]
+          PY

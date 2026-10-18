@@ -16,6 +16,7 @@ TEST_REPOSITORY_ID = "repository.actweeter.testing"
 TEST_REPOSITORY_VERSION = "1.0.0"
 SERVICE_ID = "service.actweeter"
 SERVICE_VERSION = "0.4.37"
+XSTREAM_ID = "plugin.video.xstream-pro"
 FIXED_TIME = (2026, 10, 3, 0, 0, 0)
 
 
@@ -45,7 +46,8 @@ def addon_from_zip(path: Path, addon_id: str, version: str) -> ET.Element:
 
 
 def build(repository_source: Path, service_zip: Path, output: Path,
-          skin_zip: Path | None = None) -> tuple[Path, Path, Path]:
+          skin_zip: Path | None = None,
+          xstream_zip: Path | None = None) -> tuple[Path, Path, Path]:
     if service_zip.name != f"{SERVICE_ID}-{SERVICE_VERSION}.zip":
         raise ValueError("candidate service ZIP filename does not match its Kodi identity/version")
     repo_addon = ET.parse(repository_source / "addon.xml").getroot()
@@ -70,6 +72,14 @@ def build(repository_source: Path, service_zip: Path, output: Path,
         if "~beta" not in skin_version or skin_zip.name != f"skin.actweeter-{skin_version}.zip":
             raise ValueError("test skin must have a versioned Beta filename")
         skin = addon_from_zip(skin_zip, "skin.actweeter", skin_version)
+    xstream = None
+    if xstream_zip is not None:
+        with zipfile.ZipFile(xstream_zip) as archive:
+            xstream_xml = ET.fromstring(archive.read(f"{XSTREAM_ID}/addon.xml"))
+        xstream_version = xstream_xml.get("version", "")
+        if xstream_zip.name != f"{XSTREAM_ID}-{xstream_version}.zip":
+            raise ValueError("XStream ZIP filename does not match its Kodi identity/version")
+        xstream = addon_from_zip(xstream_zip, XSTREAM_ID, xstream_version)
     metadata = repo_addon.find("./extension[@point='xbmc.addon.metadata']")
     if metadata is None:
         raise ValueError("test repository metadata extension missing")
@@ -96,11 +106,17 @@ def build(repository_source: Path, service_zip: Path, output: Path,
         skin_package = output / "repo" / "skin.actweeter" / skin_zip.name
         skin_package.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(skin_zip, skin_package)
+    if xstream is not None:
+        xstream_package = output / "repo" / XSTREAM_ID / xstream_zip.name
+        xstream_package.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(xstream_zip, xstream_package)
 
     index_root = ET.Element("addons")
     index_root.extend((repo_addon, service))
     if skin is not None:
         index_root.append(skin)
+    if xstream is not None:
+        index_root.append(xstream)
     payload = ET.tostring(index_root, encoding="utf-8", xml_declaration=True) + b"\n"
     index = output / "repo" / "addons.xml"
     checksum = output / "repo" / "addons.xml.md5"
@@ -125,14 +141,21 @@ def main() -> None:
                         default=ROOT / "testing" / TEST_REPOSITORY_ID)
     parser.add_argument("--service-zip", required=True, type=Path)
     parser.add_argument("--skin-zip", type=Path)
+    parser.add_argument("--xstream-zip", type=Path)
     parser.add_argument("--output", type=Path, default=ROOT / "docs" / "testing")
     args = parser.parse_args()
     repo_zip, index, checksum = build(args.repository_source, args.service_zip, args.output,
-                                     args.skin_zip)
+                                     args.skin_zip, args.xstream_zip)
     print(f"test repository bootstrap: {repo_zip}")
     print(f"test feed: {index}")
     print(f"test feed md5: {checksum}")
-    for path in (repo_zip, index, checksum, args.output / "repo" / SERVICE_ID / args.service_zip.name):
+    packages = [repo_zip, index, checksum,
+                args.output / "repo" / SERVICE_ID / args.service_zip.name]
+    if args.skin_zip is not None:
+        packages.append(args.output / "repo" / "skin.actweeter" / args.skin_zip.name)
+    if args.xstream_zip is not None:
+        packages.append(args.output / "repo" / XSTREAM_ID / args.xstream_zip.name)
+    for path in packages:
         print(f"SHA-256 {hashlib.sha256(path.read_bytes()).hexdigest()}  {path}")
 
 

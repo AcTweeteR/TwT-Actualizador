@@ -1,0 +1,53 @@
+name: Verify AcTweeteR Beta11 XStream route package
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  rebuild:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch main for Stable isolation check
+        run: git fetch origin main --depth=1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Rebuild candidate and isolated test feed
+        run: |
+          set -eu
+          tmp="$RUNNER_TEMP/actweeter-beta11"
+          mkdir -p "$tmp"
+          python3 -m unittest discover -s source/0.4.32/tests -v
+          curl --fail --location --silent --show-error \
+            https://github.com/Pesicp/XStreamPro/releases/download/1.1.2/plugin.video.xstream-pro-1.1.2.zip \
+            --output "$tmp/xstream-upstream.zip"
+          echo '915f45708670d07e789bb73b7390a7b5cf30175f818ef5da8ea18c9f13f537fe  '"$tmp/xstream-upstream.zip" | shasum -a 256 --check
+          python3 source/0.4.32/tools/build_xstream_package.py \
+            --upstream-zip "$tmp/xstream-upstream.zip" \
+            --output "$tmp/plugin.video.xstream-pro-1.1.2.8.zip"
+          python3 source/0.4.32/tools/build_service_package.py \
+            --output "$tmp/service.actweeter-0.4.37.zip"
+          python3 source/0.4.32/tools/build_skin_package.py \
+            --output "$tmp/skin.actweeter-1.2.29~beta10.zip"
+          python3 tools/build_test_channel.py \
+            --service-zip "$tmp/service.actweeter-0.4.37.zip" \
+            --skin-zip "$tmp/skin.actweeter-1.2.29~beta10.zip" \
+            --xstream-zip "$tmp/plugin.video.xstream-pro-1.1.2.8.zip" \
+            --output "$tmp/testing"
+      - name: Compare test-channel artifacts; Stable must remain unchanged
+        run: |
+          set -eu
+          tmp="$RUNNER_TEMP/actweeter-beta11/testing"
+          cmp "$tmp/bootstrap/repository.actweeter.testing-1.0.0.zip" docs/testing/bootstrap/repository.actweeter.testing-1.0.0.zip
+          cmp "$tmp/repo/repository.actweeter.testing/repository.actweeter.testing-1.0.0.zip" docs/testing/repo/repository.actweeter.testing/repository.actweeter.testing-1.0.0.zip
+          cmp "$tmp/repo/service.actweeter/service.actweeter-0.4.37.zip" docs/testing/repo/service.actweeter/service.actweeter-0.4.37.zip
+          cmp "$tmp/repo/skin.actweeter/skin.actweeter-1.2.29~beta10.zip" docs/testing/repo/skin.actweeter/skin.actweeter-1.2.29~beta10.zip
+          cmp "$tmp/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.8.zip" docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.8.zip
+          cmp "$tmp/repo/addons.xml" docs/testing/repo/addons.xml
+          cmp "$tmp/repo/addons.xml.md5" docs/testing/repo/addons.xml.md5
+          cmp "$tmp/bootstrap/index.html" docs/testing/bootstrap/index.html
+          git diff --exit-code origin/main -- repo/

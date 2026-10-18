@@ -29,11 +29,12 @@ class OfficialTestChannelTests(unittest.TestCase):
             if addon["id"] in expected:
                 self.assertEqual(hashlib.sha256(expected[addon["id"]].read_bytes()).hexdigest(),
                                  addon["sha256"])
-        index = ROOT / "docs/testing/repo/addons.xml"
-        self.assertEqual(hashlib.sha256(index.read_bytes()).hexdigest(),
-                         manifest["testing_index"]["sha256"])
-        self.assertEqual(hashlib.md5(index.read_bytes()).hexdigest(),
-                         manifest["testing_index"]["md5"])
+        # docs/testing is the rolling Beta feed; after Beta 11 it no longer
+        # serves the historical Beta 10 index. Preserve its recorded hashes
+        # in the release manifest and validate the current index in Beta 11's
+        # dedicated manifest test below.
+        self.assertRegex(manifest["testing_index"]["sha256"], r"^[0-9a-f]{64}$")
+        self.assertRegex(manifest["testing_index"]["md5"], r"^[0-9a-f]{32}$")
 
     def test_beta_skin_is_only_in_testing_feed_and_does_not_change_stable(self):
         import subprocess
@@ -92,6 +93,53 @@ class OfficialTestChannelTests(unittest.TestCase):
                 package = ET.fromstring(archive.read("repository.actweeter.testing/addon.xml"))
                 self.assertEqual(package.get("id"), "repository.actweeter.testing")
             self.assertTrue((output / "bootstrap" / "index.html").is_file())
+
+    def test_beta_xstream_candidate_is_indexed_without_changing_stable(self) -> None:
+        stable_index = (ROOT / "repo" / "addons.xml").read_bytes()
+        with tempfile.TemporaryDirectory() as temp:
+            temp_root = Path(temp)
+            candidate_xstream = temp_root / "plugin.video.xstream-pro-1.1.2.8.zip"
+            # Small test package proves the test-feed builder indexes/copies the
+            # candidate by its embedded Kodi identity, not by a guessed filename.
+            with zipfile.ZipFile(candidate_xstream, "w") as archive:
+                archive.writestr(
+                    "plugin.video.xstream-pro/addon.xml",
+                    '<addon id="plugin.video.xstream-pro" version="1.1.2.8" name="XStream" provider-name="AcTweeteR"/>',
+                )
+            service = temp_root / "service.actweeter-0.4.37.zip"
+            with zipfile.ZipFile(service, "w") as archive:
+                archive.writestr(
+                    "service.actweeter/addon.xml",
+                    '<addon id="service.actweeter" version="0.4.37" name="service" provider-name="AcTweeteR"/>',
+                )
+            _, index, checksum = build_test_channel.build(
+                ROOT / "testing/repository.actweeter.testing", service,
+                temp_root / "testing", xstream_zip=candidate_xstream)
+            versions = {node.get("id"): node.get("version")
+                        for node in ET.parse(index).getroot().findall("addon")}
+            self.assertEqual(versions["plugin.video.xstream-pro"], "1.1.2.8")
+            copied = index.parent / "plugin.video.xstream-pro" / candidate_xstream.name
+            self.assertEqual(copied.read_bytes(), candidate_xstream.read_bytes())
+            self.assertEqual(checksum.read_text().strip(),
+                             hashlib.md5(index.read_bytes()).hexdigest())
+            self.assertEqual((ROOT / "repo" / "addons.xml").read_bytes(), stable_index)
+
+    def test_beta11_manifest_matches_xstream_and_index_artifacts(self):
+        manifest = json.loads((ROOT / "manifests/0.4.37-beta11.json").read_text())
+        self.assertTrue(manifest["stable_untouched"])
+        self.assertEqual(manifest["release"], "0.4.37-beta11")
+        xstream_zip = (ROOT / "docs/testing/repo/plugin.video.xstream-pro/"
+                       "plugin.video.xstream-pro-1.1.2.8.zip")
+        index = ROOT / "docs/testing/repo/addons.xml"
+        self.assertEqual(hashlib.sha256(xstream_zip.read_bytes()).hexdigest(),
+                         next(addon["sha256"] for addon in manifest["addons"]
+                              if addon["id"] == "plugin.video.xstream-pro"))
+        self.assertEqual(hashlib.sha256(index.read_bytes()).hexdigest(),
+                         manifest["testing_index"]["sha256"])
+        self.assertEqual(hashlib.md5(index.read_bytes()).hexdigest(),
+                         manifest["testing_index"]["md5"])
+        self.assertEqual(ET.parse(index).getroot().find(
+            "addon[@id='plugin.video.xstream-pro']").get("version"), "1.1.2.8")
 
 
 if __name__ == "__main__":
