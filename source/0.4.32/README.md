@@ -1,6 +1,6 @@
 # AcTweeteR Beta widget-navigation source snapshot
 
-The next Beta candidate contains skin `1.2.29~beta7` and service `0.4.36`.
+The next Beta candidate contains skin `1.2.29~beta8` and service `0.4.36`.
 Service 0.4.36 rechecks the active generated Skin Shortcuts output even when
 the data migration is already verified. A package update that leaves the
 generated widget templates empty now triggers one coalesced, bounded native
@@ -23,7 +23,7 @@ are deferred; active expandable widgets remain a hard validation gate.
 
 The service candidate is `service.actweeter` 0.4.36; it retains the
 0.4.33 property migration and session-scoped coalescing. The skin is
-candidate `1.2.29~beta7`. Repository 1.0.3 and XStream Pro 1.1.2.7
+candidate `1.2.29~beta8`. Repository 1.0.3 and XStream Pro 1.1.2.7
 remain byte-identical to the 0.4.31 official packages. This snapshot does not include Kodi profile data or
 generated per-user menu caches.
 
