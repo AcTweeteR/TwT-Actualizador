@@ -268,3 +268,26 @@ attempt, but the receiver/action dispatch is not proven; it does not establish
 a regression caused by this integration because no trailer code was changed.
 Do not change SlyGuy, the preview bridge, or trailer actions based on this
 single inconclusive probe. The port 8095 collision remains unattributed.
+
+### Follow-up: duplicate Kodi process and port 8095
+
+Read-only process inspection found two Kodi executables concurrently using the
+same profile databases (`Addons33.db`, `Textures13.db`, and `TV46.db`):
+
+- The owner-confirmed Master process is the Kodi executable inside
+  `/Applications/AcTweeteR QA Kodi 21.3 0.4.11/`.
+- A second process is running from `/Applications/Kodi.app/`.
+
+`lsof` attributes the TCP listener on port 8095 to the second process, not the
+owner-confirmed Master process. The installed add-on source has a reference to
+8095 in SlyGuy's constants module, and the Master log records SlyGuy Proxy's
+`Address already in use` bind failure. Together this identifies the immediate
+collision as the parallel Kodi process holding the port while both processes
+share the profile databases. No port, add-on setting, or user data was changed.
+
+This is not yet proof that freeing 8095 restores trailer playback. The second
+Kodi instance must be quit cleanly, then the owner-confirmed Master must be
+restarted cleanly so SlyGuy can bind; only then can manual/automatic playback,
+cancellation, and return be tested. Because the two processes concurrently
+hold the same databases, neither was terminated or restarted during this
+inspection. Runtime trailer status remains `NOT_TESTED` for the full lifecycle.
