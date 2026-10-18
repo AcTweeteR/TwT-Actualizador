@@ -417,3 +417,10 @@ attributed to the optional-status change. Do not change the trailer pipeline
 or custom-window routing until a discriminating reproduction identifies the
 caller. Automated validation now reports 88 tests passing, Python compilation
 and `git diff --check` passing. No Beta/Stable publication or push occurred.
+
+The post-restart process inventory was then checked with `lsof -c Kodi`: the
+only visible Kodi process was PID `33908`, with executable
+`/Applications/Kodi.app/Contents/MacOS/Kodi`, and it held the standard profile
+database files under `userdata/Database/` plus port 8095. This confirms the
+current listener owner and active profile handles; it is not a general process
+manager audit beyond the processes visible to `lsof`.
