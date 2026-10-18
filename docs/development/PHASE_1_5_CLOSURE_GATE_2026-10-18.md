@@ -36,3 +36,49 @@ Status: **OPEN / NOT READY TO CLOSE**. These are proposed *functional acceptance
 6. Only after required gates actually pass, document `PHASE_1_5=PASS_RUNTIME` and then begin phase 1.6. Do not treat test count or add-on load as a substitute.
 
 No real Kodi profile changes, releases, or provider accesses were needed to establish this gate.
+
+## Kodi JSON-RPC runtime probe and remote-access interruption (2026-10-18)
+
+This session reached Kodi Master on TCP `127.0.0.1:9090`; Kodi's
+JSON-RPC **uses a raw JSON reply without a mandatory final newline**.
+`GUI.GetProperties` reported `skin.actweeter` and window 10100
+(Yes/No dialog) with the focused button **Conservar**, so the active
+post-upgrade customization-consent question was verified rather than
+inferred from log text. `PVR.GetProperties` reported
+`available=true, scanning=false, recording=false` (PVR subsystem
+ready only; no channel-playback claim). `Player.GetActivePlayers`
+returned an empty list at the snapshot.
+
+The existing focused **Conservar** option was selected through
+`Input.Select` to prevent destructive replacement of user-owned
+shortcuts. Kodi then displayed another Yes/No dialog with focused
+**Ahora no**. `Input.ExecuteAction(action=screenshot)` opened the
+file browser (window 10126), apparently because Kodi's screenshot
+folder setting is empty. That unintended file chooser was closed
+using `Input.Back`, returning to the Yes/No dialog. The screenshot
+was **not** captured or attached, and the later state of the
+**Ahora no** dialog cannot be confirmed after remote access failed.
+Never claim the optional offer was dismissed.
+
+After these bounded actions, **Desktop Commander stopped responding**,
+including a ping that eventually timed out. The Mac's last known Kodi
+process was `49085`; its current process/UI state is unknown until
+remote access is recovered. Do not retry non-idempotent UI actions
+without querying `GUI.GetProperties` first. No profile reset, addon
+reinstall, provider playback, background scheduling or QA clone was
+performed.
+
+**Result:** the menu-customization protection gate has direct
+`PASS_RUNTIME` evidence for the *declined overwrite path only*.
+Power-menu migration, Home/widget visual acceptance, playback,
+trailers, touch gestures and the `1111` diagnosis remain
+`NOT_TESTED/BLOCKED`. Phase 1.5 remains **OPEN**.
+
+For a repeatable Kodi UI probe, use a raw JSON-RPC request
+terminated by `\\r\\n` to localhost:9090 and parse a complete JSON
+object (do not wait for an output newline). Never print IPTV URLs
+or settings. To diagnose the `1111` log, capture the caller
+and surrounding Kodi log context; do not treat a bare
+`GetDirectory - Error getting 1111` as proof of a particular
+malformed menu or plugin route.
+
