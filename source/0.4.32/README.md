@@ -1,15 +1,17 @@
 # AcTweeteR Beta widget-navigation source snapshot
 
-The next Beta candidate contains skin `1.2.29~beta9` and service `0.4.37`.
-It adds a backed-up, versioned Skin Shortcuts migration for the Beta 8 main and
-power menu defaults. Only previously tracked or byte-identical known Beta 8
-defaults are updated; customized profile files are preserved and reported as
-conflicts. The candidate is not runtime-accepted. Stable packages and the
-Stable index remain unchanged.
+The next Beta candidate contains skin `1.2.29~beta10` and service `0.4.37`.
+It preserves the Beta 9 backed-up, versioned Skin Shortcuts migration for the
+Beta 8 main and power menu defaults. Only previously tracked or byte-identical
+known Beta 8 defaults are updated; customized profile files are preserved and
+reported as conflicts. Beta 10 additionally makes the lower power actions
+reachable from the last main-menu entry using D-pad navigation; other main-menu
+entries retain their existing route to Home content. The candidate still
+requires runtime acceptance. Stable packages and the Stable index remain
+unchanged.
 
 This source snapshot is based on official `main` at commit
-`01800e6c7a2c189787e0295d1faa96829d98f693` (merged 0.4.32 test channel),
-which includes the 0.4.31 baseline at `739a57b9e0a9d9165c9066c707842eeb5a603fd6`.
+`267dcad96074a4f3a70a8148492f4072d1d0fbc3` (Beta 9 merge).
 The 0.4.32 candidate failed on Lenovo because six inactive defaults did not
 have generated identities. The 0.4.33 base corrected that and contains a service
 migration for Skin Shortcuts 2.0.3 that resolves widget identities from native
@@ -20,7 +22,7 @@ are deferred; active expandable widgets remain a hard validation gate.
 
 The service candidate is `service.actweeter` 0.4.37; it retains the
 0.4.33 property migration and session-scoped coalescing. The skin is
-candidate `1.2.29~beta9`. Repository 1.0.3 and XStream Pro 1.1.2.7
+candidate `1.2.29~beta10`. Repository 1.0.3 and XStream Pro 1.1.2.7
 remain byte-identical to the 0.4.31 official packages. This snapshot does not include Kodi profile data or
 generated per-user menu caches.
 
@@ -34,11 +36,11 @@ second build. This avoids replacing custom shortcuts or relying on localized
 labels/default IDs as property keys. It also avoids failing a user's build on
 defaults from groups that Skin Shortcuts did not materialize for that profile.
 
-Static/unit tests and reproducible package checks are not runtime proof. The
-Lenovo acceptance gates still require the official feed to install this
-candidate and the generated active includes plus EXPANDIR interaction to be
-verified on-device. No stable publication is authorized by this candidate
-snapshot.
+Static/unit tests and reproducible package checks are not runtime proof. Beta
+9 has been installed from the official Testing feed. Runtime validated the
+migrated main-menu destinations and Home/widget loading; the lower action list
+was visible but not D-pad reachable. Beta 10 is a Testing-only skin update to
+close that navigation gap. No Stable publication is part of this candidate.
 
 ## Build
 

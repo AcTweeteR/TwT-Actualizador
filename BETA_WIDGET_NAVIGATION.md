@@ -601,3 +601,46 @@ the full suite pass locally. Normal versus expanded dialog layout, touch and
 remote interaction, and the separate trailer no-op with a clear row still
 require Lenovo runtime verification from the official Beta Kodi feed. Stable
 artifacts/feed remain unchanged; no Stable promotion is authorized.
+
+## Beta9 default-menu runtime — Lenovo TB330FU, 2026-10-18
+
+Kodi's native add-on updater installed the Beta 9 packages from the official
+Testing repository: service `0.4.37`, skin `1.2.29~beta9`; repository
+`repository.actweeter.testing` stayed at `1.0.0`. The migration matched the
+previous main/power menu files against the known Beta 8 default fingerprints,
+logged layout v12→v13 as `verified`, and reused the verified result on the next
+request. It created the service `interface_backups` directory. Android denied
+read access to files inside that private service subdirectory, so actual
+on-device backup contents/hash remain NOT_TESTED; automated tests verify the
+backup manifest and restoration behavior.
+
+The sidebar displayed exactly the five requested main entries and the three
+lower action labels. Runtime destination checks: INICIO returned to Home; TV
+opened the Kodi PVR guide; PELÍCULAS opened the movie hub; SERIES loaded its
+series content after a delayed catalog load; BUSCAR opened the movie/series
+search UI. Back returned from the guide to Home after dismissing the guide's
+options panel. Spotlight and Home widgets loaded after waiting; the initial
+loading screen was not treated as an empty catalog. No history, collections,
+credentials or Stable files were changed.
+
+The three lower labels were visible but not reachable using the D-pad from the
+main menu. Source confirms why: the main list ID 900 routes Down to Home
+container 77777, while the separate lower list ID 40003 only routes Up back to
+900 and has no incoming D-pad transition. One authorized DPAD_DOWN from the
+selected BUSCAR row did not focus a lower action. As a result, AJUSTES,
+RECARGAR CATÁLOGO and RECARGAR destinations are NOT_TESTED and the menu phase
+is not complete yet.
+
+## Beta10 candidate — D-pad path to lower menu actions
+
+The isolated Beta10 source changes the list-900 boundary action: if the next
+unwrapped menu item has an empty label, route Down to lower list 40003; otherwise
+retain the prior route to Home content (or its no-widget no-op). This uses
+Kodi's documented `Container(id).ListItemNoWrap(offset).Label` InfoLabel rather
+than a hard-coded position, so customized menu lengths are not replaced or
+reordered. List 40003 already provides native Up back to 900 and normal
+vertical item selection. The package is built only into `docs/testing`; the
+stable `/repo/` tree is unchanged. The fix is static/tested, not yet Lenovo
+runtime-validated. Stable promotion remains blocked until all three lower
+actions are reachable and their destinations work via cruceta, with Home and
+widget navigation rechecked.

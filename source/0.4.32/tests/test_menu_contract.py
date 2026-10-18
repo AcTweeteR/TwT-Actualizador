@@ -72,6 +72,30 @@ class MenuContractTests(unittest.TestCase):
         self.assertEqual(sum("ReloadSkin" in action
                              for _, action, _, _ in bottom), 1)
 
+    def test_last_main_menu_item_routes_down_to_power_menu(self):
+        root = ET.parse(ADDON / "1080i/IncludesBingie.xml").getroot()
+        main = root.find(".//control[@type='list'][@id='900']")
+        self.assertIsNotNone(main)
+        down = [(node.get("condition", ""), node.text or "")
+                for node in main.findall("ondown")]
+        self.assertIn((
+            "$EXP[IsBingieViewsActive] + String.IsEmpty(Container(900).ListItemNoWrap(1).Label)",
+            "40003",
+        ), down)
+        self.assertIn("!String.IsEmpty", down[1][0])
+        self.assertEqual(down[1][1], "77777")
+        self.assertIn("!String.IsEmpty", down[3][0])
+        self.assertEqual(down[3][1], "noop")
+
+    def test_power_menu_returns_to_main_menu_and_keeps_native_item_navigation(self):
+        root = ET.parse(ADDON / "1080i/IncludesBingie.xml").getroot()
+        power = root.find(".//control[@type='list'][@id='40003']")
+        self.assertIsNotNone(power)
+        self.assertEqual(power.findtext("onup"), "900")
+        self.assertEqual(power.findtext("ondown"), "noop")
+        self.assertEqual(power.findtext("content/include"),
+                         "skinshortcuts-group-powermenu")
+
     def test_layout_migration_tracks_power_menu_as_profile_data(self):
         self.assertIn("powermenu", interface_layout.GROUPS)
         manifest = json.loads((Path(__file__).resolve().parents[1] /

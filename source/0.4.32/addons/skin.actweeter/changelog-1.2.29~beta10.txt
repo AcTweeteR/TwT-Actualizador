@@ -1,0 +1,4 @@
+1.2.29~beta10
+- Make the lower settings/catalog/reload menu reachable by D-pad from the last main-menu item.
+- Preserve the existing D-pad route from other main-menu items to Home content.
+- Keep native up/down navigation within the lower action list and return to the main menu with Up.

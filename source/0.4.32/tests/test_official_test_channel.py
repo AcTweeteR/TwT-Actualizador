@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import sys
 import tempfile
 import unittest
@@ -15,13 +16,32 @@ import build_test_channel  # noqa: E402
 
 
 class OfficialTestChannelTests(unittest.TestCase):
+    def test_beta10_manifest_matches_testing_artifacts_and_preserves_stable(self):
+        manifest = json.loads((ROOT / "manifests/0.4.37-beta10.json").read_text())
+        self.assertTrue(manifest["stable_untouched"])
+        self.assertEqual(manifest["release"], "0.4.37-beta10")
+        expected = {
+            "skin.actweeter": ROOT / "docs/testing/repo/skin.actweeter/skin.actweeter-1.2.29~beta10.zip",
+            "service.actweeter": ROOT / "docs/testing/repo/service.actweeter/service.actweeter-0.4.37.zip",
+            "repository.actweeter.testing": ROOT / "docs/testing/bootstrap/repository.actweeter.testing-1.0.0.zip",
+        }
+        for addon in manifest["addons"]:
+            if addon["id"] in expected:
+                self.assertEqual(hashlib.sha256(expected[addon["id"]].read_bytes()).hexdigest(),
+                                 addon["sha256"])
+        index = ROOT / "docs/testing/repo/addons.xml"
+        self.assertEqual(hashlib.sha256(index.read_bytes()).hexdigest(),
+                         manifest["testing_index"]["sha256"])
+        self.assertEqual(hashlib.md5(index.read_bytes()).hexdigest(),
+                         manifest["testing_index"]["md5"])
+
     def test_beta_skin_is_only_in_testing_feed_and_does_not_change_stable(self):
         import subprocess
         stable = (ROOT / "repo/addons.xml").read_bytes()
         with tempfile.TemporaryDirectory() as temp:
             temp_root = Path(temp)
             service = temp_root / "service.actweeter-0.4.37.zip"
-            skin = temp_root / "skin.actweeter-1.2.29~beta9.zip"
+            skin = temp_root / "skin.actweeter-1.2.29~beta10.zip"
             for builder, package in (("build_service_package.py", service),
                                      ("build_skin_package.py", skin)):
                 subprocess.run([sys.executable, str(ROOT / "source/0.4.32/tools" / builder),
@@ -30,7 +50,7 @@ class OfficialTestChannelTests(unittest.TestCase):
                 ROOT / "testing/repository.actweeter.testing", service,
                 temp_root / "testing", skin)
             versions = {n.get("id"): n.get("version") for n in ET.parse(index).getroot()}
-            self.assertEqual(versions["skin.actweeter"], "1.2.29~beta9")
+            self.assertEqual(versions["skin.actweeter"], "1.2.29~beta10")
             copied = index.parent / "skin.actweeter" / skin.name
             self.assertEqual(copied.read_bytes(), skin.read_bytes())
             self.assertEqual(checksum.read_text().strip(), hashlib.md5(index.read_bytes()).hexdigest())

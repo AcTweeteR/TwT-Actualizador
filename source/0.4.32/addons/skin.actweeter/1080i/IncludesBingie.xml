@@ -1750,10 +1750,12 @@
 				<onunfocus>AlarmClock(CancelTrailerAlarm,CancelAlarm(preview_delay,silent),00:01,silent)</onunfocus>
 				<!-- Stop Kodi's geometric fallback to profile/power controls at list boundaries. -->
 				<onup>noop</onup>
-				<!-- Preserve the intentional menu-to-widgets path without falling through to power controls. -->
-				<ondown condition="$EXP[IsBingieViewsActive] + $EXP[HomeHasVisibleWidgets]">77777</ondown>
+				<!-- At the end of the main menu, continue to the lower power actions. -->
+				<ondown condition="$EXP[IsBingieViewsActive] + String.IsEmpty(Container(900).ListItemNoWrap(1).Label)">40003</ondown>
+				<!-- Otherwise preserve the intentional menu-to-widgets path. -->
+				<ondown condition="$EXP[IsBingieViewsActive] + !String.IsEmpty(Container(900).ListItemNoWrap(1).Label) + $EXP[HomeHasVisibleWidgets]">77777</ondown>
 				<ondown condition="!$EXP[IsBingieViewsActive]">noop</ondown>
-				<ondown condition="$EXP[IsBingieViewsActive] + !$EXP[HomeHasVisibleWidgets]">noop</ondown>
+				<ondown condition="$EXP[IsBingieViewsActive] + !String.IsEmpty(Container(900).ListItemNoWrap(1).Label) + !$EXP[HomeHasVisibleWidgets]">noop</ondown>
                 <onright condition="Integer.IsGreater(Container(4445).NumItems,0)">4444</onright>
                 <onright condition="Integer.IsEqual(Container(4445).NumItems,0)">ClearProperty(ShowViewSubMenu,Home)</onright>
 				<onright condition="Integer.IsEqual(Container(4445).NumItems,0) + !Window.IsActive(1109) + $EXP[HomeHasVisibleWidgets]">77777</onright>

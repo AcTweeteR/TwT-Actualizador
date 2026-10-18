@@ -1,0 +1,54 @@
+{
+  "release": "0.4.37-beta10",
+  "release_kind": "official Testing channel candidate; D-pad runtime validation pending",
+  "source_snapshot": "source/0.4.32",
+  "source_base_commit": "267dcad96074a4f3a70a8148492f4072d1d0fbc3",
+  "kodi_baseline": "21.3 Omega",
+  "addons": [
+    {
+      "id": "repository.actweeter.testing",
+      "version": "1.0.0",
+      "sha256": "72a7b30b9f6fa4ff8a05261f7e92330ad30a7cfb743cfd164b10e421707ab5e1",
+      "changed": false
+    },
+    {
+      "id": "skin.actweeter",
+      "version": "1.2.29~beta10",
+      "sha256": "4387012a8d6b928dfc665ef4b48a06773149295ca36937ec35e43e728dc2b808",
+      "changed": true
+    },
+    {
+      "id": "service.actweeter",
+      "version": "0.4.37",
+      "sha256": "2c98974fe5f2c42e9e71db368f8ffcd2cd73bb44e073faaf54d56be0c605e004",
+      "changed": false
+    },
+    {
+      "id": "plugin.video.xstream-pro",
+      "version": "1.1.2.7",
+      "sha256": "d90257ba7a197142e6a9146b9d3e1c9601e72b67c42f45152e0f6fb9a34eff34",
+      "changed": false,
+      "license": "CC BY-NC 4.0"
+    }
+  ],
+  "testing_index": {
+    "sha256": "dcb6c3c6ccbb4e0f5c35822f076e2f01b8f0ef6d02e9910247f51fbf0b926e57",
+    "md5": "7b10a2f494bb5e7a47534f81154bb740"
+  },
+  "automated_tests": {
+    "pass": 74,
+    "failures": 0,
+    "runtime_status": "PENDING_LENOVO_BETA10_UPDATE"
+  },
+  "runtime_status": {
+    "beta9_migration": "PASS_RUNTIME",
+    "beta9_main_menu_destinations": "PASS_RUNTIME",
+    "beta9_power_menu_dpad": "FAIL_RUNTIME_NOT_REACHABLE",
+    "beta10_power_menu_dpad": "PENDING",
+    "beta10_power_action_destinations": "PENDING",
+    "home_and_widget_regression": "PASS_RUNTIME_BETA9",
+    "backup_contents_on_device": "NOT_TESTED_ANDROID_PRIVATE_DATA_DENIED"
+  },
+  "publication_status": "Testing-only candidate artifacts prepared; awaiting PR and official Beta feed deployment",
+  "stable_untouched": true
+}
