@@ -1,0 +1,4 @@
+0.4.36 Beta
+- Revalidate active generated widget includes on startup even when the layout migration is already verified.
+- Coalesce repair attempts by skin version and generated-output fingerprint.
+- Preserve Skin Shortcuts data and user customizations; only native bounded preparation is retried.

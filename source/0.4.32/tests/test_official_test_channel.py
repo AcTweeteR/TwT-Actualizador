@@ -20,7 +20,7 @@ class OfficialTestChannelTests(unittest.TestCase):
         stable = (ROOT / "repo/addons.xml").read_bytes()
         with tempfile.TemporaryDirectory() as temp:
             temp_root = Path(temp)
-            service = temp_root / "service.actweeter-0.4.35.zip"
+            service = temp_root / "service.actweeter-0.4.36.zip"
             skin = temp_root / "skin.actweeter-1.2.29~beta7.zip"
             for builder, package in (("build_service_package.py", service),
                                      ("build_skin_package.py", skin)):
@@ -40,7 +40,7 @@ class OfficialTestChannelTests(unittest.TestCase):
         stable_index = (ROOT / "repo" / "addons.xml").read_bytes()
         with tempfile.TemporaryDirectory() as temp:
             temp_root = Path(temp)
-            candidate_service = temp_root / "service.actweeter-0.4.35.zip"
+            candidate_service = temp_root / "service.actweeter-0.4.36.zip"
             # Build the same deterministic service ZIP that the test-feed builder publishes.
             import subprocess
             subprocess.run([
@@ -56,7 +56,7 @@ class OfficialTestChannelTests(unittest.TestCase):
             versions = {node.get("id"): node.get("version") for node in root.findall("addon")}
             self.assertEqual(versions, {
                 "repository.actweeter.testing": "1.0.0",
-                "service.actweeter": "0.4.35",
+                "service.actweeter": "0.4.36",
             })
             feed_addon = ET.parse(ROOT / "testing" / "repository.actweeter.testing" / "addon.xml").getroot()
             endpoints = [node.findtext("info", "") for node in feed_addon.findall(

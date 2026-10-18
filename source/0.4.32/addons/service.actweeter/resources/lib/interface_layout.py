@@ -535,6 +535,17 @@ def can_reuse_generated_layout(layout_status, metadata_refreshed, ready,
             and bool(ready) and bool(migration_verified))
 
 
+def interface_preparation_needed(migration_due, generated_ready):
+    """Repair stale generated output even when its data migration is current."""
+    return bool(migration_due or not generated_ready)
+
+
+def interface_attempt_signature(layout_version, skin_version, output_digest):
+    """Key one bounded attempt to the actual skin generation, not just schema."""
+    fields = (str(layout_version), str(skin_version or ''), str(output_digest or 'missing'))
+    return hashlib.sha256('\0'.join(fields).encode('utf-8')).hexdigest()[:24]
+
+
 def second_layout_build_needed(properties_changed, first_output_ready):
     """A second build is needed only if persistence changed or output is stale."""
     return bool(properties_changed) or not bool(first_output_ready)

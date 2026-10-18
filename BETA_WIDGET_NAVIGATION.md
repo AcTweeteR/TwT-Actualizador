@@ -523,6 +523,62 @@ Beta7 local artifacts were built twice reproducibly:
 
 - Service `0.4.35`: SHA-256 `562009204db0fd63c651890ec9fad35541db46b5c148b14a5f5230c698c84e59`.
 - Skin `1.2.29~beta7`: SHA-256 `a97177a4039b873b00eb9fd3fca216f842873f204614e55c4be8bf5bec38c34c`.
+
+## Beta7 follow-up — empty Home output and Beta8 repair, 2026-10-18
+
+The authorized Lenovo was updated natively from Beta6 to service `0.4.35`
+and skin `1.2.29~beta7`. Kodi reports Home loaded with Spotlight content, but
+after more than five minutes the on-screen diagnostic still showed no live or
+recent-movie count and the visible Home contained no widget posters. The
+Kodi process remained foreground and its Android input channel reported
+`responsive`; this does not establish that the Kodi GUI was frozen.
+
+Read-only inspection of active Skin Shortcuts 2.0.3 output found 73 generated
+include declarations. The three active widget-template declarations
+(`Widgets`, movie hub, series hub) were empty nodes; Kodi's log at the same
+Home load reports `Skin has invalid include` for the widget template and
+`GetDirectory - Error getting include`. The profile still had six Home
+shortcut records and 46 `widgetExpandable` rows (20 current four-field rows,
+26 preserved legacy rows). Those stored inputs do not prove that Home's
+generated templates were materialized. The active skin source and installed
+manifests identify the running versions; no profile data was changed.
+
+Beta7's pending-migration path could return `CURRENT` from the verified
+layout-state version without validating active generated XML, and its
+once-per-session marker only represented the layout schema. The device log
+after the skin update has no corresponding successful interface-build record.
+This is a source-confirmed recovery gap consistent with the observed empty
+generated templates; whether the initial empty generation also involved a
+Skin Shortcuts runtime/build issue remains undetermined. The unrelated
+`unsupported control type 7` warning and the `GetDirectory` errors are not
+attributed by this evidence.
+
+The private Beta8 service change (candidate `0.4.36`) checks the active
+generated output and the existing property store before treating a verified
+migration as reusable. It keys one bounded attempt to the installed skin
+version and those output fingerprints, so repeated Home loads of identical
+stale output are coalesced while a changed package/output can be retried even
+within the same Kodi process. A separate native preparation lock still
+serializes actual Skin Shortcuts work. It does not delete caches, rewrite
+shortcuts, or touch stable data. Automated tests cover current/invalid output,
+signature changes, changed-signature claims in one process, and checking
+readiness before the session marker. This is not yet runtime validation.
+
+The Beta8 package and `docs/testing` index were rebuilt reproducibly in the
+current worktree, but have not been deployed from GitHub or installed on the
+Lenovo. Service `0.4.36` SHA-256 is
+`7ad66e9cb6969445fef4c698eb50c471d9cda4d230c03e1832887f431ce7e7da`;
+test-feed `addons.xml` SHA-256 is
+`0d18b8384549245dacb03c5b731df083cb5581aa75e99c5a783248affad25631`.
+The stable `repo/` tree remains unchanged. The test suite passes 61 tests.
+Trailer touch remains FAIL_RUNTIME on the previously observed installation.
+Install only after this candidate is merged and deployed to the official Beta
+feed, then verify generated widget rows and Home on Lenovo.
+
+The earlier ~60-second `service.search_refresh` wall interval still does not
+prove it blocked Home: the correlated XStream scan itself finished in about
+20 seconds, while the service trace completed at its pending-check cadence.
+No current Home-load/query causality has been established.
 - Test index: SHA-256 `ea1901d0b9cebad8155241f81e29b0f3c9936b1f86ea885d45570667edc7056f`; MD5 verified.
 - Bootstrap repository ZIP: SHA-256 `72a7b30b9f6fa4ff8a05261f7e92330ad30a7cfb743cfd164b10e421707ab5e1`.
 
