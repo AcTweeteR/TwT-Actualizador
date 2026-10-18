@@ -693,15 +693,44 @@ class KodiAutoPreviewCoordinator:
                 return None
         return self.scheduler.take_ready(now, player_active=player_active)
 
+    def _active_focus_still_matches(self, request):
+        """Check the selected card, not only the widget control's focus.
+
+        Kodi does not emit control on-unfocus when moving between items in
+        the same panel. Polling avoids leaving an owned trailer playing for
+        the previously selected poster. Only an owned preview may be stopped.
+        """
+        try:
+            if not self.kodi.getCondVisibility("Window.IsActive(%d)" % request.window):
+                return False
+            if int(self.kodi.getInfoLabel("System.CurrentControlId") or "-1") != request.focus:
+                return False
+            if int(self.kodi.getInfoLabel(
+                    "Container(%d).CurrentItem" % request.container) or "-1") != request.position:
+                return False
+            prefix = "Container(%d).ListItem." % request.container
+            return stable_identity({
+                "imdb": self.kodi.getInfoLabel(prefix + "UniqueID(imdb)"),
+                "tmdb": self.kodi.getInfoLabel(prefix + "UniqueID(tmdb)"),
+                "dbid": self.kodi.getInfoLabel(prefix + "DBID"),
+            }) == request.identity
+        except (ValueError, TypeError):
+            return False
+
     def _work(self):
         while not self.closed:
+            with self.wake:
+                active = self.scheduler.active
+            if active is not None and not self._active_focus_still_matches(active):
+                self._log("FOCUS_CHANGED", generation=active.generation)
+                self._preempt({"owner": "OTHER"})
             with self.wake:
                 now = self.clock()
                 has_media = getattr(self.kodi, "getCondVisibility", None)
                 player_active = bool(has_media("Player.HasMedia")) if has_media else False
                 request = self._take_ready(now, player_active=player_active)
                 if request is None:
-                    timeout = 1.0
+                    timeout = 0.25 if self.scheduler.active is not None else 1.0
                     if self.scheduler.delay_deadline is not None:
                         timeout = min(timeout, max(0.01, self.scheduler.delay_deadline - now))
                     self.wake.wait(timeout)
