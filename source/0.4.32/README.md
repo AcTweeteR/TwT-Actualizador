@@ -1,14 +1,11 @@
 # AcTweeteR Beta widget-navigation source snapshot
 
-The next Beta candidate contains skin `1.2.29~beta8` and service `0.4.36`.
-Service 0.4.36 rechecks the active generated Skin Shortcuts output even when
-the data migration is already verified. A package update that leaves the
-generated widget templates empty now triggers one coalesced, bounded native
-rebuild; identical stale output is not rebuilt repeatedly during the same
-Kodi session. The Home XML delegates all build ownership to the service. This
-candidate is not runtime-accepted. See the root
-`BETA_WIDGET_NAVIGATION.md` for source-confirmed corrections and runtime gates.
-The stable skin package and stable index are unchanged.
+The next Beta candidate contains skin `1.2.29~beta9` and service `0.4.37`.
+It adds a backed-up, versioned Skin Shortcuts migration for the Beta 8 main and
+power menu defaults. Only previously tracked or byte-identical known Beta 8
+defaults are updated; customized profile files are preserved and reported as
+conflicts. The candidate is not runtime-accepted. Stable packages and the
+Stable index remain unchanged.
 
 This source snapshot is based on official `main` at commit
 `01800e6c7a2c189787e0295d1faa96829d98f693` (merged 0.4.32 test channel),
@@ -21,9 +18,9 @@ materialized shortcuts, and performs a second native build before validating
 `widgetExpandable` in the active XML. Defaults absent from the current build
 are deferred; active expandable widgets remain a hard validation gate.
 
-The service candidate is `service.actweeter` 0.4.36; it retains the
+The service candidate is `service.actweeter` 0.4.37; it retains the
 0.4.33 property migration and session-scoped coalescing. The skin is
-candidate `1.2.29~beta8`. Repository 1.0.3 and XStream Pro 1.1.2.7
+candidate `1.2.29~beta9`. Repository 1.0.3 and XStream Pro 1.1.2.7
 remain byte-identical to the 0.4.31 official packages. This snapshot does not include Kodi profile data or
 generated per-user menu caches.
 
@@ -48,10 +45,10 @@ snapshot.
 Use Python 3 and the standard library. Build the service from this directory:
 
 ```sh
-python3 tools/build_service_package.py --output /tmp/service.actweeter-0.4.36.zip
+python3 tools/build_service_package.py --output /tmp/service.actweeter-0.4.37.zip
 ```
 
-The distribution index builder accepts the 0.4.36 service ZIP together with
+The distribution index builder accepts the 0.4.37 service ZIP together with
 the unchanged 0.4.31 skin, repository and XStream ZIPs. Candidate output must
 remain separate from the official stable feed until all gates pass.
 

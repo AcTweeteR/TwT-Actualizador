@@ -2,6 +2,7 @@
   "schema_version": 1,
   "files": [
     {"source": "addon_data/script.skinshortcuts/skin.actweeter-mainmenu.DATA.xml", "target": "addon_data/script.skinshortcuts/skin.actweeter-mainmenu.DATA.xml"},
+    {"source": "addon_data/script.skinshortcuts/skin.actweeter-powermenu.DATA.xml", "target": "addon_data/script.skinshortcuts/skin.actweeter-powermenu.DATA.xml"},
     {"source": "addon_data/script.skinshortcuts/skin.actweeter-movies.DATA.xml", "target": "addon_data/script.skinshortcuts/skin.actweeter-movies.DATA.xml"},
     {"source": "addon_data/script.skinshortcuts/skin.actweeter-moviehub.DATA.xml", "target": "addon_data/script.skinshortcuts/skin.actweeter-moviehub.DATA.xml"},
     {"source": "addon_data/script.skinshortcuts/skin.actweeter-tvshowhub.DATA.xml", "target": "addon_data/script.skinshortcuts/skin.actweeter-tvshowhub.DATA.xml"},
