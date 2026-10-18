@@ -27,7 +27,7 @@
 
 - No copies were installed into `~/Library/Application Support/Kodi/addons`, and no running Kodi process was killed/restarted; no personal settings, stream URLs, credentials, playback history, profiles, or real provider content were changed.
 - No ZIP package was built, no repository feed was published, and no tvOS or Lenovo device was touched.
-- The Mac Master runtime is deliberately different from the `source/0.4.32` candidate: the previous audit says installed Master service `0.3.8`, skin `1.2.0`. Do **not** copy the candidate service over the installed service wholesale.
+- The Mac Master runtime is deliberately different from the `source/0.4.32` candidate: the installed Master service is `0.3.8` and skin is `1.2.0`, versus candidate service `0.4.37` and skin `1.2.29~beta10`. The separate [read-only delta audit](MASTER_RUNTIME_DELTA_2026-10-18.md) records generated Skin Shortcuts state that must be preserved and tested. Do **not** copy the candidate over the installed add-ons wholesale.
 - Earlier Master evidence: Home/Spotlight and content rows PASS_RUNTIME; manual Spotlight movie and series trailer paths PASS_RUNTIME (limited); first-run status with SlyGuy absent, automatic-preview cancellation/audio/identity/full lifecycle, details dialog trailer, tvOS behavior, and installer persistence remain NOT_TESTED. The persisted first-run state was `prompted`, so startup skipped the interactive wizard.
 - Full touch detail-dialog acceptance on Lenovo remains separate Beta work. Do not use this Master notification fix as proof that touch is repaired.
 
