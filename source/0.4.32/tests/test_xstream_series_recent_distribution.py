@@ -11,6 +11,16 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class XStreamSeriesRecentDistributionTests(unittest.TestCase):
+    def test_setup_adapter_supports_distributed_xstream_version(self):
+        import sys
+        lib = ROOT / "addons/service.actweeter/resources/lib"
+        sys.path.insert(0, str(lib))
+        try:
+            from xstream_setup import SUPPORTED_XSTREAM_VERSIONS
+            self.assertIn("1.1.2.8", SUPPORTED_XSTREAM_VERSIONS)
+        finally:
+            sys.path.remove(str(lib))
+
     def test_series_recent_is_inside_declared_patch_hunk(self):
         patch_path = ROOT / "third_party/xstream/patches/1.1.2/actweeter-runtime.patch"
         patch = patch_path.read_text(encoding="utf-8")

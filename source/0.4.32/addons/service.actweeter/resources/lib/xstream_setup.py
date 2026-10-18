@@ -14,7 +14,7 @@ import urllib.request
 import xml.etree.ElementTree as ET
 
 SUPPORTED_XSTREAM_VERSION = "1.1.2"
-SUPPORTED_XSTREAM_VERSIONS = frozenset((SUPPORTED_XSTREAM_VERSION, "1.1.2.1", "1.1.2.2", "1.1.2.3", "1.1.2.4", "1.1.2.5", "1.1.2.6", "1.1.2.7"))
+SUPPORTED_XSTREAM_VERSIONS = frozenset((SUPPORTED_XSTREAM_VERSION, "1.1.2.1", "1.1.2.2", "1.1.2.3", "1.1.2.4", "1.1.2.5", "1.1.2.6", "1.1.2.7", "1.1.2.8"))
 DEFAULT_XSTREAM_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
 PROFILE_SETTINGS = {
     "profile_1_enabled": ("bool", "true"),
