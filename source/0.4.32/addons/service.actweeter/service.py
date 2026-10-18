@@ -29,6 +29,7 @@ from slyguy_trailer_return import (  # noqa: E402
     marker_cleanup_allowed, TerminalEventGate,
 )
 from kodi_auto_preview import KodiAutoPreviewCoordinator  # noqa: E402
+from playing_video_item import get_playing_video_item  # noqa: E402
 from interface_layout import SpotlightRotation
 from plugin_query_trace import begin as begin_plugin_trace, emit as emit_plugin_trace  # noqa: E402
 from continue_widgets import invalidate_continue_widgets  # noqa: E402
@@ -299,12 +300,8 @@ class SlyGuyTrailerReturnPlayer(_PLAYER_BASE):
             # Timestamp Kodi's callback before touching Player APIs: those APIs
             # can wait on the playback lock and would obscure callback latency.
             self.auto_preview.player_terminal_event(event)
-            try:
-                item = self.getPlayingItem()
-                owner = item.getProperty("AcTweeteR.PreviewOwner")
-            except Exception:
-                item = None
-                owner = ""
+            item = get_playing_video_item(self)
+            owner = item.getProperty("AcTweeteR.PreviewOwner") if item else ""
             if owner == "AUTO_PREVIEW" and self.auto_preview.terminal(item, event):
                 self.kodi.log("[AcTweeteR] AUTO_PREVIEW_TERMINAL event=%s" % event,
                               self.kodi.LOGINFO)

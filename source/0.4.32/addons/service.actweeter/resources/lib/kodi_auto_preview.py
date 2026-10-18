@@ -293,6 +293,15 @@ class KodiAutoPreviewCoordinator:
             self._log("FOCUS_REJECT", reason="identity_or_target")
             return False
 
+        try:
+            player_has_media = bool(self.kodi.getCondVisibility("Player.HasMedia"))
+        except Exception:
+            # Fail closed: if Kodi cannot establish that playback is idle,
+            # retain the current ownership rather than competing with it.
+            player_has_media = True
+        if self.scheduler.ownership.recover_idle_other_owner(player_has_media):
+            self._log("FOCUS_OWNER_RECOVERED", reason="home_focus_no_media")
+
         previous = self.scheduler.active
         request = self.scheduler.ownership.latest_candidate(
             identity, window, container, focus, position)
