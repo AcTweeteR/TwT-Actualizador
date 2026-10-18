@@ -54,6 +54,20 @@ class OptionalTrailerSetupTests(unittest.TestCase):
         self.assertEqual(by_name["SlyGuy Trailers"]["status"], "INSTALLED_NOT_CHECKED")
         self.assertEqual(by_name["Previews automáticos"]["status"], "INTEGRATION_NOT_CHECKED_NOW")
 
+    def test_legacy_master_completion_is_preserved_without_fake_runtime_pass(self):
+        old = {"schema_version": 1, "wizard_version": 4,
+               "completed": True, "prompted": True,
+               "setup_state": "COMPLETE"}
+        state = first_run.normalize_state(old)
+        self.assertFalse(state["completed"])
+        self.assertEqual(state["setup_state"], "INCOMPLETE")
+        self.assertTrue(state["legacy_completed_review"])
+        self.assertFalse(first_run.should_offer_first_run(state, core_configured=True))
+        self.assertTrue(first_run.should_offer_first_run(state, core_configured=False))
+        self.assertTrue(first_run.should_offer_first_run(
+            first_run.normalize_state(old | {"completed": False, "prompted": False}),
+            core_configured=True))
+
     def test_runtime_gate_does_not_readiness_gate_optional_addons(self):
         setup_path = ROOT / "addons/service.actweeter/setup.py"
         tree = ast.parse(setup_path.read_text(encoding="utf-8"))

@@ -328,6 +328,11 @@ def service_rows(installed, pvr=None, xstream_configured=None):
 def should_offer_first_run(state, core_configured):
     """Offer onboarding until the strict setup contract is actually complete."""
     state = state or {}
+    # An already-configured Master upgraded from an older wizard should not
+    # be taken hostage by a new automatic modal. Its new runtime checks remain
+    # INCOMPLETE and explicitly available via Settings/repair, not marked PASS.
+    if core_configured and state.get("legacy_completed_review"):
+        return False
     if (state.get("completed") and state.get("setup_state") == "COMPLETE"
             and state.get("wizard_version", 1) >= WIZARD_VERSION
             and not completion_blockers(state)):
@@ -435,7 +440,7 @@ def normalize_state(state):
     version = state.get("wizard_version")
     if isinstance(version, int) and not isinstance(version, bool) and 1 <= version <= WIZARD_VERSION:
         result["wizard_version"] = version
-    for key in ("prompted", "completed", "started"):
+    for key in ("prompted", "completed", "started", "legacy_completed_review"):
         if isinstance(state.get(key), bool):
             result[key] = state[key]
     deferred_process_id = state.get("deferred_process_id")
@@ -496,6 +501,8 @@ def normalize_state(state):
     if (result.get("completed") and any(
             result["setup_checks"].get(key) != "PASS_RUNTIME"
             for key in MANDATORY_SETUP_CHECKS)):
+        if result["wizard_version"] < WIZARD_VERSION:
+            result["legacy_completed_review"] = True
         result.update(completed=False, prompted=False, setup_state="INCOMPLETE",
                       configuration_status="INCOMPLETE")
     elif result.get("completed") and result["wizard_version"] < WIZARD_VERSION:
