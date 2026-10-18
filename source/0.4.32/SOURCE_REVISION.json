@@ -1,10 +1,10 @@
 {
-  "release": "0.4.36-beta8",
+  "release": "0.4.37-beta9",
   "source_base_commit": "cf1335a0b1839461d1aedd551af8ae03dcbfd25f",
   "source_base_release": "0.4.32 test candidate (runtime property persistence failed)",
   "profile_generated_cache_included": false,
-  "skin_version": "1.2.29~beta8",
-  "service_version": "0.4.36",
+  "skin_version": "1.2.29~beta9",
+  "service_version": "0.4.37",
   "xstream_version": "1.1.2.7",
   "repository_version": "1.0.3",
   "xstream_package_reused_unchanged": true,

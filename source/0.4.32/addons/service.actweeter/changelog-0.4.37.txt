@@ -1,0 +1,4 @@
+0.4.37 Beta
+- Versioned, backed-up migration for the Beta 8 main and power menu defaults.
+- Updates only tracked or exact known Beta 8 default documents; customized Skin Shortcuts data is preserved and reported as a conflict.
+- Includes the power menu in the safe structural profile synchronization manifest.

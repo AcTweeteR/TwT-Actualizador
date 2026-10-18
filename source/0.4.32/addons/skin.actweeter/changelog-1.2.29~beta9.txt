@@ -1,0 +1,4 @@
+1.2.29~beta9
+- Default navigation is five main destinations plus Settings, catalog refresh and skin reload in the lower menu.
+- The lower menu viewport fits all three native 55px rows.
+- Existing generated Skin Shortcuts menus are not forcibly rebuilt by this package; the service migrates only byte-identical Beta 8 defaults and preserves customized files.

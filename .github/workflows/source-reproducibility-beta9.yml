@@ -1,4 +1,4 @@
-name: Verify AcTweeteR Beta8 test-feed reproducibility
+name: Verify AcTweeteR Beta9 test-feed reproducibility
 
 on:
   push:
@@ -17,29 +17,29 @@ jobs:
       - name: Run candidate tests and build isolated feed
         run: |
           set -eu
-          tmp="$RUNNER_TEMP/actweeter-beta8"
+          tmp="$RUNNER_TEMP/actweeter-beta9"
           mkdir -p "$tmp"
           python3 -m unittest discover -s source/0.4.32/tests -v
           python3 source/0.4.32/tools/build_service_package.py \
-            --output "$tmp/service.actweeter-0.4.36.zip"
+            --output "$tmp/service.actweeter-0.4.37.zip"
           python3 source/0.4.32/tools/build_skin_package.py \
-            --output "$tmp/skin.actweeter-1.2.29~beta8.zip"
+            --output "$tmp/skin.actweeter-1.2.29~beta9.zip"
           python3 tools/build_test_channel.py \
-            --service-zip "$tmp/service.actweeter-0.4.36.zip" \
-            --skin-zip "$tmp/skin.actweeter-1.2.29~beta8.zip" \
+            --service-zip "$tmp/service.actweeter-0.4.37.zip" \
+            --skin-zip "$tmp/skin.actweeter-1.2.29~beta9.zip" \
             --output "$tmp/testing"
       - name: Compare official test-channel artifacts
         run: |
           set -eu
-          tmp="$RUNNER_TEMP/actweeter-beta8/testing"
+          tmp="$RUNNER_TEMP/actweeter-beta9/testing"
           cmp "$tmp/bootstrap/repository.actweeter.testing-1.0.0.zip" \
             docs/testing/bootstrap/repository.actweeter.testing-1.0.0.zip
           cmp "$tmp/repo/repository.actweeter.testing/repository.actweeter.testing-1.0.0.zip" \
             docs/testing/repo/repository.actweeter.testing/repository.actweeter.testing-1.0.0.zip
-          cmp "$tmp/repo/service.actweeter/service.actweeter-0.4.36.zip" \
-            docs/testing/repo/service.actweeter/service.actweeter-0.4.36.zip
-          cmp "$tmp/repo/skin.actweeter/skin.actweeter-1.2.29~beta8.zip" \
-            docs/testing/repo/skin.actweeter/skin.actweeter-1.2.29~beta8.zip
+          cmp "$tmp/repo/service.actweeter/service.actweeter-0.4.37.zip" \
+            docs/testing/repo/service.actweeter/service.actweeter-0.4.37.zip
+          cmp "$tmp/repo/skin.actweeter/skin.actweeter-1.2.29~beta9.zip" \
+            docs/testing/repo/skin.actweeter/skin.actweeter-1.2.29~beta9.zip
           cmp "$tmp/repo/addons.xml" docs/testing/repo/addons.xml
           cmp "$tmp/repo/addons.xml.md5" docs/testing/repo/addons.xml.md5
           cmp "$tmp/bootstrap/index.html" docs/testing/bootstrap/index.html

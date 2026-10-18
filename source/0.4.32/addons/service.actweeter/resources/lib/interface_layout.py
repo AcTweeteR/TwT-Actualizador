@@ -15,9 +15,18 @@ import urllib.parse
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-LAYOUT_VERSION = 12
-LAYOUT_MIGRATION_ID = 'interface-layout-v12-skinshortcuts-property-identities'
-GROUPS = ('mainmenu', 'inicio-1', '10000-1', 'moviehub', 'tvshowhub')
+LAYOUT_VERSION = 13
+LAYOUT_MIGRATION_ID = 'interface-layout-v13-default-navigation'
+GROUPS = ('mainmenu', 'powermenu', 'inicio-1', '10000-1', 'moviehub', 'tvshowhub')
+# Exact profile copies shipped as defaults in Beta 8. They may be updated when
+# older state files do not yet track ownership; any byte-level customization
+# remains a conflict and is never silently replaced.
+LEGACY_DEFAULT_DIGESTS = {
+    'skin.actweeter-mainmenu.DATA.xml':
+        frozenset({'b192494c629248385a11590e3a74671da0cc2ea35cf5b587d5e56abc065f3323'}),
+    'skin.actweeter-powermenu.DATA.xml':
+        frozenset({'b7e095f1a53aa510ce0e2150d134b871bedebbc8980e9514ab94f449bd4f646c'}),
+}
 BUILD_COMMAND = ('RunScript(script.skinshortcuts,type=buildxml&mainmenuID=900&levels=1&'
                  'group=mainmenu|powermenu|searchmenu|tmdbsearchmenu|moviehub|tvshowhub|'
                  'newhub|musichub|customhub|somethinghub|mylisthub)')
@@ -203,11 +212,11 @@ def source_documents(skin_root, *, recommendations_enabled=True):
                 raise ValueError('invalid shortcut item')
             action_node = node.find('action')
             action = action_node.text or ''
-            if group != 'mainmenu' and not action.startswith('plugin://plugin.video.xstream-pro/'):
+            if group not in ('mainmenu', 'powermenu') and not action.startswith('plugin://plugin.video.xstream-pro/'):
                 raise ValueError('non-provider widget source')
             if 'profile_num=' in action or '/Users/' in action:
                 raise ValueError('installation-specific widget source')
-            if group != 'mainmenu':
+            if group not in ('mainmenu', 'powermenu'):
                 expanded_action, expandable = expandable_widget_action(action)
                 if expanded_action != action:
                     action_node.text = expanded_action
@@ -243,7 +252,7 @@ def expandable_shortcut_ids(documents):
         if not filename.startswith('skin.actweeter-') or not filename.endswith('.DATA.xml'):
             continue
         group = filename[len('skin.actweeter-'):-len('.DATA.xml')]
-        if group == 'mainmenu':
+        if group in ('mainmenu', 'powermenu'):
             continue
         root = ET.fromstring(data)
         for shortcut in root.findall('shortcut'):
@@ -361,7 +370,8 @@ def apply_layout(shortcuts_root, service_root, skin_root, current_settings,
         old = path.read_bytes() if path.is_file() else None
         if old == wanted: continue
         if old is not None and digest(old) != state.get('files',{}).get(name):
-            conflicts.append(name)
+            if digest(old) not in LEGACY_DEFAULT_DIGESTS.get(name, ()):
+                conflicts.append(name)
         changes[name] = wanted
     properties = shortcuts_root/'skin.actweeter.properties'
     if properties.is_symlink(): raise ValueError('Skin Shortcuts properties symlink refused')

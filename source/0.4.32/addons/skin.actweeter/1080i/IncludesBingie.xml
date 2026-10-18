@@ -1839,10 +1839,10 @@
                 <visible>$EXP[IsMainMenuOpened]</visible>
 				<include>Hide_Menu_Animations</include>
                 <orientation>vertical</orientation>
-                <top>924</top>
+				<top>909</top>
 				<left>18</left>
                 <width>359</width>
-                <height>115</height>
+				<height>165</height>
 				<onunfocus>AlarmClock(CancelTrailerAlarm,CancelAlarm(preview_delay,silent),00:01,silent)</onunfocus>
                 <onup>900</onup>
                 <ondown>noop</ondown>
