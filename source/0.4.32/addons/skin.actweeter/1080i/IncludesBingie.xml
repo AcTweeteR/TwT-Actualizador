@@ -2272,6 +2272,10 @@
             <onleft condition="String.IsEmpty(Window(Home).Property(spotlightinfo)) + $EXP[IsPlayingUnrecognizedContent]">SetProperty(KeepPlayingPreview,1,Home)</onleft>
             <onleft condition="String.IsEmpty(Window(Home).Property(spotlightinfo))">SetFocus(900,$INFO[Window(Home).Property(menupos)])</onleft>
             <onunfocus>ClearProperty(spotlightinfo,home)</onunfocus>
+            <!-- Focus-driven Spotlight previews are owned by the coordinator;
+                 only it may stop the preview when focus leaves. -->
+            <onfocus condition="System.HasAddon(slyguy.trailers) + Skin.HasSetting(SpotLightTrailers) + String.IsEqual(Container($PARAM[widgetid]).ListItem.DBType,movie)">RunScript(service.actweeter,preview_focus,$PARAM[widgetid],3)</onfocus>
+            <onunfocus condition="System.HasAddon(slyguy.trailers)">RunScript(service.actweeter,preview_cancel,$PARAM[widgetid])</onunfocus>
 			<onfocus>SetProperty(FullImage,1,Home)</onfocus>
 			<onunfocus>ClearProperty(FullImage,home)</onunfocus>
 			<onunfocus condition="System.HasAlarm(preview_delay)">CancelAlarm(preview_delay,silent)</onunfocus>
