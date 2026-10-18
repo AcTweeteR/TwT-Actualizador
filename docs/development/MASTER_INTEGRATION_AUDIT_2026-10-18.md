@@ -185,8 +185,10 @@ that the default readiness gate does not inspect optional add-ons.
 
 ## Checkpoint decision
 
-`MASTER_INTEGRATION=PARTIAL` — one selective low-risk Master service-source
-  correction is installed; broader feature integration remains pending.
+`MASTER_INTEGRATION=PARTIAL` — the optional readiness gate is patched in the
+  installed Master service source and the installed add-on manifest now
+  matches the optional-dependency contract; live reload and broader feature
+  integration remain pending.
 `MASTER_TRAILERS_REGRESSION=NOT_TESTED` — moving Spotlight preview is visibly
 active, but the complete manual/automatic lifecycle remains unverified.
 `TRAKT_INTEGRATION=PARTIAL` — Beta code exists, Master has no
@@ -222,13 +224,12 @@ which component causes a manual trailer failure. The log also records
 does not identify the XML control or establish a trailer regression. Neither
 issue was changed as part of the setup-gate correction.
 
-Process identity needs confirmation before additional installed-file writes:
-the running executable is under `/Applications/AcTweeteR QA Kodi 21.3 0.4.11/`,
-while Kodi maps `special://home` to the standard
-`~/Library/Application Support/Kodi/` profile used by the Master add-ons. The
-profile is the expected one, but the executable's QA-labelled app path is an
-ambiguity; only read-only diagnosis and repository-side work should continue
-until the owner confirms this is the authorized Master instance.
+The owner confirmed that the running Kodi process is the authorized Master,
+despite its executable being under `/Applications/AcTweeteR QA Kodi 21.3
+0.4.11/`. It maps `special://home` to the standard
+`~/Library/Application Support/Kodi/` profile. Further writes to that exact
+profile are within the owner's authorization; this does not authorize changes
+to Apple TV, Stable, or any other Kodi profile.
 
 The installed XStream manifest is 1.1.2. Its current `series_recent` route
 calls `series_changes.recent(...)`, and the runtime-populated series row
@@ -243,10 +244,27 @@ features require a corresponding XStream update; ordinary catalogs,
 themselves justify upgrading. `script.trakt` is not installed in Master, so no
 scrobbling or account-history test has been attempted.
 
-The official Beta service manifest already marks `slyguy.trailers` as an
-optional Kodi dependency. The installed Master service manifest still declares
-it as required even though its Python setup gate was selectively corrected.
-The source test suite now checks this manifest contract as well as the setup
-gate. Focused test: 6 PASS; complete suite: 86 PASS. The manifest mismatch is
-not yet changed on disk because the active executable identity above needs
-owner confirmation.
+The official Beta service manifest marks `slyguy.trailers` as an optional Kodi
+dependency. The installed Master `service.actweeter/addon.xml` had still
+declared it required. After the owner confirmed the active profile, I made a
+private copy of that exact manifest at
+`/private/tmp/actweeter-master-addon-gate-backup-20261018/addon.xml`; its
+SHA-256 matched the pre-change installed file (`5c195046…e2ccad`). I changed
+only the SlyGuy import to `optional="true"`, matching the general source. The
+updated XML parses and reports the expected optional flag; its current SHA-256
+is `16325c9b…636f62`. No SlyGuy settings, files, credentials, or profile data
+were changed. Kodi has not restarted/reloaded its add-on dependency metadata,
+so the installed-manifest behavior remains `PASS_STATIC`, `NOT_TESTED` in live
+dependency resolution.
+
+### Manual preview interaction probe
+
+With Kodi visibly on Master Home and the Spotlight `Tráiler` control visible,
+one mouse click was issued at the control and the screen was inspected three
+seconds later. The screen remained on Home; no trailer playback or navigation
+was visible. The sanitized tail of `~/Library/Logs/kodi.log` contained no
+corresponding preview/player event in that interval. This is a failed observed
+attempt, but the receiver/action dispatch is not proven; it does not establish
+a regression caused by this integration because no trailer code was changed.
+Do not change SlyGuy, the preview bridge, or trailer actions based on this
+single inconclusive probe. The port 8095 collision remains unattributed.
