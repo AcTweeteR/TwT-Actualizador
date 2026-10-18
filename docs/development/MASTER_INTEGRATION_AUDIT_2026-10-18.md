@@ -86,6 +86,18 @@ it establish that AcTweeteR caused the port collision. Therefore:
 
 `MASTER_TRAILERS_REGRESSION=NOT_TESTED (baseline gate unresolved)`
 
+### Follow-up visual check
+
+After returning to Home, two Kodi screenshots 2.5 seconds apart showed
+different frames in the Spotlight video area while the selected title remained
+`My Nanny Stole My Life`. This is direct runtime evidence that moving Spotlight
+preview video was active on Master. It does not establish which launch path
+started it, whether the separate manual trailer button completed its flow, or
+audio, cancellation, duplicate-playback, and return behavior. Accordingly,
+record `MASTER_AUTOMATIC_PREVIEW=PARTIAL_RUNTIME` and keep
+`MASTER_TRAILERS_REGRESSION=NOT_TESTED` until those parts are tested
+independently. No trailer implementation was changed.
+
 No trailer-related source or installed file was changed. Before integrating
 any service/skin change that can touch previews, establish a clean, repeatable
 Master manual and automatic preview baseline and resolve/understand the proxy
@@ -145,8 +157,8 @@ still pass a clean-profile consent/install test before distribution.
 ## Checkpoint decision
 
 `MASTER_INTEGRATION=PARTIAL` — audit and read-only runtime checks only.
-`MASTER_TRAILERS_REGRESSION=NOT_TESTED` — a proxy error made the observed
-trailer probe inconclusive; no claim of successful playback is made.
+`MASTER_TRAILERS_REGRESSION=NOT_TESTED` — moving Spotlight preview is visibly
+active, but the complete manual/automatic lifecycle remains unverified.
 `TRAKT_INTEGRATION=PARTIAL` — Beta code exists, Master has no
 `script.trakt`, and no account authorization or remote sync was attempted.
 `INITIAL_INSTALLER=NOT_TESTED` — no clean profile was created or run yet.
