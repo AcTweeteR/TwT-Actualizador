@@ -244,3 +244,9 @@ Scope inspected: integrated commit history, installed/source parity, coordinator
 - Confirmed `rollback_layout` treated missing backup-manifest file entries as `exists=False`, risking deletion of existing shortcuts during a rollback with a missing/corrupt manifest.
 - Preflight all expected entries and required integrity fields before any shortcut mutation. Added regression asserting current shortcuts survive a missing manifest; updated symlink test with a valid manifest.
 - Full suite: 143 PASS. Live catalogue layout remains untouched; user consent not granted.
+
+## Layout rollback partial-restore audit — 2026-10-19
+
+- Rollback verified each backup payload only immediately before writing it. A corrupt later payload could leave earlier shortcuts already restored.
+- Preflight and hash-verify all backup payloads, including previous state, before the first mutation. Added two-file regression with a corrupt second payload proving both current files survive.
+- Full suite: 144 PASS. Live catalogue layout and consent remain unchanged.

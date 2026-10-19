@@ -483,17 +483,26 @@ def rollback_layout(shortcuts_root,service_root):
         expected=state.get('files',{}).get(name) or state.get('properties_hash')
         if path.is_file() and (expected is None or digest(path.read_bytes())!=expected):
             return None
-    for name in names:
-        info=manifest.get('files',{}).get(name,{})
-        path=shortcuts_root/name
+    # Validate *all* backup payloads before the first write: corruption in
+    # the last file must not leave earlier shortcuts partially rolled back.
+    restored = {}
+    for name in names + ['previous-state.json']:
+        info = backed_files.get(name, {})
         if info.get('exists'):
-            data=(backup/name).read_bytes()
-            if digest(data)!=info['sha256']:raise OSError('backup integrity mismatch')
-            atomic_write(path,data)
-        elif path.exists():path.unlink()
-    previous=manifest.get('files',{}).get('previous-state.json',{})
-    if previous.get('exists'):atomic_write(state_path,(backup/'previous-state.json').read_bytes())
-    elif state_path.exists():state_path.unlink()
+            data = (backup/name).read_bytes()
+            if digest(data) != info.get('sha256'):
+                raise OSError('backup integrity mismatch')
+            restored[name] = data
+    for name in names:
+        path = shortcuts_root/name
+        if name in restored:
+            atomic_write(path, restored[name])
+        elif path.exists():
+            path.unlink()
+    if 'previous-state.json' in restored:
+        atomic_write(state_path, restored['previous-state.json'])
+    elif state_path.exists():
+        state_path.unlink()
     return manifest.get('settings',{})
 
 def generated_rows(path):

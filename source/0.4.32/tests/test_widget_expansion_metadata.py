@@ -12,6 +12,34 @@ import interface_layout  # noqa: E402
 
 
 class ExpandableWidgetMetadataTests(unittest.TestCase):
+    def test_rollback_corrupt_later_backup_preserves_all_shortcuts(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            shortcuts = root / 'shortcuts'
+            service = root / 'service'
+            shortcuts.mkdir()
+            backup_id = '20261019T000000Z-abcdef12'
+            backup = service / 'interface_backups' / backup_id
+            backup.mkdir(parents=True)
+            names = ['skin.actweeter-a.DATA.xml', 'skin.actweeter-b.DATA.xml']
+            state_files, entries = {}, {}
+            for i, name in enumerate(names):
+                current = ('current-%d' % i).encode()
+                (shortcuts / name).write_bytes(current)
+                state_files[name] = interface_layout.digest(current)
+                wanted = ('previous-%d' % i).encode()
+                (backup / name).write_bytes(wanted if i == 0 else b'CORRUPTED')
+                entries[name] = {'exists': True, 'sha256': interface_layout.digest(wanted)}
+            entries['skin.actweeter.properties'] = {'exists': False}
+            (backup / 'MANIFEST.json').write_text(json.dumps({'files': entries}))
+            (service / 'interface_layout_state.json').write_text(json.dumps({
+                'backup': backup_id, 'files': state_files,
+            }))
+            with self.assertRaises(OSError):
+                interface_layout.rollback_layout(shortcuts, service)
+            for i, name in enumerate(names):
+                self.assertEqual((shortcuts / name).read_bytes(), ('current-%d' % i).encode())
+
     def test_rollback_missing_manifest_does_not_delete_shortcuts(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
