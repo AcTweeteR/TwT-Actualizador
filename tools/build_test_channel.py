@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import argparse
+import ctypes
+import errno
+import sys
 import hashlib
 import os
 import tempfile
@@ -20,6 +23,26 @@ SERVICE_ID = "service.actweeter"
 SERVICE_VERSION = "0.4.37"
 XSTREAM_ID = "plugin.video.xstream-pro"
 FIXED_TIME = (2026, 10, 3, 0, 0, 0)
+
+
+def publish_directory_no_replace(stage: Path, output: Path) -> None:
+    """Atomically publish a completed directory without replacing an existing path.
+
+    Darwin renamex_np(RENAME_EXCL) is required for the macOS release builder.
+    Other platforms fail closed until an equivalent primitive is implemented.
+    """
+    if sys.platform != "darwin":
+        raise RuntimeError("atomic no-replace directory publication requires macOS")
+    libc = ctypes.CDLL(None, use_errno=True)
+    rename = libc.renamex_np
+    rename.argtypes = (ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint)
+    rename.restype = ctypes.c_int
+    # RENAME_EXCL = 0x00000004 on macOS (sys/stdio.h).
+    if rename(os.fsencode(stage), os.fsencode(output), 0x00000004) != 0:
+        code = ctypes.get_errno()
+        if code in (errno.EEXIST, errno.ENOTEMPTY):
+            raise ValueError("refusing to overwrite an existing test channel")
+        raise OSError(code, os.strerror(code), str(output))
 
 
 def zip_tree(source: Path, output: Path, root_name: str) -> None:
@@ -114,12 +137,7 @@ def build(repository_source: Path, service_zip: Path, output: Path,
         result = _write_test_channel(stage, repository_source, repo_addon,
                                      service_zip, service, skin_zip, skin,
                                      xstream_zip, xstream, repo_news_name)
-        try:
-            os.rename(stage, output)
-        except OSError:
-            if output.exists() or output.is_symlink():
-                raise ValueError("refusing to overwrite an existing test channel")
-            raise
+        publish_directory_no_replace(stage, output)
     return tuple(output / path.relative_to(stage) for path in result)
 
 

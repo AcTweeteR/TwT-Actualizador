@@ -162,6 +162,35 @@ class OfficialTestChannelTests(unittest.TestCase):
             self.assertFalse(output.exists())
             self.assertFalse(list(root.glob('.actweeter-test-feed-*')))
 
+    def test_atomic_publication_rejects_existing_empty_directory(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);stage=root/'stage';stage.mkdir()
+            (stage/'new.txt').write_text('new')
+            output=root/'published';output.mkdir()
+            with self.assertRaisesRegex(ValueError,'refusing to overwrite'):
+                build_test_channel.publish_directory_no_replace(stage,output)
+            self.assertTrue(stage.exists())
+            self.assertEqual(list(output.iterdir()),[])
+
+    def test_atomic_publication_rejects_existing_symlink(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);stage=root/'stage';stage.mkdir()
+            original=root/'original';original.mkdir()
+            output=root/'published';output.symlink_to(original)
+            with self.assertRaisesRegex(ValueError,'refusing to overwrite'):
+                build_test_channel.publish_directory_no_replace(stage,output)
+            self.assertTrue(output.is_symlink())
+            self.assertTrue(stage.exists())
+
+    def test_atomic_publication_creates_completed_directory(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);stage=root/'stage';stage.mkdir()
+            (stage/'complete.txt').write_text('ready')
+            output=root/'published'
+            build_test_channel.publish_directory_no_replace(stage,output)
+            self.assertFalse(stage.exists())
+            self.assertEqual((output/'complete.txt').read_text(),'ready')
+
     def test_beta11_manifest_matches_xstream_and_index_artifacts(self):
         manifest = json.loads((ROOT / "manifests/0.4.37-beta11.json").read_text())
         self.assertTrue(manifest["stable_untouched"])
