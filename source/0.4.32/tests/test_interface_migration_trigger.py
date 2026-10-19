@@ -185,6 +185,23 @@ class InterfaceMigrationTriggerTests(unittest.TestCase):
         self.assertEqual(attempts, [1])
         self.assertNotIn("PREPARATION_BUSY", interface_layout.RETRYABLE_INTERFACE_RESULTS)
 
+    def test_invalid_generated_output_does_not_repeat_the_same_native_build(self):
+        for failure in ("BUILD_OUTPUT_INVALID", "GENERATED_XML_PROPERTY_MISSING",
+                        "GENERATED_IDENTITY_INVALID"):
+            with self.subTest(failure=failure):
+                builds = []
+                waits = []
+
+                def prepare():
+                    builds.append("native_build_and_reload")
+                    return failure
+
+                result, attempts = interface_layout.retry_interface_preparation(
+                    prepare, lambda delay: waits.append(delay) or False)
+                self.assertEqual((result, attempts), (failure, 1))
+                self.assertEqual(builds, ["native_build_and_reload"])
+                self.assertEqual(waits, [])
+
     def test_verified_current_generated_layout_is_reused_without_build(self):
         self.assertTrue(interface_layout.can_reuse_generated_layout(
             "CURRENT", False, True, True))

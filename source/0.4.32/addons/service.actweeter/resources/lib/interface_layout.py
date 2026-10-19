@@ -46,8 +46,8 @@ RETRYABLE_INTERFACE_RESULTS = frozenset({
     # profile lock. Retrying it would queue a second complete build behind the
     # first one; the active owner is responsible for finishing this operation.
     'BUILD_BUSY', 'BUILD_NOT_CONFIRMED', 'BUILD_TIMEOUT',
-    'BUILD_OUTPUT_INVALID', 'GENERATED_XML_PROPERTY_MISSING',
-    'GENERATED_IDENTITY_INVALID',
+    # Invalid XML/properties need diagnosis, not another identical build and
+    # ReloadSkin. Leave the migration pending for repair or a changed input.
 })
 
 
