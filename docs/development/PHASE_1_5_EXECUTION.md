@@ -196,3 +196,9 @@ Scope inspected: integrated commit history, installed/source parity, coordinator
 - Confirmed real control-flow bug: `_work` assigned `refocus_after_stop = active` immediately before `_preempt`, which cleared `refocus_after_stop` by design. The prior preview stopped on selection change, but the replacement card could not be rearmed by the worker.
 - Moved deferred refocus assignment after `_preempt` only in the internal card-change path, keeping manual/VOD handoff cancellation intact.
 - Added deterministic worker regression confirming the old card is passed to `_refocus_current_card`; 135 automated tests PASS. Real visual carousel transition still requires runtime validation.
+
+## Cross-window stale cancellation audit — 2026-10-19
+
+- Confirmed idle-focus cleanup checked only `container` when no preview request remained. A late on-unfocus from another window using the same control ID could erase the currently tracked row.
+- Require matching `window` and `container` for idle cancellation; preserve active request cancellation rules. Added regression for cross-window stale callback and same-window cleanup.
+- Full suite: 136 PASS. Real UI navigation and manual trailers remain unverified.

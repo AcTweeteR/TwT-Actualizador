@@ -379,7 +379,9 @@ class KodiAutoPreviewCoordinator:
             # Forget the row even without a pending request; otherwise the
             # idle observer may restart its preview after the user leaves.
             context = self.focus_context
-            if context and str(payload.get("container", "")) == str(context.get("container")):
+            if (context and
+                    str(payload.get("container", "")) == str(context.get("container")) and
+                    str(payload.get("window", "")) == str(context.get("window"))):
                 self.focus_context = None
             self._log("CANCEL_NO_REQUEST")
             return True

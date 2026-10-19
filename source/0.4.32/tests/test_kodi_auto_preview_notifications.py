@@ -109,12 +109,21 @@ class PreviewNotificationTests(unittest.TestCase):
             bridge.wake.wait = original_wait
         self.assertIs(bridge.observed_refocus, active)
 
+    def test_late_cancel_from_other_window_keeps_current_idle_row(self):
+        bridge = coordinator(FakeKodi())
+        bridge._focus(focus_packet(window=11111))
+        bridge.scheduler.cancel()
+        self.assertTrue(bridge._cancel({"window": 10000, "container": 1508}))
+        self.assertEqual(bridge.focus_context["window"], 11111)
+        self.assertTrue(bridge._cancel({"window": 11111, "container": 1508}))
+        self.assertIsNone(bridge.focus_context)
+
     def test_cancel_after_terminal_forgets_idle_row(self):
         bridge = coordinator(FakeKodi())
         bridge._focus(focus_packet())
         bridge.scheduler.cancel()
         self.assertIsNotNone(bridge.focus_context)
-        self.assertTrue(bridge._cancel({"container": 1508}))
+        self.assertTrue(bridge._cancel({"window": 11111, "container": 1508}))
         self.assertIsNone(bridge.focus_context)
 
     def test_manual_preempt_forgets_idle_row(self):
