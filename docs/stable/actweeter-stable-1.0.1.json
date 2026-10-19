@@ -1,0 +1,35 @@
+{
+  "distribution": "AcTweeteR",
+  "distribution_version": "1.0.1",
+  "channel": "stable",
+  "kodi": "21.3 Omega",
+  "status": "first stable distribution; tvOS runtime validation remains pending",
+  "addons": [
+    {
+      "addon_id": "repository.actweeter",
+      "version": "1.0.3",
+      "path": "repo/repository.actweeter/repository.actweeter-1.0.3.zip",
+      "sha256": "74620e81ff9a161bb7b0650f01e94406ccc9fa9366210ebb36e58872bb4995e8"
+    },
+    {
+      "addon_id": "skin.actweeter",
+      "version": "1.2.29",
+      "path": "repo/skin.actweeter/skin.actweeter-1.2.29.zip",
+      "sha256": "7fce3216534e442914ddff54f8e0bd758a70f2b209a6f9e2b5ad0b2194db80f0"
+    },
+    {
+      "addon_id": "service.actweeter",
+      "version": "0.4.41",
+      "path": "repo/service.actweeter/service.actweeter-0.4.41.zip",
+      "sha256": "0ab0b44c00825af323ef37e6e6b918aa24401799a1fc47c0bd82ad2ba57b404f"
+    },
+    {
+      "addon_id": "plugin.video.xstream-pro",
+      "version": "1.1.2.8",
+      "path": "repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.8.zip",
+      "sha256": "f1a305719b8b8bc5e5e0b99c66331af5ad153fdd15829b25947ba1fe97ad9382"
+    }
+  ],
+  "upstream_dependencies": "Resolved by Kodi from the upstream repositories declared in repository.actweeter; not vendored",
+  "beta_artifacts_unchanged": true
+}
