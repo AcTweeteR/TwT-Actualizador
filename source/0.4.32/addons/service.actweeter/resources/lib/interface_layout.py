@@ -360,6 +360,10 @@ def apply_layout(shortcuts_root, service_root, skin_root, current_settings,
     """
     shortcuts_root, service_root = as_path(shortcuts_root), Path(service_root)
     state_path = service_root/'interface_layout_state.json'
+    # A linked state file or backup root must never redirect reads or writes
+    # outside the service-owned profile during layout migration.
+    if state_path.is_symlink() or (service_root/'interface_backups').is_symlink():
+        raise ValueError('layout state or backup directory symlink refused')
     state = load_state(state_path)
     documents = source_documents(skin_root,
                                  recommendations_enabled=recommendations_enabled)

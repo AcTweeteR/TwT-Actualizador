@@ -13,6 +13,27 @@ import interface_layout  # noqa: E402
 
 
 class ExpandableWidgetMetadataTests(unittest.TestCase):
+    def test_apply_layout_refuses_linked_state_and_backup_directory(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            shortcuts = root / 'shortcuts'
+            service = root / 'service'
+            shortcuts.mkdir()
+            service.mkdir()
+            victim = root / 'external.json'
+            victim.write_text('{"private": true}')
+            for linked_name in ('interface_layout_state.json', 'interface_backups'):
+                with self.subTest(linked_name=linked_name):
+                    linked = service / linked_name
+                    linked.symlink_to(victim)
+                    with self.assertRaises(ValueError):
+                        interface_layout.apply_layout(
+                            shortcuts, service, ROOT / 'addons/skin.actweeter',
+                            interface_layout.SETTINGS)
+                    self.assertEqual(victim.read_text(), '{"private": true}')
+                    self.assertEqual(list(shortcuts.iterdir()), [])
+                    linked.unlink()
+
     def test_rollback_preserves_user_deleted_owned_shortcut(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

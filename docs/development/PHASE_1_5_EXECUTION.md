@@ -274,3 +274,9 @@ Scope inspected: integrated commit history, installed/source parity, coordinator
 - A shortcut missing after layout application was not compared against its expected managed hash; rollback could silently recreate a shortcut the user deliberately removed.
 - Treat a missing expected managed file (and a non-file target) as a conflict and return without changing shortcuts or state. Regression checks missing shortcut remains absent and state bytes unchanged.
 - Full suite: 148 PASS. Live catalogue consent remains unchanged.
+
+## Layout apply state and backup symlink preflight — 2026-10-19
+
+- `apply_layout` guarded shortcut symlinks but did not reject a symlinked state file or `interface_backups` root before reading/writing backups.
+- Reject both linked paths before preparing any layout mutation. Regression covers each symlink and verifies the external target and shortcuts remain unchanged.
+- Full suite: 149 PASS. User layout consent remains unchanged.
