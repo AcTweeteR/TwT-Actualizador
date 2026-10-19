@@ -357,3 +357,12 @@ Reviewed the full default-language migration: current settings, metadata migrati
 - Validate and snapshot every Spanish premium metadata cache file before creating backups or changing settings; refuse symlinks and nonregular files, preventing late discovery after settings mutation.
 - Restore deleted cache entries from the preflight snapshot on a recoverable failure.
 - 170 tests PASS, including linked report/backup and linked cache files; actual XStream remote metadata refresh remains a runtime gate.
+
+## XStream metadata migration transactional recovery and concurrent cache refresh — 2026-10-19
+
+Reviewed the complete setting writes -> cache invalidation -> migration report commit -> exception recovery path.
+
+- Keep a byte-for-byte pre-migration report snapshot. If report write raises after writing, restore it only when it still matches this migration's report bytes.
+- Before each cache invalidation, confirm its current bytes still equal the verified backup snapshot. Refuse deletion of cache refreshed concurrently by another process.
+- Track changed settings and actually removed cache entries, and restore only those entries; avoid clobbering a newly created replacement cache during rollback.
+- 172 tests PASS, including simulated postwrite report failure and concurrent cache replacement. Kodi remote metadata response remains unverified.

@@ -13,6 +13,60 @@ import interface_layout  # noqa: E402
 
 
 class ExpandableWidgetMetadataTests(unittest.TestCase):
+    def test_metadata_report_postwrite_failure_recovers_all_owned_changes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            service, profile = root/'service', root/'profile'
+            service.mkdir()
+            profile.mkdir()
+            cache = profile/'data_cache_p1_premium_meta_movie_5_es.json'
+            cache.write_bytes(b'old metadata')
+            report = service/'metadata_preferences.json'
+            report.write_bytes(b'{"schema":0}')
+            settings = {'tmdb_language':'en-US', 'interface_language':'English'}
+            addon = mock.Mock()
+            addon.getSetting.side_effect = settings.get
+            addon.setSetting.side_effect = settings.__setitem__
+            addon.getAddonInfo.return_value = str(profile)
+            vfs = mock.Mock()
+            vfs.translatePath.side_effect = lambda path: path
+            original_write = interface_layout.atomic_write
+            failed = [False]
+            def fail_after_write(path, data):
+                original_write(path, data)
+                if Path(path)==report and not failed[0]:
+                    failed[0]=True
+                    raise OSError('simulated postwrite failure')
+            with mock.patch.object(interface_layout,'atomic_write',side_effect=fail_after_write):
+                with self.assertRaises(OSError):
+                    interface_layout.prepare_metadata_language(lambda _:addon,vfs,service)
+            self.assertEqual(settings,{'tmdb_language':'en-US','interface_language':'English'})
+            self.assertEqual(cache.read_bytes(),b'old metadata')
+            self.assertEqual(report.read_bytes(),b'{"schema":0}')
+
+    def test_metadata_cache_concurrent_replacement_is_not_deleted(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            service, profile = root/'service', root/'profile'
+            service.mkdir()
+            profile.mkdir()
+            cache = profile/'data_cache_p1_premium_meta_movie_5_es.json'
+            cache.write_bytes(b'old metadata')
+            settings = {'tmdb_language':'en-US', 'interface_language':'English'}
+            addon = mock.Mock()
+            addon.getSetting.side_effect = settings.get
+            def change_setting(key,value):
+                settings[key]=value
+                cache.write_bytes(b'new metadata from other process')
+            addon.setSetting.side_effect = change_setting
+            addon.getAddonInfo.return_value = str(profile)
+            vfs = mock.Mock()
+            vfs.translatePath.side_effect = lambda path: path
+            with self.assertRaisesRegex(OSError,'metadata cache changed'):
+                interface_layout.prepare_metadata_language(lambda _:addon,vfs,service)
+            self.assertEqual(cache.read_bytes(),b'new metadata from other process')
+            self.assertEqual(settings,{'tmdb_language':'en-US','interface_language':'English'})
+
     def test_metadata_preflight_rejects_symlinked_state_and_backup_root(self):
         for linked in ('metadata_preferences.json', 'metadata_backups'):
             with self.subTest(linked=linked), tempfile.TemporaryDirectory() as tmp:

@@ -848,6 +848,7 @@ def prepare_metadata_language(addon_factory,vfs,service_root):
     backup_root = root/'metadata_backups'
     if report_path.is_symlink() or backup_root.is_symlink():
         raise ValueError('metadata state or backup symlink refused')
+    original_report = report_path.read_bytes() if report_path.is_file() else None
     migration=load_state(report_path)
     spanish=(previous['tmdb_language'].lower().replace('_','-').split('-')[0]=='es')
     refresh_spanish_cache=spanish and migration.get('schema')!=1
@@ -866,20 +867,44 @@ def prepare_metadata_language(addon_factory,vfs,service_root):
     for path, data in cache_data.items():
         atomic_write(backup/path.name,data)
         if (backup/path.name).read_bytes()!=data:raise OSError('metadata backup failed')
+    report = None
+    report_bytes = None
+    changed_settings = []
+    removed_caches = []
     try:
         for key,value in changes.items():
             addon.setSetting(key,value)
+            changed_settings.append(key)
             if addon.getSetting(key)!=value:raise OSError('metadata setting not persisted')
         if 'tmdb_language' in changes or refresh_spanish_cache:
-            for path in cache_files:path.unlink()
+            for path in cache_files:
+                # Another process may have refreshed this entry since our
+                # snapshot; never delete bytes we did not back up.
+                if path.is_symlink() or not path.is_file() or path.read_bytes()!=cache_data[path]:
+                    raise OSError('metadata cache changed during migration')
+                path.unlink()
+                removed_caches.append(path)
+        report={'schema':1,'changed':bool(changes),
+                'settings':{key:addon.getSetting(key) for key in desired},
+                'backup':backup.name,'refreshed_metadata_entries':len(removed_caches)}
+        report_bytes=json.dumps(report,ensure_ascii=False).encode()
+        atomic_write(report_path,report_bytes)
+        if report_path.read_bytes()!=report_bytes:
+            raise OSError('metadata report readback mismatch')
     except Exception:
-        for key in changes:addon.setSetting(key,previous[key])
-        for path, data in cache_data.items():
-            if not path.exists():atomic_write(path,data)
+        for key in reversed(changed_settings):
+            if addon.getSetting(key)==changes[key]:
+                addon.setSetting(key,previous[key])
+        for path in removed_caches:
+            if not path.exists():atomic_write(path,cache_data[path])
+        # Restore a post-write report only when it is still exactly ours.
+        if (report_bytes is not None and report_path.is_file() and
+                not report_path.is_symlink() and report_path.read_bytes()==report_bytes):
+            if original_report is None:
+                report_path.unlink()
+            else:
+                atomic_write(report_path,original_report)
         raise
-    report={'schema':1,'changed':bool(changes),'settings':{key:addon.getSetting(key) for key in desired},
-            'backup':backup.name,'refreshed_metadata_entries':len(cache_files)}
-    atomic_write(root/'metadata_preferences.json',json.dumps(report,ensure_ascii=False).encode())
     return report
 
 def prepare_interface(kodi, addon_factory, vfs, gui, dialog, *, allow_prompt=False):
