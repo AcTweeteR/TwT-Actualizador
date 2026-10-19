@@ -52,11 +52,12 @@ class RefreshGate:
 
     def __init__(self, interval: int = DEFAULT_INTERVAL_SECONDS):
         self.interval = interval
-        self.last_request = 0.0
+        self.last_request = None
 
     def should_request(self, last_sync: float, now: float, *, abort: bool = False) -> bool:
         return (not abort and refresh_due(last_sync, now, self.interval)
-                and now - self.last_request >= self.interval)
+                and (self.last_request is None or
+                     now - self.last_request >= self.interval))
 
     def mark_requested(self, now: float) -> None:
         self.last_request = now

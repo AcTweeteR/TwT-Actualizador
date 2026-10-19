@@ -660,10 +660,18 @@ def _run_coordinator(kodi, addon_factory, vfs, clock=time.time, monitor=None,
                 pending_refresh = None
                 next_refresh_check = now + COORDINATOR_REFRESH_CHECK_SECONDS
             elif pending_refresh:
-                next_refresh_check = now + COORDINATOR_PENDING_CHECK_SECONDS
-                if monitor.waitForAbort(COORDINATOR_PENDING_CHECK_SECONDS):
-                    break
-                continue
+                # A dispatch without an observable provider commit must not
+                # block all future refreshes for the lifetime of Kodi.
+                if now - pending_refresh["requested_at"] >= 2 * refresh_gate.interval:
+                    emit_plugin_trace(
+                        pending_refresh["trace"], "unobserved",
+                        log=lambda message: kodi.log(message, kodi.LOGWARNING))
+                    pending_refresh = None
+                else:
+                    next_refresh_check = now + COORDINATOR_PENDING_CHECK_SECONDS
+                    if monitor.waitForAbort(COORDINATOR_PENDING_CHECK_SECONDS):
+                        break
+                    continue
             # XStream builds a new profile's initial index during its own
             # startup. Give that bootstrap time to finish before this hourly
             # coordinator can request a stale/missing-index refresh.
@@ -700,7 +708,8 @@ def _run_coordinator(kodi, addon_factory, vfs, clock=time.time, monitor=None,
                         trace, "finished",
                         log=lambda message: kodi.log(message, kodi.LOGINFO))
                 else:
-                    pending_refresh = {"trace": trace, "last_sync": last_sync}
+                    pending_refresh = {"trace": trace, "last_sync": last_sync,
+                                       "requested_at": now}
                 if performance is not None:
                     performance.count("coordinator.refresh_dispatch")
                 refresh_gate.mark_requested(now)

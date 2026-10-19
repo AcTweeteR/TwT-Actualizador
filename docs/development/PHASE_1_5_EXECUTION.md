@@ -383,3 +383,11 @@ Reviewed the complete identity parsing/matching, explicit request, video-info di
 - Accept only ASCII alphanumeric provider IDs and positive canonical decimal DBIDs in typed trailer return identities; reject malformed/Unicode/control identifiers and non-string observed identities.
 - Revalidate both current request and active video after closing the information dialog and before activating fullscreen, preventing a superseded request from driving the GUI.
 - 176 tests PASS, including malformed identity cases and a simulated request invalidated during presentation. Actual Kodi GUI playback remains a runtime QA gate.
+
+## XStream background search refresh lifecycle — 2026-10-19
+
+Reviewed scheduler gate, dispatch, pending provider sync observation, stale request recovery, and retry pacing.
+
+- Initial `RefreshGate.last_request=0` incorrectly suppressed first dispatch until one full interval of clock uptime. A never-requested gate now uses `None` and permits the first due request immediately (subject to coordinator's initial provider bootstrap grace period).
+- A dispatched refresh without a later `last_successful_sync` update previously stayed pending indefinitely. After two refresh intervals, the coordinator marks it unobserved, clears pending and returns to normal refresh gate decisions. It does not infer successful sync or change provider credentials.
+- 179 tests PASS, including scheduler behavioral tests and pending lifecycle structural contract. Provider real sync remains an integration gate.
