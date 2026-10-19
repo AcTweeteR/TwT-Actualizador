@@ -52,6 +52,7 @@ class KodiAutoPreviewCoordinator:
         self.stop_timeline = {}
         self.last_terminal_at = None
         self.refocus_after_stop = None
+        self.focus_context = None
         self.closed = False
         self.wake = self.scheduler.condition
         self.worker = threading.Thread(target=self._work,
@@ -290,6 +291,11 @@ class KodiAutoPreviewCoordinator:
             # Kodi Monitor; reject it before changing player ownership.
             self._log("FOCUS_REJECT", reason="invalid_payload")
             return False
+        if window in (10000, 11111) and container == focus and container > 0:
+            self.focus_context = dict(payload)
+        else:
+            self._log("FOCUS_REJECT", reason="container_focus_mismatch")
+            return False
         if payload.get("media_type") != "movie" or window not in (10000, 11111):
             self._log("FOCUS_REJECT", reason="context", window=window,
                       media=payload.get("media_type", "unknown"))
@@ -317,6 +323,9 @@ class KodiAutoPreviewCoordinator:
         with self.wake:
             keep = {item.generation for item in
                     (self.scheduler.resolving, self.scheduler.active) if item}
+            # A displaced player can report its terminal event after new focus.
+            with self.stop_lock:
+                keep.update(self.stop_inflight)
             self.requests = {key: value for key, value in self.requests.items()
                              if key in keep}
             self.request_ids = {key: value for key, value in self.request_ids.items()
@@ -749,6 +758,32 @@ class KodiAutoPreviewCoordinator:
                       position=position)
             self._focus(payload)
 
+    def _poll_selected_card(self):
+        """Kodi's control onfocus does not report selection changes in a row."""
+        previous = self.focus_context
+        if not previous or self.kodi.getCondVisibility("Player.HasMedia"):
+            return
+        window, container, focus = (int(previous[key]) for key in ("window", "container", "focus"))
+        if not self.kodi.getCondVisibility("Window.IsActive(%d)" % window):
+            return
+        try:
+            if int(self.kodi.getInfoLabel("System.CurrentControlId") or "-1") != focus:
+                return
+            position = int(self.kodi.getInfoLabel("Container(%d).CurrentItem" % container) or "-1")
+        except (TypeError, ValueError):
+            return
+        prefix = "Container(%d).ListItem." % container
+        current = dict(previous, position=position,
+                       media_type=self.kodi.getInfoLabel(prefix + "DBType").lower(),
+                       trailer_id="")
+        for field, label in (("imdb", "UniqueID(imdb)"), ("tmdb", "UniqueID(tmdb)"),
+                             ("dbid", "DBID"), ("title", "Title"), ("year", "Year")):
+            current[field] = self.kodi.getInfoLabel(prefix + label)
+        if (position, stable_identity(current), current["media_type"]) != (
+                int(previous["position"]), stable_identity(previous), previous.get("media_type")):
+            self._log("CARD_SELECTION_CHANGED", container=container, position=position)
+            self._focus(current)
+
     def _work(self):
         while not self.closed:
             with self.wake:
@@ -766,13 +801,14 @@ class KodiAutoPreviewCoordinator:
                     previous = self.refocus_after_stop
                     self.refocus_after_stop = None
                     self._refocus_current_card(previous)
+            self._poll_selected_card()
             with self.wake:
                 now = self.clock()
                 has_media = getattr(self.kodi, "getCondVisibility", None)
                 player_active = bool(has_media("Player.HasMedia")) if has_media else False
                 request = self._take_ready(now, player_active=player_active)
                 if request is None:
-                    timeout = 0.25 if self.scheduler.active is not None or self.refocus_after_stop is not None else 1.0
+                    timeout = 0.25 if self.scheduler.active is not None or self.refocus_after_stop is not None or self.focus_context is not None else 1.0
                     if self.scheduler.delay_deadline is not None:
                         timeout = min(timeout, max(0.01, self.scheduler.delay_deadline - now))
                     self.wake.wait(timeout)

@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import json
 import sys
+import threading
 import unittest
 from pathlib import Path
 
@@ -65,6 +66,7 @@ def coordinator(kodi):
     instance = object.__new__(KodiAutoPreviewCoordinator)
     instance.kodi = kodi
     instance.closed = False
+    instance.focus_context = None
     instance.clock = lambda: 100.0
     instance.delay_parser = float
     instance.session_id = "notification-test"
@@ -73,11 +75,75 @@ def coordinator(kodi):
     instance.requests = {}
     instance.item_data = {}
     instance.request_ids = {}
-    instance._stop_owned = lambda request: None
+    instance.stop_lock = threading.Lock()
+    instance.stop_inflight = set()
+    instance.stop_timeline = {}
+    instance.stale_owned = set()
+    instance.vfs = None
+    instance.kodi.getInfoLabel = lambda label: ""
+    instance._stop_owned = lambda request, **kwargs: None
     return instance
 
 
 class PreviewNotificationTests(unittest.TestCase):
+    def test_idle_row_selection_schedules_once_after_non_movie_item(self):
+        kodi = FakeKodi()
+        bridge = coordinator(kodi)
+        bridge._focus(focus_packet(media_type="episode"))
+        labels = {"System.CurrentControlId": "1508",
+                  "Container(1508).CurrentItem": "2",
+                  "Container(1508).ListItem.DBType": "movie",
+                  "Container(1508).ListItem.UniqueID(imdb)": "tt456"}
+        kodi.getInfoLabel = lambda key: labels.get(key, "")
+        kodi.getCondVisibility = lambda key: key == "Window.IsActive(11111)"
+        bridge._poll_selected_card()
+        request = bridge.scheduler.latest
+        self.assertEqual(request.identity, "imdb:tt456")
+        self.assertEqual(request.position, 2)
+        bridge._poll_selected_card()
+        self.assertEqual(bridge.scheduler.latest, request)
+
+    def test_idle_poll_does_not_schedule_during_playback_or_outside_row(self):
+        kodi = FakeKodi()
+        bridge = coordinator(kodi)
+        bridge._focus(focus_packet())
+        request = bridge.scheduler.latest
+        kodi.getCondVisibility = lambda key: key == "Player.HasMedia"
+        bridge._poll_selected_card()
+        self.assertEqual(bridge.scheduler.latest, request)
+        kodi.getCondVisibility = lambda key: key == "Window.IsActive(11111)"
+        kodi.getInfoLabel = lambda key: "40000"
+        bridge._poll_selected_card()
+        self.assertEqual(bridge.scheduler.latest, request)
+
+    def test_mismatched_container_and_focus_is_rejected(self):
+        bridge = coordinator(FakeKodi())
+        self.assertFalse(bridge._focus(focus_packet(focus=13006)))
+        self.assertIsNone(bridge.focus_context)
+        self.assertIsNone(bridge.scheduler.latest)
+
+    def test_new_focus_preserves_displaced_request_until_stop_callback(self):
+        bridge = coordinator(FakeKodi())
+        bridge._focus(focus_packet())
+        old = bridge.scheduler.latest
+        token = bridge.request_ids[old.generation]
+        bridge.scheduler.take_ready(102)
+        bridge.scheduler.resolution_finished(old, still_current=True)
+        bridge.stop_inflight.add(old.generation)
+        bridge.stop_timeline[old.generation] = {
+            "requested_at": 99, "worker_finished_at": 99.5,
+            "terminal_callback_at": 100,
+        }
+        bridge.scheduler.preempt("OTHER")
+        bridge._focus(focus_packet(imdb="tt456", container=13005, focus=13005))
+        new = bridge.scheduler.latest
+        self.assertIn(old.generation, bridge.requests)
+        self.assertIsNone(bridge._take_ready(105))
+        self.assertFalse(bridge.terminal_by_identity(old.generation, old.identity, "wrong", "stopped"))
+        self.assertTrue(bridge.terminal_by_identity(old.generation, old.identity, token, "stopped"))
+        self.assertNotIn(old.generation, bridge.stop_inflight)
+        self.assertEqual(bridge._take_ready(105), new)
+
     def test_valid_focus_notification_schedules_latest_request(self):
         kodi = FakeKodi()
         bridge = coordinator(kodi)
