@@ -511,7 +511,7 @@ new file mode 100644
 index 0000000000000000000000000000000000000000..f43603caf622701aa4f1bcf8d513e49677651621
 --- /dev/null
 +++ b/resources/lib/premium_routes.py
-@@ -0,0 +1,1004 @@
+@@ -0,0 +1,1008 @@
 +"""Provider-first, bounded widget endpoints. Never returns a discovery item.
 +
 +Called with the existing addon's environment; playback/profile/history remain
@@ -922,6 +922,8 @@ index 0000000000000000000000000000000000000000..f43603caf622701aa4f1bcf8d513e496
 +    os.makedirs(profile, exist_ok=True)
 +    path = _search_index_path(g, pnum)
 +    filter_stamp = _search_filter_stamp(g, pnum)
++    if os.path.islink(path) or (os.path.exists(path) and not os.path.isfile(path)):
++        raise ValueError('unsafe provider search index path')
 +    conn = sqlite3.connect(path, timeout=10)
 +    conn.execute('CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT)')
 +    conn.execute('''CREATE TABLE IF NOT EXISTS items (
@@ -959,6 +961,8 @@ index 0000000000000000000000000000000000000000..f43603caf622701aa4f1bcf8d513e496
 +            continue
 +        rows = {}
 +        for item in items:
++            if not isinstance(item, dict):
++                raise ValueError('invalid provider search item')
 +            sid = provider_id(item, stype)
 +            title = str(item.get('name') or item.get('title') or '').strip()
 +            norm = _search_text(title)
@@ -973,7 +977,7 @@ index 0000000000000000000000000000000000000000..f43603caf622701aa4f1bcf8d513e496
 +                str(item.get('category_name') or ''))
 +        old_ids = {str(row[0]) for row in conn.execute(
 +            'SELECT provider_id FROM items WHERE stype=?', (stype,))}
-+        if old_ids and not rows and saved_filters == filter_stamp:
++        if old_ids and not rows:
 +            g['_log']('provider search refresh type=%s status=error reason=empty_snapshot_rejected' % stype)
 +            results.append({'scanned':0, 'added':0, 'changed':0, 'removed':0,
 +                            'status':'error'})
