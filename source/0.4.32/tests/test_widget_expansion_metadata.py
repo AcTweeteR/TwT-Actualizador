@@ -12,6 +12,25 @@ import interface_layout  # noqa: E402
 
 
 class ExpandableWidgetMetadataTests(unittest.TestCase):
+    def test_rollback_missing_manifest_does_not_delete_shortcuts(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            shortcuts = root / 'shortcuts'
+            service = root / 'service'
+            shortcuts.mkdir()
+            service.mkdir()
+            filename = 'skin.actweeter-test.DATA.xml'
+            original = shortcuts / filename
+            original.write_bytes(b'current')
+            backup_id = '20261019T000000Z-abcdef12'
+            (service / 'interface_backups' / backup_id).mkdir(parents=True)
+            (service / 'interface_layout_state.json').write_text(json.dumps({
+                'backup': backup_id, 'files': {filename: interface_layout.digest(b'current')},
+            }))
+            with self.assertRaises(OSError):
+                interface_layout.rollback_layout(shortcuts, service)
+            self.assertEqual(original.read_bytes(), b'current')
+
     def test_rollback_rejects_symlink_without_mutating_shortcuts(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -22,6 +41,12 @@ class ExpandableWidgetMetadataTests(unittest.TestCase):
             victim = root / 'outside.xml'
             victim.write_text('private', encoding='utf-8')
             (shortcuts / 'skin.actweeter-test.DATA.xml').symlink_to(victim)
+            backup = service / 'interface_backups' / '20261019T000000Z-abcdef12'
+            backup.mkdir(parents=True)
+            (backup / 'MANIFEST.json').write_text(json.dumps({'files': {
+                'skin.actweeter-test.DATA.xml': {'exists': False},
+                'skin.actweeter.properties': {'exists': False},
+            }}))
             (service / 'interface_layout_state.json').write_text(json.dumps({
                 'backup': '20261019T000000Z-abcdef12',
                 'files': {'skin.actweeter-test.DATA.xml': 'fake'},

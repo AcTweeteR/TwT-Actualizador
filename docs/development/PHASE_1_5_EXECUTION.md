@@ -238,3 +238,9 @@ Scope inspected: integrated commit history, installed/source parity, coordinator
 - `apply_layout` rejects symlinks, but `rollback_layout` did not preflight its destinations or backup sources. This could allow following a symlink during rollback.
 - Added all-target preflight for safe names and symlinks, including state and backup metadata. Regression confirms an outside file is unchanged.
 - Full suite: 142 PASS. Did not accept the user's pending interface-layout consent dialog or modify live shortcut layout.
+
+## Missing layout rollback manifest audit — 2026-10-19
+
+- Confirmed `rollback_layout` treated missing backup-manifest file entries as `exists=False`, risking deletion of existing shortcuts during a rollback with a missing/corrupt manifest.
+- Preflight all expected entries and required integrity fields before any shortcut mutation. Added regression asserting current shortcuts survive a missing manifest; updated symlink test with a valid manifest.
+- Full suite: 143 PASS. Live catalogue layout remains untouched; user consent not granted.
