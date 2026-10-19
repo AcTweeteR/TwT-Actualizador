@@ -132,6 +132,13 @@ class PreviewNotificationTests(unittest.TestCase):
         bridge._poll_selected_card()
         self.assertEqual(bridge.scheduler.latest, request)
 
+    def test_invalid_placeholder_does_not_arm_idle_row(self):
+        bridge = coordinator(FakeKodi())
+        self.assertFalse(bridge._focus(focus_packet(imdb="", media_type="movie")))
+        self.assertIsNone(bridge.focus_context)
+        self.assertFalse(bridge._focus(focus_packet(media_type="folder")))
+        self.assertIsNone(bridge.focus_context)
+
     def test_mismatched_container_and_focus_is_rejected(self):
         bridge = coordinator(FakeKodi())
         self.assertFalse(bridge._focus(focus_packet(focus=13006)))

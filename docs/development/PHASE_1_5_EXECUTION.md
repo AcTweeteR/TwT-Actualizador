@@ -160,3 +160,9 @@ Scope inspected: integrated commit history, installed/source parity, coordinator
 - Kodi log: recurring `GetDirectory` errors for TMDb Helper's `log_tagger`, `log_library`, `timer_report` paths. Their exact root cause is not established; avoid deleting its addon_data.
 - IPTV Simple loads 1293 channels, 46 groups, 764 EPG channels and 180419 entries; actual stream playback, guide navigation and VOD are not verified by this evidence.
 - Manual trailer fullscreen, series detail restore, resume/history, personalized navigation, all widgets, stress and cross-device restore remain unverified at this checkpoint. `FASE_1_5_INCOMPLETE`.
+
+## Follow-up focus-state audit — 2026-10-19
+
+- Found a second idle-observer bug: `_focus` stored `focus_context` before validating media type and stable identity. Invalid folders/placeholders could remain eligible for idle polling. Fixed by retaining only fully validated preview rows and clearing context for rejected content. Added regression test.
+- Full suite: 129 PASS; `git diff --check` PASS.
+- No claims of exhaustive runtime validation; outstanding manual-return/stream/navigation/stress checks remain.

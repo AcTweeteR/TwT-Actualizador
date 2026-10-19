@@ -308,19 +308,22 @@ class KodiAutoPreviewCoordinator:
             # Kodi Monitor; reject it before changing player ownership.
             self._log("FOCUS_REJECT", reason="invalid_payload")
             return False
-        if window in (10000, 11110, 11111) and container == focus and container > 0:
-            self.focus_context = dict(payload)
-        else:
+        if window not in (10000, 11110, 11111) or container != focus or container <= 0:
             self._log("FOCUS_REJECT", reason="container_focus_mismatch")
             return False
         if payload.get("media_type") not in ("movie", "tvshow", "season", "episode"):
+            self.focus_context = None
             self._log("FOCUS_REJECT", reason="context", window=window,
                       media=payload.get("media_type", "unknown"))
             self._preempt({"owner": "OTHER"})
             return False
-        if not identity or container <= 0 or position < 0 or focus in (40000, 40003):
+        if not identity or position < 0 or focus in (40000, 40003):
+            self.focus_context = None
             self._log("FOCUS_REJECT", reason="identity_or_target")
             return False
+        # Store only validated rows; invalid placeholders must not be
+        # rediscovered by the idle-selection observer.
+        self.focus_context = dict(payload)
 
         try:
             player_has_media = bool(self.kodi.getCondVisibility("Player.HasMedia"))
