@@ -455,8 +455,19 @@ def rollback_layout(shortcuts_root,service_root):
     state=load_state(state_path)
     if not re_safe_name(state.get('backup')):return None
     backup=service_root/'interface_backups'/state['backup']
+    if backup.is_symlink() or (backup/'MANIFEST.json').is_symlink():
+        raise ValueError('layout backup symlink refused')
     manifest=load_state(backup/'MANIFEST.json')
     names=list(state.get('files',{}))+['skin.actweeter.properties']
+    # Preflight every target and backup source before mutating any shortcut.
+    # A symlink can otherwise bypass the original apply_layout guard.
+    for name in names:
+        if not re_safe_name(name):
+            raise ValueError('unsafe shortcut name refused')
+        if (shortcuts_root/name).is_symlink() or (backup/name).is_symlink():
+            raise ValueError('layout rollback symlink refused')
+    if state_path.is_symlink() or (backup/'previous-state.json').is_symlink():
+        raise ValueError('layout state symlink refused')
     for name in names:
         path=shortcuts_root/name
         expected=state.get('files',{}).get(name) or state.get('properties_hash')

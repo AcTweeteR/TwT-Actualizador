@@ -12,6 +12,24 @@ import interface_layout  # noqa: E402
 
 
 class ExpandableWidgetMetadataTests(unittest.TestCase):
+    def test_rollback_rejects_symlink_without_mutating_shortcuts(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            shortcuts = root / 'shortcuts'
+            service = root / 'service'
+            shortcuts.mkdir()
+            service.mkdir()
+            victim = root / 'outside.xml'
+            victim.write_text('private', encoding='utf-8')
+            (shortcuts / 'skin.actweeter-test.DATA.xml').symlink_to(victim)
+            (service / 'interface_layout_state.json').write_text(json.dumps({
+                'backup': '20261019T000000Z-abcdef12',
+                'files': {'skin.actweeter-test.DATA.xml': 'fake'},
+            }))
+            with self.assertRaises(ValueError):
+                interface_layout.rollback_layout(shortcuts, service)
+            self.assertEqual(victim.read_text(), 'private')
+
     def test_supported_provider_list_route_gets_expansion_without_rewriting_reload(self):
         route = (
             "plugin://plugin.video.xstream-pro/?mode=premium&view=continue&"

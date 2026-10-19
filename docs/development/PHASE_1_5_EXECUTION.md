@@ -232,3 +232,9 @@ Scope inspected: integrated commit history, installed/source parity, coordinator
 - Confirmed the provider interpolated an unvalidated notification `request_id` into a temporary MPD path. Previous cleanup guard protected deletion but not creation.
 - Reject request IDs unless they match the coordinator's exact UUID-hex plus positive generation format before enqueue/resolution; add regression for traversal and malformed tokens.
 - Full suite: 141 PASS. Functional playback and catalogue remain pending.
+
+## Interface rollback symlink safety audit — 2026-10-19
+
+- `apply_layout` rejects symlinks, but `rollback_layout` did not preflight its destinations or backup sources. This could allow following a symlink during rollback.
+- Added all-target preflight for safe names and symlinks, including state and backup metadata. Regression confirms an outside file is unchanged.
+- Full suite: 142 PASS. Did not accept the user's pending interface-layout consent dialog or modify live shortcut layout.
