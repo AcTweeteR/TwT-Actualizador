@@ -14,6 +14,24 @@ import first_run  # noqa: E402
 
 
 class InterfaceMigrationTriggerTests(unittest.TestCase):
+    def test_declined_customization_update_is_not_reprompted_after_output_changes(self):
+        source = (ROOT / "addons/service.actweeter/setup.py").read_text()
+        helper = next(node for node in ast.parse(source).body
+                      if isinstance(node, ast.FunctionDef)
+                      and node.name == "_run_pending_interface_migration")
+        namespace = {"xbmcgui": mock.Mock()}
+        window = namespace["xbmcgui"].Window.return_value
+        window.getProperty.return_value = "1"
+        exec(compile(ast.Module(body=[helper], type_ignores=[]), "setup.py", "exec"), namespace)
+        self.assertEqual(namespace[helper.name](mock.Mock()), "CUSTOMIZATIONS_PRESERVED")
+        window.getProperty.assert_called_once_with("AcTweeteR.InterfaceMigrationDeclined")
+        window.setProperty.assert_not_called()
+        # Explicit repair must bypass the decline, not silently succeed.
+        namespace["_interface_migration_session_path"] = mock.Mock(
+            side_effect=RuntimeError("explicit repair proceeds"))
+        with self.assertRaisesRegex(RuntimeError, "explicit repair proceeds"):
+            namespace[helper.name](mock.Mock(), explicit=True)
+
     def test_home_has_one_service_owned_build_coordinator(self):
         home = ET.parse(ROOT / "addons/skin.actweeter/1080i/Home.xml").getroot()
         onloads = [node.text or "" for node in home.findall("onload")]

@@ -1624,6 +1624,8 @@ def _run_pending_interface_migration(dialog, *, explicit=False):
     """
     window = xbmcgui.Window(10000)
     marker_name = "AcTweeteR.InterfaceMigrationAttempted"
+    if not explicit and window.getProperty("AcTweeteR.InterfaceMigrationDeclined") == "1":
+        return "CUSTOMIZATIONS_PRESERVED"
     session_path = _interface_migration_session_path()
     if explicit:
         window.clearProperty(marker_name)
@@ -1711,6 +1713,8 @@ def _run_pending_interface_migration(dialog, *, explicit=False):
         monitor.waitForAbort, on_attempt=log_attempt, on_retry=log_retry)
 
     if result != "GENERATED":
+        if result == "CUSTOMIZATIONS_PRESERVED":
+            window.setProperty("AcTweeteR.InterfaceMigrationDeclined", "1")
         # This call already performed its bounded retry policy. Clearing the
         # marker for retryable outcomes lets each Skin Shortcuts-triggered
         # Home reload launch another competing migration/build worker.
