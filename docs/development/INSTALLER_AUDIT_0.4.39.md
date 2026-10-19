@@ -82,3 +82,36 @@ Recovery: historical 0.4.38 package is retained unchanged in Testing. Kodi's
 native Versions dialog can select it if offered. Otherwise report the failure
 before making further changes; no destructive downgrade or profile reset.
 Stable remains unmodified. Publication/hash evidence is appended separately.
+
+## Verified official publication
+
+- PR: https://github.com/AcTweeteR/TwT-Actualizador/pull/21 (merged).
+- Public commit: `0fd276e9b94821efa61697dba303ef26287870df`.
+- Beta release: https://github.com/AcTweeteR/TwT-Actualizador/releases/tag/v0.4.39-beta-installer
+  (`isPrerelease=true`, not draft, not promoted to Latest).
+- GitHub Pages build for that commit completed successfully. All six CI/
+  deployment runs succeeded, including historical Beta snapshots and the new
+  current-installer reproducibility job.
+- Public index downloaded from
+  https://actweeter.github.io/TwT-Actualizador/testing/repo/addons.xml
+  advertises service 0.4.39, Testing repository 1.0.1, skin 1.2.29~beta10 and
+  XStream 1.1.2.8. SHA-256:
+  `63e90e1e1a5f4178f79eb627509e5c67e845db17a56d1dd4027e3bcb86262b92`.
+- Public index MD5: `af8158bc17bf98965c30d1154d02a1d6` (download verified).
+- Public ZIP downloaded from
+  https://actweeter.github.io/TwT-Actualizador/testing/repo/service.actweeter/service.actweeter-0.4.39.zip
+  matches the local source-built package byte-for-byte; CRC and embedded
+  manifest 0.4.39 pass. SHA-256:
+  `edaa5072a968811e3b153416e03408749b61fb217da3bbf02885e375ed688e2a`.
+- Published-source suite: 109 PASS. Integration-source suite: 246 PASS. The
+  public subset retains the previous public tests and does not import private
+  XStream 1.1.2.9 development. No source/package modification of XStream or
+  the skin is in this publication.
+- Stable repo/, AGENTS.md, old ZIPs, bootstrap ZIPs, skin and XStream artifacts
+  compare unchanged against pre-publication main ecabbe6.
+- Source vs ZIP: all 101 packaged files match. AST/XML/CRC/checksums pass;
+  credential/token/private-key/credential-URL pattern scan found no matches.
+- Mac Master was not written, launched, restarted or used for installer QA in
+  this mission. No QA profile was created. No IPTV, PVR, Trakt or user-profile
+  data was changed. Actual update/installer execution in tvOS remains pending
+  the owner's test; no live installation or trailer playback PASS is claimed.
