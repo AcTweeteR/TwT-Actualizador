@@ -166,3 +166,8 @@ Scope inspected: integrated commit history, installed/source parity, coordinator
 - Found a second idle-observer bug: `_focus` stored `focus_context` before validating media type and stable identity. Invalid folders/placeholders could remain eligible for idle polling. Fixed by retaining only fully validated preview rows and clearing context for rejected content. Added regression test.
 - Full suite: 129 PASS; `git diff --check` PASS.
 - No claims of exhaustive runtime validation; outstanding manual-return/stream/navigation/stress checks remain.
+
+## Notification decoder audit — 2026-10-19
+
+- Both AcTweeteR and SlyGuy JSONRPC notification decoders used `base64.b64decode(..., validate=True)` but did not catch `binascii.Error` for malformed Base64. A malformed signal could raise into Kodi's monitor callback rather than fail closed. Added `binascii.Error` handling to both bridges and a focused regression test.
+- Full suite: 130 PASS; diff validation PASS. This is defensive correctness, not proof of exhaustive Kodi runtime coverage.

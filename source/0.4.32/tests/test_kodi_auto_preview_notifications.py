@@ -185,6 +185,11 @@ class PreviewNotificationTests(unittest.TestCase):
             SENDER, "Other." + MESSAGE, notification(focus_packet())))
         self.assertIsNotNone(bridge.scheduler.latest)
 
+    def test_malformed_base64_does_not_crash_notification_handler(self):
+        bridge = coordinator(FakeKodi())
+        self.assertFalse(bridge.on_notification(SENDER, MESSAGE, '["!!!!"]'))
+        self.assertIsNone(bridge.scheduler.latest)
+
     def test_foreign_sender_or_broken_envelope_has_no_side_effects(self):
         for sender, data in (
             ("untrusted.addon", notification(focus_packet())),

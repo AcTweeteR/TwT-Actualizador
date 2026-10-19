@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import binascii
 import json
 import math
 import threading
@@ -109,7 +110,7 @@ class KodiAutoPreviewCoordinator:
             decoded = base64.b64decode(encoded, validate=True).decode("utf-8")
             payload = json.loads(decoded)
             return payload if isinstance(payload, dict) else None
-        except (TypeError, ValueError, UnicodeError):
+        except (TypeError, ValueError, UnicodeError, binascii.Error):
             return None
 
     def _owned_item(self):
