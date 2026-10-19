@@ -90,3 +90,7 @@ Política de Kodi Master **notificar sin instalar** (`general.addonupdates=1`) c
 ## Requisito adicional de actualizaciones selectivas (19-10-2026)
 
 El propietario exige **actualización automática de las versiones propias publicadas y testadas por AcTweeteR**, manteniendo los addons de terceros en modo manual. El ajuste actual `general.addonupdates=1` protege de actualizaciones no supervisadas pero también impide las propias: es una **solución provisional**, no el objetivo final. Se añade como gate P0 un actualizador selectivo con manifiesto propio verificable, lista de paquetes permitidos, backup, validación de plataforma y rollback. El repositorio agrega feeds externos, por lo que pertenecer a `repository.actweeter` no basta como criterio de confianza. Ver [roadmap](UPDATE_CONTROL_ROADMAP.md).
+
+## Nuevos addons de terceros en releases futuras (19-10-2026)
+
+Requisito confirmado: la instalación inicial y las migraciones de AcTweeteR deben instalar/gestionar los **nuevos addons de terceros obligatorios** que declare la release, con las autorizaciones de Kodi; los **opcionales** se ofrecen sin imponerlos. Esta capacidad es independiente de las **actualizaciones upstream posteriores** de terceros ya instalados, que continúan siendo manuales. Publicar un addon en el repositorio no lo instala por sí solo: el asistente debe incorporarlo al plan de componentes. [Recorridos y criterios de aceptación](UPDATE_CONTROL_ROADMAP.md).

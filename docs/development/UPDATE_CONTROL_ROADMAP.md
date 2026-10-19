@@ -24,6 +24,21 @@ Estado: **planificado / pendiente de implementación integral**. **Requisito del
 
 **Estado actual: NO IMPLEMENTADO.** La protección básica actual impide actualizaciones automáticas de todos los addons, incluidos los propios. No presentarla como el comportamiento final solicitado.
 
+## Instalación de nuevas dependencias de terceros en futuras versiones
+
+**Requisito explícito del propietario (19-10-2026):** la política de actualización manual de terceros **no debe impedir** que AcTweeteR instale nuevos addons de terceros cuando una release nuestra los incorpore como dependencias. Diferenciar cuatro recorridos:
+
+1. **Primera instalación:** instalar los componentes propios y los addons de terceros **obligatorios** declarados en el plan de instalación, respetando las autorizaciones y el gestor de dependencias de Kodi. No prometer instalación silenciosa cuando Kodi requiera consentimiento.
+2. **Actualización de AcTweeteR con nueva dependencia obligatoria:** detectar el addon ausente y solicitar/gestionar su instalación mediante el flujo oficial de Kodi, sin habilitar las actualizaciones automáticas globales. Si falta consentimiento o el addon no está disponible, comunicar el bloqueo y permitir reintentar; no marcar la migración como completa.
+3. **Nueva integración opcional:** ofrecer instalación y configuración, nunca imponerla ni activarla sin elección del usuario.
+4. **Addon de terceros ya instalado con nueva versión upstream:** mantenerlo en modo **notificar y actualizar manualmente**, salvo decisión expresa y específica de incorporar una versión verificada como paquete propio en nuestro canal aprobado. La instalación de una dependencia ausente **no autoriza** actualizar automáticamente todos los addons existentes.
+
+**Diferencia esencial:** añadir un addon al índice de `repository.actweeter` **no lo instala** por sí solo; debe incluirse en el manifiesto de componentes y en el asistente de instalación/migración del servicio. Las actualizaciones de nuestros paquetes propios aprobados deben ser automáticas mediante el actualizador selectivo pendiente de implementar.
+
+**Criterios de aceptación obligatorios:** instalación limpia con dependencias requeridas; migración de instalación existente que añade un addon requerido; opción de rechazar un addon opcional; ausencia de actualización no solicitada de un tercero ya instalado; tratamiento de errores y permisos de Kodi; preservación de credenciales, ajustes y preferencias. Probar macOS, Android y tvOS según disponibilidad y limitaciones de addons binarios.
+
+**Estado: ESPECIFICADO, NO IMPLEMENTADO INTEGRALMENTE.** El asistente actual dispone de mecanismos de instalación y reparación, pero estos recorridos completos de actualización selectiva y nuevas dependencias todavía requieren pruebas y desarrollo.
+
 ## Hoja de ruta priorizada
 
 | Prioridad | Entrega | Criterio de aceptación |
