@@ -250,3 +250,9 @@ Scope inspected: integrated commit history, installed/source parity, coordinator
 - Rollback verified each backup payload only immediately before writing it. A corrupt later payload could leave earlier shortcuts already restored.
 - Preflight and hash-verify all backup payloads, including previous state, before the first mutation. Added two-file regression with a corrupt second payload proving both current files survive.
 - Full suite: 144 PASS. Live catalogue layout and consent remain unchanged.
+
+## Layout rollback previous-state manifest audit — 2026-10-19
+
+- The rollback manifest preflight omitted `previous-state.json`, permitting a missing entry to be interpreted as absent and deleting the current layout state.
+- Require an explicit previous-state entry and test fail-closed preservation of the existing state file.
+- Full suite: 145 PASS. Live catalogue layout and consent remain unchanged.

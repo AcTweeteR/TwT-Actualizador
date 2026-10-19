@@ -459,6 +459,7 @@ def rollback_layout(shortcuts_root,service_root):
         raise ValueError('layout backup symlink refused')
     manifest=load_state(backup/'MANIFEST.json')
     names=list(state.get('files',{}))+['skin.actweeter.properties']
+    required_names = names + ['previous-state.json']
     # Never interpret a missing/corrupt backup manifest as "file absent":
     # that would delete current shortcuts during an attempted rollback.
     backed_files = manifest.get('files')
@@ -467,7 +468,7 @@ def rollback_layout(shortcuts_root,service_root):
             not isinstance(backed_files[name].get('exists'), bool) or
             (backed_files[name]['exists'] and
              not isinstance(backed_files[name].get('sha256'), str))
-            for name in names):
+            for name in required_names):
         raise OSError('layout rollback manifest incomplete')
     # Preflight every target and backup source before mutating any shortcut.
     # A symlink can otherwise bypass the original apply_layout guard.
@@ -486,7 +487,7 @@ def rollback_layout(shortcuts_root,service_root):
     # Validate *all* backup payloads before the first write: corruption in
     # the last file must not leave earlier shortcuts partially rolled back.
     restored = {}
-    for name in names + ['previous-state.json']:
+    for name in required_names:
         info = backed_files.get(name, {})
         if info.get('exists'):
             data = (backup/name).read_bytes()

@@ -31,6 +31,7 @@ class ExpandableWidgetMetadataTests(unittest.TestCase):
                 (backup / name).write_bytes(wanted if i == 0 else b'CORRUPTED')
                 entries[name] = {'exists': True, 'sha256': interface_layout.digest(wanted)}
             entries['skin.actweeter.properties'] = {'exists': False}
+            entries['previous-state.json'] = {'exists': False}
             (backup / 'MANIFEST.json').write_text(json.dumps({'files': entries}))
             (service / 'interface_layout_state.json').write_text(json.dumps({
                 'backup': backup_id, 'files': state_files,
@@ -39,6 +40,25 @@ class ExpandableWidgetMetadataTests(unittest.TestCase):
                 interface_layout.rollback_layout(shortcuts, service)
             for i, name in enumerate(names):
                 self.assertEqual((shortcuts / name).read_bytes(), ('current-%d' % i).encode())
+
+    def test_rollback_missing_previous_state_entry_preserves_state(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            shortcuts = root / 'shortcuts'
+            service = root / 'service'
+            shortcuts.mkdir()
+            backup_id = '20261019T000000Z-abcdef12'
+            backup = service / 'interface_backups' / backup_id
+            backup.mkdir(parents=True)
+            state = service / 'interface_layout_state.json'
+            state.write_text(json.dumps({'backup': backup_id, 'files': {}}))
+            before = state.read_bytes()
+            (backup / 'MANIFEST.json').write_text(json.dumps({'files': {
+                'skin.actweeter.properties': {'exists': False},
+            }}))
+            with self.assertRaises(OSError):
+                interface_layout.rollback_layout(shortcuts, service)
+            self.assertEqual(state.read_bytes(), before)
 
     def test_rollback_missing_manifest_does_not_delete_shortcuts(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -74,6 +94,7 @@ class ExpandableWidgetMetadataTests(unittest.TestCase):
             (backup / 'MANIFEST.json').write_text(json.dumps({'files': {
                 'skin.actweeter-test.DATA.xml': {'exists': False},
                 'skin.actweeter.properties': {'exists': False},
+                'previous-state.json': {'exists': False},
             }}))
             (service / 'interface_layout_state.json').write_text(json.dumps({
                 'backup': '20261019T000000Z-abcdef12',
