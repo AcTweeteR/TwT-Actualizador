@@ -4,12 +4,18 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "addons/service.actweeter/resources/lib"))
-from slyguy_preview_bridge import _identity, preview_source, preview_target
+from slyguy_preview_bridge import _identity, _REQUEST_ID, preview_source, preview_target
 from kodi_auto_preview import read_preview_metadata
 from test_kodi_auto_preview_notifications import coordinator, FakeKodi, focus_packet
 
 
 class SeriesPreviewTests(unittest.TestCase):
+    def test_provider_request_id_cannot_escape_temp_manifest(self):
+        self.assertIsNotNone(_REQUEST_ID.fullmatch("a" * 32 + "-12"))
+        for value in ("../../userdata", "a" * 32 + "-0", "a" * 32 + "-1/../../x", "", "bad"):
+            with self.subTest(value=value):
+                self.assertIsNone(_REQUEST_ID.fullmatch(value))
+
     def test_provider_identity_rejects_missing_or_non_string_ids(self):
         for value in (None, 123, False, "", "../unsafe", "１２３"):
             with self.subTest(value=value):

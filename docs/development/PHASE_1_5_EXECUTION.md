@@ -226,3 +226,9 @@ Scope inspected: integrated commit history, installed/source parity, coordinator
 - Coordinator `stable_identity` had the same non-string coercion issue fixed earlier in the SlyGuy provider. Both endpoints must reject malformed identities consistently.
 - Require nonempty ASCII alphanumeric string identifiers; add regression for missing/numeric/bool/Unicode malformed values and valid TMDb text.
 - Full suite: 140 PASS. Functional playback remains pending.
+
+## SlyGuy incoming request token audit — 2026-10-19
+
+- Confirmed the provider interpolated an unvalidated notification `request_id` into a temporary MPD path. Previous cleanup guard protected deletion but not creation.
+- Reject request IDs unless they match the coordinator's exact UUID-hex plus positive generation format before enqueue/resolution; add regression for traversal and malformed tokens.
+- Full suite: 141 PASS. Functional playback and catalogue remain pending.

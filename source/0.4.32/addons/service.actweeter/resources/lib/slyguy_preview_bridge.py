@@ -21,6 +21,7 @@ RESULT_SENDER = "slyguy.trailers.SIGNAL"
 MESSAGE = "actweeter_auto_preview"
 _ANNOUNCEMENT_METHOD = "Other." + MESSAGE
 _VIDEO_ID = re.compile(r"^[A-Za-z0-9_-]{6,64}$")
+_REQUEST_ID = re.compile(r"^[0-9a-f]{32}-[1-9][0-9]*$")
 
 
 def _decode(data):
@@ -179,7 +180,9 @@ class SlyGuyPreviewService:
             valid_generation = int(request.get("generation")) > 0
         except (TypeError, ValueError):
             return False
-        if (not valid_generation or not request.get("request_id") or
+        request_id = request.get("request_id")
+        if (not valid_generation or not isinstance(request_id, str) or
+                _REQUEST_ID.fullmatch(request_id) is None or
                 not _identity(request) or preview_source(request) is None):
             _send(self.xbmc, "resolved", request.get("generation", 0), "no_results",
                   request.get("request_id", ""))
