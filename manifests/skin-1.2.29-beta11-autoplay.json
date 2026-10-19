@@ -10,16 +10,16 @@
     "carousel": "FAIL_RUNTIME"
   },
   "runtime_after": "PENDING_USER_TEST",
-  "automated_tests": 116,
+  "automated_tests": 122,
   "packages": {
-    "skin.actweeter-1.2.29~beta11.zip": "173b79ef008bfb3c3c4d37b5db66ae3a8a8fdf611dc78cf0b130effd5b704f07",
-    "service.actweeter-0.4.39.zip": "edaa5072a968811e3b153416e03408749b61fb217da3bbf02885e375ed688e2a",
+    "skin.actweeter-1.2.29~beta11.zip": "66dd56dd5d9b78087fca5d3ba8f49228d3de1217b1aa87c263af7c77c24f2c43",
+    "service.actweeter-0.4.40.zip": "1633ea9d9d45e0d87af496dbaac987ab58be885fddf2e23a9d6f4d951ffb1011",
     "plugin.video.xstream-pro-1.1.2.8.zip": "f1a305719b8b8bc5e5e0b99c66331af5ad153fdd15829b25947ba1fe97ad9382",
     "repository.actweeter.testing-1.0.1.zip": "8eee2935672b3127140ecf52adc512cebf15bc0cd29e6566cf16c0b7bbbc2cc3"
   },
   "testing_index": {
-    "sha256": "247a563800ffcfba0511eb186da0162937c66441b04de2408dbae23ceb71bd5c",
-    "md5": "279105d88b0fcb9e8a31de02919650cc"
+    "sha256": "b6ca56c6b468e3b7f3f197eed7260589157ad25970c3dc9e02df75c439062690",
+    "md5": "cda8dff76e214ce2d58066440bf44abd"
   },
-  "scope": "Restore missing visible-list preview dispatch; manual actions, resolver and profiles unchanged"
+  "scope": "Restore missing visible-list preview dispatch and offer the optional bridge from setup, not layout regeneration; manual actions, resolver and profiles unchanged"
 }

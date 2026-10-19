@@ -8,7 +8,7 @@
 		<import addon="script.bingie.toolbox" version="1.0.0"/>
 		<import addon="script.bingie.widgets" version="1.0.1"/>
 		<import addon="script.skinshortcuts" version="2.0.3"/>
-		<import addon="service.actweeter" version="0.4.39"/>
+		<import addon="service.actweeter" version="0.4.40"/>
 		<import addon="resource.language.es_es" version="11.0.108"/>
 		<import addon="resource.images.studios.coloured" version="0.0.24" />
 		<import addon="plugin.video.tmdb.bingie.helper" version="1.0.1" />

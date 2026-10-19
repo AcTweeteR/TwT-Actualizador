@@ -1,0 +1,12 @@
+0.4.40 - Testing: optional automatic-preview setup
+
+- Offer SlyGuy and its separately consented automatic-preview bridge during
+  first-run setup and Preparar tráilers y autorizaciones, including when the
+  SlyGuy stack is already installed.
+- Do not tie the offer to a Skin Shortcuts rebuild: reused layouts and
+  preserved customizations no longer bypass this explicit setup step.
+- Layout preparation no longer offers/installs the bridge, avoiding repeated
+  prompts after declining it in the installer. Declining never blocks IPTV.
+- Existing verified bridge installs are reused without prompting or rewriting.
+- No player/resolver behavior, credentials, profiles or schema changes.
+- Installation is not proof of trailer playback; tvOS validation is pending.

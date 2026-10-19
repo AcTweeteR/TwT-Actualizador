@@ -1082,12 +1082,6 @@ def _prepare_interface(kodi, addon_factory, vfs, gui, dialog, *, allow_prompt=Fa
     kodi.log('[AcTweeteR] INTERFACE_LAYOUT migration=%s from=%s to=%s status=verified home=%d movies=%d series=%d'%
              (LAYOUT_MIGRATION_ID, state.get('migration_history', [{}])[-1].get('from_version', 'unknown'),
               LAYOUT_VERSION, len(rows['Widgets']),len(rows['moviehub']),len(rows['tvshowhub'])),kodi.LOGINFO)
-    from slyguy_bridge_install import install as install_preview_bridge
-    try:
-        bridge=install_preview_bridge(kodi,addon_factory,vfs,dialog,allow_prompt=allow_prompt)
-        kodi.log('[AcTweeteR] PREVIEW_BRIDGE_INTEGRATION status=%s'%bridge,kodi.LOGINFO)
-    except Exception as exc:
-        kodi.log('[AcTweeteR] PREVIEW_BRIDGE_INTEGRATION status=failed type=%s'%type(exc).__name__,kodi.LOGWARNING)
     return 'GENERATED'
 
 def interface_report(kodi, addon_factory, vfs):

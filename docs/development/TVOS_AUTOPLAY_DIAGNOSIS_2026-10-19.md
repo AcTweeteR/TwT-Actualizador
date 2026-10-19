@@ -106,7 +106,7 @@ Official references: [Kodi onfocus semantics](https://kodi.wiki/view/Default_con
 [JSON-RPC](https://kodi.wiki/view/JSON-RPC_API). The connected device's own
 introspection is the authority for its 13.5.0 method parameters.
 
-## Minimal correction and validation boundary
+## Initial skin correction and validation boundary (superseded package below)
 
 Skin candidate `1.2.29~beta11`: restore focus/cancel on those two real controls,
 require existing service 0.4.39, and cancel on leaving the series hub. Respect
@@ -125,7 +125,7 @@ tvOS playback. Two independent builds produce SHA-256
 ## User-only update and acceptance
 
 When published, use Kodi Testing -> Check for updates -> AcTweeteR skin
-`1.2.29~beta11`; retain service 0.4.39. No reinstall, reset, SSH or ZIP required.
+`1.2.29~beta11` and service `0.4.40`. No reinstall, reset, SSH or ZIP required.
 The agent must NOT install it or change the production Apple TV.
 
 After updating, repeat A/B/C, hold two different posters in each row, navigate
@@ -138,3 +138,52 @@ Rollback: select the retained Beta10 skin version through Kodi's native
 repository version selection if needed; no settings need deletion. Historical
 ZIPs and service/XStream/repository packages remain unchanged. No rollout or
 rollback action was performed on the device by this investigation.
+
+## Follow-up: user requested verification of the installer consent offer
+
+The user does not recall seeing the preview-bridge dialog. This recollection
+does not prove that no bridge is installed, but source tracing demonstrates a
+second defect: `_prepare_interface()` returns early for reused generated XML
+or preserved customizations, before its old trailing `install_preview_bridge`
+call. The first-run authorizations step does not call the SlyGuy installer,
+and its maintenance SlyGuy path installs packages but does not offer the bridge.
+Thus the consent UI is not reliably reachable through setup.
+
+Correction in service **0.4.40**:
+
+- First-run authorizations call the existing optional `_install_slyguy_stack`.
+  If missing, package consent is still requested first. Rejecting it does not
+  block mandatory IPTV setup or install the bridge.
+- A ready stack calls `_offer_automatic_previews()` from both first-run and
+  the existing maintenance option **Preparar tráilers y autorizaciones**.
+  It delegates to the existing reversible installer with `allow_prompt=True`,
+  never `consent=True`. Its own explicit yes/no dialog remains mandatory.
+- Remove bridge installation from layout preparation. Declining in setup is
+  not followed by another offer during layout generation, and personalized or
+  reused layouts can no longer hide the explicit setup step.
+- Existing verified bridge hashes return CURRENT without another prompt,
+  write or restart. Optional errors remain reported and retryable, not a core
+  setup failure. Existing consent installer, provider and player code unchanged.
+- No wizard state reset, no automatic production-device activation and no
+  direct third-party package redistribution.
+
+Full final suite: **122 PASS_AUTOMATED**, including synthetic execution of the
+real consent installer (decline leaves source untouched; accepted synthetic
+install verifies backups and is idempotent), active-player refusal, optional
+error isolation and first-run/maintenance contracts. These tests do NOT prove
+an actual tvOS consent dialog, install or trailer playback.
+
+Final skin dependency is service **0.4.40**. Initial skin candidate hash above
+was built before this user follow-up and was never published to the live feed.
+It is superseded, not an immutable published release. Final package hashes:
+
+- Skin `1.2.29~beta11`: `66dd56dd5d9b78087fca5d3ba8f49228d3de1217b1aa87c263af7c77c24f2c43`.
+- Service `0.4.40`: `1633ea9d9d45e0d87af496dbaac987ab58be885fddf2e23a9d6f4d951ffb1011`.
+- Feed SHA-256: `b6ca56c6b468e3b7f3f197eed7260589157ad25970c3dc9e02df75c439062690`.
+- Feed MD5: `cda8dff76e214ce2d58066440bf44abd`.
+
+After the user installs the official update, existing completed installations
+can open the service configurator -> Preparar tráilers y autorizaciones to see
+the bridge offer without resetting or rebuilding the menu. The user must
+decide whether to authorize it. This investigation does not perform that action
+on the production Apple TV. Its exact bridge state remains NOT_OBSERVED.

@@ -35,6 +35,7 @@ class InstallerChannelTests(unittest.TestCase):
             _addon_ready=lambda name: name in self.installed and name not in self.disabled,
             _addon_version=lambda name: self.installed.get(name, ""),
             _is_tvos=lambda: False,
+            _offer_automatic_previews=Mock(return_value="CURRENT"),
         )
         names = {"_install_slyguy_stack", "_slyguy_stack_ready", "_enabled_install_sources",
                  "_request_native_addon_install", "_ensure_repository_enabled", "_open_settings"}
@@ -75,12 +76,21 @@ class InstallerChannelTests(unittest.TestCase):
         self.installed.update({name: minimum for name, minimum, _ in first_run.SLYGUY_INSTALL_SEQUENCE})
         self.assertTrue(self.ns["_install_slyguy_stack"](self.dialog))
         self.assertFalse(self.calls)
+        self.ns["_offer_automatic_previews"].assert_called_once_with(self.dialog)
+
+    def test_optional_bridge_failure_does_not_invalidate_installed_stack(self):
+        self.installed.update({name: minimum for name, minimum, _ in first_run.SLYGUY_INSTALL_SEQUENCE})
+        self.ns["_offer_automatic_previews"].return_value = "ERROR"
+        self.assertTrue(self.ns["_install_slyguy_stack"](self.dialog))
+        self.ns["_offer_automatic_previews"].assert_called_once_with(self.dialog)
+        self.assertFalse(self.calls)
 
     def test_declining_optional_stack_changes_nothing(self):
         self.dialog.yesno.return_value = False
         self.assertFalse(self.ns["_install_slyguy_stack"](self.dialog))
         self.assertFalse(self.calls)
         self.assertEqual(self.installed, {})
+        self.ns["_offer_automatic_previews"].assert_not_called()
 
     def test_partial_stack_repairs_only_missing_or_disabled_items(self):
         self.installed.update({name: minimum for name, minimum, _ in first_run.SLYGUY_INSTALL_SEQUENCE})
