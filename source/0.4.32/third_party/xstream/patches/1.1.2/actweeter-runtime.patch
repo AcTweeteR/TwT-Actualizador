@@ -980,8 +980,8 @@ index 0000000000000000000000000000000000000000..f43603caf622701aa4f1bcf8d513e496
 +                            'status':'error'})
 +            continue
 +        new_stamp = _search_source_stamp(g, pnum, stype)
-+        if new_stamp == 'missing':
-+            g['_log']('provider search refresh type=%s status=error reason=cache_unavailable' % stype)
++        if new_stamp == 'missing' or (not force_provider_refresh and new_stamp != source_stamp):
++            g['_log']('provider search refresh type=%s status=error reason=cache_unavailable_or_changed' % stype)
 +            results.append({'scanned':0, 'added':0, 'changed':0, 'removed':0,
 +                            'status':'error'})
 +            continue

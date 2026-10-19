@@ -14,7 +14,7 @@
     "addon.xml": "1b558b478ca25c44062eda9013e23beee7f8fec0c0b8c534cf58022aa6763e15",
     "service.py": "36cb80387d5f9862ee71deee9f993d7d78117f2bdf146623d1feb9d602331539",
     "resources/lib/addon.py": "351d62c70a3781ea49b89e5afcf24ac70af0ecb798dd725d03f612ca5ebb1f37",
-    "resources/lib/premium_routes.py": "2e406b44c2365859b57a1553c1e053fdafa75f5ca8a273778a8b861da27f3b92",
+    "resources/lib/premium_routes.py": "8ac9a11bbbb37e10fff1effac33654618fc3e71abd82b2d19a124a0f75b2d9cb",
     "resources/lib/pending_adapter.py": "597765cd319f2ebfc693db6798c15942a6fcac92807eef1fdfe9a75a8a196319",
     "resources/lib/content_state.py": "f47fe49a4acaa54621c8f6e2b8f80b293afa82d9570a1125ed02dae4bc3f97a2",
     "resources/lib/watched_actions.py": "df3ab7675192c82409e9cf112afa08ae75cb261b8c1919c983b7ff5e2274619b",
@@ -25,7 +25,7 @@
     "resources/lib/trakt_playback_metadata.py": "8707619e334b23ce3d4e392155caa595008cb3a599f02859f5e10707ce64e8ba"
   },
   "patch": "third_party/xstream/patches/1.1.2/actweeter-runtime.patch",
-  "patch_sha256": "9680344da8d17b5302caeb41db72ef11764c935b7af0a882dfc799e4a3783238",
+  "patch_sha256": "44c0bc8d3cb7d61836d93bbf240437192793967d2dfa45522def46cc03d72089",
   "integration_patch": "third_party/xstream/patches/1.1.2/actweeter-setup-refresh.patch",
   "integration_patch_sha256": "9be496779fbed88901c9da5fbc73aeafc206f0d44e0306cbb8bdf9130f33d04a",
   "recommendations_patch": "third_party/xstream/patches/1.1.2/actweeter-trakt-recommendations.patch",
