@@ -14,6 +14,15 @@ import first_run  # noqa: E402
 
 
 class InterfaceMigrationTriggerTests(unittest.TestCase):
+    def test_initial_home_uses_the_same_coordinator_as_subsequent_loads(self):
+        tree = ast.parse((ROOT / "addons/service.actweeter/setup.py").read_text())
+        branch = next(node for node in ast.walk(tree)
+                      if isinstance(node, ast.If) and "first_run_resume" in ast.unparse(node.test))
+        calls = [node.func.id for statement in branch.body for node in ast.walk(statement)
+                 if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)]
+        self.assertIn("_run_pending_interface_migration", calls)
+        self.assertNotIn("_prepare_product_interface", calls)
+
     def test_declined_customization_update_is_not_reprompted_after_output_changes(self):
         source = (ROOT / "addons/service.actweeter/setup.py").read_text()
         helper = next(node for node in ast.parse(source).body

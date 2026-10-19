@@ -15,6 +15,19 @@ from playing_video_item import get_playing_video_item  # noqa: E402
 
 
 class MasterRuntimeRegressionTests(unittest.TestCase):
+    def test_detail_trailer_does_not_leave_before_async_provider_captures_item(self):
+        includes = ET.parse(ROOT / "addons/skin.actweeter/1080i/IncludesFunctions.xml")
+        action = includes.find("./include[@name='AcTweeteR_Primary_Trailer_Action']")
+        actions = [node.text.strip() for node in action.findall("onclick")]
+        self.assertIn("RunScript(slyguy.trailers)", actions)
+        self.assertNotIn("Action(FullScreen)", actions)
+        for node in action.findall("onclick"):
+            if "SLYGUY_TRAILER_RETURN_" in node.text:
+                self.assertIn("String.IsEqual(ListItem.DBType,tvshow)", node.get("condition"))
+        dialog = ET.parse(ROOT / "addons/skin.actweeter/1080i/DialogVideoInfo.xml")
+        self.assertFalse(any("PlayerControl(Stop)" in (node.text or "")
+                             for node in dialog.findall("onload")))
+
     def test_idle_home_focus_recovers_stale_other_owner(self):
         ownership = PreviewOwnership()
         ownership.external_playback()

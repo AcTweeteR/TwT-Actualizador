@@ -26,6 +26,7 @@ from search_background import (last_successful_sync, plugin_refresh_url,
                                RefreshGate, xstream_profile_number)  # noqa: E402
 from slyguy_trailer_return import (  # noqa: E402
     capture_context, identity_matches, parse_identity, return_decision,
+    manual_exit_requires_stop,
     marker_cleanup_allowed, TerminalEventGate,
 )
 from kodi_auto_preview import KodiAutoPreviewCoordinator  # noqa: E402
@@ -236,6 +237,17 @@ class SlyGuyTrailerReturnPlayer(_PLAYER_BASE):
         with self.lock:
             if self.context is None:
                 context["correlation_id"] = uuid.uuid4().hex[:12]
+                context["playing_file"] = self.getPlayingFile()
+                try:
+                    source_window = xbmcgui.getCurrentWindowId()
+                    source_control = xbmcgui.Window(source_window).getFocusId()
+                    # Container labels belong to the active dialog until it
+                    # closes; revalidate the source item on return, not here.
+                    if source_window in (10000, 11110, 11111, 10025) and source_control > 0:
+                        context["source_window_id"] = source_window
+                        context["source_control_id"] = source_control
+                except (RuntimeError, SystemError):
+                    pass
                 self.context = context
                 self.terminal_gate = TerminalEventGate()
                 # DialogVideoInfo may unload after natural EOF once Kodi has
@@ -245,11 +257,43 @@ class SlyGuyTrailerReturnPlayer(_PLAYER_BASE):
                     "SetProperty(SLYGUY_TRAILER_RETURN_PLAYBACK_STARTED,1,Home)",
                     False)
                 self.kodi.log(
-                    "[AcTweeteR] SLYGUY_RETURN_CAPTURED correlation=%s origin=%s identity_kind=%s return_window=%s return_control=%s" %
+                    "[AcTweeteR] SLYGUY_RETURN_CAPTURED correlation=%s origin=%s identity_kind=%s return_window=%s return_control=%s source_window=%s source_control=%s" %
                     (context["correlation_id"], context["origin"],
                      context["identity_kind"], context["return_window_id"],
-                     context.get("return_control_id", "none")),
+                     context.get("return_control_id", "none"),
+                     context.get("source_window_id", "none"),
+                     context.get("source_control_id", "none")),
                     self.kodi.LOGINFO)
+
+                threading.Thread(target=self._present_manual, args=(context,),
+                                 name="AcTweeteR-ManualTrailer", daemon=True).start()
+
+    def _present_manual(self, context):
+        # SlyGuy must capture the detail ListItem before the dialog closes.
+        if not self._request_is_current(context):
+            return
+        self.kodi.executebuiltin("Dialog.Close(movieinformation)", False)
+        self.kodi.executebuiltin("ActivateWindow(fullscreenvideo)", False)
+        fullscreen_seen = False
+        while not self.monitor.waitForAbort(0.2):
+            if not self.isPlayingVideo() or not self._request_is_current(context):
+                return
+            try:
+                playing_file = self.getPlayingFile()
+            except RuntimeError:
+                return
+            if playing_file != context["playing_file"]:
+                return
+            window_id = _window_id(self.kodi)
+            fullscreen_seen = fullscreen_seen or window_id == 12005
+            if manual_exit_requires_stop(
+                    context, playing_file=playing_file, window_id=window_id,
+                    fullscreen_seen=fullscreen_seen,
+                    request_current=self._request_is_current(context)):
+                self.kodi.log("[AcTweeteR] SLYGUY_MANUAL_EXIT owned_stop=1",
+                              self.kodi.LOGINFO)
+                self.stop()
+                return
 
     def onPlayBackStopped(self):
         trace_player_terminal(
@@ -387,6 +431,13 @@ class SlyGuyTrailerReturnPlayer(_PLAYER_BASE):
         )
 
     def _current_identity_values(self, context):
+        control = context.get("source_control_id")
+        if control and _window_id(self.kodi) == context.get("source_window_id"):
+            prefix = "Container(%d).ListItem." % control
+            return {kind: self.kodi.getInfoLabel(prefix + label)
+                    for kind, label in (("imdb", "UniqueID(imdb)"),
+                                        ("tmdb", "UniqueID(tmdb)"),
+                                        ("dbid", "DBID"))}
         return _trailer_identity_values(
             self.kodi, spotlight=context.get("origin") == "SPOTLIGHT")
 
@@ -458,6 +509,9 @@ class SlyGuyTrailerReturnPlayer(_PLAYER_BASE):
             if decision == "restore":
                 # Action(Info) is issued only after Kodi reports the Movies Hub
                 # and the selected item's stable identity matches the capture.
+                if context.get("source_control_id"):
+                    self.kodi.executebuiltin(
+                        "SetFocus(%d)" % context["source_control_id"], False)
                 self.kodi.executebuiltin("Action(Info)", False)
                 self.kodi.log(
                     "[AcTweeteR] SLYGUY_RETURN_INFO_ACTION=1 correlation=%s" %

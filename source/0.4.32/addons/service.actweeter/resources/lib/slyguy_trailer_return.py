@@ -7,7 +7,7 @@ DETAIL_WINDOW_ID = 12003
 HOME_WINDOW_ID = 10000
 SPOTLIGHT_CONTROL_ID = 1508
 MOVIES_HUB_WINDOW_ID = 11111
-MOVIE_LIST_WINDOW_IDS = frozenset((MOVIES_HUB_WINDOW_ID, 10025))
+MOVIE_LIST_WINDOW_IDS = frozenset((HOME_WINDOW_ID, 11110, MOVIES_HUB_WINDOW_ID, 10025))
 IDENTITY_PREFIXES = ("imdb", "tmdb", "dbid")
 TERMINAL_EVENTS = frozenset(("stopped", "ended", "error"))
 
@@ -49,7 +49,7 @@ def capture_context(*, pending, explicit_request, vod_pending, window_id,
     """Capture an explicitly armed SlyGuy request from an approved surface."""
     if not pending or not explicit_request or vod_pending:
         return None
-    if str(item_type).casefold() != "movie":
+    if str(item_type).casefold() not in ("movie", "tvshow"):
         return None
     if not identity_matches(identity, current_values):
         return None
@@ -100,6 +100,15 @@ def return_decision(context, *, event, player_active, window_id, current_values,
     if window_id == DETAIL_WINDOW_ID or window_id in MOVIE_LIST_WINDOW_IDS:
         return "abandon"
     return "wait"
+
+
+def manual_exit_requires_stop(context, *, playing_file, window_id,
+                              fullscreen_seen, request_current):
+    """Stop only this captured trailer after returning to a supported surface."""
+    return bool(
+        context and request_current and fullscreen_seen and playing_file and
+        playing_file == context.get("playing_file") and
+        window_id in MOVIE_LIST_WINDOW_IDS | {DETAIL_WINDOW_ID})
 
 
 class TerminalEventGate:

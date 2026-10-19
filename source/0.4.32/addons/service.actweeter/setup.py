@@ -2096,7 +2096,7 @@ def main():
         # Upgrades apply AcTweeteR-owned defaults automatically. If the profile
         # contains hand-edited Skin Shortcuts, the layout migrator asks before
         # replacing those files and keeps the pre-migration backup.
-        _prepare_product_interface(dialog, allow_prompt=True)
+        _run_pending_interface_migration(dialog)
         # Skin Shortcuts can rebuild Home during first-run preparation. If that
         # opens the startup mask, release the claim and resume on its on-unload.
         if _intro_blocks_first_run():

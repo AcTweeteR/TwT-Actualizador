@@ -116,3 +116,35 @@ Down to Continue Watching and Right selected Medusa S01E01; generation 4
 was released in 380 ms; parent-series trailer generation 7 AVStarted at
 07:35:16.153, actual Medusa/Netflix trailer visible behind its episode card.
 No episode or VOD was played. No claim of testing every series/category.
+
+## Block 4 — manual playback and returning Home (in progress)
+
+Movie detail control 54 was verified before selecting. Baseline's immediate
+Action(FullScreen) closed the detail before asynchronous SlyGuy captured the
+ListItem: no player and no capture event. Removing that action allowed the
+same Spider-Man trailer to play, but behind the detail. Moving presentation
+to the captured AVStarted event produced actual fullscreen video at 07:46:17
+(window 12005, no detail text). Back stopped it, but the return identity
+check failed because Home's focused menu differs from its underlying row.
+The source-container recovery change remains awaiting the next runtime check.
+
+Home reload also repeatedly prompts to replace customized layout when the
+generated-output fingerprint changes. A declined prompt now suppresses only
+automatic prompts during this Kodi session; explicit repair still proceeds.
+It does not mark migration complete, change the persisted wizard state or
+write generated/user shortcuts. Installed and source setup.py match; this
+session-only decline needs runtime confirmation after restart.
+
+Backups for this block: `/private/tmp/actweeter-manual.8IMw1l/`, per-file cmp
+verified. 124 automated tests pass at this checkpoint. No publication.
+
+## Remote Desktop Commander handoff — 2026-10-19 08:30
+
+- Recovered Codex's three local commits and all nine pending source/test/doc paths without resetting or overwriting them.
+- `python3 -m unittest discover -s source/0.4.32/tests -q`: 126 tests PASS.
+- Python AST parse and both modified skin XML parses PASS; `git diff --check` PASS.
+- All five pending installed Master service/skin files byte-match their source counterparts.
+- Kodi Master running on Home with no active player at inspection. No restart, playback, resume/history changes or UI navigation performed in this handoff.
+- PVR logs show 1,293 channels, 46 groups, 764 EPG channels and 180,419 EPG entries loaded; this is not proof of successful live playback or all routes.
+- Manual fullscreen and return-to-detail source/test code exists, but the latest source-container recovery remains **runtime unverified**. Manual series detail, resume/history, 20 + EXPANDIR menus, all widgets, IPTV playback and prolonged stress are **NOT YET PASS**.
+- Phase verdict: `FASE_1_5_INCOMPLETE`. Do not tag/release/merge to Stable.

@@ -101,16 +101,15 @@
          only when this optional provider is not installed. -->
     <include name="AcTweeteR_Primary_Trailer_Action">
         <!-- Keep the underlying movie context; DialogVideoInfo arms the return only when playback has stopped. -->
-        <onclick condition="System.HasAddon(slyguy.trailers) + String.IsEqual(ListItem.DBType,movie)">ClearProperty(ACTWEETER_AUTO_PREVIEW_REQUEST,Home)</onclick>
-        <onclick condition="System.HasAddon(slyguy.trailers) + String.IsEqual(ListItem.DBType,movie)">RunScript(service.actweeter,preview_manual)</onclick>
-        <onclick condition="System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) + String.IsEqual(ListItem.DBType,movie)">SetProperty(SLYGUY_TRAILER_RETURN_PENDING,1,Home)</onclick>
-        <onclick condition="System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) + String.IsEqual(ListItem.DBType,movie)">SetProperty(SLYGUY_TRAILER_RETURN_REQUEST,1,Home)</onclick>
-        <onclick condition="System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) + String.IsEqual(ListItem.DBType,movie)">SetProperty(SLYGUY_TRAILER_RETURN_ORIGIN,VIDEO_INFO,Home)</onclick>
-        <onclick condition="!String.IsEmpty(ListItem.UniqueID(imdb)) + System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) + String.IsEqual(ListItem.DBType,movie)">SetProperty(SLYGUY_TRAILER_RETURN_ID,imdb:$INFO[ListItem.UniqueID(imdb)],Home)</onclick>
-        <onclick condition="String.IsEmpty(ListItem.UniqueID(imdb)) + !String.IsEmpty(ListItem.UniqueID(tmdb)) + System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) + String.IsEqual(ListItem.DBType,movie)">SetProperty(SLYGUY_TRAILER_RETURN_ID,tmdb:$INFO[ListItem.UniqueID(tmdb)],Home)</onclick>
-        <onclick condition="String.IsEmpty(ListItem.UniqueID(imdb)) + String.IsEmpty(ListItem.UniqueID(tmdb)) + !String.IsEmpty(ListItem.DBID) + System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) + String.IsEqual(ListItem.DBType,movie)">SetProperty(SLYGUY_TRAILER_RETURN_ID,dbid:$INFO[ListItem.DBID],Home)</onclick>
+        <onclick condition="System.HasAddon(slyguy.trailers) + [String.IsEqual(ListItem.DBType,movie) | String.IsEqual(ListItem.DBType,tvshow)]">ClearProperty(ACTWEETER_AUTO_PREVIEW_REQUEST,Home)</onclick>
+        <onclick condition="System.HasAddon(slyguy.trailers) + [String.IsEqual(ListItem.DBType,movie) | String.IsEqual(ListItem.DBType,tvshow)]">RunScript(service.actweeter,preview_manual)</onclick>
+        <onclick condition="System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) + [String.IsEqual(ListItem.DBType,movie) | String.IsEqual(ListItem.DBType,tvshow)]">SetProperty(SLYGUY_TRAILER_RETURN_PENDING,1,Home)</onclick>
+        <onclick condition="System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) + [String.IsEqual(ListItem.DBType,movie) | String.IsEqual(ListItem.DBType,tvshow)]">SetProperty(SLYGUY_TRAILER_RETURN_REQUEST,1,Home)</onclick>
+        <onclick condition="System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) + [String.IsEqual(ListItem.DBType,movie) | String.IsEqual(ListItem.DBType,tvshow)]">SetProperty(SLYGUY_TRAILER_RETURN_ORIGIN,VIDEO_INFO,Home)</onclick>
+        <onclick condition="!String.IsEmpty(ListItem.UniqueID(imdb)) + System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) + [String.IsEqual(ListItem.DBType,movie) | String.IsEqual(ListItem.DBType,tvshow)]">SetProperty(SLYGUY_TRAILER_RETURN_ID,imdb:$INFO[ListItem.UniqueID(imdb)],Home)</onclick>
+        <onclick condition="String.IsEmpty(ListItem.UniqueID(imdb)) + !String.IsEmpty(ListItem.UniqueID(tmdb)) + System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) + [String.IsEqual(ListItem.DBType,movie) | String.IsEqual(ListItem.DBType,tvshow)]">SetProperty(SLYGUY_TRAILER_RETURN_ID,tmdb:$INFO[ListItem.UniqueID(tmdb)],Home)</onclick>
+        <onclick condition="String.IsEmpty(ListItem.UniqueID(imdb)) + String.IsEmpty(ListItem.UniqueID(tmdb)) + !String.IsEmpty(ListItem.DBID) + System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) + [String.IsEqual(ListItem.DBType,movie) | String.IsEqual(ListItem.DBType,tvshow)]">SetProperty(SLYGUY_TRAILER_RETURN_ID,dbid:$INFO[ListItem.DBID],Home)</onclick>
         <onclick condition="System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb)">RunScript(slyguy.trailers)</onclick>
-        <onclick condition="System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb)">Action(FullScreen)</onclick>
     </include>
 
 	<include name="Bingie_Spotlight_Trailer_Action">
