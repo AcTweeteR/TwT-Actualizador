@@ -40,3 +40,7 @@ Status: **WAITING_FOR_DEVICE**. Apple TV is operated by its owner. Do not modify
 - [ ] Third-party addons not auto-updated; approved first-party updates verified
 
 **Do not close QA or publish Stable until the checks are evidenced.**
+
+## tvOS clean-install failure: unresolved dependencies (owner screenshot 2026-10-19)
+
+**FAIL_RUNTIME_INSTALL**: Kodi displayed `Not available` for `slyguy.trailers`, `plugin.video.tmdb.bingie.helper`, `script.bingie.helper`, `script.bingie.toolbox`, `script.bingie.widgets` when installing the skin. The Beta bootstrap repository advertises only the Beta and Stable AcTweeteR indexes, which contain just four addon entries each. The stable `repository.actweeter` ZIP advertises additional Matke BINGIE and SlyGuy feeds; the Beta bootstrap does not. Both upstream XML endpoints responded HTTP 200 when checked on the Mac, but that does not prove tvOS can install every addon. **Do not claim a successful clean install**. Remediation: new-version Beta bootstrap with vetted, accessible dependency feeds or self-hosted version-pinned, license-compliant dependencies; verify transitive dependencies and tvOS compatibility; regenerate ZIP/index, publish a new immutable version and retest from clean Kodi. Do not overwrite historical `repository.actweeter.testing-1.0.0.zip`.
