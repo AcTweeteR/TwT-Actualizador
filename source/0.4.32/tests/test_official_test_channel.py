@@ -76,7 +76,7 @@ class OfficialTestChannelTests(unittest.TestCase):
             root = ET.parse(index).getroot()
             versions = {node.get("id"): node.get("version") for node in root.findall("addon")}
             self.assertEqual(versions, {
-                "repository.actweeter.testing": "1.0.0",
+                "repository.actweeter.testing": "1.0.1",
                 "service.actweeter": "0.4.37",
             })
             feed_addon = ET.parse(ROOT / "testing" / "repository.actweeter.testing" / "addon.xml").getroot()
@@ -85,6 +85,8 @@ class OfficialTestChannelTests(unittest.TestCase):
             )]
             self.assertIn("https://actweeter.github.io/TwT-Actualizador/testing/repo/addons.xml", endpoints)
             self.assertIn("https://raw.githubusercontent.com/AcTweeteR/TwT-Actualizador/main/repo/addons.xml", endpoints)
+            self.assertIn("https://raw.githubusercontent.com/matke-84/repository.bingie/main/omega/addons.xml", endpoints)
+            self.assertIn("https://slyguy.uk/.repo/repository.slyguy/addons.xml", endpoints)
             self.assertEqual(checksum.read_text().strip(), hashlib.md5(index.read_bytes()).hexdigest())
             self.assertEqual(ET.parse(ROOT / "repo" / "addons.xml").getroot().find("addon[@id='service.actweeter']").get("version"), "0.4.31")
             self.assertEqual((ROOT / "repo" / "addons.xml").read_bytes(), stable_index)

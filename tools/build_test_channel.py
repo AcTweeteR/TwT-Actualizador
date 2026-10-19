@@ -18,7 +18,7 @@ from xml.etree import ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 TEST_REPOSITORY_ID = "repository.actweeter.testing"
-TEST_REPOSITORY_VERSION = "1.0.0"
+TEST_REPOSITORY_VERSION = "1.0.1"
 SERVICE_ID = "service.actweeter"
 SERVICE_VERSION = "0.4.37"
 XSTREAM_ID = "plugin.video.xstream-pro"
@@ -93,12 +93,14 @@ def build(repository_source: Path, service_zip: Path, output: Path,
     if repo_addon.get("id") != TEST_REPOSITORY_ID or repo_addon.get("version") != TEST_REPOSITORY_VERSION:
         raise ValueError("test repository identity/version mismatch")
     dirs = repo_addon.findall("./extension[@point='xbmc.addon.repository']/dir")
-    if len(dirs) != 2:
+    if len(dirs) != 4:
         raise ValueError("test repository must expose only its candidate and the official stable feed")
     info_urls = [node.findtext("info", "") for node in dirs]
     if info_urls != [
         "https://actweeter.github.io/TwT-Actualizador/testing/repo/addons.xml",
         "https://raw.githubusercontent.com/AcTweeteR/TwT-Actualizador/main/repo/addons.xml",
+        "https://raw.githubusercontent.com/matke-84/repository.bingie/main/omega/addons.xml",
+        "https://slyguy.uk/.repo/repository.slyguy/addons.xml",
     ]:
         raise ValueError("test repository feed endpoints are not isolated as expected")
 
