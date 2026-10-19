@@ -26,6 +26,23 @@ def stable_identity(payload):
     return ""
 
 
+def read_preview_metadata(kodi, prefix):
+    data = {field: kodi.getInfoLabel(prefix + label) for field, label in (
+        ("media_type", "DBType"), ("imdb", "UniqueID(imdb)"),
+        ("tmdb", "UniqueID(tmdb)"), ("dbid", "DBID"),
+        ("title", "Title"), ("year", "Year"), ("show_title", "TVShowTitle"),
+        ("show_dbid", "TvShowDBID"))}
+    data["media_type"] = data["media_type"].lower()
+    # XStream premium resume cards inherit these properties from the series
+    # before changing their media type to episode; UniqueIDs alone are ambiguous.
+    if (data["media_type"] in ("season", "episode") and
+            kodi.getInfoLabel(prefix + "Property(XStream.ProviderOnly)") == "true"):
+        data["show_tmdb"] = kodi.getInfoLabel(prefix + "Property(tmdb_id)")
+        data["show_imdb"] = kodi.getInfoLabel(prefix + "Property(imdb_id)")
+        data["show_year"] = data["year"]
+    return data
+
+
 class KodiAutoPreviewCoordinator:
     """Latest-wins scheduler. Provider resolution always runs off the UI thread."""
 
@@ -291,12 +308,12 @@ class KodiAutoPreviewCoordinator:
             # Kodi Monitor; reject it before changing player ownership.
             self._log("FOCUS_REJECT", reason="invalid_payload")
             return False
-        if window in (10000, 11111) and container == focus and container > 0:
+        if window in (10000, 11110, 11111) and container == focus and container > 0:
             self.focus_context = dict(payload)
         else:
             self._log("FOCUS_REJECT", reason="container_focus_mismatch")
             return False
-        if payload.get("media_type") != "movie" or window not in (10000, 11111):
+        if payload.get("media_type") not in ("movie", "tvshow", "season", "episode"):
             self._log("FOCUS_REJECT", reason="context", window=window,
                       media=payload.get("media_type", "unknown"))
             self._preempt({"owner": "OTHER"})
@@ -337,7 +354,9 @@ class KodiAutoPreviewCoordinator:
                 self.session_id, request.generation)
             self.item_data[request.generation] = {
                 key: payload.get(key, "")
-                for key in ("title", "year", "dbid", "imdb", "tmdb", "trailer_id")
+                for key in ("title", "year", "dbid", "imdb", "tmdb", "trailer_id",
+                            "media_type", "show_title", "show_dbid", "show_tmdb",
+                            "show_imdb", "show_year")
             }
             self._set_request_properties(request)
             self.scheduler.offer(request, delay, self.clock())
@@ -740,17 +759,10 @@ class KodiAutoPreviewCoordinator:
         if focus != previous.focus or position < 0:
             return
         prefix = "Container(%d).ListItem." % previous.container
-        media_type = self.kodi.getInfoLabel(prefix + "DBType").lower()
-        if media_type != "movie":
-            return
         payload = {
             "window": previous.window, "container": previous.container,
-            "focus": focus, "position": position, "media_type": media_type,
-            "imdb": self.kodi.getInfoLabel(prefix + "UniqueID(imdb)"),
-            "tmdb": self.kodi.getInfoLabel(prefix + "UniqueID(tmdb)"),
-            "dbid": self.kodi.getInfoLabel(prefix + "DBID"),
-            "title": self.kodi.getInfoLabel(prefix + "Title"),
-            "year": self.kodi.getInfoLabel(prefix + "Year"),
+            "focus": focus, "position": position,
+            **read_preview_metadata(self.kodi, prefix),
             "trailer_id": "", "delay": 3.0,
         }
         if stable_identity(payload) != previous.identity:
@@ -773,12 +785,8 @@ class KodiAutoPreviewCoordinator:
         except (TypeError, ValueError):
             return
         prefix = "Container(%d).ListItem." % container
-        current = dict(previous, position=position,
-                       media_type=self.kodi.getInfoLabel(prefix + "DBType").lower(),
-                       trailer_id="")
-        for field, label in (("imdb", "UniqueID(imdb)"), ("tmdb", "UniqueID(tmdb)"),
-                             ("dbid", "DBID"), ("title", "Title"), ("year", "Year")):
-            current[field] = self.kodi.getInfoLabel(prefix + label)
+        current = dict(previous, position=position, trailer_id="",
+                       **read_preview_metadata(self.kodi, prefix))
         if (position, stable_identity(current), current["media_type"]) != (
                 int(previous["position"]), stable_identity(previous), previous.get("media_type")):
             self._log("CARD_SELECTION_CHANGED", container=container, position=position)
@@ -835,7 +843,7 @@ class KodiAutoPreviewCoordinator:
                     "action": "resolve", "generation": request.generation,
                     "identity": request.identity, "window": request.window,
                     "container": request.container, "focus": request.focus,
-                    "position": request.position, "media_type": "movie",
+                    "position": request.position,
                     "request_id": self.request_ids[request.generation],
                     **item_data,
                 })

@@ -69,6 +69,7 @@ from xstream_setup import (
     validate_xtream_credentials,
 )
 from module_catalog import installation_plan
+from kodi_auto_preview import read_preview_metadata
 from platform_support import detect_platform
 from dependency_graph import inspect_graph
 from pvr_binding import profile_is_bound
@@ -1510,12 +1511,7 @@ def _auto_preview_focus(args):
             "container": container,
             "focus": focus,
             "position": int(xbmc.getInfoLabel("Container(%d).CurrentItem" % container) or "-1"),
-            "media_type": xbmc.getInfoLabel(prefix + "DBType").lower(),
-            "imdb": xbmc.getInfoLabel(prefix + "UniqueID(imdb)"),
-            "tmdb": xbmc.getInfoLabel(prefix + "UniqueID(tmdb)"),
-            "dbid": xbmc.getInfoLabel(prefix + "DBID"),
-            "title": xbmc.getInfoLabel(prefix + "Title"),
-            "year": xbmc.getInfoLabel(prefix + "Year"),
+            **read_preview_metadata(xbmc, prefix),
             "trailer_id": trailer_id,
             "delay": delay,
         }

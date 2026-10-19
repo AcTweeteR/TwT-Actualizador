@@ -81,7 +81,7 @@ class PreviewOwnership:
         with self.lock:
             self.generation += 1
             self.request = None
-            if (not identity or window not in (10000, 11111) or
+            if (not identity or window not in (10000, 11110, 11111) or
                     container <= 0 or focus in (40000, 40003) or
                     self.owner not in ("NONE", "AUTO_PREVIEW")):
                 return None

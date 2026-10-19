@@ -78,3 +78,41 @@ Spotlight content while a different row is selected.
 
 Do not infer any of these runtime results from unit tests. Do not overwrite
 generated XML, profile state, credentials, Stable, or other worktrees.
+
+## Block 3 — series and episode trailer resolution (2026-10-19)
+
+The existing bridge rejected all media except movie, and the coordinator's
+surface allowlist omitted the real Series hub window 11110. Source and
+Master now support movie/tvshow/season/episode through the same scheduler.
+`read_preview_metadata` is shared by the focus dispatcher and row observer.
+Episode/season lookup uses only the parent TV show database ID or explicit
+parent metadata. XStream premium cards preserve series `tmdb_id`/`imdb_id`
+properties before changing the card's media type to episode: this contract
+was verified in installed `premium_routes.py` listitem and continue routes.
+Unidentified parent data produces no results; episode IDs never become show
+or movie lookup IDs. No third-party add-on files were changed.
+
+The first runtime attempt exposed an existing provider-dispatch bug: SlyGuy
+returned an IMDb plugin route and the bridge passed its `tt…` identifier to
+the YouTube extractor. Kodi logged `youtube:truncated_id`. `preview_target`
+now distinguishes native IMDb and YouTube routes. IMDb uses SlyGuy's own
+`IMDB.get_best` and TrailerItem/headers without its shared `imdb.m3u8` file.
+
+After that change, the episode's parent (A la deriva) completed resolution
+with `no_stream` / `no_results` at 07:31:24, without a playback or wrong ID.
+This is valid absence of an available trailer, not a successful-series-video
+claim. Further known-title playback is PENDING.
+
+- 119 automated tests pass; includes parent-ID boundaries, tvshow types,
+  Series hub admission and IMDb/YouTube route separation.
+- Backups: `/private/tmp/actweeter-series.dmBBky/` and
+  `/private/tmp/actweeter-series-hub.hsPFma/`, per-file cmp verified.
+- Master changes remain local and source-backed; no Stable/Beta publication.
+- Kodi exits have logged `Application stopped`; no force quit/system shutdown.
+
+Series runtime confirmed after restart: window 11110 / Spotlight tvshow
+Ted Lasso, generation 4, AVStarted 07:34:34.762, actual video visible.
+Down to Continue Watching and Right selected Medusa S01E01; generation 4
+was released in 380 ms; parent-series trailer generation 7 AVStarted at
+07:35:16.153, actual Medusa/Netflix trailer visible behind its episode card.
+No episode or VOD was played. No claim of testing every series/category.
