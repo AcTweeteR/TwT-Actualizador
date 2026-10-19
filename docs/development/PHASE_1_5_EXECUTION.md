@@ -171,3 +171,10 @@ Scope inspected: integrated commit history, installed/source parity, coordinator
 
 - Both AcTweeteR and SlyGuy JSONRPC notification decoders used `base64.b64decode(..., validate=True)` but did not catch `binascii.Error` for malformed Base64. A malformed signal could raise into Kodi's monitor callback rather than fail closed. Added `binascii.Error` handling to both bridges and a focused regression test.
 - Full suite: 130 PASS; diff validation PASS. This is defensive correctness, not proof of exhaustive Kodi runtime coverage.
+
+## Playback handoff audit — 2026-10-19
+
+- Confirmed state-lifecycle bug: `_preempt` and `external_playback_started` cancelled active previews but retained `focus_context` and `refocus_after_stop`. When manual trailer or VOD playback ended, the idle-row observer could re-arm an old automatic trailer without a new focus event.
+- Fixed both handoff paths to discard idle focus and refocus markers before preempting; exact owned-item stop protection remains unchanged.
+- Added regression tests for manual detail preemption and external VOD start. Full suite: 132 PASS; `git diff --check` PASS.
+- Runtime manual return, IPTV/VOD playback, resume/history, navigation and extended stability remain unverified. Do not close 1.5 on automated tests alone.

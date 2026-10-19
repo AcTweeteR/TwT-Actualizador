@@ -430,6 +430,11 @@ class KodiAutoPreviewCoordinator:
         if owner not in ("MANUAL_DETAIL", "MANUAL_SPOTLIGHT", "VOD", "OTHER"):
             return False
         with self.wake:
+            # A manual/VOD handoff invalidates the selected automatic row.
+            # Otherwise the idle observer may restart its trailer when that
+            # external playback ends, without a new focus event.
+            self.focus_context = None
+            self.refocus_after_stop = None
             request = self.scheduler.active
             self.scheduler.preempt(owner)
             self._clear_current()
@@ -465,6 +470,11 @@ class KodiAutoPreviewCoordinator:
         if owner not in ("MANUAL_DETAIL", "MANUAL_SPOTLIGHT", "VOD", "OTHER"):
             owner = "OTHER"
         with self.wake:
+            # A manual/VOD handoff invalidates the selected automatic row.
+            # Otherwise the idle observer may restart its trailer when that
+            # external playback ends, without a new focus event.
+            self.focus_context = None
+            self.refocus_after_stop = None
             request = self.scheduler.active
             self.scheduler.preempt(owner)
             self._clear_current()

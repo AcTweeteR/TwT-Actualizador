@@ -94,6 +94,22 @@ class PreviewNotificationTests(unittest.TestCase):
         self.assertTrue(bridge._cancel({"container": 1508}))
         self.assertIsNone(bridge.focus_context)
 
+    def test_manual_preempt_forgets_idle_row(self):
+        bridge = coordinator(FakeKodi())
+        bridge._focus(focus_packet())
+        bridge.refocus_after_stop = bridge.scheduler.latest
+        self.assertTrue(bridge._preempt({"owner": "MANUAL_DETAIL"}))
+        self.assertIsNone(bridge.focus_context)
+        self.assertIsNone(bridge.refocus_after_stop)
+
+    def test_external_vod_playback_forgets_idle_row(self):
+        bridge = coordinator(FakeKodi())
+        bridge._focus(focus_packet())
+        bridge.refocus_after_stop = bridge.scheduler.latest
+        bridge.external_playback_started("VOD")
+        self.assertIsNone(bridge.focus_context)
+        self.assertIsNone(bridge.refocus_after_stop)
+
     def test_home_exit_forgets_idle_row(self):
         bridge = coordinator(FakeKodi())
         bridge._focus(focus_packet())
