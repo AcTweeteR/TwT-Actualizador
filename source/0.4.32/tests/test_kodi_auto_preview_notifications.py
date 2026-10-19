@@ -17,6 +17,34 @@ from automatic_preview import LatestPreviewScheduler, PreviewOwnership  # noqa: 
 from kodi_auto_preview import KodiAutoPreviewCoordinator, SENDER, MESSAGE  # noqa: E402
 
 
+class StaleCleanupContractTests(unittest.TestCase):
+    def test_stale_item_cannot_delete_another_request_manifest(self):
+        from unittest import mock
+        bridge = coordinator(FakeKodi())
+        token = 'a' * 32 + '-1'
+        other = 'b' * 32 + '-2'
+        bridge.request_ids[1] = token
+        bridge._delete_manifest = mock.Mock()
+        item = mock.Mock()
+        item.getProperty.side_effect = lambda name: {
+            'AcTweeteR.PreviewRequestId': token,
+            'AcTweeteR.PreviewManifest': 'special://temp/actweeter_preview_%s.mpd' % other,
+        }.get(name, '')
+        self.assertFalse(bridge._cleanup_stale(1, 'imdb:tt123', token, item))
+        bridge._delete_manifest.assert_not_called()
+        self.assertEqual(bridge.request_ids[1], token)
+
+    def test_stale_mismatched_identity_does_not_delete_manifest(self):
+        from unittest import mock
+        bridge = coordinator(FakeKodi())
+        token = 'a' * 32 + '-1'
+        bridge.request_ids[1] = token
+        bridge.requests[1] = mock.Mock(identity='imdb:tt123')
+        bridge._delete_manifest = mock.Mock()
+        self.assertFalse(bridge._cleanup_stale(1, 'imdb:tt999', token))
+        bridge._delete_manifest.assert_not_called()
+
+
 class FakeKodi:
     LOGINFO = 1
 

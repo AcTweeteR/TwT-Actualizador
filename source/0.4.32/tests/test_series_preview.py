@@ -1,4 +1,5 @@
 """Trailer lookup must never treat episode identifiers as movie/show IDs."""
+import ast
 import sys
 import unittest
 from pathlib import Path
@@ -10,6 +11,19 @@ from test_kodi_auto_preview_notifications import coordinator, FakeKodi, focus_pa
 
 
 class SeriesPreviewTests(unittest.TestCase):
+    def test_provider_manifest_cleanup_cannot_abort_worker(self):
+        source = Path(__file__).resolve().parents[1] / 'addons/service.actweeter/resources/lib/slyguy_preview_bridge.py'
+        klass = next(node for node in ast.parse(source.read_text()).body
+                     if isinstance(node, ast.ClassDef) and node.name == 'SlyGuyPreviewService')
+        method = next(node for node in klass.body
+                      if isinstance(node, ast.FunctionDef) and node.name == '_resolve')
+        finalizers = [node for node in ast.walk(method)
+                      if isinstance(node, ast.Try) and node.finalbody]
+        self.assertTrue(finalizers)
+        cleanup = ast.unparse(finalizers[0].finalbody)
+        self.assertIn('except Exception', cleanup)
+        self.assertIn('xbmcvfs.delete', cleanup)
+
     def test_provider_request_id_cannot_escape_temp_manifest(self):
         self.assertIsNotNone(_REQUEST_ID.fullmatch("a" * 32 + "-12"))
         for value in ("../../userdata", "a" * 32 + "-0", "a" * 32 + "-1/../../x", "", "bad"):

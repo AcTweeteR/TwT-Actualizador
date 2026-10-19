@@ -289,8 +289,16 @@ class SlyGuyPreviewService:
             if not playback_requested:
                 self.xbmc.log("[SlyGuy] ACTWEETER_PREVIEW_RESOLUTION status=cleaned generation=%d" %
                               generation, getattr(self.xbmc, "LOGINFO", 1))
-            if not playback_requested and xbmcvfs.exists(self.xbmc.translatePath(manifest)):
-                xbmcvfs.delete(self.xbmc.translatePath(manifest))
+            if not playback_requested:
+                try:
+                    manifest_path = self.xbmc.translatePath(manifest)
+                    if xbmcvfs.exists(manifest_path):
+                        xbmcvfs.delete(manifest_path)
+                except Exception as exc:
+                    # Cleanup is best-effort; a VFS failure must not kill the
+                    # provider worker or suppress the resolution notification.
+                    self.xbmc.log("[SlyGuy] ACTWEETER_PREVIEW_CLEANUP_FAILED type=%s" %
+                                  type(exc).__name__, getattr(self.xbmc, "LOGWARNING", 2))
 
     def _run(self):
         while not self.closed and not self.monitor.abortRequested():

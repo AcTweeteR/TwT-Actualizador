@@ -660,12 +660,19 @@ class KodiAutoPreviewCoordinator:
         request = self.requests.get(generation)
         if item is not None:
             request_id = item.getProperty("AcTweeteR.PreviewRequestId")
+        # A stale callback must not delete a different generation's manifest,
+        # even if its item carries a syntactically valid temporary filename.
+        if (not isinstance(request_id, str) or
+                re.fullmatch(r"[0-9a-f]{32}-[1-9][0-9]*", request_id) is None or
+                (request is not None and request.identity != identity) or
+                (self.request_ids.get(generation) not in (None, request_id))):
+            return False
         manifest = item.getProperty("AcTweeteR.PreviewManifest") if item else ""
-        self._delete_manifest(manifest or
-                              "special://temp/actweeter_preview_%s.mpd" % request_id)
+        expected_manifest = "special://temp/actweeter_preview_%s.mpd" % request_id
+        if manifest and manifest != expected_manifest:
+            return False
+        self._delete_manifest(expected_manifest)
         if self.request_ids.get(generation) == request_id:
-            if request is not None and request.identity != identity:
-                return False
             self._clear_generation(generation)
             self.requests.pop(generation, None)
             self.item_data.pop(generation, None)

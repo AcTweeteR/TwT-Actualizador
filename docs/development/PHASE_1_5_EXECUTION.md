@@ -298,3 +298,11 @@ Reviewed capture, fullscreen handoff, owned stop, terminal gating, marker cleanu
 - Request or selected identity could change between focus confirmation and Action(Info). Recheck request ownership, window, focus and stable identity immediately before opening the detail.
 
 153 automated tests PASS, including AST guard regression. Runtime manual trailer/movie/series Back tests remain pending; do not claim functional certification until reproduced on Kodi.
+
+## Preview provider/coordinator manifest cleanup audit — 2026-10-19
+
+Reviewed provider request validation, preview resolution, player handoff, manifest cleanup, and coordinator stale callbacks.
+
+- Coordinator `_cleanup_stale` previously deleted the item's advertised manifest before verifying identity/token ownership; a stale callback could remove another generation's valid MPD. Validate request ID format, known generation token and identity, and exact expected manifest name *before* deletion.
+- Provider `_resolve` cleanup ran in `finally` without protecting VFS translation/existence/deletion exceptions, which could suppress status and terminate the provider worker. Log cleanup failure by exception type and allow worker to continue.
+- 156 automated tests PASS, including stale cross-request and mismatched-identity cases, plus structural guard for provider cleanup. Full playback runtime and VFS failure-injection integration still pending.
