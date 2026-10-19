@@ -9,10 +9,30 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT/'addons/service.actweeter/resources/lib'))
-from search_background import RefreshGate, last_successful_sync, refresh_due
+from search_background import RefreshGate, last_successful_sync, refresh_due, xstream_profile_number, plugin_refresh_url
 
 
 class RefreshLifecycleTests(unittest.TestCase):
+    def test_active_profile_validation_prevents_cross_profile_refresh(self):
+        self.assertEqual(xstream_profile_number('Profile 1'),1)
+        self.assertEqual(xstream_profile_number('Profile 10'),10)
+        self.assertEqual(xstream_profile_number('profile 2'),2)
+        self.assertEqual(xstream_profile_number(''),1)
+        for value in ('Profile 0','Profile 11','Profile 999','Profile 2 extra',
+                      'other 2','Profile -1','Profile １', '2', 2, True):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                xstream_profile_number(value)
+        self.assertIn('profile_num=10',plugin_refresh_url(10))
+        for value in (True, '1', 1.0, 0, 11):
+            with self.subTest(url_value=value), self.assertRaises(ValueError):
+                plugin_refresh_url(value)
+
+    def test_sync_reader_rejects_invalid_profile_number(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            for value in (0, 11, -1, True, '1', 1.5):
+                with self.subTest(value=value), self.assertRaises(ValueError):
+                    last_successful_sync(tmp,value)
+
     def test_sync_timestamp_rejects_nan_infinity_and_negative(self):
         for value, expected in (('nan',0.0),('inf',0.0),('-50',0.0),('123.5',123.5)):
             with self.subTest(value=value), tempfile.TemporaryDirectory() as tmp:

@@ -15,13 +15,19 @@ COORDINATOR_PENDING_CHECK_SECONDS = 60
 
 
 def xstream_profile_number(active_profile: str) -> int:
-    match = re.search(r"(\d+)$", str(active_profile or "Profile 1").strip())
-    number = int(match.group(1)) if match else 1
-    return number if 1 <= number <= 10 else 1
+    value = active_profile or "Profile 1"
+    if not isinstance(value, str):
+        raise ValueError("invalid XStream profile type")
+    match = re.fullmatch(r"Profile ([1-9]|10)", value.strip(), re.I)
+    if not match:
+        raise ValueError("invalid XStream active profile")
+    return int(match.group(1))
 
 
 def last_successful_sync(profile_path: str, profile_number: int) -> float:
     """Read one scalar timestamp, never returning any personal row/value."""
+    if type(profile_number) is not int or not 1 <= profile_number <= 10:
+        raise ValueError("unsupported XStream profile number")
     path = os.path.join(profile_path, "provider_search_%d.sqlite" % profile_number)
     if not os.path.exists(path) or os.path.islink(path) or not os.path.isfile(path):
         return 0.0
@@ -69,7 +75,9 @@ class RefreshGate:
 
 
 def plugin_refresh_url(profile_number: int) -> str:
-    number = int(profile_number)
+    if type(profile_number) is not int:
+        raise ValueError("invalid XStream profile number")
+    number = profile_number
     if not 1 <= number <= 10:
         raise ValueError("unsupported XStream profile")
     return ("plugin://plugin.video.xstream-pro/?mode=premium&view=search_sync"

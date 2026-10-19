@@ -409,3 +409,9 @@ Reviewed timestamp handling through due-check and request cooldown for system-cl
 - Provider timestamps more than five minutes in the future now trigger a refresh rather than blocking until the clock catches up. Small clock differences remain tolerated.
 - An in-memory request timestamp more than five minutes ahead of the current clock no longer blocks the scheduler indefinitely after a backwards clock adjustment.
 - 183 automated tests PASS. A real live sync and UI search are still pending; no provider mutation was performed during read-only verification.
+
+## XStream active-profile isolation and refresh URL — 2026-10-19
+
+Audited the end-to-end active profile setting -> numeric profile -> provider SQLite filename -> plugin refresh URL path. Invalid `Profile 999` and malformed names previously silently fell back to profile 1, risking a wrong-profile refresh. The conversion now accepts only the canonical `Profile 1`–`Profile 10` labels (case-insensitive), with an empty setting still defaulting to Profile 1. The SQLite marker reader and refresh URL both require a real integer 1–10; no coercion of strings/bools/floats. Invalid profiles fail closed and are logged by the existing coordinator exception handling. Kodi Master currently uses Profile 1.
+
+185 tests PASS including active-profile, SQLite selection, and refresh URL boundaries. Real multi-profile switching and provider refresh remain runtime QA gates.
