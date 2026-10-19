@@ -1,0 +1,771 @@
+{
+  "feeds": [
+    {
+      "source": "SlyGuy",
+      "sha256": "e990fe95714611d430b94e6918e067d640988d22cf0dd3e008226bdd3ef51bad"
+    },
+    {
+      "source": "BINGIE",
+      "sha256": "cd4269a1cf1e1cc0240152996c662f72a2b0b697d6d7ea5dcb11e714419fa541"
+    },
+    {
+      "source": "KodiOmega",
+      "sha256": "396a5c1850b8524ddbaaed08717d48380886c687cc4b0f9418d44bd34802b795"
+    },
+    {
+      "source": "AcTweeteRBeta",
+      "sha256": "9e417cd0fd98b7b1085bf89441561e34e45dfb0a27243fc2e81b193968a9abec"
+    },
+    {
+      "source": "ServiceCandidate",
+      "sha256": "219c09012f93e958cb0c9e64e06974b98091e6484d81753d72784317fc3a2268"
+    },
+    {
+      "source": "KodiBundledPillow",
+      "sha256": "5ee3b731157f9aaff28cca5f9b093cad1584c1e579a2e5a991ffffc5160ebeb7"
+    }
+  ],
+  "runtime": "NOT_TESTED",
+  "dependencies": [
+    {
+      "id": "skin.actweeter",
+      "minimum": "1.2.8",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "AcTweeteRBeta",
+          "version": "1.2.29~beta10",
+          "platform": "all",
+          "license": "GPL v2.0"
+        }
+      ]
+    },
+    {
+      "id": "script.bingie.helper",
+      "minimum": "1.1.2",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "BINGIE",
+          "version": "1.1.2",
+          "platform": "all",
+          "license": "GPL v3.0"
+        }
+      ]
+    },
+    {
+      "id": "script.module.simplejson",
+      "minimum": "3.17.0",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "KodiOmega",
+          "version": "3.19.1+matrix.1",
+          "platform": "all",
+          "license": "MIT"
+        }
+      ]
+    },
+    {
+      "id": "script.bingie.toolbox",
+      "minimum": "1.0.0",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "BINGIE",
+          "version": "1.0.0",
+          "platform": "all",
+          "license": "GPL v2.0"
+        }
+      ]
+    },
+    {
+      "id": "script.module.simplecache",
+      "minimum": "2.0.2",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "KodiOmega",
+          "version": "2.0.2",
+          "platform": "all",
+          "license": "Apache 2.0"
+        }
+      ]
+    },
+    {
+      "id": "script.bingie.widgets",
+      "minimum": "1.0.1",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "BINGIE",
+          "version": "1.0.1",
+          "platform": "all",
+          "license": "GPL v2.0"
+        }
+      ]
+    },
+    {
+      "id": "script.module.requests",
+      "minimum": "2.27.1",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "KodiOmega",
+          "version": "2.31.0",
+          "platform": "all",
+          "license": "Apache-2.0"
+        }
+      ]
+    },
+    {
+      "id": "script.module.certifi",
+      "minimum": "2023.5.7",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "KodiOmega",
+          "version": "2023.5.7",
+          "platform": null,
+          "license": "MPL-2.0"
+        }
+      ]
+    },
+    {
+      "id": "script.module.chardet",
+      "minimum": "5.1.0",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "KodiOmega",
+          "version": "5.1.0",
+          "platform": "all",
+          "license": "LGPL-2.1"
+        }
+      ]
+    },
+    {
+      "id": "script.module.idna",
+      "minimum": "3.4.0",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "KodiOmega",
+          "version": "3.10.0",
+          "platform": "all",
+          "license": "BSD-3-Clause"
+        }
+      ]
+    },
+    {
+      "id": "script.module.urllib3",
+      "minimum": "1.26.16+matrix.1",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "KodiOmega",
+          "version": "2.2.3",
+          "platform": "all",
+          "license": "MIT"
+        }
+      ]
+    },
+    {
+      "id": "script.module.infotagger",
+      "minimum": "0.0.5",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "KodiOmega",
+          "version": "0.0.8",
+          "platform": "all",
+          "license": "GPL-3.0-or-later"
+        }
+      ]
+    },
+    {
+      "id": "script.skinshortcuts",
+      "minimum": "2.0.3",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "KodiOmega",
+          "version": "2.0.3",
+          "platform": "all",
+          "license": "GPL-2.0-only"
+        }
+      ]
+    },
+    {
+      "id": "script.module.unidecode",
+      "minimum": "1.1.1+matrix.2",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "KodiOmega",
+          "version": "1.3.6",
+          "platform": "all",
+          "license": "GPL-2.0-or-later"
+        }
+      ]
+    },
+    {
+      "id": "script.module.simpleeval",
+      "minimum": "0.9.10",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "KodiOmega",
+          "version": "0.9.13",
+          "platform": "all",
+          "license": "MIT"
+        }
+      ]
+    },
+    {
+      "id": "service.actweeter",
+      "minimum": "0.4.28",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "AcTweeteRBeta",
+          "version": "0.4.38",
+          "platform": "all",
+          "license": "GPL-2.0-or-later"
+        },
+        {
+          "source": "ServiceCandidate",
+          "version": "0.4.39",
+          "platform": "all",
+          "license": "GPL-2.0-or-later"
+        }
+      ]
+    },
+    {
+      "id": "plugin.video.xstream-pro",
+      "minimum": "1.1.2.7",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "AcTweeteRBeta",
+          "version": "1.1.2.8",
+          "platform": "all",
+          "license": "CC BY-NC 4.0"
+        }
+      ]
+    },
+    {
+      "id": "pvr.iptvsimple",
+      "minimum": "21.4.0",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "KodiOmega",
+          "version": "21.11.0",
+          "platform": "windows-i686",
+          "license": "GPL-2.0-or-later"
+        },
+        {
+          "source": "KodiOmega",
+          "version": "21.11.0",
+          "platform": "windows-x86_64",
+          "license": "GPL-2.0-or-later"
+        },
+        {
+          "source": "KodiOmega",
+          "version": "21.11.0",
+          "platform": "osx-arm64",
+          "license": "GPL-2.0-or-later"
+        },
+        {
+          "source": "KodiOmega",
+          "version": "21.11.0",
+          "platform": "osx-x86_64",
+          "license": "GPL-2.0-or-later"
+        },
+        {
+          "source": "KodiOmega",
+          "version": "21.11.0",
+          "platform": "android-aarch64",
+          "license": "GPL-2.0-or-later"
+        },
+        {
+          "source": "KodiOmega",
+          "version": "21.11.0",
+          "platform": "android-armv7",
+          "license": "GPL-2.0-or-later"
+        }
+      ]
+    },
+    {
+      "id": "inputstream.ffmpegdirect",
+      "minimum": "",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "KodiOmega",
+          "version": "21.3.8",
+          "platform": "windows-x86_64",
+          "license": "GPL-2.0-or-later"
+        },
+        {
+          "source": "KodiOmega",
+          "version": "21.3.8",
+          "platform": "windows-i686",
+          "license": "GPL-2.0-or-later"
+        },
+        {
+          "source": "KodiOmega",
+          "version": "21.3.8",
+          "platform": "osx-x86_64",
+          "license": "GPL-2.0-or-later"
+        },
+        {
+          "source": "KodiOmega",
+          "version": "21.3.8",
+          "platform": "osx-arm64",
+          "license": "GPL-2.0-or-later"
+        },
+        {
+          "source": "KodiOmega",
+          "version": "21.3.8",
+          "platform": "android-armv7",
+          "license": "GPL-2.0-or-later"
+        },
+        {
+          "source": "KodiOmega",
+          "version": "21.3.8",
+          "platform": "android-aarch64",
+          "license": "GPL-2.0-or-later"
+        }
+      ]
+    },
+    {
+      "id": "inputstream.adaptive",
+      "minimum": "21.0.0",
+      "required": false,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "KodiOmega",
+          "version": "21.5.25",
+          "platform": "windows-i686",
+          "license": "GPL-2.0-or-later"
+        },
+        {
+          "source": "KodiOmega",
+          "version": "21.5.25",
+          "platform": "windows-x86_64",
+          "license": "GPL-2.0-or-later"
+        },
+        {
+          "source": "KodiOmega",
+          "version": "21.5.25",
+          "platform": "osx-arm64",
+          "license": "GPL-2.0-or-later"
+        },
+        {
+          "source": "KodiOmega",
+          "version": "21.5.25",
+          "platform": "osx-x86_64",
+          "license": "GPL-2.0-or-later"
+        },
+        {
+          "source": "KodiOmega",
+          "version": "21.5.25",
+          "platform": "android-aarch64",
+          "license": "GPL-2.0-or-later"
+        },
+        {
+          "source": "KodiOmega",
+          "version": "21.5.25",
+          "platform": "android-armv7",
+          "license": "GPL-2.0-or-later"
+        }
+      ]
+    },
+    {
+      "id": "inputstream.rtmp",
+      "minimum": "",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "KodiOmega",
+          "version": "21.1.2",
+          "platform": "windows-x86_64",
+          "license": "GPL-2.0-or-later"
+        },
+        {
+          "source": "KodiOmega",
+          "version": "21.1.2",
+          "platform": "windows-i686",
+          "license": "GPL-2.0-or-later"
+        },
+        {
+          "source": "KodiOmega",
+          "version": "21.1.2",
+          "platform": "osx-arm64",
+          "license": "GPL-2.0-or-later"
+        },
+        {
+          "source": "KodiOmega",
+          "version": "21.1.2",
+          "platform": "osx-x86_64",
+          "license": "GPL-2.0-or-later"
+        },
+        {
+          "source": "KodiOmega",
+          "version": "21.1.2",
+          "platform": "android-aarch64",
+          "license": "GPL-2.0-or-later"
+        },
+        {
+          "source": "KodiOmega",
+          "version": "21.1.2",
+          "platform": "android-armv7",
+          "license": "GPL-2.0-or-later"
+        }
+      ]
+    },
+    {
+      "id": "service.upnext",
+      "minimum": "1.1.0",
+      "required": false,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "KodiOmega",
+          "version": "1.1.9+matrix.1",
+          "platform": "all",
+          "license": "GPL-2.0-only"
+        }
+      ]
+    },
+    {
+      "id": "slyguy.trailers",
+      "minimum": "0.2.1",
+      "required": false,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "SlyGuy",
+          "version": "0.2.1",
+          "platform": null,
+          "license": ""
+        }
+      ]
+    },
+    {
+      "id": "script.module.slyguy",
+      "minimum": "0.86.96",
+      "required": false,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "SlyGuy",
+          "version": "0.87.0",
+          "platform": null,
+          "license": ""
+        }
+      ]
+    },
+    {
+      "id": "slyguy.dependencies",
+      "minimum": "0.0.30",
+      "required": false,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "SlyGuy",
+          "version": "0.0.30",
+          "platform": null,
+          "license": ""
+        }
+      ]
+    },
+    {
+      "id": "repository.slyguy",
+      "minimum": "0.0.9",
+      "required": false,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "SlyGuy",
+          "version": "0.0.9",
+          "platform": "all",
+          "license": ""
+        }
+      ]
+    },
+    {
+      "id": "plugin.video.youtube",
+      "minimum": "",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "KodiOmega",
+          "version": "7.4.4",
+          "platform": "all",
+          "license": "GPL-2.0-only"
+        }
+      ]
+    },
+    {
+      "id": "script.module.inputstreamhelper",
+      "minimum": "0.2.2",
+      "required": false,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "KodiOmega",
+          "version": "0.8.6",
+          "platform": "all",
+          "license": "MIT"
+        }
+      ]
+    },
+    {
+      "id": "script.module.pysocks",
+      "minimum": "1.6.8",
+      "required": false,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "KodiOmega",
+          "version": "1.7.0+matrix.1",
+          "platform": "all",
+          "license": "BSD"
+        }
+      ]
+    },
+    {
+      "id": "script.trakt",
+      "minimum": "3.9.0",
+      "required": false,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "KodiOmega",
+          "version": "3.9.0",
+          "platform": "all",
+          "license": " GPL-2.0-only"
+        }
+      ]
+    },
+    {
+      "id": "script.module.dateutil",
+      "minimum": "2.8.1",
+      "required": false,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "KodiOmega",
+          "version": "2.8.2",
+          "platform": null,
+          "license": "Apache-2.0, BSD-3-Clause"
+        }
+      ]
+    },
+    {
+      "id": "script.module.six",
+      "minimum": "1.15.0+matrix.1",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "KodiOmega",
+          "version": "1.16.0+matrix.1",
+          "platform": "all",
+          "license": "MIT"
+        }
+      ]
+    },
+    {
+      "id": "resource.language.es_es",
+      "minimum": "11.0.108",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "KodiOmega",
+          "version": "11.0.109",
+          "platform": null,
+          "license": null
+        }
+      ]
+    },
+    {
+      "id": "resource.images.studios.coloured",
+      "minimum": "0.0.24",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "BINGIE",
+          "version": "1.0.0012",
+          "platform": "all",
+          "license": null
+        },
+        {
+          "source": "KodiOmega",
+          "version": "0.0.24",
+          "platform": "all",
+          "license": null
+        }
+      ]
+    },
+    {
+      "id": "plugin.video.tmdb.bingie.helper",
+      "minimum": "1.0.1",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "BINGIE",
+          "version": "1.0.3",
+          "platform": null,
+          "license": "GPL-3.0-or-later"
+        }
+      ]
+    },
+    {
+      "id": "script.module.pil",
+      "minimum": "1.1.7",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "KodiBundledPillow",
+          "version": "5.1.0",
+          "platform": "all",
+          "license": null
+        }
+      ]
+    },
+    {
+      "id": "script.module.addon.signals",
+      "minimum": "0.0.6",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "KodiOmega",
+          "version": "0.0.6+matrix.1",
+          "platform": "all",
+          "license": "LGPL-2.1-only"
+        }
+      ]
+    },
+    {
+      "id": "script.module.bingie",
+      "minimum": "1.0.1",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "BINGIE",
+          "version": "1.0.1",
+          "platform": null,
+          "license": "GPL-3.0-or-later"
+        }
+      ]
+    },
+    {
+      "id": "script.module.beautifulsoup4",
+      "minimum": "4.9.3",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "KodiOmega",
+          "version": "4.12.2",
+          "platform": "all",
+          "license": "MIT"
+        }
+      ]
+    },
+    {
+      "id": "script.module.soupsieve",
+      "minimum": "2.4.1",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "KodiOmega",
+          "version": "2.4.1",
+          "platform": "all",
+          "license": "MIT"
+        }
+      ]
+    },
+    {
+      "id": "script.module.qrcode",
+      "minimum": "6.1.0",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "KodiOmega",
+          "version": "6.1.0+matrix.3",
+          "platform": null,
+          "license": "BSD-3-Clause"
+        }
+      ]
+    },
+    {
+      "id": "plugin.program.autocompletion",
+      "minimum": "2.1.2",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "BINGIE",
+          "version": "2.1.3",
+          "platform": "all",
+          "license": "GPL-2.0-or-later"
+        },
+        {
+          "source": "KodiOmega",
+          "version": "2.1.2",
+          "platform": "all",
+          "license": "GPL-2.0-or-later"
+        }
+      ]
+    },
+    {
+      "id": "script.module.autocompletion",
+      "minimum": "2.0.5",
+      "required": true,
+      "status": "AVAILABLE_METADATA",
+      "candidates": [
+        {
+          "source": "KodiOmega",
+          "version": "2.1.1",
+          "platform": "all",
+          "license": "GPL-2.0-or-later"
+        }
+      ]
+    }
+  ]
+}

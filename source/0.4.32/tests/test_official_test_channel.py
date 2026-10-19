@@ -41,7 +41,7 @@ class OfficialTestChannelTests(unittest.TestCase):
         stable = (ROOT / "repo/addons.xml").read_bytes()
         with tempfile.TemporaryDirectory() as temp:
             temp_root = Path(temp)
-            service = temp_root / "service.actweeter-0.4.37.zip"
+            service = temp_root / f"service.actweeter-{build_test_channel.SERVICE_VERSION}.zip"
             skin = temp_root / "skin.actweeter-1.2.29~beta10.zip"
             for builder, package in (("build_service_package.py", service),
                                      ("build_skin_package.py", skin)):
@@ -61,7 +61,7 @@ class OfficialTestChannelTests(unittest.TestCase):
         stable_index = (ROOT / "repo" / "addons.xml").read_bytes()
         with tempfile.TemporaryDirectory() as temp:
             temp_root = Path(temp)
-            candidate_service = temp_root / "service.actweeter-0.4.37.zip"
+            candidate_service = temp_root / f"service.actweeter-{build_test_channel.SERVICE_VERSION}.zip"
             # Build the same deterministic service ZIP that the test-feed builder publishes.
             import subprocess
             subprocess.run([
@@ -77,7 +77,7 @@ class OfficialTestChannelTests(unittest.TestCase):
             versions = {node.get("id"): node.get("version") for node in root.findall("addon")}
             self.assertEqual(versions, {
                 "repository.actweeter.testing": "1.0.1",
-                "service.actweeter": "0.4.37",
+                "service.actweeter": build_test_channel.SERVICE_VERSION,
             })
             feed_addon = ET.parse(ROOT / "testing" / "repository.actweeter.testing" / "addon.xml").getroot()
             endpoints = [node.findtext("info", "") for node in feed_addon.findall(
@@ -203,9 +203,20 @@ class OfficialTestChannelTests(unittest.TestCase):
         self.assertEqual(hashlib.sha256(xstream_zip.read_bytes()).hexdigest(),
                          next(addon["sha256"] for addon in manifest["addons"]
                               if addon["id"] == "plugin.video.xstream-pro"))
-        self.assertEqual(hashlib.sha256(index.read_bytes()).hexdigest(),
+        # The live index advances; reconstruct the historical feed from its
+        # immutable packages rather than requiring the rolling feed to stay old.
+        historical = ET.Element("addons")
+        for addon_id, version in (("repository.actweeter.testing", "1.0.0"),
+                                  ("service.actweeter", "0.4.37"),
+                                  ("skin.actweeter", "1.2.29~beta10"),
+                                  ("plugin.video.xstream-pro", "1.1.2.8")):
+            package = ROOT / "docs/testing/repo" / addon_id / f"{addon_id}-{version}.zip"
+            with zipfile.ZipFile(package) as archive:
+                historical.append(ET.fromstring(archive.read(f"{addon_id}/addon.xml")))
+        payload = ET.tostring(historical, encoding="utf-8", xml_declaration=True) + b"\n"
+        self.assertEqual(hashlib.sha256(payload).hexdigest(),
                          manifest["testing_index"]["sha256"])
-        self.assertEqual(hashlib.md5(index.read_bytes()).hexdigest(),
+        self.assertEqual(hashlib.md5(payload).hexdigest(),
                          manifest["testing_index"]["md5"])
         self.assertEqual(ET.parse(index).getroot().find(
             "addon[@id='plugin.video.xstream-pro']").get("version"), "1.1.2.8")

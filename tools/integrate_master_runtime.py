@@ -25,7 +25,7 @@ KODI = Path.home() / "Library/Application Support/Kodi"
 ADDONS = ("plugin.video.xstream-pro", "service.actweeter", "skin.actweeter")
 EXPECTED = {
     "plugin.video.xstream-pro": "1.1.2.8",
-    "service.actweeter": "0.4.37",
+    "service.actweeter": "0.4.39",
     "skin.actweeter": "1.2.29~beta10",
 }
 GENERATED = "skin.actweeter/1080i/script-skinshortcuts-includes.xml"

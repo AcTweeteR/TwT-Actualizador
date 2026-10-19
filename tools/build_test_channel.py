@@ -11,6 +11,7 @@ import os
 import tempfile
 import shutil
 import stat
+import re
 import zipfile
 from pathlib import Path
 from xml.etree import ElementTree as ET
@@ -20,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TEST_REPOSITORY_ID = "repository.actweeter.testing"
 TEST_REPOSITORY_VERSION = "1.0.1"
 SERVICE_ID = "service.actweeter"
-SERVICE_VERSION = "0.4.37"
+SERVICE_VERSION = "0.4.39"
 XSTREAM_ID = "plugin.video.xstream-pro"
 FIXED_TIME = (2026, 10, 3, 0, 0, 0)
 
@@ -87,7 +88,7 @@ def build(repository_source: Path, service_zip: Path, output: Path,
     # Never overwrite an existing feed or expose half-copied artifacts.
     if output.exists() or output.is_symlink():
         raise ValueError("refusing to overwrite an existing test channel")
-    if service_zip.name not in (f"{SERVICE_ID}-{SERVICE_VERSION}.zip", f"{SERVICE_ID}-0.4.38.zip"):
+    if not re.fullmatch(r"service\.actweeter-\d+\.\d+\.\d+\.zip", service_zip.name):
         raise ValueError("candidate service ZIP filename does not match its Kodi identity/version")
     repo_addon = ET.parse(repository_source / "addon.xml").getroot()
     if repo_addon.get("id") != TEST_REPOSITORY_ID or repo_addon.get("version") != TEST_REPOSITORY_VERSION:

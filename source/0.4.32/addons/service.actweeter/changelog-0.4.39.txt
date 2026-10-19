@@ -1,0 +1,6 @@
+0.4.39 — Beta installer repair
+- Recognize enabled AcTweeteR Stable and Testing repositories in all installer entry points.
+- Repair only missing, disabled or outdated SlyGuy components through Kodi's native resolver after consent.
+- Keep SlyGuy and InputStream Adaptive optional; do not block the IPTV core when trailer integrations are absent.
+- Preserve wizard progress, credentials, profiles and existing add-on settings.
+- Installation readiness is separate from trailer playback and tvOS runtime validation.

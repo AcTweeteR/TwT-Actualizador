@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 
 
-CATALOG_VERSION = 14
+CATALOG_VERSION = 15
 ALL_TARGET_PLATFORMS = ("macos", "windows", "linux", "android", "tvos")
 
 MODULES = (
@@ -130,6 +130,7 @@ MODULES = (
              "dependencies": (), "configuration": "Optional official device-code authorization; account tokens stay in script.trakt",
              "update": "Kodi official repository", "recovery": "Kodi native reinstall; retain add-on profile"},
             {"id": "inputstream.adaptive", "minimum": "21.0.0", "source": "Kodi official or platform-bundled",
+             "required": False, "consent_required": True,
              "license": "GPL-2.0-or-later", "platforms": ALL_TARGET_PLATFORMS,
              "dependencies": (), "configuration": "Platform binary used by SlyGuy DASH playback",
              "update": "Kodi official/platform binary update channel",

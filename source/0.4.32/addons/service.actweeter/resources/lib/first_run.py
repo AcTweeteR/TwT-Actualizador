@@ -100,6 +100,17 @@ SLYGUY_INSTALL_SEQUENCE = (
     ("slyguy.trailers", "0.2.1", "repository.slyguy"),
 )
 
+
+def repository_candidates(sources):
+    """Accept either installed AcTweeteR channel; never install/switch channels."""
+    result = []
+    for source in sources:
+        for candidate in (("repository.actweeter.testing", "repository.actweeter")
+                          if source == "repository.actweeter" else (source,)):
+            if candidate not in result:
+                result.append(candidate)
+    return tuple(result)
+
 # Kodi's repository resolver searches every enabled repository. These IDs are
 # the authoritative repositories exposed by AcTweeteR 1.0.3 (Matke Omega and
 # SlyGuy catalogs) and Kodi's built-in catalog; no user-added source is assumed.
