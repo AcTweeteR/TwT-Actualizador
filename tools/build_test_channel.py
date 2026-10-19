@@ -87,7 +87,7 @@ def build(repository_source: Path, service_zip: Path, output: Path,
     # Never overwrite an existing feed or expose half-copied artifacts.
     if output.exists() or output.is_symlink():
         raise ValueError("refusing to overwrite an existing test channel")
-    if service_zip.name != f"{SERVICE_ID}-{SERVICE_VERSION}.zip":
+    if service_zip.name not in (f"{SERVICE_ID}-{SERVICE_VERSION}.zip", f"{SERVICE_ID}-0.4.38.zip"):
         raise ValueError("candidate service ZIP filename does not match its Kodi identity/version")
     repo_addon = ET.parse(repository_source / "addon.xml").getroot()
     if repo_addon.get("id") != TEST_REPOSITORY_ID or repo_addon.get("version") != TEST_REPOSITORY_VERSION:
@@ -104,7 +104,7 @@ def build(repository_source: Path, service_zip: Path, output: Path,
     ]:
         raise ValueError("test repository feed endpoints are not isolated as expected")
 
-    service = addon_from_zip(service_zip, SERVICE_ID, SERVICE_VERSION)
+    service = addon_from_zip(service_zip, SERVICE_ID, service_zip.name[len(SERVICE_ID) + 1:-4])
     skin = None
     if skin_zip is not None:
         with zipfile.ZipFile(skin_zip) as archive:

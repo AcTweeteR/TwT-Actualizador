@@ -1282,8 +1282,13 @@ def _configure_xstream_provider(dialog):
 def _missing_components():
     missing = [item["id"] for item in installation_plan(_platform())
                if not item["supported"] or not _addon_requirement_ready(item["id"])]
+    # Optional modules must never block core setup, even when the full
+    # diagnostic dependency graph includes their uninstalled subdependencies.
+    optional_ids = {addon_id for addon_id, item in all_addons().items()
+                    if not item.get("required", True)}
     for item in _installed_dependency_graph():
-        if item["status"] != "READY" and item["id"] not in missing:
+        if (item["id"] not in optional_ids and item["status"] != "READY"
+                and item["id"] not in missing):
             missing.append(item["id"])
     if (_addon_ready("plugin.video.xstream-pro") and not _xstream_refresh_supported()
             and "plugin.video.xstream-pro" not in missing):
@@ -1370,6 +1375,11 @@ def _install_components_once(dialog, *, consent_granted=False, quiet=False,
                 "XStream Pro: pendiente; primero debe existir IPTV Simple tvOS habilitado y >=21.4.0.")
             continue
         sources = REQUIRED_REPAIR_SOURCES.get(addon_id, ("repository.actweeter", "repository.xbmc.org"))
+        # The testing repository aggregates the same vetted dependency feeds.
+        # Kodi resolves add-on IDs across enabled repositories, not only the
+        # provenance label in the declarative catalog.
+        if "repository.actweeter" in sources:
+            sources = tuple(dict.fromkeys(("repository.actweeter.testing",) + tuple(sources)))
         for source in sources:
             if _addon_enabled(source):
                 break
