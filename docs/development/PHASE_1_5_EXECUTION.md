@@ -268,3 +268,9 @@ Scope inspected: integrated commit history, installed/source parity, coordinator
 - `_restore_context` called SetFocus and immediately Action(Info), without verifying Kodi had processed the asynchronous focus change. This could open information for the wrong item.
 - Gate Action(Info) on the original window, confirmed focused control and exact captured item identity, with bounded wait; fail closed when focus cannot be confirmed. AST regression checks guard precedes Action(Info).
 - Full suite: 147 PASS. Real movie/series return UI playback remains to be verified.
+
+## Layout rollback deleted-shortcut preservation — 2026-10-19
+
+- A shortcut missing after layout application was not compared against its expected managed hash; rollback could silently recreate a shortcut the user deliberately removed.
+- Treat a missing expected managed file (and a non-file target) as a conflict and return without changing shortcuts or state. Regression checks missing shortcut remains absent and state bytes unchanged.
+- Full suite: 148 PASS. Live catalogue consent remains unchanged.

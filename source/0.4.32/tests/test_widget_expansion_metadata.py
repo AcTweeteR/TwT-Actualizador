@@ -13,6 +13,32 @@ import interface_layout  # noqa: E402
 
 
 class ExpandableWidgetMetadataTests(unittest.TestCase):
+    def test_rollback_preserves_user_deleted_owned_shortcut(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            shortcuts = root / 'shortcuts'
+            service = root / 'service'
+            shortcuts.mkdir()
+            backup_id = '20261019T000000Z-abcdef12'
+            backup = service / 'interface_backups' / backup_id
+            backup.mkdir(parents=True)
+            name = 'skin.actweeter-moviehub.DATA.xml'
+            original = b'previous shortcut'
+            (backup / name).write_bytes(original)
+            (backup / 'MANIFEST.json').write_text(json.dumps({'files': {
+                name: {'exists': True, 'sha256': interface_layout.digest(original)},
+                'skin.actweeter.properties': {'exists': False},
+                'previous-state.json': {'exists': False},
+            }}))
+            state = service / 'interface_layout_state.json'
+            state.write_text(json.dumps({'backup': backup_id, 'files': {
+                name: interface_layout.digest(b'new shortcut'),
+            }}))
+            before = state.read_bytes()
+            self.assertIsNone(interface_layout.rollback_layout(shortcuts, service))
+            self.assertFalse((shortcuts / name).exists())
+            self.assertEqual(state.read_bytes(), before)
+
     def test_rollback_write_failure_restores_previous_shortcut_bytes(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

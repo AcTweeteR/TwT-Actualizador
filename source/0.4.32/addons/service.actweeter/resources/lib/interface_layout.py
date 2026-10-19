@@ -482,7 +482,12 @@ def rollback_layout(shortcuts_root,service_root):
     for name in names:
         path=shortcuts_root/name
         expected=state.get('files',{}).get(name) or state.get('properties_hash')
-        if path.is_file() and (expected is None or digest(path.read_bytes())!=expected):
+        # A deleted owned shortcut is also a user-visible change. Do not
+        # recreate it from an older backup without explicit confirmation.
+        if not path.is_file():
+            if expected is not None or path.exists():
+                return None
+        elif expected is None or digest(path.read_bytes()) != expected:
             return None
     # Validate *all* backup payloads before the first write: corruption in
     # the last file must not leave earlier shortcuts partially rolled back.
