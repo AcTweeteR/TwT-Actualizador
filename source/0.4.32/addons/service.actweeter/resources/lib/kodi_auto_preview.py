@@ -6,6 +6,7 @@ import base64
 import binascii
 import json
 import math
+import re
 import threading
 import time
 import uuid
@@ -642,8 +643,11 @@ class KodiAutoPreviewCoordinator:
         return True
 
     def _delete_manifest(self, manifest):
-        if not isinstance(manifest, str) or not manifest.startswith(
-                "special://temp/actweeter_preview_"):
+        # A prefix alone also matches path traversal and unrelated files.
+        # Delete only the exact MPD naming scheme created by our bridge.
+        if (not isinstance(manifest, str) or
+                re.fullmatch(r"special://temp/actweeter_preview_[A-Za-z0-9_-]+\.mpd",
+                             manifest) is None):
             return
         if self.vfs is None:
             return

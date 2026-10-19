@@ -208,3 +208,9 @@ Scope inspected: integrated commit history, installed/source parity, coordinator
 - Confirmed premature abandon: `return_decision` treated temporarily empty ListItem identities on detail/list windows as definitive mismatch, potentially losing manual trailer detail restoration during Kodi window transitions.
 - Wait on empty identity (bounded by existing 8-second caller deadline); abandon only an observed different identity. Added regression for detail and all supported list windows.
 - Full suite: 137 PASS. Manual trailer fullscreen and return require visual runtime QA before closing 1.5.
+
+## Preview manifest deletion safety audit — 2026-10-19
+
+- Confirmed overly broad prefix-based deletion allowed malformed/traversal-like `PreviewManifest` strings to reach VFS deletion.
+- Restricted cleanup to the exact `special://temp/actweeter_preview_<safe-token>.mpd` naming convention emitted by the SlyGuy preview bridge. Rejected traversal, suffix and alternate-extension cases; valid MPD cleanup retained.
+- Full suite: 138 PASS. No unrelated Kodi user data was modified.

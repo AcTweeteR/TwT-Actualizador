@@ -86,6 +86,27 @@ def coordinator(kodi):
 
 
 class PreviewNotificationTests(unittest.TestCase):
+    def test_manifest_cleanup_rejects_traversal_and_unrelated_files(self):
+        bridge = coordinator(FakeKodi())
+        class VFS:
+            deleted = []
+            def translatePath(self, path):
+                return path
+            def exists(self, path):
+                return True
+            def delete(self, path):
+                self.deleted.append(path)
+        bridge.vfs = VFS()
+        for path in ("special://temp/actweeter_preview_../../userdata.xml",
+                     "special://temp/actweeter_preview_x.mpd/../userdata.xml",
+                     "special://temp/actweeter_preview_x.json",
+                     "special://temp/actweeter_preview_x.mpd?query=1"):
+            bridge._delete_manifest(path)
+        self.assertEqual(bridge.vfs.deleted, [])
+        valid = "special://temp/actweeter_preview_notification-test-1.mpd"
+        bridge._delete_manifest(valid)
+        self.assertEqual(bridge.vfs.deleted, [valid])
+
     def test_card_change_rearms_deferred_focus_after_preemption(self):
         # Exercise the worker's card-change branch with one deterministic
         # iteration: preemption must not erase its own re-focus request.
