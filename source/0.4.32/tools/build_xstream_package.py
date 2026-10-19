@@ -149,6 +149,14 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
     actual = sha256(source_zip)
     if actual != expected:
         raise ValueError("upstream XStream ZIP SHA-256 mismatch")
+    # A published Kodi version is immutable: never silently overwrite a
+    # package containing different bytes with the same add-on version.
+    if output.exists():
+        with zipfile.ZipFile(output) as published:
+            addon_xml = published.read(UPSTREAM_ROOT + "/addon.xml")
+            published_version = ET.fromstring(addon_xml).get("version")
+        if published_version == data["distribution_version"]:
+            raise ValueError("refusing to overwrite an existing published XStream version")
 
     with tempfile.TemporaryDirectory(prefix="actweeter-xstream-") as temp:
         root = Path(temp) / UPSTREAM_ROOT
