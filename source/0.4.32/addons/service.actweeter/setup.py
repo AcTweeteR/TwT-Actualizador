@@ -68,7 +68,7 @@ from xstream_setup import (
     save_native_profile,
     validate_xtream_credentials,
 )
-from module_catalog import installation_plan
+from module_catalog import all_addons, installation_plan
 from kodi_auto_preview import read_preview_metadata
 from platform_support import detect_platform
 from dependency_graph import inspect_graph
