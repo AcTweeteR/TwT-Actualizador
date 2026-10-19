@@ -54,6 +54,15 @@ class ManualTrailerTests(unittest.TestCase):
             with self.subTest(field=field, value=value):
                 self.assertFalse(manual_exit_requires_stop(context, **(args | {field: value})))
 
+    def test_transient_empty_identity_waits_but_different_identity_abandons(self):
+        context = {"identity": "tmdb:123", "origin": "VIDEO_INFO",
+                   "return_window_id": 12003}
+        for window in (12003, 10000, 11110, 11111, 10025):
+            args = dict(event="stopped", player_active=False, window_id=window)
+            with self.subTest(window=window):
+                self.assertEqual(return_decision(context, current_values={}, **args), "wait")
+                self.assertEqual(return_decision(context, current_values={"tmdb": "999"}, **args), "abandon")
+
     def test_home_and_series_hub_restore_only_matching_detail(self):
         context = {"identity": "tmdb:123", "origin": "VIDEO_INFO",
                    "return_window_id": 12003}

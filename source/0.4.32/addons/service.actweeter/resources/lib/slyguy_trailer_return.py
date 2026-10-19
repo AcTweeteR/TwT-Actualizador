@@ -98,6 +98,12 @@ def return_decision(context, *, event, player_active, window_id, current_values,
             context["identity"], current_values):
         return "restore"
     if window_id == DETAIL_WINDOW_ID or window_id in MOVIE_LIST_WINDOW_IDS:
+        # Window transitions can expose a blank ListItem before Kodi binds the
+        # destination control. Wait for a stable identity (bounded by the
+        # caller's restore deadline), but abandon a confirmed different item.
+        parsed = parse_identity(context["identity"])
+        if parsed and not str(current_values.get(parsed[0], "")):
+            return "wait"
         return "abandon"
     return "wait"
 

@@ -202,3 +202,9 @@ Scope inspected: integrated commit history, installed/source parity, coordinator
 - Confirmed idle-focus cleanup checked only `container` when no preview request remained. A late on-unfocus from another window using the same control ID could erase the currently tracked row.
 - Require matching `window` and `container` for idle cancellation; preserve active request cancellation rules. Added regression for cross-window stale callback and same-window cleanup.
 - Full suite: 136 PASS. Real UI navigation and manual trailers remain unverified.
+
+## Manual trailer detail-return identity audit — 2026-10-19
+
+- Confirmed premature abandon: `return_decision` treated temporarily empty ListItem identities on detail/list windows as definitive mismatch, potentially losing manual trailer detail restoration during Kodi window transitions.
+- Wait on empty identity (bounded by existing 8-second caller deadline); abandon only an observed different identity. Added regression for detail and all supported list windows.
+- Full suite: 137 PASS. Manual trailer fullscreen and return require visual runtime QA before closing 1.5.
