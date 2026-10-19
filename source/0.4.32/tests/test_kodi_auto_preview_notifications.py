@@ -196,6 +196,25 @@ class PreviewNotificationTests(unittest.TestCase):
         self.assertIsNone(bridge.scheduler.resolving)
         self.assertNotIn(request.generation, bridge.requests)
 
+    def test_av_started_with_transient_non_numeric_focus_is_stale_not_exception(self):
+        bridge = coordinator(FakeKodi())
+        bridge._focus(focus_packet())
+        request = bridge.scheduler.latest
+        token = bridge.request_ids[request.generation]
+        bridge.scheduler.take_ready(102)
+        bridge.launch_pending = {}
+        bridge.kodi.getInfoLabel = lambda label: (
+            "not-an-integer" if label == "System.CurrentControlId" else "")
+
+        class TaggedItem:
+            def getProperty(self, key):
+                return {"AcTweeteR.PreviewGeneration": str(request.generation),
+                        "AcTweeteR.PreviewIdentity": request.identity,
+                        "AcTweeteR.PreviewRequestId": token}.get(key, "")
+
+        self.assertEqual(bridge.av_started(TaggedItem()), "STALE_OWNED")
+        self.assertIn((request.generation, token), bridge.stale_owned)
+
     def test_valid_focus_notification_schedules_latest_request(self):
         kodi = FakeKodi()
         bridge = coordinator(kodi)

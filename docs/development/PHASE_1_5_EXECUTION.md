@@ -184,3 +184,9 @@ Scope inspected: integrated commit history, installed/source parity, coordinator
 - Confirmed coordinator bug: `_work` called `_resolved` for `launch_error` without `request_id`, but `_resolved` requires the exact token. Consequently a `run_script` exception could leave `scheduler.resolving` occupied and prevent later automatic previews.
 - Fixed local failure notification to include the exact current generation request token; added regression verifying resolution slot release.
 - Full suite: 133 PASS; `git diff --check` PASS. No manual trailer/EPG/VOD/runtime navigation certification implied.
+
+## AVStarted transient-label audit — 2026-10-19
+
+- Confirmed uncaught `ValueError` risk in `KodiAutoPreviewCoordinator.av_started`: transient non-numeric Kodi focus/current-item labels were parsed directly with `int` in the Player callback. An exception could interrupt the owned-preview lifecycle during window changes.
+- Treat invalid numeric labels as stale focus (`-1`), preserving exact token ownership and stale-preview rejection. Added a regression for malformed `System.CurrentControlId`.
+- Full suite: 134 PASS; no syntax/diff errors. Runtime detail restoration, IPTV and user-data flows remain unverified.

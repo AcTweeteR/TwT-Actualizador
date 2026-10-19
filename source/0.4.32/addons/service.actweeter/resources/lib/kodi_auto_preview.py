@@ -525,9 +525,15 @@ class KodiAutoPreviewCoordinator:
             self.stale_owned.add((generation, request_id))
             return "UNOWNED"
         current = self.scheduler.latest or self.scheduler.resolving
-        current_focus = int(self.kodi.getInfoLabel("System.CurrentControlId") or "-1")
-        current_position = int(self.kodi.getInfoLabel(
-            "Container(%d).CurrentItem" % request.container) or "-1")
+        # Kodi can temporarily expose empty/non-numeric control labels while
+        # changing windows. Treat that as stale focus, never raise from the
+        # Player AVStarted callback or accidentally accept an old preview.
+        try:
+            current_focus = int(self.kodi.getInfoLabel("System.CurrentControlId") or "-1")
+            current_position = int(self.kodi.getInfoLabel(
+                "Container(%d).CurrentItem" % request.container) or "-1")
+        except (TypeError, ValueError):
+            current_focus = current_position = -1
         labels = "Container(%d).ListItem." % request.container
         actual_identity = stable_identity({
             "imdb": self.kodi.getInfoLabel(labels + "UniqueID(imdb)"),
