@@ -2,6 +2,8 @@
 
 Kodi repositories cannot themselves mandate a host-wide setting. The service
 checks the policy at startup and requests notification-only mode via JSON-RPC.
+This is an interim safeguard: approved AcTweeteR releases will require a
+separate selective updater; never enable global auto-updates as a shortcut.
 """
 import json
 

@@ -86,3 +86,7 @@ malformed menu or plugin route.
 ## Control de actualizaciones (19-10-2026)
 
 Política de Kodi Master **notificar sin instalar** (`general.addonupdates=1`) confirmada por JSON-RPC y en el log del servicio tras reinicio. El servicio vuelve a aplicar esta política al arrancar; instalar solo el repositorio no puede imponerla. El control completo de versiones, integridad, compatibilidad, avisos y rollback sigue **PENDIENTE**. Ver [hoja de ruta de actualizaciones](UPDATE_CONTROL_ROADMAP.md). La validación de distribución nueva y las pruebas de regresión de Kodi Master siguen abiertas.
+
+## Requisito adicional de actualizaciones selectivas (19-10-2026)
+
+El propietario exige **actualización automática de las versiones propias publicadas y testadas por AcTweeteR**, manteniendo los addons de terceros en modo manual. El ajuste actual `general.addonupdates=1` protege de actualizaciones no supervisadas pero también impide las propias: es una **solución provisional**, no el objetivo final. Se añade como gate P0 un actualizador selectivo con manifiesto propio verificable, lista de paquetes permitidos, backup, validación de plataforma y rollback. El repositorio agrega feeds externos, por lo que pertenecer a `repository.actweeter` no basta como criterio de confianza. Ver [roadmap](UPDATE_CONTROL_ROADMAP.md).
