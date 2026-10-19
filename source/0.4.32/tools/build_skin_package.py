@@ -7,6 +7,7 @@ import argparse
 import stat
 import unicodedata
 import zipfile
+from package_safety import publish_zip
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -52,18 +53,12 @@ def main() -> None:
         raise SystemExit("skin addon.xml has no version")
     parser.add_argument("--output", type=Path, default=ROOT / "dist" / f"skin.actweeter-{version}.zip")
     args = parser.parse_args()
-    output = args.output.expanduser().resolve()
-    output.parent.mkdir(parents=True, exist_ok=True)
-    with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
-        for path in sorted(p for p in SOURCE.rglob("*") if p.is_file()):
-            if path.suffix in ('.pyc','.pyo') or path.name=='.DS_Store':continue
-            name = (Path("skin.actweeter") / path.relative_to(SOURCE)).as_posix()
-            info = zipfile.ZipInfo(name, FIXED_TIME)
-            info.compress_type = zipfile.ZIP_DEFLATED
-            info.external_attr = (stat.S_IFREG | 0o644) << 16
-            payload = bootstrap_includes(SOURCE) if path.relative_to(SOURCE).as_posix()=='1080i/script-skinshortcuts-includes.xml' else path.read_bytes()
-            archive.writestr(info, payload, compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)
-    digest = hashlib.sha256(output.read_bytes()).hexdigest()
+    output = args.output.expanduser().absolute()
+    if ET.parse(SOURCE / "addon.xml").getroot().get("id") != "skin.actweeter":
+        raise ValueError("skin addon identity mismatch")
+    digest = publish_zip(SOURCE, output, "skin.actweeter", version, FIXED_TIME,
+                         lambda path: bootstrap_includes(SOURCE) if path.relative_to(SOURCE).as_posix() == "1080i/script-skinshortcuts-includes.xml" else path.read_bytes(),
+                         lambda path: path.suffix in (".pyc", ".pyo") or "__pycache__" in path.parts or path.name == ".DS_Store")
     print(f"{output}\nSHA-256 {digest}")
 
 

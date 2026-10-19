@@ -7,6 +7,7 @@ import hashlib
 import stat
 import xml.etree.ElementTree as ET
 import zipfile
+from package_safety import publish_zip
 from pathlib import Path
 
 
@@ -23,21 +24,11 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path,
                         default=ROOT / "dist" / f"service.actweeter-{version}.zip")
-    output = parser.parse_args().output.expanduser().resolve()
-    output.parent.mkdir(parents=True, exist_ok=True)
-    with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED,
-                         compresslevel=9) as archive:
-        for path in sorted(p for p in SOURCE.rglob("*") if p.is_file()
-                           and "__pycache__" not in p.parts
-                           and p.suffix != ".pyc"):
-            name = (Path("service.actweeter") / path.relative_to(SOURCE)).as_posix()
-            info = zipfile.ZipInfo(name, FIXED_TIME)
-            info.compress_type = zipfile.ZIP_DEFLATED
-            info.external_attr = (stat.S_IFREG | 0o644) << 16
-            archive.writestr(info, path.read_bytes(),
-                             compress_type=zipfile.ZIP_DEFLATED,
-                             compresslevel=9)
-    print(f"{output}\nSHA-256 {hashlib.sha256(output.read_bytes()).hexdigest()}")
+    output = parser.parse_args().output.expanduser().absolute()
+    digest = publish_zip(SOURCE, output, "service.actweeter", version, FIXED_TIME,
+                         lambda path: path.read_bytes(),
+                         lambda path: "__pycache__" in path.parts or path.suffix in (".pyc", ".pyo") or path.name == ".DS_Store")
+    print(f"{output}\nSHA-256 {digest}")
 
 
 if __name__ == "__main__":

@@ -21,10 +21,11 @@ class CandidatePackageBuildTests(unittest.TestCase):
                             "--output", str(package)], check=True,
                            cwd=ROOT, capture_output=True, text=True)
             first_hash = hashlib.sha256(package.read_bytes()).hexdigest()
+            second_package = Path(temp) / "service-second.zip"
             subprocess.run([sys.executable, str(ROOT / "tools/build_service_package.py"),
-                            "--output", str(package)], check=True,
-                           cwd=ROOT, capture_output=True, text=True)
-            self.assertEqual(hashlib.sha256(package.read_bytes()).hexdigest(), first_hash)
+                            "--output", str(second_package)], check=True,
+                            cwd=ROOT, capture_output=True, text=True)
+            self.assertEqual(hashlib.sha256(second_package.read_bytes()).hexdigest(), first_hash)
             with zipfile.ZipFile(package) as archive:
                 self.assertIsNone(archive.testzip())
                 addon = ET.fromstring(archive.read("service.actweeter/addon.xml"))
