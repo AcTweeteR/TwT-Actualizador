@@ -42,7 +42,7 @@ class XStreamSeriesRecentDistributionTests(unittest.TestCase):
         patch_path = ROOT / manifest["patch"]
         expected_patch_hash = hashlib.sha256(patch_path.read_bytes()).hexdigest()
         self.assertEqual(manifest["patch_sha256"], expected_patch_hash)
-        self.assertEqual(manifest["distribution_version"], "1.1.2.8")
+        self.assertEqual(manifest["distribution_version"], "1.1.2.9")
         self.assertIn("resources/lib/series_changes.py",
                       manifest["local_runtime_sha256"])
 

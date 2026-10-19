@@ -2,7 +2,7 @@
   "addon_id": "plugin.video.xstream-pro",
   "upstream_project": "https://github.com/Pesicp/XStreamPro",
   "upstream_version": "1.1.2",
-  "distribution_version": "1.1.2.8",
+  "distribution_version": "1.1.2.9",
   "upstream_ref": "1.1.2",
   "upstream_commit": "1aa3e67da7c03c6acc3ec7e1ca579a7f645220f4",
   "upstream_release_url": "https://github.com/Pesicp/XStreamPro/releases/download/1.1.2/plugin.video.xstream-pro-1.1.2.zip",
@@ -11,7 +11,7 @@
   "upstream_release_zip_sha256": "915f45708670d07e789bb73b7390a7b5cf30175f818ef5da8ea18c9f13f537fe",
   "upstream_license_observed": "CC BY-NC 4.0",
   "local_runtime_sha256": {
-    "addon.xml": "e1739e52797f1ff3f5504f237bd8efdeb08cf56a94435d1d937c48d757f2c1b2",
+    "addon.xml": "1b558b478ca25c44062eda9013e23beee7f8fec0c0b8c534cf58022aa6763e15",
     "service.py": "36cb80387d5f9862ee71deee9f993d7d78117f2bdf146623d1feb9d602331539",
     "resources/lib/addon.py": "351d62c70a3781ea49b89e5afcf24ac70af0ecb798dd725d03f612ca5ebb1f37",
     "resources/lib/premium_routes.py": "4986a7449044fe83ac1a34c31f0561d92e071bc43ad325d3a9ebcffba471eb82",
