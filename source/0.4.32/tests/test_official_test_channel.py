@@ -124,6 +124,44 @@ class OfficialTestChannelTests(unittest.TestCase):
                              hashlib.md5(index.read_bytes()).hexdigest())
             self.assertEqual((ROOT / "repo" / "addons.xml").read_bytes(), stable_index)
 
+    def test_existing_test_feed_cannot_be_overwritten(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);output=root/'testing';output.mkdir()
+            marker=output/'keep.txt';marker.write_text('original')
+            with self.assertRaisesRegex(ValueError,'refusing to overwrite'):
+                build_test_channel.build(ROOT/'testing/repository.actweeter.testing',
+                                        root/'missing.zip',output)
+            self.assertEqual(marker.read_text(),'original')
+
+    def test_invalid_package_leaves_no_partial_feed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);service=root/'service.actweeter-0.4.37.zip'
+            with zipfile.ZipFile(service,'w') as archive:
+                archive.writestr('service.actweeter/addon.xml',
+                                 '<addon id="service.actweeter" version="0.4.37"/>')
+                archive.writestr('foreign/unsafe','x')
+            output=root/'testing'
+            with self.assertRaisesRegex(ValueError,'unsafe ZIP paths'):
+                build_test_channel.build(ROOT/'testing/repository.actweeter.testing',
+                                        service,output)
+            self.assertFalse(output.exists())
+
+    def test_build_failure_cleans_staging_and_preserves_stable(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);service=root/'service.actweeter-0.4.37.zip'
+            with zipfile.ZipFile(service,'w') as archive:
+                archive.writestr('service.actweeter/addon.xml',
+                                 '<addon id="service.actweeter" version="0.4.37"/>')
+            output=root/'testing'
+            with patch.object(build_test_channel,'_write_test_channel',
+                              side_effect=OSError('simulated disk failure')):
+                with self.assertRaisesRegex(OSError,'disk failure'):
+                    build_test_channel.build(ROOT/'testing/repository.actweeter.testing',
+                                            service,output)
+            self.assertFalse(output.exists())
+            self.assertFalse(list(root.glob('.actweeter-test-feed-*')))
+
     def test_beta11_manifest_matches_xstream_and_index_artifacts(self):
         manifest = json.loads((ROOT / "manifests/0.4.37-beta11.json").read_text())
         self.assertTrue(manifest["stable_untouched"])

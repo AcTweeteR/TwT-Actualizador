@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import os
+import tempfile
 import shutil
 import stat
 import zipfile
@@ -22,6 +24,9 @@ FIXED_TIME = (2026, 10, 3, 0, 0, 0)
 
 def zip_tree(source: Path, output: Path, root_name: str) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
+    for entry in source.rglob("*"):
+        if entry.is_symlink():
+            raise ValueError("test repository source contains a symlink")
     with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED,
                          compresslevel=9) as archive:
         for path in sorted(p for p in source.rglob("*") if p.is_file()):
@@ -34,6 +39,14 @@ def zip_tree(source: Path, output: Path, root_name: str) -> None:
 
 def addon_from_zip(path: Path, addon_id: str, version: str) -> ET.Element:
     with zipfile.ZipFile(path) as archive:
+        names = archive.namelist()
+        if (len(names) != len(set(names))
+                or any(not name.startswith(addon_id + "/")
+                       or ".." in Path(name).parts for name in names)
+                or any((member.external_attr >> 16) & 0o170000
+                       not in (0, stat.S_IFREG, stat.S_IFDIR)
+                       for member in archive.infolist())):
+            raise ValueError(f"unsafe ZIP paths: {path.name}")
         if archive.testzip() is not None:
             raise ValueError(f"bad ZIP CRC: {path.name}")
         expected = f"{addon_id}/addon.xml"
@@ -48,6 +61,9 @@ def addon_from_zip(path: Path, addon_id: str, version: str) -> ET.Element:
 def build(repository_source: Path, service_zip: Path, output: Path,
           skin_zip: Path | None = None,
           xstream_zip: Path | None = None) -> tuple[Path, Path, Path]:
+    # Never overwrite an existing feed or expose half-copied artifacts.
+    if output.exists() or output.is_symlink():
+        raise ValueError("refusing to overwrite an existing test channel")
     if service_zip.name != f"{SERVICE_ID}-{SERVICE_VERSION}.zip":
         raise ValueError("candidate service ZIP filename does not match its Kodi identity/version")
     repo_addon = ET.parse(repository_source / "addon.xml").getroot()
@@ -90,6 +106,27 @@ def build(repository_source: Path, service_zip: Path, output: Path,
     if not (repository_source / repo_news_name).is_file():
         raise ValueError("test repository changelog missing")
 
+    # All input validation has completed. Build into a private sibling tree.
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix=".actweeter-test-feed-", dir=output.parent) as temporary:
+        stage = Path(temporary) / "feed"
+        stage.mkdir()
+        result = _write_test_channel(stage, repository_source, repo_addon,
+                                     service_zip, service, skin_zip, skin,
+                                     xstream_zip, xstream, repo_news_name)
+        try:
+            os.rename(stage, output)
+        except OSError:
+            if output.exists() or output.is_symlink():
+                raise ValueError("refusing to overwrite an existing test channel")
+            raise
+    return tuple(output / path.relative_to(stage) for path in result)
+
+
+def _write_test_channel(output: Path, repository_source: Path, repo_addon: ET.Element,
+                        service_zip: Path, service: ET.Element, skin_zip: Path | None,
+                        skin: ET.Element | None, xstream_zip: Path | None,
+                        xstream: ET.Element | None, repo_news_name: str) -> tuple[Path, Path, Path]:
     repo_zip = output / "bootstrap" / f"{TEST_REPOSITORY_ID}-{TEST_REPOSITORY_VERSION}.zip"
     zip_tree(repository_source, repo_zip, TEST_REPOSITORY_ID)
     with zipfile.ZipFile(repo_zip) as archive:
