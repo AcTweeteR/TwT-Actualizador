@@ -6,6 +6,7 @@
     <include>CustomBingieWinProps</include>
     <include>BingieViews_WindowOpen_Fade</include>
 	<onload>Skin.TimerStart(spotlightanimation)</onload>
+    <onunload condition="System.HasAddon(slyguy.trailers)">RunScript(service.actweeter,preview_exit)</onunload>
     <controls>
 		<include>Defs_TMDbBingieHelper_Loader</include>
         <!-- fake go-to-fullscreen button -->
