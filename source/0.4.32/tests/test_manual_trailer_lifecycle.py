@@ -7,10 +7,35 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] /
                        "addons/service.actweeter/resources/lib"))
-from slyguy_trailer_return import capture_context, manual_exit_requires_stop, return_decision
+from slyguy_trailer_return import capture_context, manual_exit_requires_stop, return_decision, parse_identity, identity_matches
 
 
 class ManualTrailerTests(unittest.TestCase):
+    def test_manual_identity_rejects_malformed_and_nonstring_provider_ids(self):
+        for value in ('tmdb:../evil', 'imdb:tt 123', 'tmdb:１２３',
+                      'dbid:0', 'dbid:-1', 'dbid:001', 'tmdb:abc\n',
+                      'tmdb:', 'other:123', None, 123):
+            with self.subTest(value=value):
+                self.assertIsNone(parse_identity(value))
+        self.assertEqual(parse_identity('imdb:tt123'), ('imdb','tt123'))
+        self.assertEqual(parse_identity('dbid:123'), ('dbid','123'))
+        self.assertFalse(identity_matches('tmdb:123', {'tmdb':123}))
+        self.assertFalse(identity_matches('tmdb:123', {'tmdb':None}))
+
+    def test_manual_presentation_does_not_fullscreen_superseded_request(self):
+        source = Path(__file__).resolve().parents[1] / 'addons/service.actweeter/service.py'
+        player = next(node for node in ast.parse(source.read_text()).body
+                      if isinstance(node, ast.ClassDef) and node.name == 'SlyGuyTrailerReturnPlayer')
+        method = next(node for node in player.body
+                      if isinstance(node, ast.FunctionDef) and node.name == '_present_manual')
+        namespace = {'_window_id': mock.Mock(), 'manual_exit_requires_stop':manual_exit_requires_stop}
+        exec(compile(ast.Module(body=[method],type_ignores=[]),str(source),'exec'),namespace)
+        fake = mock.Mock()
+        fake._request_is_current.side_effect = [True,False]
+        namespace[method.name](fake,{'playing_file':'trailer.mp4'})
+        fake.kodi.executebuiltin.assert_called_once_with('Dialog.Close(movieinformation)',False)
+        fake.monitor.waitForAbort.assert_not_called()
+
     def test_manual_restore_recovers_only_verified_focused_list_control(self):
         source = Path(__file__).resolve().parents[1] / 'addons/service.actweeter/service.py'
         player = next(node for node in ast.parse(source.read_text()).body

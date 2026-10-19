@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 
 DETAIL_WINDOW_ID = 12003
 HOME_WINDOW_ID = 10000
@@ -19,7 +21,10 @@ def parse_identity(value):
     kind, identifier = value.split(":", 1)
     if kind not in IDENTITY_PREFIXES or not identifier:
         return None
-    if any(char in identifier for char in "\r\n\x00"):
+    if kind == "dbid":
+        if not re.fullmatch(r"[1-9][0-9]*", identifier):
+            return None
+    elif not re.fullmatch(r"[A-Za-z0-9]+", identifier):
         return None
     return kind, identifier
 
@@ -30,7 +35,8 @@ def identity_matches(identity, current_values):
     if parsed is None:
         return False
     kind, expected = parsed
-    return str(current_values.get(kind, "")) == expected
+    observed = current_values.get(kind, "")
+    return isinstance(observed, str) and observed == expected
 
 
 def marker_cleanup_allowed(current_identity, expected_identity, *,

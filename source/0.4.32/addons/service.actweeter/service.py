@@ -273,6 +273,8 @@ class SlyGuyTrailerReturnPlayer(_PLAYER_BASE):
         if not self._request_is_current(context):
             return
         self.kodi.executebuiltin("Dialog.Close(movieinformation)", False)
+        if not self._request_is_current(context) or not self.isPlayingVideo():
+            return
         self.kodi.executebuiltin("ActivateWindow(fullscreenvideo)", False)
         fullscreen_seen = False
         while not self.monitor.waitForAbort(0.2):

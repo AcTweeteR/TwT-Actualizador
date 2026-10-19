@@ -375,3 +375,11 @@ Reviewed VIDEO_INFO manual launch, terminal callback, list focus recovery, Spotl
 - During asynchronous Spotlight refocus and detail reopen waits, revalidate the original request to avoid completing a superseded trailer request.
 - Treat Home request markers as armed only for literal `1`, not any nonempty value.
 - 174 tests PASS. Tests include structural assertions for focus/identity/request guards; full manual trailer playback and actual GUI restoration are still NOT verified.
+
+## Manual trailer identity and presentation transition — 2026-10-19
+
+Reviewed the complete identity parsing/matching, explicit request, video-info dismissal, fullscreen activation and owned stop flow.
+
+- Accept only ASCII alphanumeric provider IDs and positive canonical decimal DBIDs in typed trailer return identities; reject malformed/Unicode/control identifiers and non-string observed identities.
+- Revalidate both current request and active video after closing the information dialog and before activating fullscreen, preventing a superseded request from driving the GUI.
+- 176 tests PASS, including malformed identity cases and a simulated request invalidated during presentation. Actual Kodi GUI playback remains a runtime QA gate.
