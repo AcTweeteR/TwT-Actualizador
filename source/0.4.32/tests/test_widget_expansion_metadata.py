@@ -13,6 +13,58 @@ import interface_layout  # noqa: E402
 
 
 class ExpandableWidgetMetadataTests(unittest.TestCase):
+    def test_apply_refuses_directory_shortcut_without_partial_changes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            shortcuts = root / 'shortcuts'
+            service = root / 'service'
+            shortcuts.mkdir()
+            service.mkdir()
+            name = sorted(interface_layout.source_documents(ROOT / 'addons/skin.actweeter'))[-1]
+            (shortcuts / name).mkdir()
+            with self.assertRaises(ValueError):
+                interface_layout.apply_layout(shortcuts, service,
+                    ROOT / 'addons/skin.actweeter', interface_layout.SETTINGS)
+            self.assertTrue((shortcuts / name).is_dir())
+            self.assertEqual(sorted(p.name for p in shortcuts.iterdir()), [name])
+
+    def test_apply_refuses_traversal_or_duplicate_snapshot_names(self):
+        for name in ('../outside', 'nested/entry', 'skin.actweeter.properties',
+                     'previous-state.json'):
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                shortcuts = root / 'shortcuts'
+                service = root / 'service'
+                shortcuts.mkdir()
+                service.mkdir()
+                victim = root / 'outside'
+                victim.write_bytes(b'preserve')
+                with self.assertRaises(ValueError):
+                    interface_layout.apply_layout(shortcuts, service,
+                        ROOT / 'addons/skin.actweeter', interface_layout.SETTINGS,
+                        snapshots={name: victim})
+                self.assertEqual(victim.read_bytes(), b'preserve')
+                self.assertEqual(list(shortcuts.iterdir()), [])
+
+    def test_apply_then_rollback_restores_exact_original_bytes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            shortcuts = root / 'shortcuts'
+            service = root / 'service'
+            shortcuts.mkdir()
+            service.mkdir()
+            old = b'{"layout_version": 0, "files": {}}'
+            state = service / 'interface_layout_state.json'
+            state.write_bytes(old)
+            result = interface_layout.apply_layout(shortcuts, service,
+                ROOT / 'addons/skin.actweeter', interface_layout.SETTINGS)
+            self.assertEqual(result['status'], 'APPLIED')
+            self.assertTrue(result['changed'])
+            self.assertEqual(interface_layout.rollback_layout(shortcuts, service),
+                             interface_layout.SETTINGS)
+            self.assertEqual(state.read_bytes(), old)
+            self.assertEqual(list(shortcuts.iterdir()), [])
+
     def test_rollback_refuses_linked_state_before_read(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

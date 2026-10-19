@@ -323,3 +323,12 @@ Reviewed the complete rollback authorization chain (state read, backup location,
 - Validate all state-derived backup filenames before any backup-file reads.
 - The prior fallback `state.files[name] or state.properties_hash` could authorize overwriting an unrelated customized shortcut if its content happened to match the properties hash. Restrict `properties_hash` exclusively to `skin.actweeter.properties`; all other shortcuts require their own exact expected digest.
 - 161 automated tests PASS, including symlinked state, traversal in state filenames and incorrect cross-file hash authorization. Full Kodi GUI consent/restore remains pending.
+
+## Layout apply-backup-rollback complete isolated round trip — 2026-10-19
+
+Audited the whole apply/backup/rollback path with a real temporary filesystem (not the Kodi Master profile):
+
+- Apply preflights every shortcut destination, refusing existing directories/non-files before writing any other shortcut. This avoids partially mutated layouts when a later target is a directory.
+- Apply validates extra snapshot names, refusing traversal, nested paths and collisions with managed/reserved backup entries. No external path can be selected as backup output via the snapshot key.
+- New isolated end-to-end test applies the real skin shortcut documents, verifies a backup is produced, rolls back, and asserts exact original state bytes and no leftover managed shortcuts.
+- 164 automated tests PASS; live GUI consent, Skin Shortcuts build and provider playback are separate remaining gates.

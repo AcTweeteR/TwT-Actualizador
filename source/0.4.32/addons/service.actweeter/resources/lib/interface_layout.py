@@ -371,6 +371,8 @@ def apply_layout(shortcuts_root, service_root, skin_root, current_settings,
     for name, wanted in documents.items():
         path = shortcuts_root/name
         if path.is_symlink(): raise ValueError('shortcut symlink refused')
+        if path.exists() and not path.is_file():
+            raise ValueError('shortcut target is not a file')
         old = path.read_bytes() if path.is_file() else None
         if old == wanted: continue
         if old is not None and digest(old) != state.get('files',{}).get(name):
@@ -406,7 +408,14 @@ def apply_layout(shortcuts_root, service_root, skin_root, current_settings,
     targets = {name:shortcuts_root/name for name in documents}
     targets.update({properties.name:properties,'skin.actweeter.hash':shortcuts_root/'skin.actweeter.hash'})
     targets['previous-state.json']=state_path
-    targets.update(snapshots or {})
+    if snapshots:
+        if not isinstance(snapshots, dict) or any(
+                not re_safe_name(name) or name in targets
+                for name in snapshots):
+            raise ValueError('unsafe or duplicate snapshot name refused')
+        targets.update(snapshots)
+    if any(not re_safe_name(name) for name in targets):
+        raise ValueError('unsafe backup entry name refused')
     for name,path in targets.items():
         path = as_path(path)
         if path.is_symlink(): raise ValueError('backup symlink refused')
