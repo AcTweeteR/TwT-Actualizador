@@ -17,6 +17,17 @@ from automatic_preview import LatestPreviewScheduler, PreviewOwnership  # noqa: 
 from kodi_auto_preview import KodiAutoPreviewCoordinator, SENDER, MESSAGE  # noqa: E402
 
 
+class CancelWindowContractTests(unittest.TestCase):
+    def test_late_other_window_cancel_cannot_cancel_active_preview(self):
+        bridge = coordinator(FakeKodi())
+        self.assertTrue(bridge._focus(focus_packet()))
+        request = bridge.scheduler.latest
+        self.assertFalse(bridge._cancel(dict(window=11110, container=1508,
+                                              focus=1508, position=1, imdb='tt123')))
+        self.assertEqual(bridge.scheduler.latest, request)
+        self.assertEqual(bridge.focus_context['window'], 11111)
+
+
 class StaleCleanupContractTests(unittest.TestCase):
     def test_stale_item_cannot_delete_another_request_manifest(self):
         from unittest import mock

@@ -63,12 +63,15 @@ def preview_source(request):
     if media not in ("movie", "tvshow", "season", "episode"):
         return None
     parent = media in ("season", "episode")
-    ids = {key: request.get(("show_" if parent else "") + key)
-           for key in ("imdb", "tmdb")
-           if request.get(("show_" if parent else "") + key)}
-    dbid = request.get("show_dbid" if parent else "dbid") or -1
-    if parent and (not request.get("show_title") or
-                   (not ids and (not str(dbid).isdigit() or int(dbid) < 0))):
+    prefix = "show_" if parent else ""
+    ids = {key: value for key in ("imdb", "tmdb")
+           if (value := request.get(prefix + key)) is not None
+           and isinstance(value, str) and value.strip()
+           and value.isascii() and value.isalnum()}
+    raw_dbid = request.get(prefix + "dbid")
+    dbid = (raw_dbid if isinstance(raw_dbid, str) and raw_dbid.isascii()
+            and raw_dbid.isdecimal() and int(raw_dbid) > 0 else -1)
+    if parent and (not request.get("show_title") or (not ids and dbid == -1)):
         return None
     trailer_id = str(request.get("trailer_id") or "")
     return {

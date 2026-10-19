@@ -394,6 +394,10 @@ class KodiAutoPreviewCoordinator:
             return False
         try:
             window = int(payload.get("window", request.window))
+            if window != request.window:
+                self._log("CANCEL_IGNORED", generation=request.generation,
+                          reason="other_window")
+                return False
             focus = int(payload.get("focus", request.focus))
             position = int(payload.get("position", request.position))
         except (TypeError, ValueError):
@@ -418,6 +422,7 @@ class KodiAutoPreviewCoordinator:
             return False
         with self.wake:
             if (self.focus_context and
+                    str(self.focus_context.get("window")) == str(request.window) and
                     str(self.focus_context.get("container")) == str(request.container)):
                 self.focus_context = None
             # When focus moved to a non-preview item there is no replacement

@@ -306,3 +306,11 @@ Reviewed provider request validation, preview resolution, player handoff, manife
 - Coordinator `_cleanup_stale` previously deleted the item's advertised manifest before verifying identity/token ownership; a stale callback could remove another generation's valid MPD. Validate request ID format, known generation token and identity, and exact expected manifest name *before* deletion.
 - Provider `_resolve` cleanup ran in `finally` without protecting VFS translation/existence/deletion exceptions, which could suppress status and terminate the provider worker. Log cleanup failure by exception type and allow worker to continue.
 - 156 automated tests PASS, including stale cross-request and mismatched-identity cases, plus structural guard for provider cleanup. Full playback runtime and VFS failure-injection integration still pending.
+
+## Preview selection/cancel/provider parent identity audit — 2026-10-19
+
+Reviewed the focus notification -> scheduler offer -> cancel/unfocus -> SlyGuy episode/season parent trailer lookup path as one workflow.
+
+- Pending/active preview `_cancel` accepted a late cancel from another window with the same container ID; now rejects mismatched windows and checks both window and container when clearing idle focus context.
+- SlyGuy `preview_source` accepted malformed parent imdb/tmdb values (including non-string and Unicode numeric values) and invalid parent dbid. Require ASCII alphanumeric string IDs and positive decimal dbid before resolving a series parent; do not substitute episode ID.
+- 158 automated tests PASS, including cross-window pending cancel and malformed episode-parent identity. Real GUI carousel/episode preview remains a runtime QA gate.

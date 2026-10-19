@@ -78,6 +78,16 @@ class SeriesPreviewTests(unittest.TestCase):
             show_title="Series", tmdb="999", imdb="tt999", dbid="99")))
         self.assertIsNone(preview_source(dict(media_type="channel", tmdb="1")))
 
+    def test_parent_trailer_lookup_rejects_malformed_parent_ids(self):
+        for bad in (None, False, 123, '../evil', '１２３', ''):
+            with self.subTest(bad=bad):
+                source = preview_source(dict(media_type='episode', show_title='Series',
+                                             show_tmdb=bad, show_imdb=bad,
+                                             show_dbid=bad, tmdb='999'))
+                self.assertIsNone(source)
+        self.assertEqual(preview_source(dict(media_type='episode', show_title='Series',
+                                             show_dbid='7'))['dbid'], '7')
+
     def test_library_episode_uses_parent_database_identity(self):
         source = preview_source(dict(media_type="episode", show_title="Series", show_dbid="7"))
         self.assertEqual(source["dbid"], "7")
