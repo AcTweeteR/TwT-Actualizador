@@ -289,3 +289,12 @@ Scope: reviewed `apply_layout`, `rollback_layout`, `backup_interface`, backup ma
 - `rollback_layout`: reject a symlinked backup root before loading any manifest. Regression checks no external files change.
 - `backup_interface`: reject symlinked backup root and report destination before creating pre-update snapshots. Regression checks both entry points.
 - All 152 automated tests PASS; source syntax and diff checks clean. The full Kodi visual/functional flows and power-loss consistency are separate, still-open QA gates.
+
+## Manual trailer lifecycle: return-path audit — 2026-10-19
+
+Reviewed capture, fullscreen handoff, owned stop, terminal gating, marker cleanup and return to detail/spotlight. Two additional unsafe Info-action paths were found:
+
+- Missing/unknown source control or source window could still reach Action(Info) without verified control focus. Refuse restoration without a known source control from the exact current list window.
+- Request or selected identity could change between focus confirmation and Action(Info). Recheck request ownership, window, focus and stable identity immediately before opening the detail.
+
+153 automated tests PASS, including AST guard regression. Runtime manual trailer/movie/series Back tests remain pending; do not claim functional certification until reproduced on Kodi.

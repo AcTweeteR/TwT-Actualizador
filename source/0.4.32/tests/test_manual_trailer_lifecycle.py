@@ -11,6 +11,28 @@ from slyguy_trailer_return import capture_context, manual_exit_requires_stop, re
 
 
 class ManualTrailerTests(unittest.TestCase):
+    def test_manual_restore_refuses_missing_source_and_rechecks_before_info(self):
+        source = Path(__file__).resolve().parents[1] / 'addons/service.actweeter/service.py'
+        player = next(node for node in ast.parse(source.read_text()).body
+                      if isinstance(node, ast.ClassDef) and node.name == 'SlyGuyTrailerReturnPlayer')
+        method = next(node for node in player.body
+                      if isinstance(node, ast.FunctionDef) and node.name == '_restore_context')
+        statements = [node for node in ast.walk(method) if isinstance(node, ast.If)]
+        missing_source_guards = [node for node in statements
+                                 if 'not source_control' in ast.unparse(node.test)
+                                 and 'source_window_id' in ast.unparse(node.test)]
+        self.assertTrue(missing_source_guards)
+        info = next(node for node in ast.walk(method)
+                    if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+                    and node.func.attr == 'executebuiltin' and node.args
+                    and isinstance(node.args[0], ast.Constant)
+                    and node.args[0].value == 'Action(Info)')
+        rechecks = [node for node in statements if node.lineno < info.lineno
+                    and 'not self._request_is_current(context)' in ast.unparse(node.test)
+                    and 'Control.HasFocus' in ast.unparse(node.test)
+                    and 'identity_matches' in ast.unparse(node.test)]
+        self.assertTrue(rechecks, 'request, focus and identity must be rechecked immediately before Info')
+
     def test_manual_restore_checks_focus_before_info_action(self):
         source = Path(__file__).resolve().parents[1] / 'addons/service.actweeter/service.py'
         player = next(node for node in ast.parse(source.read_text()).body
