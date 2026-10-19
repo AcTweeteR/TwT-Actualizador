@@ -190,3 +190,9 @@ Scope inspected: integrated commit history, installed/source parity, coordinator
 - Confirmed uncaught `ValueError` risk in `KodiAutoPreviewCoordinator.av_started`: transient non-numeric Kodi focus/current-item labels were parsed directly with `int` in the Player callback. An exception could interrupt the owned-preview lifecycle during window changes.
 - Treat invalid numeric labels as stale focus (`-1`), preserving exact token ownership and stale-preview rejection. Added a regression for malformed `System.CurrentControlId`.
 - Full suite: 134 PASS; no syntax/diff errors. Runtime detail restoration, IPTV and user-data flows remain unverified.
+
+## Carousel consecutive-card transition audit — 2026-10-19
+
+- Confirmed real control-flow bug: `_work` assigned `refocus_after_stop = active` immediately before `_preempt`, which cleared `refocus_after_stop` by design. The prior preview stopped on selection change, but the replacement card could not be rearmed by the worker.
+- Moved deferred refocus assignment after `_preempt` only in the internal card-change path, keeping manual/VOD handoff cancellation intact.
+- Added deterministic worker regression confirming the old card is passed to `_refocus_current_card`; 135 automated tests PASS. Real visual carousel transition still requires runtime validation.

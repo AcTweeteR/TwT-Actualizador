@@ -829,8 +829,11 @@ class KodiAutoPreviewCoordinator:
                 active = self.scheduler.active
             if active is not None and not self._active_focus_still_matches(active):
                 self._log("FOCUS_CHANGED", generation=active.generation)
-                self.refocus_after_stop = active
                 self._preempt({"owner": "OTHER"})
+                # Explicit preemption clears deferred focus by design for
+                # manual/VOD handoff. Re-arm only this internal card-change
+                # path, after preemption, to preview the newly selected card.
+                self.refocus_after_stop = active
             if self.refocus_after_stop is not None:
                 try:
                     playing = self.kodi.getCondVisibility("Player.HasMedia")

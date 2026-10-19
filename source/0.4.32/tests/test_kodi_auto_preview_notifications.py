@@ -86,6 +86,29 @@ def coordinator(kodi):
 
 
 class PreviewNotificationTests(unittest.TestCase):
+    def test_card_change_rearms_deferred_focus_after_preemption(self):
+        # Exercise the worker's card-change branch with one deterministic
+        # iteration: preemption must not erase its own re-focus request.
+        bridge = coordinator(FakeKodi())
+        bridge._focus(focus_packet())
+        active = bridge.scheduler.latest
+        bridge.scheduler.active = active
+        bridge._active_focus_still_matches = lambda request: False
+        bridge._refocus_current_card = lambda request: setattr(
+            bridge, "observed_refocus", request)
+        bridge._poll_selected_card = lambda: None
+        bridge._take_ready = lambda *args, **kwargs: None
+        bridge.kodi.getCondVisibility = lambda condition: False
+        original_wait = bridge.wake.wait
+        def stop_after_one_iteration(timeout):
+            bridge.closed = True
+        bridge.wake.wait = stop_after_one_iteration
+        try:
+            bridge._work()
+        finally:
+            bridge.wake.wait = original_wait
+        self.assertIs(bridge.observed_refocus, active)
+
     def test_cancel_after_terminal_forgets_idle_row(self):
         bridge = coordinator(FakeKodi())
         bridge._focus(focus_packet())
