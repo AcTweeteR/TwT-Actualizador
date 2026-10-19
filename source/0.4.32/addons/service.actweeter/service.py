@@ -22,6 +22,7 @@ LIB_PATH = os.path.join(ADDON_PATH, "resources", "lib")
 if LIB_PATH not in sys.path:
     sys.path.insert(0, LIB_PATH)
 
+from addon_update_policy import ensure_notify_only  # noqa: E402
 from search_background import (last_successful_sync, plugin_refresh_url,
                                RefreshGate, xstream_profile_number)  # noqa: E402
 from slyguy_trailer_return import (  # noqa: E402
@@ -780,6 +781,12 @@ def run_service(kodi, addon_factory, vfs, clock=time.time):
              (profile, instance_id), kodi.LOGINFO)
     kodi.log("[AcTweeteR] COORDINATOR_START profile=%s instance=%s" %
              (profile, instance_id), kodi.LOGINFO)
+    try:
+        policy_status = ensure_notify_only(kodi.executeJSONRPC)
+        kodi.log("[AcTweeteR] ADDON_UPDATE_POLICY status=%s" % policy_status, kodi.LOGINFO)
+    except Exception as exc:
+        kodi.log("[AcTweeteR] ADDON_UPDATE_POLICY status=FAILED error=%s" % type(exc).__name__,
+                 getattr(kodi, "LOGERROR", kodi.LOGINFO))
     player_factory = getattr(kodi, "Player", None)
     preview_player = player_factory() if player_factory else _InactivePlayer()
     auto_preview = KodiAutoPreviewCoordinator(
