@@ -1,0 +1,15 @@
+{
+  "release": "0.4.41-testing",
+  "base_commit": "63be13db36edb452009c228d82169e6126c126d1",
+  "retained_fix_commit": "0ed33f87c19e51b03620a4d6b8aceefcc7eaf1df",
+  "stable_untouched": true,
+  "addons": [
+    {"id": "service.actweeter", "version": "0.4.41", "sha256": "0ab0b44c00825af323ef37e6e6b918aa24401799a1fc47c0bd82ad2ba57b404f"},
+    {"id": "skin.actweeter", "version": "1.2.29~beta11", "sha256": "66dd56dd5d9b78087fca5d3ba8f49228d3de1217b1aa87c263af7c77c24f2c43", "reused": true},
+    {"id": "plugin.video.xstream-pro", "version": "1.1.2.8", "sha256": "f1a305719b8b8bc5e5e0b99c66331af5ad153fdd15829b25947ba1fe97ad9382", "reused": true},
+    {"id": "repository.actweeter.testing", "version": "1.0.1", "sha256": "8eee2935672b3127140ecf52adc512cebf15bc0cd29e6566cf16c0b7bbbc2cc3", "reused": true}
+  ],
+  "testing_index": {"sha256": "3f298b49eed1bbe5a6446b7b9958fa2c45051873ed38511eab8b322592aef278", "md5": "fb5027d07c692c349b14c9041cd63550"},
+  "automated_tests": {"count": 135, "python_3_11": "PASS", "python_3_14": "PASS"},
+  "runtime": {"master_installed_output_validation": "PASS_STATIC", "master_startup": "NOT_TESTED", "lenovo": "NOT_TESTED", "tvos": "PENDING_USER_TEST"}
+}

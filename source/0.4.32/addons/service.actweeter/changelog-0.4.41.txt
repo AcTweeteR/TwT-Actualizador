@@ -1,0 +1,6 @@
+0.4.41 — Testing
+- Validar únicamente las filas e identidades del perfil activo en los includes multiperfil de Skin Shortcuts; no exigir sus propiedades en el almacén de otros perfiles.
+- No reintentar automáticamente validaciones XML inválidas: conservar el error y la migración pendiente en lugar de repetir compilaciones idénticas.
+- Mantener reintentos acotados para bloqueos temporales y compilaciones no observadas o con timeout.
+- Conservar la oferta opcional del bridge con consentimiento independiente y los tráilers de Spotlight/carruseles de 0.4.40.
+- La causa completa de InterfaceReady vacío y el arranque limpio siguen pendientes de validación runtime en Master/Lenovo. Esta Beta no declara resuelta la inicialización.
