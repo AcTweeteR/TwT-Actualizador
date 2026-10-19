@@ -1,6 +1,7 @@
 import sys
 import tempfile
 import unittest
+from unittest import mock
 import hashlib
 import json
 import xml.etree.ElementTree as ET
@@ -12,6 +13,44 @@ import interface_layout  # noqa: E402
 
 
 class ExpandableWidgetMetadataTests(unittest.TestCase):
+    def test_rollback_write_failure_restores_previous_shortcut_bytes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            shortcuts = root / 'shortcuts'
+            service = root / 'service'
+            shortcuts.mkdir()
+            backup_id = '20261019T000000Z-abcdef12'
+            backup = service / 'interface_backups' / backup_id
+            backup.mkdir(parents=True)
+            names = ['skin.actweeter-a.DATA.xml', 'skin.actweeter-b.DATA.xml']
+            state_files, entries = {}, {}
+            for i, name in enumerate(names):
+                current = ('current-%d' % i).encode()
+                (shortcuts / name).write_bytes(current)
+                state_files[name] = interface_layout.digest(current)
+                old = ('previous-%d' % i).encode()
+                (backup / name).write_bytes(old)
+                entries[name] = {'exists': True, 'sha256': interface_layout.digest(old)}
+            entries['skin.actweeter.properties'] = {'exists': False}
+            entries['previous-state.json'] = {'exists': False}
+            (backup / 'MANIFEST.json').write_text(json.dumps({'files': entries}))
+            state = service / 'interface_layout_state.json'
+            state.write_text(json.dumps({'backup': backup_id, 'files': state_files}))
+            before_state = state.read_bytes()
+            real_write = interface_layout.atomic_write
+            failed = [False]
+            def fail_second_once(path, data):
+                if Path(path).name == names[1] and not failed[0]:
+                    failed[0] = True
+                    raise OSError('simulated disk error')
+                return real_write(path, data)
+            with mock.patch.object(interface_layout, 'atomic_write', side_effect=fail_second_once):
+                with self.assertRaises(OSError):
+                    interface_layout.rollback_layout(shortcuts, service)
+            for i, name in enumerate(names):
+                self.assertEqual((shortcuts / name).read_bytes(), ('current-%d' % i).encode())
+            self.assertEqual(state.read_bytes(), before_state)
+
     def test_rollback_corrupt_later_backup_preserves_all_shortcuts(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

@@ -494,16 +494,31 @@ def rollback_layout(shortcuts_root,service_root):
             if digest(data) != info.get('sha256'):
                 raise OSError('backup integrity mismatch')
             restored[name] = data
-    for name in names:
-        path = shortcuts_root/name
-        if name in restored:
-            atomic_write(path, restored[name])
-        elif path.exists():
-            path.unlink()
-    if 'previous-state.json' in restored:
-        atomic_write(state_path, restored['previous-state.json'])
-    elif state_path.exists():
-        state_path.unlink()
+    # A filesystem write can still fail after preflight (disk full, I/O).
+    # Preserve the exact pre-rollback bytes so the failed operation can undo
+    # its own partial changes, without relying on the backup being restored.
+    targets = {name: shortcuts_root/name for name in names}
+    targets['previous-state.json'] = state_path
+    originals = {name: path.read_bytes() if path.is_file() else None
+                 for name, path in targets.items()}
+    changed = []
+    try:
+        for name, path in targets.items():
+            changed.append(name)
+            if name in restored:
+                atomic_write(path, restored[name])
+            elif path.exists():
+                path.unlink()
+    except Exception:
+        for name in reversed(changed):
+            path = targets[name]
+            original = originals[name]
+            if original is None:
+                if path.exists():
+                    path.unlink()
+            else:
+                atomic_write(path, original)
+        raise
     return manifest.get('settings',{})
 
 def generated_rows(path):

@@ -256,3 +256,9 @@ Scope inspected: integrated commit history, installed/source parity, coordinator
 - The rollback manifest preflight omitted `previous-state.json`, permitting a missing entry to be interpreted as absent and deleting the current layout state.
 - Require an explicit previous-state entry and test fail-closed preservation of the existing state file.
 - Full suite: 145 PASS. Live catalogue layout and consent remain unchanged.
+
+## Layout rollback mid-write failure audit — 2026-10-19
+
+- Even after verifying all backup payloads, a later filesystem write failure could leave earlier shortcuts partially restored.
+- Snapshot original target bytes, and on rollback write failure restore already touched paths in reverse order. Regression injects a one-time failure on the second shortcut and verifies both original shortcuts and layout state remain intact.
+- Full suite: 146 PASS. This is best-effort recovery from a recoverable I/O failure, not a power-loss transaction.
