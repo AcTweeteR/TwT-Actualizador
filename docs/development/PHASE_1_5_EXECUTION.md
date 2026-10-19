@@ -391,3 +391,11 @@ Reviewed scheduler gate, dispatch, pending provider sync observation, stale requ
 - Initial `RefreshGate.last_request=0` incorrectly suppressed first dispatch until one full interval of clock uptime. A never-requested gate now uses `None` and permits the first due request immediately (subject to coordinator's initial provider bootstrap grace period).
 - A dispatched refresh without a later `last_successful_sync` update previously stayed pending indefinitely. After two refresh intervals, the coordinator marks it unobserved, clears pending and returns to normal refresh gate decisions. It does not infer successful sync or change provider credentials.
 - 179 tests PASS, including scheduler behavioral tests and pending lifecycle structural contract. Provider real sync remains an integration gate.
+
+## XStream provider SQLite sync marker read — 2026-10-19
+
+Audited the index timestamp path through SQLite open, scalar extraction and refresh_due decision.
+
+- Refuse symlink/nonregular index paths and use read-only SQLite URI without resolving a linked path. No provider data mutation.
+- Treat nonfinite SQLite timestamps (`NaN`, infinities) as absent; reject nonfinite inputs in refresh_due rather than producing unstable scheduling decisions.
+- 181 tests PASS, including real temporary SQLite databases and linked index paths. Concurrent index rebuild/runtime sync remains unverified.

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import math
 import re
 import sqlite3
 from pathlib import Path
@@ -22,16 +23,17 @@ def xstream_profile_number(active_profile: str) -> int:
 def last_successful_sync(profile_path: str, profile_number: int) -> float:
     """Read one scalar timestamp, never returning any personal row/value."""
     path = os.path.join(profile_path, "provider_search_%d.sqlite" % profile_number)
-    if not os.path.exists(path):
+    if not os.path.exists(path) or os.path.islink(path) or not os.path.isfile(path):
         return 0.0
     try:
-        uri = Path(path).resolve().as_uri() + "?mode=ro"
+        uri = Path(path).absolute().as_uri() + "?mode=ro"
         conn = sqlite3.connect(uri, uri=True, timeout=2)
         try:
             row = conn.execute(
                 "SELECT value FROM meta WHERE key='last_successful_sync'"
             ).fetchone()
-            return max(0.0, float(row[0])) if row else 0.0
+            timestamp = float(row[0]) if row else 0.0
+            return max(0.0, timestamp) if math.isfinite(timestamp) else 0.0
         finally:
             conn.close()
     except (OSError, ValueError, sqlite3.Error):
@@ -39,7 +41,8 @@ def last_successful_sync(profile_path: str, profile_number: int) -> float:
 
 
 def refresh_due(last_sync: float, now: float, interval: int = DEFAULT_INTERVAL_SECONDS) -> bool:
-    return last_sync <= 0 or now - last_sync >= interval
+    return (math.isfinite(last_sync) and math.isfinite(now) and
+            (last_sync <= 0 or now - last_sync >= interval))
 
 
 def refresh_state_check_due(now: float, next_check: float, *, pending: bool = False) -> bool:
