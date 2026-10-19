@@ -13,6 +13,58 @@ import interface_layout  # noqa: E402
 
 
 class ExpandableWidgetMetadataTests(unittest.TestCase):
+    def test_rollback_refuses_linked_state_before_read(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            service = root / 'service'
+            shortcuts = root / 'shortcuts'
+            service.mkdir()
+            shortcuts.mkdir()
+            external = root / 'external.json'
+            external.write_text('{"backup":"outside","files":{}}')
+            (service / 'interface_layout_state.json').symlink_to(external)
+            with self.assertRaises(ValueError):
+                interface_layout.rollback_layout(shortcuts, service)
+            self.assertEqual(external.read_text(), '{"backup":"outside","files":{}}')
+
+    def test_rollback_rejects_unsafe_manifest_names_before_backup_access(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            service = root / 'service'
+            shortcuts = root / 'shortcuts'
+            service.mkdir()
+            shortcuts.mkdir()
+            state = {'backup': 'valid-backup', 'files': {'../outside': 'abc'}}
+            (service / 'interface_layout_state.json').write_text(json.dumps(state))
+            backup = service / 'interface_backups' / 'valid-backup'
+            backup.mkdir(parents=True)
+            (backup / 'MANIFEST.json').write_text(json.dumps({'files': {}}))
+            with self.assertRaises(ValueError):
+                interface_layout.rollback_layout(shortcuts, service)
+            self.assertEqual(list(shortcuts.iterdir()), [])
+
+    def test_rollback_properties_hash_cannot_authorize_other_shortcut(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            service = root / 'service'
+            shortcuts = root / 'shortcuts'
+            service.mkdir()
+            shortcuts.mkdir()
+            name = 'skin.actweeter-moviehub.DATA.xml'
+            current = b'user changed shortcut'
+            (shortcuts / name).write_bytes(current)
+            state = {'backup': 'valid-backup', 'files': {name: 'wrong-hash'},
+                     'properties_hash': interface_layout.digest(current)}
+            (service / 'interface_layout_state.json').write_text(json.dumps(state))
+            backup = service / 'interface_backups' / 'valid-backup'
+            backup.mkdir(parents=True)
+            (backup / 'MANIFEST.json').write_text(json.dumps({'files': {
+                name: {'exists': False}, 'skin.actweeter.properties': {'exists': False},
+                'previous-state.json': {'exists': False},
+            }}))
+            self.assertIsNone(interface_layout.rollback_layout(shortcuts, service))
+            self.assertEqual((shortcuts / name).read_bytes(), current)
+
     def test_apply_layout_recovers_state_after_postwrite_failure(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

@@ -463,15 +463,21 @@ def apply_layout(shortcuts_root, service_root, skin_root, current_settings,
 def rollback_layout(shortcuts_root,service_root):
     shortcuts_root,service_root=as_path(shortcuts_root),Path(service_root)
     state_path=service_root/'interface_layout_state.json'
+    if state_path.is_symlink():
+        raise ValueError('layout state symlink refused')
     state=load_state(state_path)
+    if not isinstance(state.get('files'), dict):
+        return None
     if not re_safe_name(state.get('backup')):return None
     backup=service_root/'interface_backups'/state['backup']
     if ((service_root/'interface_backups').is_symlink() or backup.is_symlink() or
             (backup/'MANIFEST.json').is_symlink()):
         raise ValueError('layout backup symlink refused')
     manifest=load_state(backup/'MANIFEST.json')
-    names=list(dict.fromkeys([*state.get('files',{}), 'skin.actweeter.properties']))
+    names=list(dict.fromkeys([*state['files'], 'skin.actweeter.properties']))
     required_names = names + ['previous-state.json']
+    if any(not re_safe_name(name) for name in required_names):
+        raise ValueError('unsafe shortcut name refused')
     # Never interpret a missing/corrupt backup manifest as "file absent":
     # that would delete current shortcuts during an attempted rollback.
     backed_files = manifest.get('files')
@@ -493,7 +499,8 @@ def rollback_layout(shortcuts_root,service_root):
         raise ValueError('layout state symlink refused')
     for name in names:
         path=shortcuts_root/name
-        expected=state.get('files',{}).get(name) or state.get('properties_hash')
+        expected=(state.get('properties_hash') if name == 'skin.actweeter.properties'
+                  else state['files'].get(name))
         # A deleted owned shortcut is also a user-visible change. Do not
         # recreate it from an older backup without explicit confirmation.
         if not path.is_file():

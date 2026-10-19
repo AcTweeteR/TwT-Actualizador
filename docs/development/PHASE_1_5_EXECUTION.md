@@ -314,3 +314,12 @@ Reviewed the focus notification -> scheduler offer -> cancel/unfocus -> SlyGuy e
 - Pending/active preview `_cancel` accepted a late cancel from another window with the same container ID; now rejects mismatched windows and checks both window and container when clearing idle focus context.
 - SlyGuy `preview_source` accepted malformed parent imdb/tmdb values (including non-string and Unicode numeric values) and invalid parent dbid. Require ASCII alphanumeric string IDs and positive decimal dbid before resolving a series parent; do not substitute episode ID.
 - 158 automated tests PASS, including cross-window pending cancel and malformed episode-parent identity. Real GUI carousel/episode preview remains a runtime QA gate.
+
+## Layout rollback: state, manifest and per-file hash audit — 2026-10-19
+
+Reviewed the complete rollback authorization chain (state read, backup location, manifest, names, owned hash, restoration).
+
+- Reject linked `interface_layout_state.json` before reading it, and refuse malformed `files` state.
+- Validate all state-derived backup filenames before any backup-file reads.
+- The prior fallback `state.files[name] or state.properties_hash` could authorize overwriting an unrelated customized shortcut if its content happened to match the properties hash. Restrict `properties_hash` exclusively to `skin.actweeter.properties`; all other shortcuts require their own exact expected digest.
+- 161 automated tests PASS, including symlinked state, traversal in state filenames and incorrect cross-file hash authorization. Full Kodi GUI consent/restore remains pending.
