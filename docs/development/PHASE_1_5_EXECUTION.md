@@ -148,3 +148,15 @@ verified. 124 automated tests pass at this checkpoint. No publication.
 - PVR logs show 1,293 channels, 46 groups, 764 EPG channels and 180,419 EPG entries loaded; this is not proof of successful live playback or all routes.
 - Manual fullscreen and return-to-detail source/test code exists, but the latest source-container recovery remains **runtime unverified**. Manual series detail, resume/history, 20 + EXPANDIR menus, all widgets, IPTV playback and prolonged stress are **NOT YET PASS**.
 - Phase verdict: `FASE_1_5_INCOMPLETE`. Do not tag/release/merge to Stable.
+
+## Deep-audit checkpoint — 2026-10-19
+
+Scope inspected: integrated commit history, installed/source parity, coordinator ownership and focus/cancel/exit paths, manual trailer capture/return gates, migration state, Kodi logs, unit/integration contracts, and IPTV/EPG loading. This is a **checkpoint, not an exhaustive function-by-function runtime certification**.
+
+- 580-file integration verification PASS, generated skin shortcuts preserved.
+- 128 automated tests PASS; Python/XML checks from prior checkpoint PASS.
+- Confirmed bug: an idle row retained `focus_context` after an on-unfocus with no pending request; Home exit also retained the row/refocus marker. This could re-arm a trailer from a stale selection. Fix clears only the matching row on accepted cancel, and clears both row/refocus state on Home exit. Two targeted regressions added.
+- Kodi log: local QA repositories `127.0.0.1:8765` and `127.0.0.1:18765` have failed connection attempts. These are disabled/offline local test feeds; do not remove or alter without determining whether the user still needs them.
+- Kodi log: recurring `GetDirectory` errors for TMDb Helper's `log_tagger`, `log_library`, `timer_report` paths. Their exact root cause is not established; avoid deleting its addon_data.
+- IPTV Simple loads 1293 channels, 46 groups, 764 EPG channels and 180419 entries; actual stream playback, guide navigation and VOD are not verified by this evidence.
+- Manual trailer fullscreen, series detail restore, resume/history, personalized navigation, all widgets, stress and cross-device restore remain unverified at this checkpoint. `FASE_1_5_INCOMPLETE`.

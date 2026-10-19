@@ -86,6 +86,22 @@ def coordinator(kodi):
 
 
 class PreviewNotificationTests(unittest.TestCase):
+    def test_cancel_after_terminal_forgets_idle_row(self):
+        bridge = coordinator(FakeKodi())
+        bridge._focus(focus_packet())
+        bridge.scheduler.cancel()
+        self.assertIsNotNone(bridge.focus_context)
+        self.assertTrue(bridge._cancel({"container": 1508}))
+        self.assertIsNone(bridge.focus_context)
+
+    def test_home_exit_forgets_idle_row(self):
+        bridge = coordinator(FakeKodi())
+        bridge._focus(focus_packet())
+        bridge.refocus_after_stop = bridge.scheduler.latest
+        self.assertTrue(bridge._exit_home())
+        self.assertIsNone(bridge.focus_context)
+        self.assertIsNone(bridge.refocus_after_stop)
+
     def test_idle_row_selection_schedules_once_after_non_movie_item(self):
         kodi = FakeKodi()
         bridge = coordinator(kodi)

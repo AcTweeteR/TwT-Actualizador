@@ -371,6 +371,12 @@ class KodiAutoPreviewCoordinator:
         pending = self.scheduler.latest or self.scheduler.resolving
         request = pending or self.scheduler.active
         if request is None:
+            # An on-unfocus can arrive after a trailer has already ended.
+            # Forget the row even without a pending request; otherwise the
+            # idle observer may restart its preview after the user leaves.
+            context = self.focus_context
+            if context and str(payload.get("container", "")) == str(context.get("container")):
+                self.focus_context = None
             self._log("CANCEL_NO_REQUEST")
             return True
         try:
@@ -403,6 +409,9 @@ class KodiAutoPreviewCoordinator:
                       reason="replacement_identity_mismatch")
             return False
         with self.wake:
+            if (self.focus_context and
+                    str(self.focus_context.get("container")) == str(request.container)):
+                self.focus_context = None
             # When focus moved to a non-preview item there is no replacement
             # request to protect; cancel the exact active preview instead of
             # rejecting the transition because the newly focused item differs.
@@ -436,6 +445,8 @@ class KodiAutoPreviewCoordinator:
         is invalidated by generation and cannot replace later playback.
         """
         with self.wake:
+            self.focus_context = None
+            self.refocus_after_stop = None
             active = self.scheduler.active
             self.scheduler.cancel()
             self._clear_current()
