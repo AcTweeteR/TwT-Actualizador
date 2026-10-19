@@ -280,3 +280,12 @@ Scope inspected: integrated commit history, installed/source parity, coordinator
 - `apply_layout` guarded shortcut symlinks but did not reject a symlinked state file or `interface_backups` root before reading/writing backups.
 - Reject both linked paths before preparing any layout mutation. Regression covers each symlink and verifies the external target and shortcuts remain unchanged.
 - Full suite: 149 PASS. User layout consent remains unchanged.
+
+## Section audit: layout apply, backup and rollback — 2026-10-19
+
+Scope: reviewed `apply_layout`, `rollback_layout`, `backup_interface`, backup manifest and state write paths as a single workflow; no user-consent dialog was accepted.
+
+- `apply_layout`: snapshot and restore previous layout state if a state write/readback raises after modifying the file; existing shortcut undo remains in place. Regression injects a post-write failure and checks both state and shortcuts.
+- `rollback_layout`: reject a symlinked backup root before loading any manifest. Regression checks no external files change.
+- `backup_interface`: reject symlinked backup root and report destination before creating pre-update snapshots. Regression checks both entry points.
+- All 152 automated tests PASS; source syntax and diff checks clean. The full Kodi visual/functional flows and power-loss consistency are separate, still-open QA gates.

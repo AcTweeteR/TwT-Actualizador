@@ -401,6 +401,7 @@ def apply_layout(shortcuts_root, service_root, skin_root, current_settings,
         datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'-'+uuid.uuid4().hex[:8])
     backup.mkdir(parents=True,mode=0o700)
     originals = {}
+    previous_state_bytes = state_path.read_bytes() if state_path.is_file() else None
     manifest = {'schema':1,'files':{},'settings':{k:current_settings.get(k,'') for k in SETTINGS}}
     targets = {name:shortcuts_root/name for name in documents}
     targets.update({properties.name:properties,'skin.actweeter.hash':shortcuts_root/'skin.actweeter.hash'})
@@ -444,11 +445,17 @@ def apply_layout(shortcuts_root, service_root, skin_root, current_settings,
             new_state['properties_hash']=digest(properties.read_bytes())
         atomic_write(state_path,json.dumps(new_state,sort_keys=True,indent=2).encode())
     except Exception:
-        for name,original in originals.items():
+        for name,original in reversed(list(originals.items())):
             path=shortcuts_root/name
             if original is None:
                 if path.exists():path.unlink()
             else:atomic_write(path,original)
+        # A writer can raise after changing the state file (e.g. a failed
+        # readback). Restore state along with the shortcuts on failure.
+        if previous_state_bytes is None:
+            if state_path.exists():state_path.unlink()
+        else:
+            atomic_write(state_path,previous_state_bytes)
         raise
     return {'status':'APPLIED','changed':sorted(changes),'settings':setting_changes,
             'backup':backup.name,'migration':migration}
@@ -459,10 +466,11 @@ def rollback_layout(shortcuts_root,service_root):
     state=load_state(state_path)
     if not re_safe_name(state.get('backup')):return None
     backup=service_root/'interface_backups'/state['backup']
-    if backup.is_symlink() or (backup/'MANIFEST.json').is_symlink():
+    if ((service_root/'interface_backups').is_symlink() or backup.is_symlink() or
+            (backup/'MANIFEST.json').is_symlink()):
         raise ValueError('layout backup symlink refused')
     manifest=load_state(backup/'MANIFEST.json')
-    names=list(state.get('files',{}))+['skin.actweeter.properties']
+    names=list(dict.fromkeys([*state.get('files',{}), 'skin.actweeter.properties']))
     required_names = names + ['previous-state.json']
     # Never interpret a missing/corrupt backup manifest as "file absent":
     # that would delete current shortcuts during an attempted rollback.
@@ -1067,6 +1075,11 @@ def backup_interface(addon_factory,vfs):
              'generated-includes.xml':KodiPath(str(skin_root/'1080i/script-skinshortcuts-includes.xml'),vfs)}
     for path in shortcuts.glob('skin.actweeter*'):
         if path.suffix in ('.xml','.hash','.properties'):targets[path.name]=path
+    # This entry point also runs before a skin update, independently of
+    # apply_layout. Never follow a linked backup root or report file.
+    if ((service_root/'interface_backups').is_symlink() or
+            (service_root/'interface_backup_only.json').is_symlink()):
+        raise ValueError('interface backup destination symlink refused')
     backup_id='before-update-'+uuid.uuid4().hex[:12]
     backup=service_root/'interface_backups'/backup_id
     backup.mkdir(parents=True,mode=0o700)

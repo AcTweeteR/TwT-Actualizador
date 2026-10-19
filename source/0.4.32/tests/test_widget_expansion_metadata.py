@@ -13,6 +13,71 @@ import interface_layout  # noqa: E402
 
 
 class ExpandableWidgetMetadataTests(unittest.TestCase):
+    def test_apply_layout_recovers_state_after_postwrite_failure(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            shortcuts = root / 'shortcuts'
+            service = root / 'service'
+            shortcuts.mkdir()
+            service.mkdir()
+            state = service / 'interface_layout_state.json'
+            previous = b'{"layout_version": 0, "files": {}}'
+            state.write_bytes(previous)
+            real_write = interface_layout.atomic_write
+            failed = [False]
+            def fail_after_state_write(path, data):
+                real_write(path, data)
+                if Path(path) == state and not failed[0]:
+                    failed[0] = True
+                    raise OSError('simulated failed state readback')
+            with mock.patch.object(interface_layout, 'atomic_write', side_effect=fail_after_state_write):
+                with self.assertRaises(OSError):
+                    interface_layout.apply_layout(shortcuts, service,
+                        ROOT / 'addons/skin.actweeter', interface_layout.SETTINGS)
+            self.assertEqual(state.read_bytes(), previous)
+            self.assertEqual(list(shortcuts.iterdir()), [])
+
+    def test_rollback_refuses_linked_backup_root(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            shortcuts = root / 'shortcuts'
+            service = root / 'service'
+            shortcuts.mkdir()
+            service.mkdir()
+            (service / 'interface_layout_state.json').write_text(json.dumps({
+                'backup': 'some-backup', 'files': {},
+            }))
+            external = root / 'external'
+            external.mkdir()
+            (service / 'interface_backups').symlink_to(external, target_is_directory=True)
+            with self.assertRaises(ValueError):
+                interface_layout.rollback_layout(shortcuts, service)
+            self.assertEqual(list(external.iterdir()), [])
+
+    def test_backup_interface_refuses_linked_destinations(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            service = root / 'service'
+            service.mkdir()
+            skin = root / 'skin'
+            skin.mkdir()
+            external = root / 'external'
+            external.mkdir()
+            addon = mock.Mock()
+            addon.getAddonInfo.side_effect = lambda key: str(service if key == 'profile' else skin)
+            factory = mock.Mock(return_value=addon)
+            vfs = mock.Mock()
+            vfs.translatePath.side_effect = lambda path: path
+            vfs.listdir.return_value = ([], [])
+            for name in ('interface_backups', 'interface_backup_only.json'):
+                with self.subTest(name=name):
+                    link = service / name
+                    link.symlink_to(external, target_is_directory=True)
+                    with self.assertRaises(ValueError):
+                        interface_layout.backup_interface(factory, vfs)
+                    link.unlink()
+            self.assertEqual(list(external.iterdir()), [])
+
     def test_apply_layout_refuses_linked_state_and_backup_directory(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
