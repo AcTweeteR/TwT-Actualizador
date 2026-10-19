@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import ast
 import hashlib
+import os
 import json
 import re
 import stat
@@ -122,7 +123,9 @@ def apply_contextual_unified_patch(root: Path, patch_path: Path) -> int:
         if not target or not hunks:
             raise ValueError("unified patch target or hunks missing")
         target_path = root / target
-        if not target_path.is_file() or ".." in Path(target).parts:
+        relative_target = Path(target)
+        if (relative_target.is_absolute() or ".." in relative_target.parts
+                or not target_path.is_file() or target_path.is_symlink()):
             raise ValueError("unsafe or missing unified patch target")
         for hunk in hunks:
             old_lines = [line[1:] for line in hunk["lines"]
@@ -149,14 +152,10 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
     actual = sha256(source_zip)
     if actual != expected:
         raise ValueError("upstream XStream ZIP SHA-256 mismatch")
-    # A published Kodi version is immutable: never silently overwrite a
-    # package containing different bytes with the same add-on version.
-    if output.exists():
-        with zipfile.ZipFile(output) as published:
-            addon_xml = published.read(UPSTREAM_ROOT + "/addon.xml")
-            published_version = ET.fromstring(addon_xml).get("version")
-        if published_version == data["distribution_version"]:
-            raise ValueError("refusing to overwrite an existing published XStream version")
+    # An output path is immutable regardless of the version inside it.
+    # Do not follow a pre-existing symlink or truncate another release.
+    if output.is_symlink() or output.exists():
+        raise ValueError("refusing to overwrite an existing XStream output")
 
     with tempfile.TemporaryDirectory(prefix="actweeter-xstream-") as temp:
         root = Path(temp) / UPSTREAM_ROOT
@@ -164,15 +163,21 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
         with zipfile.ZipFile(source_zip) as archive:
             if archive.testzip() is not None:
                 raise ValueError("upstream XStream ZIP CRC failed")
-            names = [n for n in archive.namelist()
-                     if n.startswith(UPSTREAM_ROOT + "/")]
-            if not names or any(Path(n).is_absolute() or ".." in Path(n).parts
-                                for n in names):
+            names = archive.namelist()
+            if (not names or len(names) != len(set(names))
+                    or any(not n.startswith(UPSTREAM_ROOT + "/")
+                           or Path(n).is_absolute() or ".." in Path(n).parts
+                           for n in names)):
                 raise ValueError("unexpected XStream ZIP paths")
             for name in names:
                 info = archive.getinfo(name)
+                file_type = (info.external_attr >> 16) & 0o170000
+                if file_type not in (0, stat.S_IFREG, stat.S_IFDIR):
+                    raise ValueError("unsafe XStream ZIP member type")
                 if info.is_dir():
                     continue
+                if file_type == stat.S_IFDIR:
+                    raise ValueError("directory metadata on ZIP file member")
                 destination = root / Path(name).relative_to(UPSTREAM_ROOT)
                 destination.parent.mkdir(parents=True, exist_ok=True)
                 destination.write_bytes(archive.read(name))
@@ -253,19 +258,32 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             manifest, encoding="utf-8", xml_declaration=True) + b"\n")
 
         output.parent.mkdir(parents=True, exist_ok=True)
-        with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED,
-                             compresslevel=9) as archive:
-            for path in sorted(item for item in root.rglob("*")
-                                if item.is_file() and should_package(item)):
-                relative = path.relative_to(root).as_posix()
-                info = zipfile.ZipInfo(f"{UPSTREAM_ROOT}/{relative}", FIXED_TIME)
-                info.compress_type = zipfile.ZIP_DEFLATED
-                info.external_attr = (stat.S_IFREG | 0o644) << 16
-                archive.writestr(info, path.read_bytes(),
-                                 compress_type=zipfile.ZIP_DEFLATED,
-                                 compresslevel=9)
+        # Build and validate privately; never expose a partial release.
+        fd, temp_name = tempfile.mkstemp(prefix=".actweeter-xstream-", suffix=".zip",
+                                          dir=output.parent)
+        os.close(fd)
+        candidate = Path(temp_name)
+        try:
+            return _write_validate_publish(root, candidate, output, data, actual)
+        finally:
+            candidate.unlink(missing_ok=True)
 
-    with zipfile.ZipFile(output) as archive:
+
+def _write_validate_publish(root: Path, candidate: Path, output: Path,
+                            data: dict, actual: str) -> dict[str, str]:
+    with zipfile.ZipFile(candidate, "w", compression=zipfile.ZIP_DEFLATED,
+                         compresslevel=9) as archive:
+        for path in sorted(item for item in root.rglob("*")
+                            if item.is_file() and should_package(item)):
+            relative = path.relative_to(root).as_posix()
+            info = zipfile.ZipInfo(f"{UPSTREAM_ROOT}/{relative}", FIXED_TIME)
+            info.compress_type = zipfile.ZIP_DEFLATED
+            info.external_attr = (stat.S_IFREG | 0o644) << 16
+            archive.writestr(info, path.read_bytes(),
+                             compress_type=zipfile.ZIP_DEFLATED,
+                             compresslevel=9)
+
+    with zipfile.ZipFile(candidate) as archive:
         if archive.testzip() is not None:
             raise ValueError("built XStream ZIP CRC failed")
         for relative, expected_hash in data.get("local_runtime_sha256", {}).items():
@@ -299,7 +317,14 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
         if not any(isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
                    and node.name == "recent" for node in series_tree.body):
             raise ValueError("series_changes.recent route provider is missing")
-    return {"upstream_sha256": actual, "candidate_sha256": sha256(output),
+    candidate_hash = sha256(candidate)
+    # Atomic create-if-absent, including when another builder races us.
+    # os.replace() is intentionally NOT used: it can overwrite an existing ZIP.
+    try:
+        os.link(candidate, output, follow_symlinks=False)
+    except FileExistsError as exc:
+        raise ValueError("refusing to overwrite an existing XStream output") from exc
+    return {"upstream_sha256": actual, "candidate_sha256": candidate_hash,
             "version": str(data["distribution_version"]), "file": output.name}
 
 
