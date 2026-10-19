@@ -58,11 +58,30 @@ class PreviewOwnership:
                 self.started = None
                 self.owner = "NONE"
 
+    def recover_idle_other_owner(self, player_has_media):
+        """Release a stale OTHER owner only after Home focus returns idle.
+
+        Leaving Home can preempt previews without Kodi producing a player
+        terminal callback. A later Home focus is safe to recover only when
+        Kodi confirms that no media is active; active playback remains owned.
+        """
+        if player_has_media:
+            return False
+        with self.lock:
+            if self.owner != "OTHER":
+                return False
+            self.generation += 1
+            self.request = None
+            self.launching = None
+            self.started = None
+            self.owner = "NONE"
+            return True
+
     def candidate(self, identity, window, container, focus, position=-1):
         with self.lock:
             self.generation += 1
             self.request = None
-            if (not identity or window not in (10000, 11111) or
+            if (not identity or window not in (10000, 11110, 11111) or
                     container <= 0 or focus in (40000, 40003) or
                     self.owner not in ("NONE", "AUTO_PREVIEW")):
                 return None

@@ -59,10 +59,10 @@ SETUP_CHECK_STATUSES = {
 # EPG is optional: a provider may not supply guide data.
 MANDATORY_SETUP_CHECKS = (
     "mandatory_addons", "provider_authentication", "movies_catalog",
-    "series_catalog", "live_tv_ready", "pvr_configuration", "trailer_addon_ready",
+    "series_catalog", "live_tv_ready", "pvr_configuration",
 )
 OPTIONAL_SETUP_CHECKS = (
-    "epg_ready_or_not_provided", "trailer_search",
+    "epg_ready_or_not_provided", "trailer_addon_ready", "trailer_search",
     "trailer_resolution", "trailer_playback", "home_widgets", "spotlight", "search",
     "script_trakt_authorization", "xstream_trakt_authorization",
 )
@@ -99,6 +99,17 @@ SLYGUY_INSTALL_SEQUENCE = (
     ("script.module.slyguy", "0.86.96", "repository.slyguy"),
     ("slyguy.trailers", "0.2.1", "repository.slyguy"),
 )
+
+
+def repository_candidates(sources):
+    """Accept either installed AcTweeteR channel; never install/switch channels."""
+    result = []
+    for source in sources:
+        for candidate in (("repository.actweeter.testing", "repository.actweeter")
+                          if source == "repository.actweeter" else (source,)):
+            if candidate not in result:
+                result.append(candidate)
+    return tuple(result)
 
 # Kodi's repository resolver searches every enabled repository. These IDs are
 # the authoritative repositories exposed by AcTweeteR 1.0.3 (Matke Omega and
@@ -292,7 +303,7 @@ def service_rows(installed, pvr=None, xstream_configured=None):
     for key, label, optional in (
         ("xstream", "IPTV / XStream", False),
         ("pvr", "TV / PVR", False),
-        ("slyguy", "SlyGuy Trailers", False),
+        ("slyguy", "SlyGuy Trailers", True),
         ("youtube", "YouTube (fallback y búsqueda; autorización según uso)", False),
         ("trakt", "Trakt", True),
         ("metadata", "Metadatos (dependencia de skin)", False),
@@ -314,8 +325,8 @@ def service_rows(installed, pvr=None, xstream_configured=None):
     slyguy_present = bool(installed.get("slyguy", False))
     rows.append({
         "service": "Previews automáticos",
-        "status": "INTEGRATION_NOT_CHECKED_NOW" if slyguy_present else "MISSING",
-        "optional": False,
+        "status": "INTEGRATION_NOT_CHECKED_NOW" if slyguy_present else "OPTIONAL_MISSING",
+        "optional": True,
     })
     rows.append({
         "service": "OAuth Google",
@@ -328,6 +339,11 @@ def service_rows(installed, pvr=None, xstream_configured=None):
 def should_offer_first_run(state, core_configured):
     """Offer onboarding until the strict setup contract is actually complete."""
     state = state or {}
+    # An already-configured Master upgraded from an older wizard should not
+    # be taken hostage by a new automatic modal. Its new runtime checks remain
+    # INCOMPLETE and explicitly available via Settings/repair, not marked PASS.
+    if core_configured and state.get("legacy_completed_review"):
+        return False
     if (state.get("completed") and state.get("setup_state") == "COMPLETE"
             and state.get("wizard_version", 1) >= WIZARD_VERSION
             and not completion_blockers(state)):
@@ -435,7 +451,7 @@ def normalize_state(state):
     version = state.get("wizard_version")
     if isinstance(version, int) and not isinstance(version, bool) and 1 <= version <= WIZARD_VERSION:
         result["wizard_version"] = version
-    for key in ("prompted", "completed", "started"):
+    for key in ("prompted", "completed", "started", "legacy_completed_review"):
         if isinstance(state.get(key), bool):
             result[key] = state[key]
     deferred_process_id = state.get("deferred_process_id")
@@ -496,6 +512,8 @@ def normalize_state(state):
     if (result.get("completed") and any(
             result["setup_checks"].get(key) != "PASS_RUNTIME"
             for key in MANDATORY_SETUP_CHECKS)):
+        if result["wizard_version"] < WIZARD_VERSION:
+            result["legacy_completed_review"] = True
         result.update(completed=False, prompted=False, setup_state="INCOMPLETE",
                       configuration_status="INCOMPLETE")
     elif result.get("completed") and result["wizard_version"] < WIZARD_VERSION:

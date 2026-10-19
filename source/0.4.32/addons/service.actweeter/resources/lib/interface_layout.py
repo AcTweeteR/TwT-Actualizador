@@ -360,6 +360,10 @@ def apply_layout(shortcuts_root, service_root, skin_root, current_settings,
     """
     shortcuts_root, service_root = as_path(shortcuts_root), Path(service_root)
     state_path = service_root/'interface_layout_state.json'
+    # A linked state file or backup root must never redirect reads or writes
+    # outside the service-owned profile during layout migration.
+    if state_path.is_symlink() or (service_root/'interface_backups').is_symlink():
+        raise ValueError('layout state or backup directory symlink refused')
     state = load_state(state_path)
     documents = source_documents(skin_root,
                                  recommendations_enabled=recommendations_enabled)
@@ -367,6 +371,8 @@ def apply_layout(shortcuts_root, service_root, skin_root, current_settings,
     for name, wanted in documents.items():
         path = shortcuts_root/name
         if path.is_symlink(): raise ValueError('shortcut symlink refused')
+        if path.exists() and not path.is_file():
+            raise ValueError('shortcut target is not a file')
         old = path.read_bytes() if path.is_file() else None
         if old == wanted: continue
         if old is not None and digest(old) != state.get('files',{}).get(name):
@@ -397,11 +403,19 @@ def apply_layout(shortcuts_root, service_root, skin_root, current_settings,
         datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'-'+uuid.uuid4().hex[:8])
     backup.mkdir(parents=True,mode=0o700)
     originals = {}
+    previous_state_bytes = state_path.read_bytes() if state_path.is_file() else None
     manifest = {'schema':1,'files':{},'settings':{k:current_settings.get(k,'') for k in SETTINGS}}
     targets = {name:shortcuts_root/name for name in documents}
     targets.update({properties.name:properties,'skin.actweeter.hash':shortcuts_root/'skin.actweeter.hash'})
     targets['previous-state.json']=state_path
-    targets.update(snapshots or {})
+    if snapshots:
+        if not isinstance(snapshots, dict) or any(
+                not re_safe_name(name) or name in targets
+                for name in snapshots):
+            raise ValueError('unsafe or duplicate snapshot name refused')
+        targets.update(snapshots)
+    if any(not re_safe_name(name) for name in targets):
+        raise ValueError('unsafe backup entry name refused')
     for name,path in targets.items():
         path = as_path(path)
         if path.is_symlink(): raise ValueError('backup symlink refused')
@@ -440,11 +454,17 @@ def apply_layout(shortcuts_root, service_root, skin_root, current_settings,
             new_state['properties_hash']=digest(properties.read_bytes())
         atomic_write(state_path,json.dumps(new_state,sort_keys=True,indent=2).encode())
     except Exception:
-        for name,original in originals.items():
+        for name,original in reversed(list(originals.items())):
             path=shortcuts_root/name
             if original is None:
                 if path.exists():path.unlink()
             else:atomic_write(path,original)
+        # A writer can raise after changing the state file (e.g. a failed
+        # readback). Restore state along with the shortcuts on failure.
+        if previous_state_bytes is None:
+            if state_path.exists():state_path.unlink()
+        else:
+            atomic_write(state_path,previous_state_bytes)
         raise
     return {'status':'APPLIED','changed':sorted(changes),'settings':setting_changes,
             'backup':backup.name,'migration':migration}
@@ -452,27 +472,86 @@ def apply_layout(shortcuts_root, service_root, skin_root, current_settings,
 def rollback_layout(shortcuts_root,service_root):
     shortcuts_root,service_root=as_path(shortcuts_root),Path(service_root)
     state_path=service_root/'interface_layout_state.json'
+    if state_path.is_symlink():
+        raise ValueError('layout state symlink refused')
     state=load_state(state_path)
+    if not isinstance(state.get('files'), dict):
+        return None
     if not re_safe_name(state.get('backup')):return None
     backup=service_root/'interface_backups'/state['backup']
+    if ((service_root/'interface_backups').is_symlink() or backup.is_symlink() or
+            (backup/'MANIFEST.json').is_symlink()):
+        raise ValueError('layout backup symlink refused')
     manifest=load_state(backup/'MANIFEST.json')
-    names=list(state.get('files',{}))+['skin.actweeter.properties']
+    names=list(dict.fromkeys([*state['files'], 'skin.actweeter.properties']))
+    required_names = names + ['previous-state.json']
+    if any(not re_safe_name(name) for name in required_names):
+        raise ValueError('unsafe shortcut name refused')
+    # Never interpret a missing/corrupt backup manifest as "file absent":
+    # that would delete current shortcuts during an attempted rollback.
+    backed_files = manifest.get('files')
+    if not isinstance(backed_files, dict) or any(
+            not isinstance(backed_files.get(name), dict) or
+            not isinstance(backed_files[name].get('exists'), bool) or
+            (backed_files[name]['exists'] and
+             not isinstance(backed_files[name].get('sha256'), str))
+            for name in required_names):
+        raise OSError('layout rollback manifest incomplete')
+    # Preflight every target and backup source before mutating any shortcut.
+    # A symlink can otherwise bypass the original apply_layout guard.
+    for name in names:
+        if not re_safe_name(name):
+            raise ValueError('unsafe shortcut name refused')
+        if (shortcuts_root/name).is_symlink() or (backup/name).is_symlink():
+            raise ValueError('layout rollback symlink refused')
+    if state_path.is_symlink() or (backup/'previous-state.json').is_symlink():
+        raise ValueError('layout state symlink refused')
     for name in names:
         path=shortcuts_root/name
-        expected=state.get('files',{}).get(name) or state.get('properties_hash')
-        if path.is_file() and (expected is None or digest(path.read_bytes())!=expected):
+        expected=(state.get('properties_hash') if name == 'skin.actweeter.properties'
+                  else state['files'].get(name))
+        # A deleted owned shortcut is also a user-visible change. Do not
+        # recreate it from an older backup without explicit confirmation.
+        if not path.is_file():
+            if expected is not None or path.exists():
+                return None
+        elif expected is None or digest(path.read_bytes()) != expected:
             return None
-    for name in names:
-        info=manifest.get('files',{}).get(name,{})
-        path=shortcuts_root/name
+    # Validate *all* backup payloads before the first write: corruption in
+    # the last file must not leave earlier shortcuts partially rolled back.
+    restored = {}
+    for name in required_names:
+        info = backed_files.get(name, {})
         if info.get('exists'):
-            data=(backup/name).read_bytes()
-            if digest(data)!=info['sha256']:raise OSError('backup integrity mismatch')
-            atomic_write(path,data)
-        elif path.exists():path.unlink()
-    previous=manifest.get('files',{}).get('previous-state.json',{})
-    if previous.get('exists'):atomic_write(state_path,(backup/'previous-state.json').read_bytes())
-    elif state_path.exists():state_path.unlink()
+            data = (backup/name).read_bytes()
+            if digest(data) != info.get('sha256'):
+                raise OSError('backup integrity mismatch')
+            restored[name] = data
+    # A filesystem write can still fail after preflight (disk full, I/O).
+    # Preserve the exact pre-rollback bytes so the failed operation can undo
+    # its own partial changes, without relying on the backup being restored.
+    targets = {name: shortcuts_root/name for name in names}
+    targets['previous-state.json'] = state_path
+    originals = {name: path.read_bytes() if path.is_file() else None
+                 for name, path in targets.items()}
+    changed = []
+    try:
+        for name, path in targets.items():
+            changed.append(name)
+            if name in restored:
+                atomic_write(path, restored[name])
+            elif path.exists():
+                path.unlink()
+    except Exception:
+        for name in reversed(changed):
+            path = targets[name]
+            original = originals[name]
+            if original is None:
+                if path.exists():
+                    path.unlink()
+            else:
+                atomic_write(path, original)
+        raise
     return manifest.get('settings',{})
 
 def generated_rows(path):
@@ -566,9 +645,15 @@ def persist_generated_expandable_properties(shortcuts_root, service_root,
     """Backup and persist properties using identities from a completed build."""
     shortcuts_root, service_root = as_path(shortcuts_root), Path(service_root)
     properties = shortcuts_root/'skin.actweeter.properties'
-    if properties.is_symlink():
-        raise ValueError('Skin Shortcuts properties symlink refused')
+    state_path = service_root/'interface_layout_state.json'
+    backup_root = service_root/'interface_backups'
+    if (properties.is_symlink() or state_path.is_symlink() or
+            backup_root.is_symlink()):
+        raise ValueError('Skin Shortcuts property persistence symlink refused')
+    if properties.exists() and not properties.is_file():
+        raise ValueError('Skin Shortcuts properties path is not a file')
     existing = properties.read_bytes() if properties.is_file() else None
+    original_state = state_path.read_bytes() if state_path.is_file() else None
     ids = expandable_shortcut_ids(documents)
     identities = generated_shortcut_identities(generated_path, ids)
     required = expandable_property_rows(documents, identities)
@@ -597,7 +682,6 @@ def persist_generated_expandable_properties(shortcuts_root, service_root,
         atomic_write(properties, merged)
         if properties.read_bytes() != merged:
             raise OSError('Skin Shortcuts property persistence readback mismatch')
-        state_path = service_root/'interface_layout_state.json'
         state = load_state(state_path)
         state['properties_hash'] = digest(merged)
         state['properties_backup'] = backup.name
@@ -610,6 +694,21 @@ def persist_generated_expandable_properties(shortcuts_root, service_root,
                 properties.unlink()
             else:
                 atomic_write(properties, existing)
+        # A post-write state failure must not leave the new properties hash
+        # recorded against restored old properties. Only undo our own state.
+        if state_path.is_file():
+            current_state = state_path.read_bytes()
+            if current_state != original_state:
+                try:
+                    recorded = json.loads(current_state.decode('utf-8'))
+                except (UnicodeDecodeError, ValueError):
+                    recorded = {}
+                if (recorded.get('properties_hash') == digest(merged) and
+                        recorded.get('properties_backup') == backup.name):
+                    if original_state is None:
+                        state_path.unlink()
+                    else:
+                        atomic_write(state_path, original_state)
         raise
     return {'changed': True, 'rows': len(required), 'identities': identities,
             'backup': backup.name}
@@ -745,51 +844,96 @@ def prepare_metadata_language(addon_factory,vfs,service_root):
     previous={key:addon.getSetting(key) for key in desired}
     changes={key:value for key,value in desired.items() if previous[key] in defaults[key]}
     root=Path(service_root)
-    migration=load_state(root/'metadata_preferences.json')
+    report_path = root/'metadata_preferences.json'
+    backup_root = root/'metadata_backups'
+    if report_path.is_symlink() or backup_root.is_symlink():
+        raise ValueError('metadata state or backup symlink refused')
+    original_report = report_path.read_bytes() if report_path.is_file() else None
+    migration=load_state(report_path)
     spanish=(previous['tmdb_language'].lower().replace('_','-').split('-')[0]=='es')
     refresh_spanish_cache=spanish and migration.get('schema')!=1
     if not changes and not refresh_spanish_cache:return {'changed':False,'settings':previous}
-    backup=root/'metadata_backups'/uuid.uuid4().hex[:12]
-    backup.mkdir(parents=True,mode=0o700)
-    atomic_write(backup/'preferences.json',json.dumps(previous,ensure_ascii=False).encode())
     profile=Path(vfs.translatePath(addon.getAddonInfo('profile')))
     cache_files=[p for p in profile.glob('data_cache_p*_premium_meta_*_es.json')
                  if re.fullmatch(r'data_cache_p[0-9]+_premium_meta_(movie|series)_[0-9]+_es\.json',p.name)]
+    cache_data = {}
     for path in cache_files:
-        if path.is_symlink():raise ValueError('metadata cache symlink refused')
-        data=path.read_bytes();atomic_write(backup/path.name,data)
+        if path.is_symlink() or not path.is_file():
+            raise ValueError('metadata cache destination refused')
+        cache_data[path] = path.read_bytes()
+    backup=backup_root/uuid.uuid4().hex[:12]
+    backup.mkdir(parents=True,mode=0o700)
+    atomic_write(backup/'preferences.json',json.dumps(previous,ensure_ascii=False).encode())
+    for path, data in cache_data.items():
+        atomic_write(backup/path.name,data)
         if (backup/path.name).read_bytes()!=data:raise OSError('metadata backup failed')
+    report = None
+    report_bytes = None
+    changed_settings = []
+    removed_caches = []
     try:
         for key,value in changes.items():
             addon.setSetting(key,value)
+            changed_settings.append(key)
             if addon.getSetting(key)!=value:raise OSError('metadata setting not persisted')
         if 'tmdb_language' in changes or refresh_spanish_cache:
-            for path in cache_files:path.unlink()
+            for path in cache_files:
+                # Another process may have refreshed this entry since our
+                # snapshot; never delete bytes we did not back up.
+                if path.is_symlink() or not path.is_file() or path.read_bytes()!=cache_data[path]:
+                    raise OSError('metadata cache changed during migration')
+                path.unlink()
+                removed_caches.append(path)
+        report={'schema':1,'changed':bool(changes),
+                'settings':{key:addon.getSetting(key) for key in desired},
+                'backup':backup.name,'refreshed_metadata_entries':len(removed_caches)}
+        report_bytes=json.dumps(report,ensure_ascii=False).encode()
+        atomic_write(report_path,report_bytes)
+        if report_path.read_bytes()!=report_bytes:
+            raise OSError('metadata report readback mismatch')
     except Exception:
-        for key in changes:addon.setSetting(key,previous[key])
-        for path in cache_files:
-            if not path.exists():atomic_write(path,(backup/path.name).read_bytes())
+        for key in reversed(changed_settings):
+            if addon.getSetting(key)==changes[key]:
+                addon.setSetting(key,previous[key])
+        for path in removed_caches:
+            if not path.exists():atomic_write(path,cache_data[path])
+        # Restore a post-write report only when it is still exactly ours.
+        if (report_bytes is not None and report_path.is_file() and
+                not report_path.is_symlink() and report_path.read_bytes()==report_bytes):
+            if original_report is None:
+                report_path.unlink()
+            else:
+                atomic_write(report_path,original_report)
         raise
-    report={'schema':1,'changed':bool(changes),'settings':{key:addon.getSetting(key) for key in desired},
-            'backup':backup.name,'refreshed_metadata_entries':len(cache_files)}
-    atomic_write(root/'metadata_preferences.json',json.dumps(report,ensure_ascii=False).encode())
     return report
 
 def prepare_interface(kodi, addon_factory, vfs, gui, dialog, *, allow_prompt=False):
     service_root=Path(vfs.translatePath(addon_factory('service.actweeter').getAddonInfo('profile')))
     service_root.mkdir(parents=True,exist_ok=True)
     lock=service_root/'interface-prepare.lock'
-    try:descriptor=os.open(lock,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
-    except FileExistsError:
-        previous=load_state(lock)
-        if remove_stale_preparation_lock(lock, os.getpid()):
-            return prepare_interface(kodi,addon_factory,vfs,gui,dialog,allow_prompt=allow_prompt)
-        return 'PREPARATION_BUSY'
+    # One stale-lock recovery is enough. Repeated replacements by another
+    # process must not recurse indefinitely or remove the new owner's lock.
+    descriptor = None
+    for attempt in range(2):
+        try:
+            descriptor = os.open(lock, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            break
+        except FileExistsError:
+            if attempt or not remove_stale_preparation_lock(lock, os.getpid()):
+                return 'PREPARATION_BUSY'
     try:
-        with os.fdopen(descriptor,'w') as stream:json.dump({'pid':os.getpid()},stream)
+        owned = os.fstat(descriptor)
+        with os.fdopen(descriptor,'w') as stream:
+            json.dump({'pid':os.getpid()},stream)
         return _prepare_interface(kodi,addon_factory,vfs,gui,dialog,allow_prompt=allow_prompt)
     finally:
-        if lock.exists():lock.unlink()
+        try:
+            current = lock.lstat()
+            if (not lock.is_symlink() and current.st_dev == owned.st_dev and
+                    current.st_ino == owned.st_ino):
+                lock.unlink()
+        except FileNotFoundError:
+            pass
 
 def _prepare_interface(kodi, addon_factory, vfs, gui, dialog, *, allow_prompt=False):
     """Kodi adapter: prepare DATA then ask Skin Shortcuts to generate its includes."""
@@ -1012,6 +1156,11 @@ def backup_interface(addon_factory,vfs):
              'generated-includes.xml':KodiPath(str(skin_root/'1080i/script-skinshortcuts-includes.xml'),vfs)}
     for path in shortcuts.glob('skin.actweeter*'):
         if path.suffix in ('.xml','.hash','.properties'):targets[path.name]=path
+    # This entry point also runs before a skin update, independently of
+    # apply_layout. Never follow a linked backup root or report file.
+    if ((service_root/'interface_backups').is_symlink() or
+            (service_root/'interface_backup_only.json').is_symlink()):
+        raise ValueError('interface backup destination symlink refused')
     backup_id='before-update-'+uuid.uuid4().hex[:12]
     backup=service_root/'interface_backups'/backup_id
     backup.mkdir(parents=True,mode=0o700)

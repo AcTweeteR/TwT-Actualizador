@@ -9,6 +9,7 @@ most one resolver and only the latest queued request.
 from __future__ import annotations
 
 import base64
+import binascii
 import json
 import re
 import threading
@@ -20,6 +21,7 @@ RESULT_SENDER = "slyguy.trailers.SIGNAL"
 MESSAGE = "actweeter_auto_preview"
 _ANNOUNCEMENT_METHOD = "Other." + MESSAGE
 _VIDEO_ID = re.compile(r"^[A-Za-z0-9_-]{6,64}$")
+_REQUEST_ID = re.compile(r"^[0-9a-f]{32}-[1-9][0-9]*$")
 
 
 def _decode(data):
@@ -30,7 +32,7 @@ def _decode(data):
             return None
         payload = json.loads(base64.b64decode(encoded, validate=True).decode("utf-8"))
         return payload if isinstance(payload, dict) else None
-    except (TypeError, ValueError, UnicodeError):
+    except (TypeError, ValueError, UnicodeError, binascii.Error):
         return None
 
 
@@ -48,10 +50,55 @@ def _send(xbmc, action, generation, status, request_id=""):
 
 def _identity(data):
     for key in ("imdb", "tmdb", "dbid"):
-        value = str(data.get(key, "")).strip()
-        if value.isalnum():
+        raw = data.get(key)
+        value = raw.strip() if isinstance(raw, str) else ""
+        if value and value.isascii() and value.isalnum():
             return key + ":" + value
     return ""
+
+
+def preview_source(request):
+    """Separate the selected episode identity from its parent trailer lookup."""
+    media = request.get("media_type")
+    if media not in ("movie", "tvshow", "season", "episode"):
+        return None
+    parent = media in ("season", "episode")
+    prefix = "show_" if parent else ""
+    ids = {key: value for key in ("imdb", "tmdb")
+           if (value := request.get(prefix + key)) is not None
+           and isinstance(value, str) and value.strip()
+           and value.isascii() and value.isalnum()}
+    raw_dbid = request.get(prefix + "dbid")
+    dbid = (raw_dbid if isinstance(raw_dbid, str) and raw_dbid.isascii()
+            and raw_dbid.isdecimal() and int(raw_dbid) > 0 else -1)
+    if parent and (not request.get("show_title") or (not ids and dbid == -1)):
+        return None
+    trailer_id = str(request.get("trailer_id") or "")
+    return {
+        "mediatype": "tvshow" if parent else media,
+        "dbid": dbid,
+        "title": request.get("show_title" if parent else "title") or "",
+        "year": request.get("show_year" if parent else "year") or 0,
+        "unique_ids": ids, "art": {},
+        "trailer": ("https://www.youtube.com/watch?v=" + trailer_id
+                    if not parent and _VIDEO_ID.fullmatch(trailer_id) else ""),
+    }
+
+
+def preview_target(path, get_youtube_id):
+    parsed = urlparse(path)
+    if parsed.scheme == "plugin" and parsed.netloc == "slyguy.trailers":
+        identifier = (parse_qs(parsed.query).get("video_id") or [""])[0]
+        if parsed.path.rstrip("/").endswith("/imdb"):
+            return ("imdb", identifier) if re.fullmatch(r"tt\d+", identifier) else ("", "")
+        if parsed.path.rstrip("/").endswith("/play") and _VIDEO_ID.fullmatch(identifier):
+            return "youtube", identifier
+        return "", ""
+    if parsed.hostname in ("youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be", "plugin.video.youtube"):
+        identifier = get_youtube_id(path) or ""
+        if _VIDEO_ID.fullmatch(identifier):
+            return "youtube", identifier
+    return "", ""
 
 
 def request_is_current(xbmc, request):
@@ -88,7 +135,7 @@ class SlyGuyPreviewService:
     """Single provider worker with a replaceable one-entry pending slot."""
 
     def __init__(self, xbmc, monitor, player, build_item, get_youtube_id,
-                 play_yt_dlp, yt_dlp_mode, refresh_settings=None):
+                 play_yt_dlp, yt_dlp_mode, refresh_settings=None, resolve_imdb=None):
         self.xbmc = xbmc
         self.monitor = monitor
         self.player = player
@@ -97,6 +144,7 @@ class SlyGuyPreviewService:
         self.play_yt_dlp = play_yt_dlp
         self.yt_dlp_mode = yt_dlp_mode
         self.refresh_settings = refresh_settings or (lambda: None)
+        self.resolve_imdb = resolve_imdb
         self.lock = threading.Condition()
         self.pending = None
         self.resolving = False
@@ -135,8 +183,10 @@ class SlyGuyPreviewService:
             valid_generation = int(request.get("generation")) > 0
         except (TypeError, ValueError):
             return False
-        if (not valid_generation or not request.get("request_id") or
-                not _identity(request) or request.get("media_type") != "movie"):
+        request_id = request.get("request_id")
+        if (not valid_generation or not isinstance(request_id, str) or
+                _REQUEST_ID.fullmatch(request_id) is None or
+                not _identity(request) or preview_source(request) is None):
             _send(self.xbmc, "resolved", request.get("generation", 0), "no_results",
                   request.get("request_id", ""))
             return False
@@ -161,39 +211,26 @@ class SlyGuyPreviewService:
                 self.xbmc.log("[SlyGuy] ACTWEETER_PREVIEW_RESOLUTION status=stale generation=%d" %
                               generation, getattr(self.xbmc, "LOGINFO", 1))
                 return "stale"
-            source = {
-                "mediatype": "movie",
-                "dbid": request.get("dbid") or -1,
-                "title": request.get("title") or "",
-                "year": request.get("year") or 0,
-                "unique_ids": {key: request[key] for key in ("imdb", "tmdb")
-                               if request.get(key)},
-                "art": {},
-                "trailer": ("https://www.youtube.com/watch?v=" + request["trailer_id"]
-                            if request.get("trailer_id", "").isalnum() else ""),
-            }
+            source = preview_source(request)
+            if source is None:
+                return "no_results"
             item = self.build_item(source)
             if not item or not item.path:
                 self.xbmc.log("[SlyGuy] ACTWEETER_PREVIEW_RESOLUTION status=no_results generation=%d" %
                               generation, getattr(self.xbmc, "LOGINFO", 1))
                 return "no_results"
-            parsed = urlparse(item.path)
-            video_id = ""
-            if parsed.scheme == "plugin" and parsed.netloc == "slyguy.trailers":
-                if parsed.path.rstrip("/").endswith("/play"):
-                    video_id = (parse_qs(parsed.query).get("video_id") or [""])[0]
-                # SlyGuy's IMDb route uses its own shared M3U and is excluded;
-                # automatic preview's yt-dlp path must have an isolated MPD.
-            if not video_id:
-                video_id = self.get_youtube_id(item.path) or ""
-            if not _VIDEO_ID.fullmatch(video_id):
+            provider, video_id = preview_target(item.path, self.get_youtube_id)
+            if not provider:
                 self.xbmc.log("[SlyGuy] ACTWEETER_PREVIEW_RESOLUTION status=no_video_id generation=%d" %
                               generation, getattr(self.xbmc, "LOGINFO", 1))
                 return "no_results"
             if not self._is_current(request):
                 return "stale"
 
-            resolved = self.play_yt_dlp(video_id, manifest_path=manifest)
+            if provider == "imdb":
+                resolved = self.resolve_imdb(video_id) if self.resolve_imdb else None
+            else:
+                resolved = self.play_yt_dlp(video_id, manifest_path=manifest)
             if not resolved or not resolved.path:
                 self.xbmc.log("[SlyGuy] ACTWEETER_PREVIEW_RESOLUTION status=no_stream generation=%d" %
                               generation, getattr(self.xbmc, "LOGINFO", 1))
@@ -218,7 +255,8 @@ class SlyGuyPreviewService:
             manifest_name = manifest.rsplit("/", 1)[-1]
             local_proxy = parsed_playback.hostname in ("127.0.0.1", "localhost")
             manifest_match = manifest_name in unquote(parsed_playback.path)
-            if parsed_playback.scheme not in ("http", "https") or not local_proxy or not manifest_match:
+            if (parsed_playback.scheme not in ("http", "https") or
+                    (provider == "youtube" and (not local_proxy or not manifest_match))):
                 self.xbmc.log(
                     "[SlyGuy] ACTWEETER_PREVIEW_RESOLUTION status=proxy_unavailable "
                     "generation=%d scheme=%s loopback=%s manifest_match=%s" %
@@ -227,8 +265,9 @@ class SlyGuyPreviewService:
                 return "error"
             self.xbmc.log(
                 "[SlyGuy] ACTWEETER_PREVIEW_RESOLUTION status=proxy_ready "
-                "generation=%d scheme=%s loopback=yes manifest_match=yes" %
-                (generation, parsed_playback.scheme), getattr(self.xbmc, "LOGINFO", 1))
+                "generation=%d scheme=%s provider=%s loopback=%s manifest_match=%s" %
+                (generation, parsed_playback.scheme, provider, local_proxy,
+                 manifest_match), getattr(self.xbmc, "LOGINFO", 1))
             listitem.setProperty("AcTweeteR.PreviewOwner", "AUTO_PREVIEW")
             listitem.setProperty("AcTweeteR.PreviewGeneration", str(generation))
             listitem.setProperty("AcTweeteR.PreviewIdentity", request["identity"])
@@ -253,8 +292,16 @@ class SlyGuyPreviewService:
             if not playback_requested:
                 self.xbmc.log("[SlyGuy] ACTWEETER_PREVIEW_RESOLUTION status=cleaned generation=%d" %
                               generation, getattr(self.xbmc, "LOGINFO", 1))
-            if not playback_requested and xbmcvfs.exists(self.xbmc.translatePath(manifest)):
-                xbmcvfs.delete(self.xbmc.translatePath(manifest))
+            if not playback_requested:
+                try:
+                    manifest_path = self.xbmc.translatePath(manifest)
+                    if xbmcvfs.exists(manifest_path):
+                        xbmcvfs.delete(manifest_path)
+                except Exception as exc:
+                    # Cleanup is best-effort; a VFS failure must not kill the
+                    # provider worker or suppress the resolution notification.
+                    self.xbmc.log("[SlyGuy] ACTWEETER_PREVIEW_CLEANUP_FAILED type=%s" %
+                                  type(exc).__name__, getattr(self.xbmc, "LOGWARNING", 2))
 
     def _run(self):
         while not self.closed and not self.monitor.abortRequested():
@@ -288,6 +335,16 @@ def run_slyguy_service():
     from resources.lib.plugin import _build_item
     from resources.lib.settings import settings as trailer_settings
     from resources.lib.youtube import get_youtube_id, play_yt_dlp
+    from resources.lib.imdb import IMDB
+    from resources.lib.constants import TrailerItem, IMDB_API_HEADERS, IMDB_QUALITY_MAP
+
+    def resolve_imdb(identifier):
+        best = IMDB(identifier).get_best()
+        videos = best.get("videos", {}) if best else {}
+        path = videos.get("DEF_AUTO") or next(
+            (videos[key] for key in IMDB_QUALITY_MAP if videos.get(key)), "")
+        # Use SlyGuy's native resolver without its shared temp/imdb.m3u8 file.
+        return TrailerItem(path=path, headers=IMDB_API_HEADERS) if path else None
 
     class Monitor(xbmc.Monitor):
         def __init__(self):
@@ -313,7 +370,8 @@ def run_slyguy_service():
     monitor = Monitor()
     worker = SlyGuyPreviewService(xbmc, monitor, xbmc.Player(), _build_item,
                                   get_youtube_id, play_yt_dlp, None,
-                                  refresh_settings=trailer_settings.reset)
+                                  refresh_settings=trailer_settings.reset,
+                                  resolve_imdb=resolve_imdb)
     monitor.worker = worker
     xbmc.log("[SlyGuy] ACTWEETER_PREVIEW_BRIDGE status=started",
              getattr(xbmc, "LOGINFO", 1))

@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 
 
-CATALOG_VERSION = 13
+CATALOG_VERSION = 15
 ALL_TARGET_PLATFORMS = ("macos", "windows", "linux", "android", "tvos")
 
 MODULES = (
@@ -28,7 +28,7 @@ MODULES = (
              "recovery": "Kodi reinstall/update; preserve Kodi userdata"},
             {"id": "service.actweeter", "minimum": "0.4.23", "source": "repository.actweeter",
              "license": "GPL-2.0-or-later", "platforms": ALL_TARGET_PLATFORMS,
-             "dependencies": ("plugin.video.xstream-pro", "pvr.iptvsimple", "plugin.video.youtube", "slyguy.trailers"),
+             "dependencies": ("plugin.video.xstream-pro", "pvr.iptvsimple", "plugin.video.youtube"),
              "configuration": "Resumable setup state in add-on profile; Trakt is optional",
              "update": "Kodi add-on repository automatic updates",
              "recovery": "Rerun AcTweeteR setup/repair"},
@@ -91,22 +91,26 @@ MODULES = (
     {
         "id": "trailers",
         "name": "Trailers (SlyGuy)",
-        "required": True,
+        "required": False,
         "addons": (
             {"id": "repository.slyguy", "minimum": "0.0.9", "source": "official SlyGuy repository package, bootstrapped from its live catalog",
              "license": "upstream metadata; no AcTweeteR redistribution", "platforms": ALL_TARGET_PLATFORMS,
+             "consent_required": True,
              "dependencies": (), "configuration": "Kodi repository trust/install confirmation",
              "update": "SlyGuy repository", "recovery": "Re-enable repository and refresh Kodi repositories"},
             {"id": "slyguy.dependencies", "minimum": "0.0.30", "source": "repository.slyguy",
              "license": "upstream metadata; no AcTweeteR redistribution", "platforms": ALL_TARGET_PLATFORMS,
+             "consent_required": True,
              "dependencies": ("repository.slyguy",), "configuration": "None verified",
              "update": "SlyGuy repository", "recovery": "Kodi native reinstall from repository.slyguy"},
             {"id": "script.module.slyguy", "minimum": "0.86.96", "source": "repository.slyguy",
              "license": "upstream metadata; no AcTweeteR redistribution", "platforms": ALL_TARGET_PLATFORMS,
+             "consent_required": True,
              "dependencies": ("slyguy.dependencies", "repository.slyguy"), "configuration": "None verified",
              "update": "SlyGuy repository", "recovery": "Kodi native reinstall from repository.slyguy"},
             {"id": "slyguy.trailers", "minimum": "0.2.1", "source": "repository.slyguy",
              "license": "upstream metadata; no AcTweeteR redistribution", "platforms": ALL_TARGET_PLATFORMS,
+             "consent_required": True,
              "dependencies": ("script.module.slyguy", "inputstream.adaptive"), "configuration": "Provider availability; no shared credentials",
              "update": "SlyGuy repository", "recovery": "Rerun trailer repair in AcTweeteR"},
         ),
@@ -126,6 +130,7 @@ MODULES = (
              "dependencies": (), "configuration": "Optional official device-code authorization; account tokens stay in script.trakt",
              "update": "Kodi official repository", "recovery": "Kodi native reinstall; retain add-on profile"},
             {"id": "inputstream.adaptive", "minimum": "21.0.0", "source": "Kodi official or platform-bundled",
+             "required": False, "consent_required": True,
              "license": "GPL-2.0-or-later", "platforms": ALL_TARGET_PLATFORMS,
              "dependencies": (), "configuration": "Platform binary used by SlyGuy DASH playback",
              "update": "Kodi official/platform binary update channel",

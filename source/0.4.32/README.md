@@ -1,5 +1,19 @@
 # AcTweeteR Beta widget-navigation source snapshot
 
+## Current service: 0.4.39 (installer Beta)
+
+The service recognizes both installed AcTweeteR repository channels for native
+installation/repair. SlyGuy and InputStream Adaptive remain optional. Existing
+wizard state and provider settings are preserved. Build using
+`python3 source/0.4.32/tools/build_service_package.py`; publish only the new
+service ZIP in the Testing feed. The published skin 1.2.29~beta10, XStream
+1.1.2.8 and repository Testing 1.0.1 are reused without rebuilding or replacing
+their immutable artifacts. No Stable publication is authorized.
+
+The sections below describe historical Beta 10/11 development, not current
+installer runtime acceptance. tvOS installation and playback require device
+evidence; successful unit tests do not establish that result.
+
 The next Beta candidate contains skin `1.2.29~beta10` and service `0.4.37`.
 It preserves the Beta 9 backed-up, versioned Skin Shortcuts migration for the
 Beta 8 main and power menu defaults. Only previously tracked or byte-identical

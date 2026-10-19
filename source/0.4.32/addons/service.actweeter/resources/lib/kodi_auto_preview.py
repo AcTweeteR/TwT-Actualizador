@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import base64
+import binascii
 import json
+import math
+import re
 import threading
 import time
 import uuid
@@ -19,10 +22,28 @@ _ANNOUNCEMENT_METHOD = "Other." + MESSAGE
 
 def stable_identity(payload):
     for name in ("imdb", "tmdb", "dbid"):
-        value = str(payload.get(name, "")).strip()
-        if value and value.isalnum():
+        raw = payload.get(name)
+        value = raw.strip() if isinstance(raw, str) else ""
+        if value and value.isascii() and value.isalnum():
             return name + ":" + value
     return ""
+
+
+def read_preview_metadata(kodi, prefix):
+    data = {field: kodi.getInfoLabel(prefix + label) for field, label in (
+        ("media_type", "DBType"), ("imdb", "UniqueID(imdb)"),
+        ("tmdb", "UniqueID(tmdb)"), ("dbid", "DBID"),
+        ("title", "Title"), ("year", "Year"), ("show_title", "TVShowTitle"),
+        ("show_dbid", "TvShowDBID"))}
+    data["media_type"] = data["media_type"].lower()
+    # XStream premium resume cards inherit these properties from the series
+    # before changing their media type to episode; UniqueIDs alone are ambiguous.
+    if (data["media_type"] in ("season", "episode") and
+            kodi.getInfoLabel(prefix + "Property(XStream.ProviderOnly)") == "true"):
+        data["show_tmdb"] = kodi.getInfoLabel(prefix + "Property(tmdb_id)")
+        data["show_imdb"] = kodi.getInfoLabel(prefix + "Property(imdb_id)")
+        data["show_year"] = data["year"]
+    return data
 
 
 class KodiAutoPreviewCoordinator:
@@ -50,6 +71,8 @@ class KodiAutoPreviewCoordinator:
         self.stop_inflight = set()
         self.stop_timeline = {}
         self.last_terminal_at = None
+        self.refocus_after_stop = None
+        self.focus_context = None
         self.closed = False
         self.wake = self.scheduler.condition
         self.worker = threading.Thread(target=self._work,
@@ -89,7 +112,7 @@ class KodiAutoPreviewCoordinator:
             decoded = base64.b64decode(encoded, validate=True).decode("utf-8")
             payload = json.loads(decoded)
             return payload if isinstance(payload, dict) else None
-        except (TypeError, ValueError, UnicodeError):
+        except (TypeError, ValueError, UnicodeError, binascii.Error):
             return None
 
     def _owned_item(self):
@@ -281,17 +304,38 @@ class KodiAutoPreviewCoordinator:
             focus = int(payload["focus"])
             position = int(payload["position"])
             delay = self.delay_parser(payload.get("delay", 3))
-        except (TypeError, ValueError):
+            if not math.isfinite(delay):
+                raise ValueError("non-finite preview delay")
+        except (KeyError, TypeError, ValueError):
+            # A partially delivered/foreign notification must not raise from
+            # Kodi Monitor; reject it before changing player ownership.
             self._log("FOCUS_REJECT", reason="invalid_payload")
             return False
-        if payload.get("media_type") != "movie" or window not in (10000, 11111):
+        if window not in (10000, 11110, 11111) or container != focus or container <= 0:
+            self._log("FOCUS_REJECT", reason="container_focus_mismatch")
+            return False
+        if payload.get("media_type") not in ("movie", "tvshow", "season", "episode"):
+            self.focus_context = None
             self._log("FOCUS_REJECT", reason="context", window=window,
                       media=payload.get("media_type", "unknown"))
             self._preempt({"owner": "OTHER"})
             return False
-        if not identity or container <= 0 or position < 0 or focus in (40000, 40003):
+        if not identity or position < 0 or focus in (40000, 40003):
+            self.focus_context = None
             self._log("FOCUS_REJECT", reason="identity_or_target")
             return False
+        # Store only validated rows; invalid placeholders must not be
+        # rediscovered by the idle-selection observer.
+        self.focus_context = dict(payload)
+
+        try:
+            player_has_media = bool(self.kodi.getCondVisibility("Player.HasMedia"))
+        except Exception:
+            # Fail closed: if Kodi cannot establish that playback is idle,
+            # retain the current ownership rather than competing with it.
+            player_has_media = True
+        if self.scheduler.ownership.recover_idle_other_owner(player_has_media):
+            self._log("FOCUS_OWNER_RECOVERED", reason="home_focus_no_media")
 
         previous = self.scheduler.active
         request = self.scheduler.ownership.latest_candidate(
@@ -302,6 +346,9 @@ class KodiAutoPreviewCoordinator:
         with self.wake:
             keep = {item.generation for item in
                     (self.scheduler.resolving, self.scheduler.active) if item}
+            # A displaced player can report its terminal event after new focus.
+            with self.stop_lock:
+                keep.update(self.stop_inflight)
             self.requests = {key: value for key, value in self.requests.items()
                              if key in keep}
             self.request_ids = {key: value for key, value in self.request_ids.items()
@@ -313,7 +360,9 @@ class KodiAutoPreviewCoordinator:
                 self.session_id, request.generation)
             self.item_data[request.generation] = {
                 key: payload.get(key, "")
-                for key in ("title", "year", "dbid", "imdb", "tmdb", "trailer_id")
+                for key in ("title", "year", "dbid", "imdb", "tmdb", "trailer_id",
+                            "media_type", "show_title", "show_dbid", "show_tmdb",
+                            "show_imdb", "show_year")
             }
             self._set_request_properties(request)
             self.scheduler.offer(request, delay, self.clock())
@@ -328,6 +377,14 @@ class KodiAutoPreviewCoordinator:
         pending = self.scheduler.latest or self.scheduler.resolving
         request = pending or self.scheduler.active
         if request is None:
+            # An on-unfocus can arrive after a trailer has already ended.
+            # Forget the row even without a pending request; otherwise the
+            # idle observer may restart its preview after the user leaves.
+            context = self.focus_context
+            if (context and
+                    str(payload.get("container", "")) == str(context.get("container")) and
+                    str(payload.get("window", "")) == str(context.get("window"))):
+                self.focus_context = None
             self._log("CANCEL_NO_REQUEST")
             return True
         try:
@@ -337,6 +394,10 @@ class KodiAutoPreviewCoordinator:
             return False
         try:
             window = int(payload.get("window", request.window))
+            if window != request.window:
+                self._log("CANCEL_IGNORED", generation=request.generation,
+                          reason="other_window")
+                return False
             focus = int(payload.get("focus", request.focus))
             position = int(payload.get("position", request.position))
         except (TypeError, ValueError):
@@ -360,6 +421,10 @@ class KodiAutoPreviewCoordinator:
                       reason="replacement_identity_mismatch")
             return False
         with self.wake:
+            if (self.focus_context and
+                    str(self.focus_context.get("window")) == str(request.window) and
+                    str(self.focus_context.get("container")) == str(request.container)):
+                self.focus_context = None
             # When focus moved to a non-preview item there is no replacement
             # request to protect; cancel the exact active preview instead of
             # rejecting the transition because the newly focused item differs.
@@ -374,6 +439,11 @@ class KodiAutoPreviewCoordinator:
         if owner not in ("MANUAL_DETAIL", "MANUAL_SPOTLIGHT", "VOD", "OTHER"):
             return False
         with self.wake:
+            # A manual/VOD handoff invalidates the selected automatic row.
+            # Otherwise the idle observer may restart its trailer when that
+            # external playback ends, without a new focus event.
+            self.focus_context = None
+            self.refocus_after_stop = None
             request = self.scheduler.active
             self.scheduler.preempt(owner)
             self._clear_current()
@@ -393,6 +463,8 @@ class KodiAutoPreviewCoordinator:
         is invalidated by generation and cannot replace later playback.
         """
         with self.wake:
+            self.focus_context = None
+            self.refocus_after_stop = None
             active = self.scheduler.active
             self.scheduler.cancel()
             self._clear_current()
@@ -407,6 +479,11 @@ class KodiAutoPreviewCoordinator:
         if owner not in ("MANUAL_DETAIL", "MANUAL_SPOTLIGHT", "VOD", "OTHER"):
             owner = "OTHER"
         with self.wake:
+            # A manual/VOD handoff invalidates the selected automatic row.
+            # Otherwise the idle observer may restart its trailer when that
+            # external playback ends, without a new focus event.
+            self.focus_context = None
+            self.refocus_after_stop = None
             request = self.scheduler.active
             self.scheduler.preempt(owner)
             self._clear_current()
@@ -457,9 +534,15 @@ class KodiAutoPreviewCoordinator:
             self.stale_owned.add((generation, request_id))
             return "UNOWNED"
         current = self.scheduler.latest or self.scheduler.resolving
-        current_focus = int(self.kodi.getInfoLabel("System.CurrentControlId") or "-1")
-        current_position = int(self.kodi.getInfoLabel(
-            "Container(%d).CurrentItem" % request.container) or "-1")
+        # Kodi can temporarily expose empty/non-numeric control labels while
+        # changing windows. Treat that as stale focus, never raise from the
+        # Player AVStarted callback or accidentally accept an old preview.
+        try:
+            current_focus = int(self.kodi.getInfoLabel("System.CurrentControlId") or "-1")
+            current_position = int(self.kodi.getInfoLabel(
+                "Container(%d).CurrentItem" % request.container) or "-1")
+        except (TypeError, ValueError):
+            current_focus = current_position = -1
         labels = "Container(%d).ListItem." % request.container
         actual_identity = stable_identity({
             "imdb": self.kodi.getInfoLabel(labels + "UniqueID(imdb)"),
@@ -566,8 +649,11 @@ class KodiAutoPreviewCoordinator:
         return True
 
     def _delete_manifest(self, manifest):
-        if not isinstance(manifest, str) or not manifest.startswith(
-                "special://temp/actweeter_preview_"):
+        # A prefix alone also matches path traversal and unrelated files.
+        # Delete only the exact MPD naming scheme created by our bridge.
+        if (not isinstance(manifest, str) or
+                re.fullmatch(r"special://temp/actweeter_preview_[A-Za-z0-9_-]+\.mpd",
+                             manifest) is None):
             return
         if self.vfs is None:
             return
@@ -579,12 +665,19 @@ class KodiAutoPreviewCoordinator:
         request = self.requests.get(generation)
         if item is not None:
             request_id = item.getProperty("AcTweeteR.PreviewRequestId")
+        # A stale callback must not delete a different generation's manifest,
+        # even if its item carries a syntactically valid temporary filename.
+        if (not isinstance(request_id, str) or
+                re.fullmatch(r"[0-9a-f]{32}-[1-9][0-9]*", request_id) is None or
+                (request is not None and request.identity != identity) or
+                (self.request_ids.get(generation) not in (None, request_id))):
+            return False
         manifest = item.getProperty("AcTweeteR.PreviewManifest") if item else ""
-        self._delete_manifest(manifest or
-                              "special://temp/actweeter_preview_%s.mpd" % request_id)
+        expected_manifest = "special://temp/actweeter_preview_%s.mpd" % request_id
+        if manifest and manifest != expected_manifest:
+            return False
+        self._delete_manifest(expected_manifest)
         if self.request_ids.get(generation) == request_id:
-            if request is not None and request.identity != identity:
-                return False
             self._clear_generation(generation)
             self.requests.pop(generation, None)
             self.item_data.pop(generation, None)
@@ -679,15 +772,104 @@ class KodiAutoPreviewCoordinator:
                 return None
         return self.scheduler.take_ready(now, player_active=player_active)
 
+    def _active_focus_still_matches(self, request):
+        """Check the selected card, not only the widget control's focus.
+
+        Kodi does not emit control on-unfocus when moving between items in
+        the same panel. Polling avoids leaving an owned trailer playing for
+        the previously selected poster. Only an owned preview may be stopped.
+        """
+        try:
+            if not self.kodi.getCondVisibility("Window.IsActive(%d)" % request.window):
+                return False
+            if int(self.kodi.getInfoLabel("System.CurrentControlId") or "-1") != request.focus:
+                return False
+            if int(self.kodi.getInfoLabel(
+                    "Container(%d).CurrentItem" % request.container) or "-1") != request.position:
+                return False
+            prefix = "Container(%d).ListItem." % request.container
+            return stable_identity({
+                "imdb": self.kodi.getInfoLabel(prefix + "UniqueID(imdb)"),
+                "tmdb": self.kodi.getInfoLabel(prefix + "UniqueID(tmdb)"),
+                "dbid": self.kodi.getInfoLabel(prefix + "DBID"),
+            }) == request.identity
+        except (ValueError, TypeError):
+            return False
+
+    def _refocus_current_card(self, previous):
+        """Request the newly selected poster after the old owned trailer stops."""
+        if not self.kodi.getCondVisibility("Window.IsActive(%d)" % previous.window):
+            return
+        try:
+            focus = int(self.kodi.getInfoLabel("System.CurrentControlId") or "-1")
+            position = int(self.kodi.getInfoLabel(
+                "Container(%d).CurrentItem" % previous.container) or "-1")
+        except (TypeError, ValueError):
+            return
+        if focus != previous.focus or position < 0:
+            return
+        prefix = "Container(%d).ListItem." % previous.container
+        payload = {
+            "window": previous.window, "container": previous.container,
+            "focus": focus, "position": position,
+            **read_preview_metadata(self.kodi, prefix),
+            "trailer_id": "", "delay": 3.0,
+        }
+        if stable_identity(payload) != previous.identity:
+            self._log("CARD_REFOCUS", container=previous.container,
+                      position=position)
+            self._focus(payload)
+
+    def _poll_selected_card(self):
+        """Kodi's control onfocus does not report selection changes in a row."""
+        previous = self.focus_context
+        if not previous or self.kodi.getCondVisibility("Player.HasMedia"):
+            return
+        window, container, focus = (int(previous[key]) for key in ("window", "container", "focus"))
+        if not self.kodi.getCondVisibility("Window.IsActive(%d)" % window):
+            return
+        try:
+            if int(self.kodi.getInfoLabel("System.CurrentControlId") or "-1") != focus:
+                return
+            position = int(self.kodi.getInfoLabel("Container(%d).CurrentItem" % container) or "-1")
+        except (TypeError, ValueError):
+            return
+        prefix = "Container(%d).ListItem." % container
+        current = dict(previous, position=position, trailer_id="",
+                       **read_preview_metadata(self.kodi, prefix))
+        if (position, stable_identity(current), current["media_type"]) != (
+                int(previous["position"]), stable_identity(previous), previous.get("media_type")):
+            self._log("CARD_SELECTION_CHANGED", container=container, position=position)
+            self._focus(current)
+
     def _work(self):
         while not self.closed:
+            with self.wake:
+                active = self.scheduler.active
+            if active is not None and not self._active_focus_still_matches(active):
+                self._log("FOCUS_CHANGED", generation=active.generation)
+                self._preempt({"owner": "OTHER"})
+                # Explicit preemption clears deferred focus by design for
+                # manual/VOD handoff. Re-arm only this internal card-change
+                # path, after preemption, to preview the newly selected card.
+                self.refocus_after_stop = active
+            if self.refocus_after_stop is not None:
+                try:
+                    playing = self.kodi.getCondVisibility("Player.HasMedia")
+                except Exception:
+                    playing = True
+                if not playing:
+                    previous = self.refocus_after_stop
+                    self.refocus_after_stop = None
+                    self._refocus_current_card(previous)
+            self._poll_selected_card()
             with self.wake:
                 now = self.clock()
                 has_media = getattr(self.kodi, "getCondVisibility", None)
                 player_active = bool(has_media("Player.HasMedia")) if has_media else False
                 request = self._take_ready(now, player_active=player_active)
                 if request is None:
-                    timeout = 1.0
+                    timeout = 0.25 if self.scheduler.active is not None or self.refocus_after_stop is not None or self.focus_context is not None else 1.0
                     if self.scheduler.delay_deadline is not None:
                         timeout = min(timeout, max(0.01, self.scheduler.delay_deadline - now))
                     self.wake.wait(timeout)
@@ -714,14 +896,16 @@ class KodiAutoPreviewCoordinator:
                     "action": "resolve", "generation": request.generation,
                     "identity": request.identity, "window": request.window,
                     "container": request.container, "focus": request.focus,
-                    "position": request.position, "media_type": "movie",
+                    "position": request.position,
                     "request_id": self.request_ids[request.generation],
                     **item_data,
                 })
             except Exception as exc:
                 self._log("RESOLUTION_DISPATCH_FAILED", generation=request.generation,
                           error=type(exc).__name__)
-                self._resolved({"generation": request.generation, "status": "launch_error"})
+                self._resolved({"generation": request.generation,
+                                "request_id": self.request_ids.get(request.generation),
+                                "status": "launch_error"})
 
     def close(self):
         self.closed = True

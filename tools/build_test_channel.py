@@ -3,9 +3,15 @@
 from __future__ import annotations
 
 import argparse
+import ctypes
+import errno
+import sys
 import hashlib
+import os
+import tempfile
 import shutil
 import stat
+import re
 import zipfile
 from pathlib import Path
 from xml.etree import ElementTree as ET
@@ -13,15 +19,38 @@ from xml.etree import ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 TEST_REPOSITORY_ID = "repository.actweeter.testing"
-TEST_REPOSITORY_VERSION = "1.0.0"
+TEST_REPOSITORY_VERSION = "1.0.1"
 SERVICE_ID = "service.actweeter"
-SERVICE_VERSION = "0.4.37"
+SERVICE_VERSION = "0.4.39"
 XSTREAM_ID = "plugin.video.xstream-pro"
 FIXED_TIME = (2026, 10, 3, 0, 0, 0)
 
 
+def publish_directory_no_replace(stage: Path, output: Path) -> None:
+    """Atomically publish a completed directory without replacing an existing path.
+
+    Darwin renamex_np(RENAME_EXCL) is required for the macOS release builder.
+    Other platforms fail closed until an equivalent primitive is implemented.
+    """
+    if sys.platform != "darwin":
+        raise RuntimeError("atomic no-replace directory publication requires macOS")
+    libc = ctypes.CDLL(None, use_errno=True)
+    rename = libc.renamex_np
+    rename.argtypes = (ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint)
+    rename.restype = ctypes.c_int
+    # RENAME_EXCL = 0x00000004 on macOS (sys/stdio.h).
+    if rename(os.fsencode(stage), os.fsencode(output), 0x00000004) != 0:
+        code = ctypes.get_errno()
+        if code in (errno.EEXIST, errno.ENOTEMPTY):
+            raise ValueError("refusing to overwrite an existing test channel")
+        raise OSError(code, os.strerror(code), str(output))
+
+
 def zip_tree(source: Path, output: Path, root_name: str) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
+    for entry in source.rglob("*"):
+        if entry.is_symlink():
+            raise ValueError("test repository source contains a symlink")
     with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED,
                          compresslevel=9) as archive:
         for path in sorted(p for p in source.rglob("*") if p.is_file()):
@@ -34,6 +63,14 @@ def zip_tree(source: Path, output: Path, root_name: str) -> None:
 
 def addon_from_zip(path: Path, addon_id: str, version: str) -> ET.Element:
     with zipfile.ZipFile(path) as archive:
+        names = archive.namelist()
+        if (len(names) != len(set(names))
+                or any(not name.startswith(addon_id + "/")
+                       or ".." in Path(name).parts for name in names)
+                or any((member.external_attr >> 16) & 0o170000
+                       not in (0, stat.S_IFREG, stat.S_IFDIR)
+                       for member in archive.infolist())):
+            raise ValueError(f"unsafe ZIP paths: {path.name}")
         if archive.testzip() is not None:
             raise ValueError(f"bad ZIP CRC: {path.name}")
         expected = f"{addon_id}/addon.xml"
@@ -48,22 +85,27 @@ def addon_from_zip(path: Path, addon_id: str, version: str) -> ET.Element:
 def build(repository_source: Path, service_zip: Path, output: Path,
           skin_zip: Path | None = None,
           xstream_zip: Path | None = None) -> tuple[Path, Path, Path]:
-    if service_zip.name != f"{SERVICE_ID}-{SERVICE_VERSION}.zip":
+    # Never overwrite an existing feed or expose half-copied artifacts.
+    if output.exists() or output.is_symlink():
+        raise ValueError("refusing to overwrite an existing test channel")
+    if not re.fullmatch(r"service\.actweeter-\d+\.\d+\.\d+\.zip", service_zip.name):
         raise ValueError("candidate service ZIP filename does not match its Kodi identity/version")
     repo_addon = ET.parse(repository_source / "addon.xml").getroot()
     if repo_addon.get("id") != TEST_REPOSITORY_ID or repo_addon.get("version") != TEST_REPOSITORY_VERSION:
         raise ValueError("test repository identity/version mismatch")
     dirs = repo_addon.findall("./extension[@point='xbmc.addon.repository']/dir")
-    if len(dirs) != 2:
+    if len(dirs) != 4:
         raise ValueError("test repository must expose only its candidate and the official stable feed")
     info_urls = [node.findtext("info", "") for node in dirs]
     if info_urls != [
         "https://actweeter.github.io/TwT-Actualizador/testing/repo/addons.xml",
         "https://raw.githubusercontent.com/AcTweeteR/TwT-Actualizador/main/repo/addons.xml",
+        "https://raw.githubusercontent.com/matke-84/repository.bingie/main/omega/addons.xml",
+        "https://slyguy.uk/.repo/repository.slyguy/addons.xml",
     ]:
         raise ValueError("test repository feed endpoints are not isolated as expected")
 
-    service = addon_from_zip(service_zip, SERVICE_ID, SERVICE_VERSION)
+    service = addon_from_zip(service_zip, SERVICE_ID, service_zip.name[len(SERVICE_ID) + 1:-4])
     skin = None
     if skin_zip is not None:
         with zipfile.ZipFile(skin_zip) as archive:
@@ -90,6 +132,22 @@ def build(repository_source: Path, service_zip: Path, output: Path,
     if not (repository_source / repo_news_name).is_file():
         raise ValueError("test repository changelog missing")
 
+    # All input validation has completed. Build into a private sibling tree.
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix=".actweeter-test-feed-", dir=output.parent) as temporary:
+        stage = Path(temporary) / "feed"
+        stage.mkdir()
+        result = _write_test_channel(stage, repository_source, repo_addon,
+                                     service_zip, service, skin_zip, skin,
+                                     xstream_zip, xstream, repo_news_name)
+        publish_directory_no_replace(stage, output)
+    return tuple(output / path.relative_to(stage) for path in result)
+
+
+def _write_test_channel(output: Path, repository_source: Path, repo_addon: ET.Element,
+                        service_zip: Path, service: ET.Element, skin_zip: Path | None,
+                        skin: ET.Element | None, xstream_zip: Path | None,
+                        xstream: ET.Element | None, repo_news_name: str) -> tuple[Path, Path, Path]:
     repo_zip = output / "bootstrap" / f"{TEST_REPOSITORY_ID}-{TEST_REPOSITORY_VERSION}.zip"
     zip_tree(repository_source, repo_zip, TEST_REPOSITORY_ID)
     with zipfile.ZipFile(repo_zip) as archive:
