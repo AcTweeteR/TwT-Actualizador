@@ -9,3 +9,4 @@
 - [Kodi Master phase 1.5 acceptance and blockers (2026-10-18)](PHASE_1_5_CLOSURE_GATE_2026-10-18.md)
 - [Candidate source and reproducibility](../../source/0.4.32/README.md)
 - [Testing feed](../testing/README.md)
+- [Kodi AcTweeteR: roadmap de control de actualizaciones](UPDATE_CONTROL_ROADMAP.md)
