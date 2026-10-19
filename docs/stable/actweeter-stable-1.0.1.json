@@ -3,7 +3,7 @@
   "distribution_version": "1.0.1",
   "channel": "stable",
   "kodi": "21.3 Omega",
-  "status": "first stable distribution; tvOS runtime validation remains pending",
+  "status": "Stable 1.0.1 hotfix: automatic add-on updates restored; tvOS runtime validation pending",
   "addons": [
     {
       "addon_id": "repository.actweeter",
@@ -19,9 +19,9 @@
     },
     {
       "addon_id": "service.actweeter",
-      "version": "0.4.41",
-      "path": "repo/service.actweeter/service.actweeter-0.4.41.zip",
-      "sha256": "0ab0b44c00825af323ef37e6e6b918aa24401799a1fc47c0bd82ad2ba57b404f"
+      "version": "0.4.42",
+      "path": "repo/service.actweeter/service.actweeter-0.4.42.zip",
+      "sha256": "834732d34c69dabdbb18808068c780e4afb4358259df9dad96952e813750ef11"
     },
     {
       "addon_id": "plugin.video.xstream-pro",
