@@ -13,6 +13,59 @@ import interface_layout  # noqa: E402
 
 
 class ExpandableWidgetMetadataTests(unittest.TestCase):
+    def test_property_persistence_refuses_linked_state_or_backup_root(self):
+        for linked in ('interface_layout_state.json', 'interface_backups'):
+            with self.subTest(linked=linked), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                shortcuts = root / 'shortcuts'
+                service = root / 'service'
+                shortcuts.mkdir()
+                service.mkdir()
+                outside = root / 'outside'
+                if linked == 'interface_backups':
+                    outside.mkdir()
+                    (service / linked).symlink_to(outside, target_is_directory=True)
+                else:
+                    outside.write_text('{}')
+                    (service / linked).symlink_to(outside)
+                with self.assertRaises(ValueError):
+                    interface_layout.persist_generated_expandable_properties(
+                        shortcuts, service, root / 'generated.xml', {})
+                self.assertFalse((shortcuts / 'skin.actweeter.properties').exists())
+
+    def test_property_persistence_postwrite_failure_restores_state_and_properties(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            shortcuts = root / 'shortcuts'
+            service = root / 'service'
+            shortcuts.mkdir()
+            service.mkdir()
+            properties = shortcuts / 'skin.actweeter.properties'
+            original_properties = b'[["custom", "id", "user", "keep"]]'
+            properties.write_bytes(original_properties)
+            state = service / 'interface_layout_state.json'
+            original_state = b'{"layout_version":12,"build_status":"PENDING"}'
+            state.write_bytes(original_state)
+            documents = {'skin.actweeter-moviehub.DATA.xml': b'data'}
+            real_write = interface_layout.atomic_write
+            failed = [False]
+            def postwrite_failure(path, data):
+                real_write(path, data)
+                if Path(path) == state and not failed[0]:
+                    failed[0] = True
+                    raise OSError('simulated state readback failure')
+            with mock.patch.object(interface_layout, 'expandable_shortcut_ids',
+                                   return_value={'default': 'moviehub'}), \
+                 mock.patch.object(interface_layout, 'generated_shortcut_identities',
+                                   return_value={'default': ('moviehub.1', 'label')}), \
+                 mock.patch.object(interface_layout, 'atomic_write',
+                                   side_effect=postwrite_failure):
+                with self.assertRaises(OSError):
+                    interface_layout.persist_generated_expandable_properties(
+                        shortcuts, service, root / 'generated.xml', documents)
+            self.assertEqual(properties.read_bytes(), original_properties)
+            self.assertEqual(state.read_bytes(), original_state)
+
     def test_apply_refuses_directory_shortcut_without_partial_changes(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

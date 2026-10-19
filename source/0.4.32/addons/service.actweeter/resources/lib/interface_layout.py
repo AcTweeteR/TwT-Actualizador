@@ -645,9 +645,15 @@ def persist_generated_expandable_properties(shortcuts_root, service_root,
     """Backup and persist properties using identities from a completed build."""
     shortcuts_root, service_root = as_path(shortcuts_root), Path(service_root)
     properties = shortcuts_root/'skin.actweeter.properties'
-    if properties.is_symlink():
-        raise ValueError('Skin Shortcuts properties symlink refused')
+    state_path = service_root/'interface_layout_state.json'
+    backup_root = service_root/'interface_backups'
+    if (properties.is_symlink() or state_path.is_symlink() or
+            backup_root.is_symlink()):
+        raise ValueError('Skin Shortcuts property persistence symlink refused')
+    if properties.exists() and not properties.is_file():
+        raise ValueError('Skin Shortcuts properties path is not a file')
     existing = properties.read_bytes() if properties.is_file() else None
+    original_state = state_path.read_bytes() if state_path.is_file() else None
     ids = expandable_shortcut_ids(documents)
     identities = generated_shortcut_identities(generated_path, ids)
     required = expandable_property_rows(documents, identities)
@@ -676,7 +682,6 @@ def persist_generated_expandable_properties(shortcuts_root, service_root,
         atomic_write(properties, merged)
         if properties.read_bytes() != merged:
             raise OSError('Skin Shortcuts property persistence readback mismatch')
-        state_path = service_root/'interface_layout_state.json'
         state = load_state(state_path)
         state['properties_hash'] = digest(merged)
         state['properties_backup'] = backup.name
@@ -689,6 +694,21 @@ def persist_generated_expandable_properties(shortcuts_root, service_root,
                 properties.unlink()
             else:
                 atomic_write(properties, existing)
+        # A post-write state failure must not leave the new properties hash
+        # recorded against restored old properties. Only undo our own state.
+        if state_path.is_file():
+            current_state = state_path.read_bytes()
+            if current_state != original_state:
+                try:
+                    recorded = json.loads(current_state.decode('utf-8'))
+                except (UnicodeDecodeError, ValueError):
+                    recorded = {}
+                if (recorded.get('properties_hash') == digest(merged) and
+                        recorded.get('properties_backup') == backup.name):
+                    if original_state is None:
+                        state_path.unlink()
+                    else:
+                        atomic_write(state_path, original_state)
         raise
     return {'changed': True, 'rows': len(required), 'identities': identities,
             'backup': backup.name}

@@ -340,3 +340,11 @@ Reviewed lock acquisition, stale-owner recovery, preparation callback, and relea
 - Previously stale-lock recovery recursively reentered `prepare_interface` with no retry bound under lock contention. It now retries acquisition at most once and returns PREPARATION_BUSY when another owner persists.
 - Previously the finalizer unlinked any file at the lock path, even if another process had replaced it while preparation ran. The finalizer now compares device/inode identity with its own open descriptor and refuses to remove another owner's lock or a symlink.
 - 166 automated tests PASS, including lock replacement during preparation and bounded stale-lock recovery. Multi-process Kodi runtime contention remains a separate QA gate.
+
+## Skin Shortcuts property persistence and state recovery — 2026-10-19
+
+Audited the second-stage widget identity -> property merge -> backup -> write -> state update -> recovery flow.
+
+- Refuse symlinked property, state and backup-root paths before reading/writing; reject directory at the property file destination.
+- Snapshot previous state bytes before writing. On a post-write state failure, restore properties only when they still match our written bytes and restore state only when it still contains our exact properties hash and backup marker. This prevents stale state pointing to rolled-back property data without clobbering unrelated concurrent changes.
+- 168 tests PASS, including linked destinations and simulated failure after the state file was written. Native Skin Shortcuts GUI rebuild remains unverified.
