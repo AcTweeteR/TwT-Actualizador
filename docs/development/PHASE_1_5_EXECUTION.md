@@ -262,3 +262,9 @@ Scope inspected: integrated commit history, installed/source parity, coordinator
 - Even after verifying all backup payloads, a later filesystem write failure could leave earlier shortcuts partially restored.
 - Snapshot original target bytes, and on rollback write failure restore already touched paths in reverse order. Regression injects a one-time failure on the second shortcut and verifies both original shortcuts and layout state remain intact.
 - Full suite: 146 PASS. This is best-effort recovery from a recoverable I/O failure, not a power-loss transaction.
+
+## Manual trailer return focus race — 2026-10-19
+
+- `_restore_context` called SetFocus and immediately Action(Info), without verifying Kodi had processed the asynchronous focus change. This could open information for the wrong item.
+- Gate Action(Info) on the original window, confirmed focused control and exact captured item identity, with bounded wait; fail closed when focus cannot be confirmed. AST regression checks guard precedes Action(Info).
+- Full suite: 147 PASS. Real movie/series return UI playback remains to be verified.

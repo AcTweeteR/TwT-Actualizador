@@ -11,6 +11,26 @@ from slyguy_trailer_return import capture_context, manual_exit_requires_stop, re
 
 
 class ManualTrailerTests(unittest.TestCase):
+    def test_manual_restore_checks_focus_before_info_action(self):
+        source = Path(__file__).resolve().parents[1] / 'addons/service.actweeter/service.py'
+        player = next(node for node in ast.parse(source.read_text()).body
+                      if isinstance(node, ast.ClassDef) and node.name == 'SlyGuyTrailerReturnPlayer')
+        method = next(node for node in player.body
+                      if isinstance(node, ast.FunctionDef) and node.name == '_restore_context')
+        calls = [node for node in ast.walk(method) if isinstance(node, ast.Call)]
+        focus_checks = [node for node in calls if isinstance(node.func, ast.Attribute)
+                        and node.func.attr == 'getCondVisibility' and node.args
+                        and isinstance(node.args[0], ast.BinOp)
+                        and isinstance(node.args[0].left, ast.Constant)
+                        and 'Control.HasFocus' in str(node.args[0].left.value)]
+        self.assertTrue(focus_checks, 'manual return must verify selected focus')
+        info_calls = [node for node in calls if isinstance(node.func, ast.Attribute)
+                      and node.func.attr == 'executebuiltin' and node.args
+                      and isinstance(node.args[0], ast.Constant)
+                      and node.args[0].value == 'Action(Info)']
+        self.assertEqual(len(info_calls), 1)
+        self.assertLess(focus_checks[0].lineno, info_calls[0].lineno)
+
     def test_real_presentation_worker_stops_only_its_own_file_after_back(self):
         source = Path(__file__).resolve().parents[1] / "addons/service.actweeter/service.py"
         player = next(node for node in ast.parse(source.read_text()).body

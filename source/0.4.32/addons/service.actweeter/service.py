@@ -509,9 +509,27 @@ class SlyGuyTrailerReturnPlayer(_PLAYER_BASE):
             if decision == "restore":
                 # Action(Info) is issued only after Kodi reports the Movies Hub
                 # and the selected item's stable identity matches the capture.
-                if context.get("source_control_id"):
-                    self.kodi.executebuiltin(
-                        "SetFocus(%d)" % context["source_control_id"], False)
+                source_control = context.get("source_control_id")
+                if source_control:
+                    self.kodi.executebuiltin("SetFocus(%d)" % source_control, False)
+                    # Kodi processes SetFocus asynchronously. Do not issue
+                    # Action(Info) against a different selected control.
+                    focus_deadline = min(deadline, time.monotonic() + 1.0)
+                    while (not self.monitor.abortRequested() and
+                           time.monotonic() < focus_deadline):
+                        if (_window_id(self.kodi) == window_id and
+                                self.kodi.getCondVisibility(
+                                    "Control.HasFocus(%d)" % source_control) and
+                                identity_matches(
+                                    context["identity"],
+                                    self._current_identity_values(context))):
+                            break
+                        time.sleep(0.05)
+                    else:
+                        self.kodi.log(
+                            "[AcTweeteR] SLYGUY_RETURN_RESULT=FOCUS_NOT_CONFIRMED correlation=%s" %
+                            context.get("correlation_id", "none"), self.kodi.LOGWARNING)
+                        break
                 self.kodi.executebuiltin("Action(Info)", False)
                 self.kodi.log(
                     "[AcTweeteR] SLYGUY_RETURN_INFO_ACTION=1 correlation=%s" %
