@@ -13,6 +13,50 @@ import interface_layout  # noqa: E402
 
 
 class ExpandableWidgetMetadataTests(unittest.TestCase):
+    def test_metadata_preflight_rejects_symlinked_state_and_backup_root(self):
+        for linked in ('metadata_preferences.json', 'metadata_backups'):
+            with self.subTest(linked=linked), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                service = root / 'service'
+                service.mkdir()
+                outside = root / 'outside'
+                if linked == 'metadata_backups':
+                    outside.mkdir()
+                    (service / linked).symlink_to(outside, target_is_directory=True)
+                else:
+                    outside.write_text('{}')
+                    (service / linked).symlink_to(outside)
+                addon = mock.Mock()
+                addon.getSetting.side_effect = lambda key: 'en-US' if key == 'tmdb_language' else 'English'
+                addon.getAddonInfo.return_value = str(root / 'profile')
+                vfs = mock.Mock()
+                vfs.translatePath.side_effect = lambda path: path
+                with self.assertRaises(ValueError):
+                    interface_layout.prepare_metadata_language(
+                        lambda _name: addon, vfs, service)
+                addon.setSetting.assert_not_called()
+
+    def test_metadata_preflight_refuses_linked_cache_without_setting_changes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            service = root / 'service'
+            profile = root / 'profile'
+            service.mkdir()
+            profile.mkdir()
+            outside = root / 'private'
+            outside.write_bytes(b'private')
+            cache = profile / 'data_cache_p1_premium_meta_movie_5_es.json'
+            cache.symlink_to(outside)
+            addon = mock.Mock()
+            addon.getSetting.side_effect = lambda key: 'en-US' if key == 'tmdb_language' else 'English'
+            addon.getAddonInfo.return_value = str(profile)
+            vfs = mock.Mock()
+            vfs.translatePath.side_effect = lambda path: path
+            with self.assertRaises(ValueError):
+                interface_layout.prepare_metadata_language(lambda _name: addon, vfs, service)
+            addon.setSetting.assert_not_called()
+            self.assertEqual(outside.read_bytes(), b'private')
+
     def test_property_persistence_refuses_linked_state_or_backup_root(self):
         for linked in ('interface_layout_state.json', 'interface_backups'):
             with self.subTest(linked=linked), tempfile.TemporaryDirectory() as tmp:

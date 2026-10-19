@@ -844,19 +844,27 @@ def prepare_metadata_language(addon_factory,vfs,service_root):
     previous={key:addon.getSetting(key) for key in desired}
     changes={key:value for key,value in desired.items() if previous[key] in defaults[key]}
     root=Path(service_root)
-    migration=load_state(root/'metadata_preferences.json')
+    report_path = root/'metadata_preferences.json'
+    backup_root = root/'metadata_backups'
+    if report_path.is_symlink() or backup_root.is_symlink():
+        raise ValueError('metadata state or backup symlink refused')
+    migration=load_state(report_path)
     spanish=(previous['tmdb_language'].lower().replace('_','-').split('-')[0]=='es')
     refresh_spanish_cache=spanish and migration.get('schema')!=1
     if not changes and not refresh_spanish_cache:return {'changed':False,'settings':previous}
-    backup=root/'metadata_backups'/uuid.uuid4().hex[:12]
-    backup.mkdir(parents=True,mode=0o700)
-    atomic_write(backup/'preferences.json',json.dumps(previous,ensure_ascii=False).encode())
     profile=Path(vfs.translatePath(addon.getAddonInfo('profile')))
     cache_files=[p for p in profile.glob('data_cache_p*_premium_meta_*_es.json')
                  if re.fullmatch(r'data_cache_p[0-9]+_premium_meta_(movie|series)_[0-9]+_es\.json',p.name)]
+    cache_data = {}
     for path in cache_files:
-        if path.is_symlink():raise ValueError('metadata cache symlink refused')
-        data=path.read_bytes();atomic_write(backup/path.name,data)
+        if path.is_symlink() or not path.is_file():
+            raise ValueError('metadata cache destination refused')
+        cache_data[path] = path.read_bytes()
+    backup=backup_root/uuid.uuid4().hex[:12]
+    backup.mkdir(parents=True,mode=0o700)
+    atomic_write(backup/'preferences.json',json.dumps(previous,ensure_ascii=False).encode())
+    for path, data in cache_data.items():
+        atomic_write(backup/path.name,data)
         if (backup/path.name).read_bytes()!=data:raise OSError('metadata backup failed')
     try:
         for key,value in changes.items():
@@ -866,8 +874,8 @@ def prepare_metadata_language(addon_factory,vfs,service_root):
             for path in cache_files:path.unlink()
     except Exception:
         for key in changes:addon.setSetting(key,previous[key])
-        for path in cache_files:
-            if not path.exists():atomic_write(path,(backup/path.name).read_bytes())
+        for path, data in cache_data.items():
+            if not path.exists():atomic_write(path,data)
         raise
     report={'schema':1,'changed':bool(changes),'settings':{key:addon.getSetting(key) for key in desired},
             'backup':backup.name,'refreshed_metadata_entries':len(cache_files)}

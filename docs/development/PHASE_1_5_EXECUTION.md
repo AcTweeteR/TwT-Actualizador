@@ -348,3 +348,12 @@ Audited the second-stage widget identity -> property merge -> backup -> write ->
 - Refuse symlinked property, state and backup-root paths before reading/writing; reject directory at the property file destination.
 - Snapshot previous state bytes before writing. On a post-write state failure, restore properties only when they still match our written bytes and restore state only when it still contains our exact properties hash and backup marker. This prevents stale state pointing to rolled-back property data without clobbering unrelated concurrent changes.
 - 168 tests PASS, including linked destinations and simulated failure after the state file was written. Native Skin Shortcuts GUI rebuild remains unverified.
+
+## XStream Spanish metadata preferences/cache audit — 2026-10-19
+
+Reviewed the full default-language migration: current settings, metadata migration marker, cache discovery, backup, settings persistence, cache invalidation, and rollback.
+
+- Reject linked metadata report and backup root before migration, avoiding writes outside the service profile.
+- Validate and snapshot every Spanish premium metadata cache file before creating backups or changing settings; refuse symlinks and nonregular files, preventing late discovery after settings mutation.
+- Restore deleted cache entries from the preflight snapshot on a recoverable failure.
+- 170 tests PASS, including linked report/backup and linked cache files; actual XStream remote metadata refresh remains a runtime gate.
