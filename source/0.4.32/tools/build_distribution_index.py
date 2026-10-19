@@ -31,9 +31,13 @@ def addon_from_zip(path: Path, expected_id: str, expected_version: str) -> ET.El
         names = archive.namelist()
         if (len(names) != len(set(names))
                 or any(not name.startswith(expected_id + "/")
-                       or ".." in Path(name).parts for name in names)
-                or any((entry.external_attr >> 16) & 0o170000
+                       or "\\" in name or any(part in ("", ".", "..")
+                           for part in name.rstrip("/").split("/"))
+                       for name in names)
+                or any(((entry.external_attr >> 16) & 0o170000)
                        not in (0, stat.S_IFREG, stat.S_IFDIR)
+                       for entry in archive.infolist())
+                or any(entry.file_size > 128 * 1024 * 1024
                        for entry in archive.infolist())):
             raise ValueError("unsafe add-on ZIP entries")
         matches = [name for name in names

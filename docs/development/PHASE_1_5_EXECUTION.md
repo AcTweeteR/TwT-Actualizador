@@ -469,3 +469,7 @@ Audited the `repository.actweeter` ZIP build end-to-end: source identity, source
 ## Skin and service ZIP builders audit (2026-10-19)
 
 Audited both addon package creation paths end-to-end: deterministic ZIP entries, source-tree safety, skin Skin Shortcuts bootstrap replacement, metadata identity, output collisions, and partial-build failure cleanup. Replaced direct overwrite with a shared staged ZIP builder that checks source symlinks, validates ZIP CRC and embedded addon identity, and atomically creates output without replacing existing files. Updated reproducibility test to compare independent output paths instead of requiring an unsafe overwrite. **222 automated tests PASS**. Kodi Master unchanged. More dedicated fault-injection tests and live deployment acceptance remain outstanding.
+
+## End-to-end package safety fault injection (2026-10-19)
+
+Follow-up audit across the shared ZIP builder and repository index ingestion: added explicit rejection of Windows backslash ZIP paths, dot/empty path components, oversized individual members, and verified special-file rejection. Added six fault-injection tests for failed source reads, wrong embedded addon identity, source symlink, hostile archive paths, symlink ZIP member, and existing index destination preservation. **228 automated tests PASS**. No Kodi Master deployment was needed because these tools run outside Kodi. This is a package-pipeline safety milestone, **not** a claim of complete release/runtime acceptance.
