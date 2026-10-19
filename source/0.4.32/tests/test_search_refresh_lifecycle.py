@@ -42,6 +42,19 @@ class RefreshLifecycleTests(unittest.TestCase):
         self.assertFalse(gate.should_request(0, 3719))
         self.assertTrue(gate.should_request(0, 3720))
 
+    def test_future_provider_timestamp_recovers_from_clock_skew(self):
+        self.assertFalse(refresh_due(1250, 1000))
+        self.assertTrue(refresh_due(1400, 1000))
+        self.assertFalse(refresh_due(1000, 1200))
+        self.assertTrue(refresh_due(1000, 4600))
+
+    def test_refresh_gate_recovers_from_large_clock_rollback(self):
+        gate = RefreshGate()
+        gate.mark_requested(10000)
+        self.assertFalse(gate.should_request(0, 9800))
+        self.assertTrue(gate.should_request(0, 9000))
+        self.assertFalse(gate.should_request(0, 9000, abort=True))
+
     def test_refresh_after_time_origin_and_abort(self):
         gate = RefreshGate()
         self.assertTrue(gate.should_request(0, 0))

@@ -42,7 +42,8 @@ def last_successful_sync(profile_path: str, profile_number: int) -> float:
 
 def refresh_due(last_sync: float, now: float, interval: int = DEFAULT_INTERVAL_SECONDS) -> bool:
     return (math.isfinite(last_sync) and math.isfinite(now) and
-            (last_sync <= 0 or now - last_sync >= interval))
+            (last_sync <= 0 or last_sync > now + COORDINATOR_REFRESH_CHECK_SECONDS
+             or now - last_sync >= interval))
 
 
 def refresh_state_check_due(now: float, next_check: float, *, pending: bool = False) -> bool:
@@ -60,6 +61,7 @@ class RefreshGate:
     def should_request(self, last_sync: float, now: float, *, abort: bool = False) -> bool:
         return (not abort and refresh_due(last_sync, now, self.interval)
                 and (self.last_request is None or
+                     now < self.last_request - COORDINATOR_REFRESH_CHECK_SECONDS or
                      now - self.last_request >= self.interval))
 
     def mark_requested(self, now: float) -> None:

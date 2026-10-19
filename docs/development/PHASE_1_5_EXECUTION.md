@@ -399,3 +399,13 @@ Audited the index timestamp path through SQLite open, scalar extraction and refr
 - Refuse symlink/nonregular index paths and use read-only SQLite URI without resolving a linked path. No provider data mutation.
 - Treat nonfinite SQLite timestamps (`NaN`, infinities) as absent; reject nonfinite inputs in refresh_due rather than producing unstable scheduling decisions.
 - 181 tests PASS, including real temporary SQLite databases and linked index paths. Concurrent index rebuild/runtime sync remains unverified.
+
+## XStream real index verification and clock-skew recovery — 2026-10-19
+
+Read-only verification of installed Kodi Master XStream SQLite index: `PRAGMA quick_check` returned `ok`, with 12,934 movie rows and 5,070 series rows; movie/series/filter/schema and last successful sync metadata exist. This proves a readable local index, not a completed fresh provider refresh. The installed provider exposes `search_sync`.
+
+Reviewed timestamp handling through due-check and request cooldown for system-clock corrections:
+
+- Provider timestamps more than five minutes in the future now trigger a refresh rather than blocking until the clock catches up. Small clock differences remain tolerated.
+- An in-memory request timestamp more than five minutes ahead of the current clock no longer blocks the scheduler indefinitely after a backwards clock adjustment.
+- 183 automated tests PASS. A real live sync and UI search are still pending; no provider mutation was performed during read-only verification.
