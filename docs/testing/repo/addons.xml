@@ -34,7 +34,7 @@
 		<license>MIT</license>
 		<news>changelog-1.0.1.txt</news>
 	</extension>
-</addon><addon id="service.actweeter" name="AcTweeteR Service" version="0.4.41" provider-name="AcTweeteR maintainers">
+</addon><addon id="service.actweeter" name="AcTweeteR Service" version="0.4.43" provider-name="AcTweeteR maintainers">
   <requires>
     <import addon="xbmc.python" version="3.0.0" />
     <import addon="plugin.video.xstream-pro" version="1.1.2.7" />
