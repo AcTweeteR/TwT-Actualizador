@@ -4,13 +4,14 @@
   "source": "upstream XStream 1.1.2 and tracked patches",
   "upstream_sha256": "915f45708670d07e789bb73b7390a7b5cf30175f818ef5da8ea18c9f13f537fe",
   "candidate_version": "1.1.2.9",
-  "candidate_sha256": "4b127c59b182126824772776c710e72881e08d67852f8b5c9c626ee56e7736d3",
-  "candidate_local_path": "/Users/alberto/Documents/Codex/kodi-staging/xstream-1.1.2.9-audit/plugin.video.xstream-pro-1.1.2.9.zip",
+  "candidate_sha256": "544586b086756437d37f5ab18fad9e55f1769bd17fa7fa28a5fbd61c0324a423",
+  "candidate_local_path": "/Users/alberto/Documents/Codex/kodi-staging/xstream-1.1.2.9-audit/revised/plugin.video.xstream-pro-1.1.2.9.zip",
   "reproducible_builds": 2,
   "testing_feed_isolated_dry_run": "PASS",
   "stable_channel_untouched": true,
   "historical_1_1_2_8_untouched": true,
   "kodi_master_installed_version": "1.1.2.8",
   "runtime_sync": "NOT_TESTED",
-  "publication": "NOT_PUBLISHED"
+  "publication": "NOT_PUBLISHED",
+  "previous_preliminary_candidate_superseded": true
 }

@@ -511,7 +511,7 @@ new file mode 100644
 index 0000000000000000000000000000000000000000..f43603caf622701aa4f1bcf8d513e49677651621
 --- /dev/null
 +++ b/resources/lib/premium_routes.py
-@@ -0,0 +1,1008 @@
+@@ -0,0 +1,1007 @@
 +"""Provider-first, bounded widget endpoints. Never returns a discovery item.
 +
 +Called with the existing addon's environment; playback/profile/history remain
@@ -882,10 +882,7 @@ index 0000000000000000000000000000000000000000..f43603caf622701aa4f1bcf8d513e496
 +
 +def _search_filter_stamp(g, pnum):
 +    def values(method, stype):
-+        try:
-+            return tuple(sorted(str(value) for value in method(stype, pnum)))
-+        except Exception:
-+            return ()
++        return tuple(sorted(str(value) for value in method(stype, pnum)))
 +    addon = g['addon']
 +    adult = addon.getSetting('hide_adult_categories').lower() == 'true'
 +    parts = [str(adult)]
@@ -1264,6 +1261,8 @@ index 0000000000000000000000000000000000000000..f43603caf622701aa4f1bcf8d513e496
 +            conn = None
 +            try:
 +                path = _search_index_path(g, pnum)
++                if os.path.islink(path):
++                    raise ValueError('unsafe provider search index path')
 +                if os.path.isfile(path):
 +                    conn = sqlite3.connect('file:%s?mode=ro' % os.path.abspath(path),
 +                                            uri=True, timeout=3)

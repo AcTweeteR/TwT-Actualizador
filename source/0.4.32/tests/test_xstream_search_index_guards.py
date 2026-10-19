@@ -34,6 +34,12 @@ class XStreamIndexGuardTests(unittest.TestCase):
         self.assertIn("raise ValueError('invalid provider search item')",text)
         self.assertIn('if os.path.islink(path) or (os.path.exists(path) and not os.path.isfile(path)):',text)
 
+    def test_filter_failures_and_query_symlinks_fail_closed(self):
+        patch=PATCH.read_text()
+        self.assertNotIn('+        except Exception:\n+            return ()',patch)
+        self.assertIn("+                if os.path.islink(path):",patch)
+        self.assertIn("+                    raise ValueError('unsafe provider search index path')",patch)
+
     def test_patched_provider_function_is_syntactically_valid(self):
         patch=PATCH.read_bytes()
         start=patch.index(b'+++ b/resources/lib/premium_routes.py')
