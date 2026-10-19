@@ -366,3 +366,12 @@ Reviewed the complete setting writes -> cache invalidation -> migration report c
 - Before each cache invalidation, confirm its current bytes still equal the verified backup snapshot. Refuse deletion of cache refreshed concurrently by another process.
 - Track changed settings and actually removed cache entries, and restore only those entries; avoid clobbering a newly created replacement cache during rollback.
 - 172 tests PASS, including simulated postwrite report failure and concurrent cache replacement. Kodi remote metadata response remains unverified.
+
+## Manual SlyGuy trailer return workflow — 2026-10-19
+
+Reviewed VIDEO_INFO manual launch, terminal callback, list focus recovery, Spotlight restoration, and marker cleanup as one lifecycle.
+
+- Kodi often starts playback while DialogVideoInfo (12003) is active, so no originating list control is captured. The earlier fail-closed source-control requirement could prevent reopening the detail from Home/Movies Hub. A missing control can now be recovered only from the currently focused control of an approved list window, with an exact per-container identity match; the final Action(Info) still requires current request, window, focus and identity checks.
+- During asynchronous Spotlight refocus and detail reopen waits, revalidate the original request to avoid completing a superseded trailer request.
+- Treat Home request markers as armed only for literal `1`, not any nonempty value.
+- 174 tests PASS. Tests include structural assertions for focus/identity/request guards; full manual trailer playback and actual GUI restoration are still NOT verified.

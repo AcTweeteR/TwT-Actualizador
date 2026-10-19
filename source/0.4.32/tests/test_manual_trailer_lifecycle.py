@@ -11,6 +11,32 @@ from slyguy_trailer_return import capture_context, manual_exit_requires_stop, re
 
 
 class ManualTrailerTests(unittest.TestCase):
+    def test_manual_restore_recovers_only_verified_focused_list_control(self):
+        source = Path(__file__).resolve().parents[1] / 'addons/service.actweeter/service.py'
+        player = next(node for node in ast.parse(source.read_text()).body
+                      if isinstance(node, ast.ClassDef) and node.name == 'SlyGuyTrailerReturnPlayer')
+        method = next(node for node in player.body
+                      if isinstance(node, ast.FunctionDef) and node.name == '_restore_context')
+        code = ast.unparse(method)
+        self.assertIn('xbmcgui.Window(window_id).getFocusId()', code)
+        self.assertIn('candidate > 0', code)
+        self.assertIn('Control.HasFocus(%d)', code)
+        self.assertIn("identity_matches(context['identity'], values)", code)
+        self.assertIn('source_control = candidate', code)
+        self.assertIn('source_window_id', code)
+
+    def test_manual_return_waits_require_current_request(self):
+        source = Path(__file__).resolve().parents[1] / 'addons/service.actweeter/service.py'
+        player = next(node for node in ast.parse(source.read_text()).body
+                      if isinstance(node, ast.ClassDef) and node.name == 'SlyGuyTrailerReturnPlayer')
+        method = next(node for node in player.body
+                      if isinstance(node, ast.FunctionDef) and node.name == '_restore_context')
+        code = ast.unparse(method)
+        self.assertGreaterEqual(code.count('self._request_is_current(context)'), 4)
+        self.assertIn("pending=pending == '1'", ast.unparse(next(
+            node for node in player.body if isinstance(node, ast.FunctionDef)
+            and node.name == '_clear_markers')))
+
     def test_manual_restore_refuses_missing_source_and_rechecks_before_info(self):
         source = Path(__file__).resolve().parents[1] / 'addons/service.actweeter/service.py'
         player = next(node for node in ast.parse(source.read_text()).body

@@ -396,7 +396,7 @@ class SlyGuyTrailerReturnPlayer(_PLAYER_BASE):
         if not marker_cleanup_allowed(
                 current, context["identity"],
                 identity_verified=identity_verified,
-                pending=bool(pending), explicit_request=bool(request)):
+                pending=pending == "1", explicit_request=request == "1"):
             return
         self.kodi.executebuiltin(
             "ClearProperty(SLYGUY_TRAILER_RETURN_PENDING,Home)", False)
@@ -492,7 +492,8 @@ class SlyGuyTrailerReturnPlayer(_PLAYER_BASE):
                 deadline = time.monotonic() + 3.0
                 while (not self.monitor.abortRequested() and
                        time.monotonic() < deadline):
-                    if (_window_id(self.kodi) == 10000 and
+                    if (self._request_is_current(context) and
+                            _window_id(self.kodi) == 10000 and
                             self.kodi.getCondVisibility("Control.HasFocus(1508)") and
                             identity_matches(
                                 context["identity"],
@@ -510,6 +511,28 @@ class SlyGuyTrailerReturnPlayer(_PLAYER_BASE):
                 # Action(Info) is issued only after Kodi reports the Movies Hub
                 # and the selected item's stable identity matches the capture.
                 source_control = context.get("source_control_id")
+                if not source_control:
+                    # Detail dialogs normally hide their originating list
+                    # control at AV start. Recover only the *currently focused*
+                    # list control, and only when its own container item has
+                    # the exact captured identity; never guess a control ID.
+                    try:
+                        candidate = xbmcgui.Window(window_id).getFocusId()
+                        values = {kind: self.kodi.getInfoLabel(
+                            "Container(%d).ListItem.%s" % (candidate, label))
+                            for kind, label in (("imdb", "UniqueID(imdb)"),
+                                                ("tmdb", "UniqueID(tmdb)"),
+                                                ("dbid", "DBID"))}
+                        if (window_id in (10000, 11110, 11111, 10025) and
+                                candidate > 0 and
+                                self.kodi.getCondVisibility(
+                                    "Control.HasFocus(%d)" % candidate) and
+                                identity_matches(context["identity"], values)):
+                            source_control = candidate
+                            context["source_window_id"] = window_id
+                            context["source_control_id"] = candidate
+                    except (RuntimeError, SystemError, ValueError, TypeError):
+                        pass
                 if not source_control or context.get("source_window_id") != window_id:
                     self.kodi.log(
                         "[AcTweeteR] SLYGUY_RETURN_RESULT=SOURCE_CONTROL_UNKNOWN correlation=%s" %
@@ -552,7 +575,8 @@ class SlyGuyTrailerReturnPlayer(_PLAYER_BASE):
                 deadline = time.monotonic() + 8.0
                 while (not self.monitor.abortRequested() and
                        time.monotonic() < deadline):
-                    if (_window_id(self.kodi) == 12003 and
+                    if (self._request_is_current(context) and
+                            _window_id(self.kodi) == 12003 and
                             identity_matches(
                                 context["identity"],
                                 self._current_identity_values(context))):
