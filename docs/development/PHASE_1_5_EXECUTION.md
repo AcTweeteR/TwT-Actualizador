@@ -415,3 +415,9 @@ Reviewed timestamp handling through due-check and request cooldown for system-cl
 Audited the end-to-end active profile setting -> numeric profile -> provider SQLite filename -> plugin refresh URL path. Invalid `Profile 999` and malformed names previously silently fell back to profile 1, risking a wrong-profile refresh. The conversion now accepts only the canonical `Profile 1`–`Profile 10` labels (case-insensitive), with an empty setting still defaulting to Profile 1. The SQLite marker reader and refresh URL both require a real integer 1–10; no coercion of strings/bools/floats. Invalid profiles fail closed and are logged by the existing coordinator exception handling. Kodi Master currently uses Profile 1.
 
 185 tests PASS including active-profile, SQLite selection, and refresh URL boundaries. Real multi-profile switching and provider refresh remain runtime QA gates.
+
+## SearchWorker two-provider snapshot transaction — 2026-10-19
+
+Audited standalone service search worker -> snapshot provider -> `reconcile` -> SQLite meta commit. Previously movie changes committed before series snapshot was obtained, so a series failure could leave a partially updated index. The worker now collects both complete snapshots before opening one SQLite write transaction, reconciles both under caller-owned transaction, and commits the success marker with both media types. Cancellation and reconciliation errors roll back all writes. `reconcile` retains standalone transaction behavior by default but can join a verified caller-owned transaction.
+
+191 tests PASS including six real SQLite transaction scenarios. **Scope:** this worker currently has no caller in the installed service; the actual XStream provider implements its own `_ensure_search_index` transaction and is not modified by this change. Do not claim runtime provider synchronization was tested.
