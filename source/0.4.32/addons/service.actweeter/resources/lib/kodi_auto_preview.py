@@ -22,8 +22,9 @@ _ANNOUNCEMENT_METHOD = "Other." + MESSAGE
 
 def stable_identity(payload):
     for name in ("imdb", "tmdb", "dbid"):
-        value = str(payload.get(name, "")).strip()
-        if value and value.isalnum():
+        raw = payload.get(name)
+        value = raw.strip() if isinstance(raw, str) else ""
+        if value and value.isascii() and value.isalnum():
             return name + ":" + value
     return ""
 

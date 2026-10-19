@@ -86,6 +86,13 @@ def coordinator(kodi):
 
 
 class PreviewNotificationTests(unittest.TestCase):
+    def test_coordinator_identity_rejects_non_string_ids(self):
+        from kodi_auto_preview import stable_identity
+        for value in (None, 123, False, "", "../bad", "１２３"):
+            with self.subTest(value=value):
+                self.assertEqual(stable_identity({"tmdb": value}), "")
+        self.assertEqual(stable_identity({"tmdb": "123"}), "tmdb:123")
+
     def test_manifest_cleanup_rejects_traversal_and_unrelated_files(self):
         bridge = coordinator(FakeKodi())
         class VFS:

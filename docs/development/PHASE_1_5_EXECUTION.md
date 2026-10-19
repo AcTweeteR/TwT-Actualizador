@@ -220,3 +220,9 @@ Scope inspected: integrated commit history, installed/source parity, coordinator
 - Provider `_identity` previously coerced non-string values to text; e.g. `None` became `None` as a string and passed `.isalnum()`, admitting an invalid candidate identity.
 - Reject missing/non-string and non-ASCII identifiers while retaining valid Kodi IDs. Added regression for malformed and valid inputs; 139 PASS.
 - Real runtime provider resolution and playback still require functional verification.
+
+## AcTweeteR coordinator identity validation audit — 2026-10-19
+
+- Coordinator `stable_identity` had the same non-string coercion issue fixed earlier in the SlyGuy provider. Both endpoints must reject malformed identities consistently.
+- Require nonempty ASCII alphanumeric string identifiers; add regression for missing/numeric/bool/Unicode malformed values and valid TMDb text.
+- Full suite: 140 PASS. Functional playback remains pending.
