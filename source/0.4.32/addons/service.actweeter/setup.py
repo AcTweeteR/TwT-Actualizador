@@ -578,6 +578,24 @@ def _slyguy_stack_ready():
         for addon_id, minimum, _source in SLYGUY_INSTALL_SEQUENCE)
 
 
+def _offer_automatic_previews(dialog):
+    """Offer the optional bridge independently of layout rebuilds/customizations."""
+    try:
+        from slyguy_bridge_install import install
+        status = install(xbmc, xbmcaddon.Addon, xbmcvfs, dialog, allow_prompt=True)
+    except Exception as exc:
+        xbmc.log("[AcTweeteR] PREVIEW_BRIDGE_INTEGRATION status=failed type=%s" %
+                 type(exc).__name__, xbmc.LOGWARNING)
+        status = "ERROR"
+    else:
+        xbmc.log("[AcTweeteR] PREVIEW_BRIDGE_INTEGRATION status=%s" % status,
+                 xbmc.LOGINFO)
+    if status not in ("CURRENT", "INSTALLED_NOT_RUNTIME_VERIFIED", "DECLINED"):
+        dialog.ok("Previews automáticos pendientes",
+                  "La integración opcional no se ha confirmado (%s). Puedes continuar y reintentar desde Preparar tráilers y autorizaciones. No se modifican tus preferencias de reproducción; los tráilers manuales se comprueban por separado." % status)
+    return status
+
+
 def _install_slyguy_stack(dialog, *, open_settings=False, consent_granted=False):
     """Bootstrap the official SlyGuy repository, then resolve its dependency chain with Kodi."""
     already_ready = _slyguy_stack_ready()
@@ -617,6 +635,7 @@ def _install_slyguy_stack(dialog, *, open_settings=False, consent_granted=False)
         dialog.ok("SlyGuy pendiente", "La cadena oficial no quedó instalada y habilitada en las versiones mínimas. No se marcará como lista.")
         return False
 
+    _offer_automatic_previews(dialog)
     if open_settings:
         xbmc.executebuiltin("Addon.OpenSettings(slyguy.trailers)", True)
     else:
@@ -1904,6 +1923,8 @@ def _run_onboarding(dialog):
         return False
     _write_state(mark_step(_read_state(), "Conectar proveedor IPTV", "DONE"))
     _write_state(mark_step(_read_state(), "Autorizaciones externas", "IN_PROGRESS"))
+    # Optional consent belongs to setup, never to a successful menu rebuild.
+    _install_slyguy_stack(dialog)
     if dialog.yesno(
             "Trakt es opcional",
             "Puedes autorizar el complemento oficial de Kodi ahora para scrobbling y sincronización de biblioteca. También puedes configurarlo después desde sus ajustes. IPTV, películas, series, TV y EPG no dependen de Trakt.",

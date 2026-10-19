@@ -1,0 +1,10 @@
+1.2.29~beta11 - Testing: automatic preview wiring
+
+- Restore missing focus/cancel calls on Spotlight and standard BINGIE rows,
+  reusing the existing AcTweeteR ownership/cancellation coordinator.
+- Respect Spotlight/row autoplay switches and the selected trailer source.
+- Cancel owned preview requests when leaving the series hub.
+- Require service.actweeter 0.4.40 with explicit optional bridge setup.
+- No manual trailer actions, playback routes, settings or profile data changed.
+- tvOS autoplay after this update requires user runtime validation; this is
+  not a claim that every trailer is available or that tvOS playback is fixed.

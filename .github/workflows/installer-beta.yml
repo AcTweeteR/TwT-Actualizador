@@ -1,7 +1,7 @@
 name: Verify current AcTweeteR Beta installer
 on:
   push:
-    branches: [main, codex/beta-installer-0.4.39]
+    branches: [main, codex/beta-installer-0.4.39, codex/tvos-autoplay-skin-wiring]
   pull_request:
   workflow_dispatch:
 jobs:
@@ -17,13 +17,15 @@ jobs:
       - name: Installer tests and reproducible service
         run: |
           python3 -m unittest discover -s source/0.4.32/tests -v
-          python3 source/0.4.32/tools/build_service_package.py --output "$RUNNER_TEMP/service.actweeter-0.4.39.zip"
-          cmp "$RUNNER_TEMP/service.actweeter-0.4.39.zip" docs/testing/repo/service.actweeter/service.actweeter-0.4.39.zip
+          python3 source/0.4.32/tools/build_service_package.py --output "$RUNNER_TEMP/service.actweeter-0.4.40.zip"
+          cmp "$RUNNER_TEMP/service.actweeter-0.4.40.zip" docs/testing/repo/service.actweeter/service.actweeter-0.4.40.zip
+          python3 source/0.4.32/tools/build_skin_package.py --output "$RUNNER_TEMP/skin.actweeter-1.2.29~beta11.zip"
+          cmp "$RUNNER_TEMP/skin.actweeter-1.2.29~beta11.zip" docs/testing/repo/skin.actweeter/skin.actweeter-1.2.29~beta11.zip
       - name: Verify isolated Beta feed and immutable dependencies
         run: |
           python3 tools/build_test_channel.py \
-            --service-zip "$RUNNER_TEMP/service.actweeter-0.4.39.zip" \
-            --skin-zip "docs/testing/repo/skin.actweeter/skin.actweeter-1.2.29~beta10.zip" \
+            --service-zip "$RUNNER_TEMP/service.actweeter-0.4.40.zip" \
+            --skin-zip "docs/testing/repo/skin.actweeter/skin.actweeter-1.2.29~beta11.zip" \
             --xstream-zip docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.8.zip \
             --output "$RUNNER_TEMP/testing"
           cmp "$RUNNER_TEMP/testing/repo/addons.xml" docs/testing/repo/addons.xml

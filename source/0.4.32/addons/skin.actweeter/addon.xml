@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- AcTweeteR is a locally maintained derivative of BINGIE Matke 2.0.2.
      Upstream authorship, copyright and licensing are documented separately. -->
-<addon id="skin.actweeter" version="1.2.29~beta10" name="AcTweeteR" provider-name="AcTweeteR maintainers">
+<addon id="skin.actweeter" version="1.2.29~beta11" name="AcTweeteR" provider-name="AcTweeteR maintainers">
 	<requires>
 		<import version="5.17.0" addon="xbmc.gui"/>
 		<import addon="script.bingie.helper" version="1.1.2"/>
 		<import addon="script.bingie.toolbox" version="1.0.0"/>
 		<import addon="script.bingie.widgets" version="1.0.1"/>
 		<import addon="script.skinshortcuts" version="2.0.3"/>
-		<import addon="service.actweeter" version="0.4.28"/>
+		<import addon="service.actweeter" version="0.4.40"/>
 		<import addon="resource.language.es_es" version="11.0.108"/>
 		<import addon="resource.images.studios.coloured" version="0.0.24" />
 		<import addon="plugin.video.tmdb.bingie.helper" version="1.0.1" />
@@ -30,7 +30,7 @@
 		<description lang="es_MX">AcTweeteR - tu espacio de películas, series y televisión.</description>
 		<platform>all</platform>
 		<license>GPL v2.0</license>
-		<news>changelog-1.2.29~beta10.txt</news>
+		<news>changelog-1.2.29~beta11.txt</news>
 		<forum></forum>
 		<source></source>
 		<assets>

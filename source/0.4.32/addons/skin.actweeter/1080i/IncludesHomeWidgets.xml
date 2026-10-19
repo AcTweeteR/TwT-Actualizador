@@ -688,6 +688,9 @@
     </include>
 
     <include name="WidgetBaseBingieIncludes">
+        <!-- Register the actual row; the coordinator tracks subsequent poster changes. -->
+        <onfocus condition="[Window.IsActive(Home) | Window.IsActive(11110) | Window.IsActive(11111)] + System.HasAddon(slyguy.trailers) + Skin.HasSetting(BingieAutoTrailer) + String.IsEqual(Skin.String(AutoYoutubeTrailer),true) + !String.IsEqual(Skin.String(trailersource),imdb)">RunScript(service.actweeter,preview_focus,$PARAM[widgetid],3)</onfocus>
+        <onunfocus condition="[Window.IsActive(Home) | Window.IsActive(11110) | Window.IsActive(11111)] + System.HasAddon(slyguy.trailers)">RunScript(service.actweeter,preview_cancel,$PARAM[widgetid])</onunfocus>
         <onunfocus condition="System.HasAlarm(preview_delay)">CancelAlarm(preview_delay,silent)</onunfocus>
         <onunfocus condition="!System.HasAddon(slyguy.trailers) + Skin.HasSetting(BingieAutoTrailer) + $EXP[IsPlayingUnrecognizedContent] + String.IsEmpty(Window(Home).Property(KeepPlayingPreview))">PlayerControl(Stop)</onunfocus>
         <onfocus condition="!String.IsEmpty(Window(Home).Property(KeepPlayingPreview))">ClearProperty(KeepPlayingPreview,home)</onfocus>
