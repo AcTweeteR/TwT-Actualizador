@@ -49,8 +49,9 @@ def _send(xbmc, action, generation, status, request_id=""):
 
 def _identity(data):
     for key in ("imdb", "tmdb", "dbid"):
-        value = str(data.get(key, "")).strip()
-        if value.isalnum():
+        raw = data.get(key)
+        value = raw.strip() if isinstance(raw, str) else ""
+        if value and value.isascii() and value.isalnum():
             return key + ":" + value
     return ""
 

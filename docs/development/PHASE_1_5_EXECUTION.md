@@ -214,3 +214,9 @@ Scope inspected: integrated commit history, installed/source parity, coordinator
 - Confirmed overly broad prefix-based deletion allowed malformed/traversal-like `PreviewManifest` strings to reach VFS deletion.
 - Restricted cleanup to the exact `special://temp/actweeter_preview_<safe-token>.mpd` naming convention emitted by the SlyGuy preview bridge. Rejected traversal, suffix and alternate-extension cases; valid MPD cleanup retained.
 - Full suite: 138 PASS. No unrelated Kodi user data was modified.
+
+## SlyGuy provider identity validation audit — 2026-10-19
+
+- Provider `_identity` previously coerced non-string values to text; e.g. `None` became `None` as a string and passed `.isalnum()`, admitting an invalid candidate identity.
+- Reject missing/non-string and non-ASCII identifiers while retaining valid Kodi IDs. Added regression for malformed and valid inputs; 139 PASS.
+- Real runtime provider resolution and playback still require functional verification.

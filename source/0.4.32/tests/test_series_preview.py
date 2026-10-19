@@ -4,12 +4,18 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "addons/service.actweeter/resources/lib"))
-from slyguy_preview_bridge import preview_source, preview_target
+from slyguy_preview_bridge import _identity, preview_source, preview_target
 from kodi_auto_preview import read_preview_metadata
 from test_kodi_auto_preview_notifications import coordinator, FakeKodi, focus_packet
 
 
 class SeriesPreviewTests(unittest.TestCase):
+    def test_provider_identity_rejects_missing_or_non_string_ids(self):
+        for value in (None, 123, False, "", "../unsafe", "１２３"):
+            with self.subTest(value=value):
+                self.assertEqual(_identity({"tmdb": value}), "")
+        self.assertEqual(_identity({"tmdb": "123"}), "tmdb:123")
+
     def test_imdb_route_cannot_be_misread_as_youtube_id(self):
         def forbidden(path):
             self.fail("IMDb must not be passed to the YouTube extractor")
