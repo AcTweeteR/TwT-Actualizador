@@ -34,6 +34,14 @@ active player, not an RPC error. Sampling cannot exclude a very short failed
 attempt between samples. No authorized log-reading mechanism was available;
 internal resolver logs and SlyGuy bridge startup are NOT_OBSERVED on tvOS.
 
+The native `Files.PrepareDownload` method was first introspected (`ReadData`)
+and returned a download URL for `special://logpath/kodi.log`. The authorized
+HTTP download itself returned 401 while a subsequent authenticated RPC ping
+still returned pong. No log contents were obtained, no security setting was
+changed, and no alternate filesystem route was tried. Both complete candidate
+focus-gate expressions were evaluated through `XBMC.GetInfoBooleans` and
+returned true on the production device, without executing their actions.
+
 ## Demonstrated distribution defect and Mac antecedent
 
 The publicly downloaded Beta10 ZIP SHA-256 is
@@ -61,6 +69,16 @@ confirmed missing link in distribution, not evidence of a tvOS player defect.
 The installed skin's bytes cannot be read through addon-version queries; its
 reported version matches that artifact, but exact installed XML parity is
 not claimed.
+
+There is a separate prerequisite that addon-enabled status cannot establish:
+`resources/lib/slyguy_bridge_install.py` installs its managed hook only after
+consent, called from `interface_layout.py` after layout preparation. A clean
+SlyGuy install can therefore play manual trailers without running the automatic
+bridge. Its tvOS consent/startup status remains unknown without readable logs
+or the user's recollection. Do not assume it is installed, and do not invoke
+the diagnostic plugin or install/repair action on the read-only Apple TV.
+The candidate repairs the demonstrated missing dispatch, not this unobserved
+state; a second downstream blocker cannot yet be excluded.
 
 ## Flow and hypothesis assessment
 
