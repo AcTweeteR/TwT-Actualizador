@@ -15,10 +15,14 @@ def publish_zip(source: Path, output: Path, addon_id: str, version: str,
                 excluded: Callable[[Path], bool] | None = None) -> str:
     if output.exists() or output.is_symlink():
         raise ValueError("refusing to overwrite existing addon package")
+    if source.is_symlink() or not source.is_dir():
+        raise ValueError("addon source must be a real directory")
     files = []
     for path in source.rglob('*'):
         if path.is_symlink():
             raise ValueError("addon source contains a symlink")
+        if not path.is_file() and not path.is_dir():
+            raise ValueError("addon source contains a non-regular entry")
         if path.is_file() and not (excluded and excluded(path)):
             files.append(path)
     if not (source / 'addon.xml').is_file():
@@ -31,6 +35,8 @@ def publish_zip(source: Path, output: Path, addon_id: str, version: str,
         with zipfile.ZipFile(candidate, 'w', compression=zipfile.ZIP_DEFLATED,
                              compresslevel=9) as archive:
             for path in sorted(files):
+                if path.is_symlink() or not path.is_file():
+                    raise ValueError("addon source changed during packaging")
                 name = (Path(addon_id) / path.relative_to(source)).as_posix()
                 info = zipfile.ZipInfo(name, fixed_time)
                 info.compress_type = zipfile.ZIP_DEFLATED

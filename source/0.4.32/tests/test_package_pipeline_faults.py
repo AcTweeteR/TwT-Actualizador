@@ -100,3 +100,70 @@ class DistributionIndexPublicationFaults(unittest.TestCase):
                     build(None, None, None, None, destination)
             self.assertEqual(marker.read_text(), 'original')
             self.assertFalse(list(Path(temp).glob('.actweeter-index-*')))
+
+class PackageSourceEntryFaults(unittest.TestCase):
+    def test_source_root_symlink_is_rejected(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            real = root / 'real'
+            real.mkdir()
+            (real / 'addon.xml').write_text('<addon id="test.addon" version="1.0"/>')
+            alias = root / 'alias'
+            alias.symlink_to(real, target_is_directory=True)
+            with self.assertRaisesRegex(ValueError, 'real directory'):
+                publish_zip(alias, root / 'out.zip', 'test.addon', '1.0',
+                            (2026, 10, 3, 0, 0, 0), lambda p: p.read_bytes())
+            self.assertFalse((root / 'out.zip').exists())
+
+    def test_source_fifo_is_rejected_without_opening_it(self):
+        import os
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / 'source'
+            source.mkdir()
+            (source / 'addon.xml').write_text('<addon id="test.addon" version="1.0"/>')
+            os.mkfifo(source / 'fifo')
+            with self.assertRaisesRegex(ValueError, 'non-regular'):
+                publish_zip(source, root / 'out.zip', 'test.addon', '1.0',
+                            (2026, 10, 3, 0, 0, 0), lambda p: p.read_bytes())
+            self.assertFalse((root / 'out.zip').exists())
+
+    def test_mid_write_exception_cleans_staging(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / 'source'
+            source.mkdir()
+            manifest = source / 'addon.xml'
+            manifest.write_text('<addon id="test.addon" version="1.0"/>')
+            with patch('package_safety.zipfile.ZipInfo', side_effect=OSError('injected packaging fault')):
+                with self.assertRaisesRegex(OSError, 'injected'):
+                    publish_zip(source, root / 'out.zip', 'test.addon', '1.0',
+                                (2026, 10, 3, 0, 0, 0), lambda path: path.read_bytes())
+            self.assertFalse((root / 'out.zip').exists())
+            self.assertFalse(list(root.glob('.actweeter-package-*')))
+
+    def test_source_file_becomes_symlink_before_read(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / 'source'
+            source.mkdir()
+            manifest = source / 'addon.xml'
+            manifest.write_text('<addon id="test.addon" version="1.0"/>')
+            original = Path.is_symlink
+            def changed(self):
+                if self == manifest and not changed.done:
+                    changed.done = True
+                    return False
+                if self == manifest and changed.done:
+                    return True
+                return original(self)
+            changed.done = False
+            # Inventory sees an ordinary file; pre-write guard sees a symlink.
+            with patch.object(Path, 'is_symlink', changed):
+                with self.assertRaisesRegex(ValueError, 'source changed'):
+                    publish_zip(source, root / 'out.zip', 'test.addon', '1.0',
+                                (2026, 10, 3, 0, 0, 0), lambda p: p.read_bytes())
+            self.assertFalse((root / 'out.zip').exists())
+            self.assertFalse(list(root.glob('.actweeter-package-*')))
