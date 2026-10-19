@@ -178,3 +178,9 @@ Scope inspected: integrated commit history, installed/source parity, coordinator
 - Fixed both handoff paths to discard idle focus and refocus markers before preempting; exact owned-item stop protection remains unchanged.
 - Added regression tests for manual detail preemption and external VOD start. Full suite: 132 PASS; `git diff --check` PASS.
 - Runtime manual return, IPTV/VOD playback, resume/history, navigation and extended stability remain unverified. Do not close 1.5 on automated tests alone.
+
+## Resolution failure audit — 2026-10-19
+
+- Confirmed coordinator bug: `_work` called `_resolved` for `launch_error` without `request_id`, but `_resolved` requires the exact token. Consequently a `run_script` exception could leave `scheduler.resolving` occupied and prevent later automatic previews.
+- Fixed local failure notification to include the exact current generation request token; added regression verifying resolution slot release.
+- Full suite: 133 PASS; `git diff --check` PASS. No manual trailer/EPG/VOD/runtime navigation certification implied.

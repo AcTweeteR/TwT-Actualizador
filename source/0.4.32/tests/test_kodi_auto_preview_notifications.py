@@ -183,6 +183,19 @@ class PreviewNotificationTests(unittest.TestCase):
         self.assertNotIn(old.generation, bridge.stop_inflight)
         self.assertEqual(bridge._take_ready(105), new)
 
+    def test_launch_error_with_current_token_releases_resolution(self):
+        bridge = coordinator(FakeKodi())
+        bridge._focus(focus_packet())
+        request = bridge.scheduler.latest
+        token = bridge.request_ids[request.generation]
+        bridge.scheduler.take_ready(102)
+        bridge.launch_pending = {}
+        self.assertTrue(bridge._resolved({
+            "generation": request.generation, "request_id": token,
+            "status": "launch_error"}))
+        self.assertIsNone(bridge.scheduler.resolving)
+        self.assertNotIn(request.generation, bridge.requests)
+
     def test_valid_focus_notification_schedules_latest_request(self):
         kodi = FakeKodi()
         bridge = coordinator(kodi)

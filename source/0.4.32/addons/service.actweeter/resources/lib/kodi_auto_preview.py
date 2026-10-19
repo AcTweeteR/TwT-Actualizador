@@ -875,7 +875,9 @@ class KodiAutoPreviewCoordinator:
             except Exception as exc:
                 self._log("RESOLUTION_DISPATCH_FAILED", generation=request.generation,
                           error=type(exc).__name__)
-                self._resolved({"generation": request.generation, "status": "launch_error"})
+                self._resolved({"generation": request.generation,
+                                "request_id": self.request_ids.get(request.generation),
+                                "status": "launch_error"})
 
     def close(self):
         self.closed = True
