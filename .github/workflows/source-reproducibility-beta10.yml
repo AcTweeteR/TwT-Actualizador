@@ -11,6 +11,8 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: 11d0057eb7c940d69fe01c44bc92f10ff5f04600
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"

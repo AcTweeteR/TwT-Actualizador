@@ -1,0 +1,1 @@
+0.4.38: Fix Beta repository source detection in repair wizard; do not gate mandatory setup on optional SlyGuy modules.

@@ -16,20 +16,21 @@ REPOSITORY_ROOT = ROOT.parents[1]
 class CandidatePackageBuildTests(unittest.TestCase):
     def test_service_zip_is_reproducible_and_well_formed(self):
         with tempfile.TemporaryDirectory() as temp:
-            package = Path(temp) / "service.actweeter-0.4.37.zip"
+            package = Path(temp) / "service.actweeter-0.4.39.zip"
             subprocess.run([sys.executable, str(ROOT / "tools/build_service_package.py"),
                             "--output", str(package)], check=True,
                            cwd=ROOT, capture_output=True, text=True)
             first_hash = hashlib.sha256(package.read_bytes()).hexdigest()
+            second_package = Path(temp) / "service-second.zip"
             subprocess.run([sys.executable, str(ROOT / "tools/build_service_package.py"),
-                            "--output", str(package)], check=True,
-                           cwd=ROOT, capture_output=True, text=True)
-            self.assertEqual(hashlib.sha256(package.read_bytes()).hexdigest(), first_hash)
+                            "--output", str(second_package)], check=True,
+                            cwd=ROOT, capture_output=True, text=True)
+            self.assertEqual(hashlib.sha256(second_package.read_bytes()).hexdigest(), first_hash)
             with zipfile.ZipFile(package) as archive:
                 self.assertIsNone(archive.testzip())
                 addon = ET.fromstring(archive.read("service.actweeter/addon.xml"))
-                self.assertEqual(addon.get("version"), "0.4.37")
-                self.assertIn("service.actweeter/changelog-0.4.37.txt",
+                self.assertEqual(addon.get("version"), "0.4.39")
+                self.assertIn("service.actweeter/changelog-0.4.39.txt",
                               archive.namelist())
                 self.assertFalse(any(name.endswith((".pyc", ".pyo"))
                                      or "__pycache__" in name.split("/")
@@ -44,7 +45,7 @@ class CandidatePackageBuildTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp:
             output = Path(temp)
-            service = output / "service.actweeter-0.4.37.zip"
+            service = output / "service.actweeter-0.4.39.zip"
             subprocess.run([sys.executable, str(ROOT / "tools/build_service_package.py"),
                             "--output", str(service)], check=True,
                            cwd=ROOT, capture_output=True, text=True)
@@ -58,7 +59,7 @@ class CandidatePackageBuildTests(unittest.TestCase):
             payload = index_path.read_bytes()
             versions = {node.get("id"): node.get("version")
                         for node in ET.fromstring(payload).findall("addon")}
-            self.assertEqual(versions["service.actweeter"], "0.4.37")
+            self.assertEqual(versions["service.actweeter"], "0.4.39")
             self.assertEqual(versions["skin.actweeter"], "1.2.28")
             self.assertEqual(versions["plugin.video.xstream-pro"], "1.1.2.7")
             self.assertEqual(hashlib.md5(payload).hexdigest(),

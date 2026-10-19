@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import re
+
 
 DETAIL_WINDOW_ID = 12003
 HOME_WINDOW_ID = 10000
 SPOTLIGHT_CONTROL_ID = 1508
 MOVIES_HUB_WINDOW_ID = 11111
-MOVIE_LIST_WINDOW_IDS = frozenset((MOVIES_HUB_WINDOW_ID, 10025))
+MOVIE_LIST_WINDOW_IDS = frozenset((HOME_WINDOW_ID, 11110, MOVIES_HUB_WINDOW_ID, 10025))
 IDENTITY_PREFIXES = ("imdb", "tmdb", "dbid")
 TERMINAL_EVENTS = frozenset(("stopped", "ended", "error"))
 
@@ -19,7 +21,10 @@ def parse_identity(value):
     kind, identifier = value.split(":", 1)
     if kind not in IDENTITY_PREFIXES or not identifier:
         return None
-    if any(char in identifier for char in "\r\n\x00"):
+    if kind == "dbid":
+        if not re.fullmatch(r"[1-9][0-9]*", identifier):
+            return None
+    elif not re.fullmatch(r"[A-Za-z0-9]+", identifier):
         return None
     return kind, identifier
 
@@ -30,7 +35,8 @@ def identity_matches(identity, current_values):
     if parsed is None:
         return False
     kind, expected = parsed
-    return str(current_values.get(kind, "")) == expected
+    observed = current_values.get(kind, "")
+    return isinstance(observed, str) and observed == expected
 
 
 def marker_cleanup_allowed(current_identity, expected_identity, *,
@@ -49,7 +55,7 @@ def capture_context(*, pending, explicit_request, vod_pending, window_id,
     """Capture an explicitly armed SlyGuy request from an approved surface."""
     if not pending or not explicit_request or vod_pending:
         return None
-    if str(item_type).casefold() != "movie":
+    if str(item_type).casefold() not in ("movie", "tvshow"):
         return None
     if not identity_matches(identity, current_values):
         return None
@@ -98,8 +104,23 @@ def return_decision(context, *, event, player_active, window_id, current_values,
             context["identity"], current_values):
         return "restore"
     if window_id == DETAIL_WINDOW_ID or window_id in MOVIE_LIST_WINDOW_IDS:
+        # Window transitions can expose a blank ListItem before Kodi binds the
+        # destination control. Wait for a stable identity (bounded by the
+        # caller's restore deadline), but abandon a confirmed different item.
+        parsed = parse_identity(context["identity"])
+        if parsed and not str(current_values.get(parsed[0], "")):
+            return "wait"
         return "abandon"
     return "wait"
+
+
+def manual_exit_requires_stop(context, *, playing_file, window_id,
+                              fullscreen_seen, request_current):
+    """Stop only this captured trailer after returning to a supported surface."""
+    return bool(
+        context and request_current and fullscreen_seen and playing_file and
+        playing_file == context.get("playing_file") and
+        window_id in MOVIE_LIST_WINDOW_IDS | {DETAIL_WINDOW_ID})
 
 
 class TerminalEventGate:

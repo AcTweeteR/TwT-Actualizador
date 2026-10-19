@@ -1,0 +1,1 @@
+1.0.1: Restore vetted BINGIE and SlyGuy dependency sources used by the original stable installer. tvOS clean-install QA pending.

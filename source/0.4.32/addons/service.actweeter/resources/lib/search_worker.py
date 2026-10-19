@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+import math
 
 from search_store import open_store, reconcile
 from sync_scheduler import DEFAULT_INTERVAL_SECONDS, is_due
@@ -24,21 +25,40 @@ class SearchWorker:
         try:
             meta = dict(conn.execute("SELECT key,value FROM meta"))
             last_success = float(meta.get("last_successful_sync", "0") or 0)
+            if not math.isfinite(last_success):
+                last_success = 0.0
             if monitor.abortRequested() or not is_due(last_success, self.clock(), self.interval):
                 return None
 
             started = self.clock()
-            totals = {"scanned": 0, "added": 0, "changed": 0, "removed": 0}
+            # Obtain both complete snapshots before taking the write lock.
+            # A later provider error must not commit an earlier media type.
+            snapshots = []
             for stype in ("movie", "series"):
                 if monitor.abortRequested():
                     return None
                 records, checkpoint, complete = self.snapshot_provider(stype, monitor)
                 if monitor.abortRequested():
                     return None
-                delta = reconcile(conn, stype, records, checkpoint, complete=complete)
+                if not complete:
+                    raise ValueError("incomplete provider snapshot")
+                snapshots.append((stype, list(records), checkpoint))
+            if monitor.abortRequested():
+                return None
+            totals = {"scanned": 0, "added": 0, "changed": 0, "removed": 0}
+            conn.commit()  # Finish any schema setup transaction.
+            conn.execute("BEGIN IMMEDIATE")
+            for stype, records, checkpoint in snapshots:
+                if monitor.abortRequested():
+                    conn.rollback()
+                    return None
+                delta = reconcile(conn, stype, records, checkpoint,
+                                  complete=True, manage_transaction=False)
                 for key in totals:
                     totals[key] += getattr(delta, key)
-
+            if monitor.abortRequested():
+                conn.rollback()
+                return None
             duration_ms = max(0, int((self.clock() - started) * 1000))
             conn.execute("INSERT OR REPLACE INTO meta(key,value) VALUES (?,?)",
                          ("last_successful_sync", str(self.clock())))

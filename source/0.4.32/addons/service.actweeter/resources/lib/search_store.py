@@ -44,7 +44,7 @@ def open_store(path: str) -> sqlite3.Connection:
 
 def reconcile(conn: sqlite3.Connection, stype: str,
                records: Iterable[Mapping[str, object]], checkpoint: str,
-               *, complete: bool) -> Delta:
+               *, complete: bool, manage_transaction: bool = True) -> Delta:
     """Atomically reconcile one provider media type by its stable provider ID.
 
     Incomplete/failed reads are rejected before starting the transaction so a
@@ -65,7 +65,10 @@ def reconcile(conn: sqlite3.Connection, stype: str,
             continue
         prepared[str(row[1])] = row
 
-    conn.execute("BEGIN IMMEDIATE")
+    if manage_transaction:
+        conn.execute("BEGIN IMMEDIATE")
+    elif not conn.in_transaction:
+        raise RuntimeError("caller must own the snapshot transaction")
     try:
         previous = {
             str(row[0]): tuple(row[1:])
@@ -97,8 +100,10 @@ def reconcile(conn: sqlite3.Connection, stype: str,
                      ("sync." + stype, str(checkpoint)))
         conn.execute("INSERT OR REPLACE INTO meta(key,value) VALUES (?,?)",
                      ("schema_version", "1"))
-        conn.commit()
+        if manage_transaction:
+            conn.commit()
         return Delta(len(prepared), added, changed, len(removed_ids))
     except Exception:
-        conn.rollback()
+        if manage_transaction:
+            conn.rollback()
         raise

@@ -41,7 +41,7 @@ class OfficialTestChannelTests(unittest.TestCase):
         stable = (ROOT / "repo/addons.xml").read_bytes()
         with tempfile.TemporaryDirectory() as temp:
             temp_root = Path(temp)
-            service = temp_root / "service.actweeter-0.4.37.zip"
+            service = temp_root / f"service.actweeter-{build_test_channel.SERVICE_VERSION}.zip"
             skin = temp_root / "skin.actweeter-1.2.29~beta10.zip"
             for builder, package in (("build_service_package.py", service),
                                      ("build_skin_package.py", skin)):
@@ -61,7 +61,7 @@ class OfficialTestChannelTests(unittest.TestCase):
         stable_index = (ROOT / "repo" / "addons.xml").read_bytes()
         with tempfile.TemporaryDirectory() as temp:
             temp_root = Path(temp)
-            candidate_service = temp_root / "service.actweeter-0.4.37.zip"
+            candidate_service = temp_root / f"service.actweeter-{build_test_channel.SERVICE_VERSION}.zip"
             # Build the same deterministic service ZIP that the test-feed builder publishes.
             import subprocess
             subprocess.run([
@@ -76,8 +76,8 @@ class OfficialTestChannelTests(unittest.TestCase):
             root = ET.parse(index).getroot()
             versions = {node.get("id"): node.get("version") for node in root.findall("addon")}
             self.assertEqual(versions, {
-                "repository.actweeter.testing": "1.0.0",
-                "service.actweeter": "0.4.37",
+                "repository.actweeter.testing": "1.0.1",
+                "service.actweeter": build_test_channel.SERVICE_VERSION,
             })
             feed_addon = ET.parse(ROOT / "testing" / "repository.actweeter.testing" / "addon.xml").getroot()
             endpoints = [node.findtext("info", "") for node in feed_addon.findall(
@@ -85,6 +85,8 @@ class OfficialTestChannelTests(unittest.TestCase):
             )]
             self.assertIn("https://actweeter.github.io/TwT-Actualizador/testing/repo/addons.xml", endpoints)
             self.assertIn("https://raw.githubusercontent.com/AcTweeteR/TwT-Actualizador/main/repo/addons.xml", endpoints)
+            self.assertIn("https://raw.githubusercontent.com/matke-84/repository.bingie/main/omega/addons.xml", endpoints)
+            self.assertIn("https://slyguy.uk/.repo/repository.slyguy/addons.xml", endpoints)
             self.assertEqual(checksum.read_text().strip(), hashlib.md5(index.read_bytes()).hexdigest())
             self.assertEqual(ET.parse(ROOT / "repo" / "addons.xml").getroot().find("addon[@id='service.actweeter']").get("version"), "0.4.31")
             self.assertEqual((ROOT / "repo" / "addons.xml").read_bytes(), stable_index)
@@ -124,6 +126,73 @@ class OfficialTestChannelTests(unittest.TestCase):
                              hashlib.md5(index.read_bytes()).hexdigest())
             self.assertEqual((ROOT / "repo" / "addons.xml").read_bytes(), stable_index)
 
+    def test_existing_test_feed_cannot_be_overwritten(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);output=root/'testing';output.mkdir()
+            marker=output/'keep.txt';marker.write_text('original')
+            with self.assertRaisesRegex(ValueError,'refusing to overwrite'):
+                build_test_channel.build(ROOT/'testing/repository.actweeter.testing',
+                                        root/'missing.zip',output)
+            self.assertEqual(marker.read_text(),'original')
+
+    def test_invalid_package_leaves_no_partial_feed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);service=root/'service.actweeter-0.4.37.zip'
+            with zipfile.ZipFile(service,'w') as archive:
+                archive.writestr('service.actweeter/addon.xml',
+                                 '<addon id="service.actweeter" version="0.4.37"/>')
+                archive.writestr('foreign/unsafe','x')
+            output=root/'testing'
+            with self.assertRaisesRegex(ValueError,'unsafe ZIP paths'):
+                build_test_channel.build(ROOT/'testing/repository.actweeter.testing',
+                                        service,output)
+            self.assertFalse(output.exists())
+
+    def test_build_failure_cleans_staging_and_preserves_stable(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);service=root/'service.actweeter-0.4.37.zip'
+            with zipfile.ZipFile(service,'w') as archive:
+                archive.writestr('service.actweeter/addon.xml',
+                                 '<addon id="service.actweeter" version="0.4.37"/>')
+            output=root/'testing'
+            with patch.object(build_test_channel,'_write_test_channel',
+                              side_effect=OSError('simulated disk failure')):
+                with self.assertRaisesRegex(OSError,'disk failure'):
+                    build_test_channel.build(ROOT/'testing/repository.actweeter.testing',
+                                            service,output)
+            self.assertFalse(output.exists())
+            self.assertFalse(list(root.glob('.actweeter-test-feed-*')))
+
+    def test_atomic_publication_rejects_existing_empty_directory(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);stage=root/'stage';stage.mkdir()
+            (stage/'new.txt').write_text('new')
+            output=root/'published';output.mkdir()
+            with self.assertRaisesRegex(ValueError,'refusing to overwrite'):
+                build_test_channel.publish_directory_no_replace(stage,output)
+            self.assertTrue(stage.exists())
+            self.assertEqual(list(output.iterdir()),[])
+
+    def test_atomic_publication_rejects_existing_symlink(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);stage=root/'stage';stage.mkdir()
+            original=root/'original';original.mkdir()
+            output=root/'published';output.symlink_to(original)
+            with self.assertRaisesRegex(ValueError,'refusing to overwrite'):
+                build_test_channel.publish_directory_no_replace(stage,output)
+            self.assertTrue(output.is_symlink())
+            self.assertTrue(stage.exists())
+
+    def test_atomic_publication_creates_completed_directory(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);stage=root/'stage';stage.mkdir()
+            (stage/'complete.txt').write_text('ready')
+            output=root/'published'
+            build_test_channel.publish_directory_no_replace(stage,output)
+            self.assertFalse(stage.exists())
+            self.assertEqual((output/'complete.txt').read_text(),'ready')
+
     def test_beta11_manifest_matches_xstream_and_index_artifacts(self):
         manifest = json.loads((ROOT / "manifests/0.4.37-beta11.json").read_text())
         self.assertTrue(manifest["stable_untouched"])
@@ -134,9 +203,20 @@ class OfficialTestChannelTests(unittest.TestCase):
         self.assertEqual(hashlib.sha256(xstream_zip.read_bytes()).hexdigest(),
                          next(addon["sha256"] for addon in manifest["addons"]
                               if addon["id"] == "plugin.video.xstream-pro"))
-        self.assertEqual(hashlib.sha256(index.read_bytes()).hexdigest(),
+        # The live index advances; reconstruct the historical feed from its
+        # immutable packages rather than requiring the rolling feed to stay old.
+        historical = ET.Element("addons")
+        for addon_id, version in (("repository.actweeter.testing", "1.0.0"),
+                                  ("service.actweeter", "0.4.37"),
+                                  ("skin.actweeter", "1.2.29~beta10"),
+                                  ("plugin.video.xstream-pro", "1.1.2.8")):
+            package = ROOT / "docs/testing/repo" / addon_id / f"{addon_id}-{version}.zip"
+            with zipfile.ZipFile(package) as archive:
+                historical.append(ET.fromstring(archive.read(f"{addon_id}/addon.xml")))
+        payload = ET.tostring(historical, encoding="utf-8", xml_declaration=True) + b"\n"
+        self.assertEqual(hashlib.sha256(payload).hexdigest(),
                          manifest["testing_index"]["sha256"])
-        self.assertEqual(hashlib.md5(index.read_bytes()).hexdigest(),
+        self.assertEqual(hashlib.md5(payload).hexdigest(),
                          manifest["testing_index"]["md5"])
         self.assertEqual(ET.parse(index).getroot().find(
             "addon[@id='plugin.video.xstream-pro']").get("version"), "1.1.2.8")

@@ -11,6 +11,8 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: db98eab99b9a93f03ac3e5b8000d020dadbac8c4
       - name: Fetch main for Stable isolation check
         run: git fetch origin main --depth=1
       - uses: actions/setup-python@v5

@@ -1,0 +1,24 @@
+{
+  "release": "0.4.39-beta-installer",
+  "channel": "Testing only",
+  "integration_source_commit": "95f67ed",
+  "baseline_public_main": "ecabbe6f8bf5301a153242aa088aecf152bad63e",
+  "service": {
+    "version": "0.4.39",
+    "path": "docs/testing/repo/service.actweeter/service.actweeter-0.4.39.zip",
+    "sha256": "edaa5072a968811e3b153416e03408749b61fb217da3bbf02885e375ed688e2a"
+  },
+  "testing_index": {
+    "sha256": "63e90e1e1a5f4178f79eb627509e5c67e845db17a56d1dd4027e3bcb86262b92",
+    "md5": "af8158bc17bf98965c30d1154d02a1d6"
+  },
+  "unchanged_packages": {
+    "skin.actweeter-1.2.29~beta10.zip": "4387012a8d6b928dfc665ef4b48a06773149295ca36937ec35e43e728dc2b808",
+    "plugin.video.xstream-pro-1.1.2.8.zip": "f1a305719b8b8bc5e5e0b99c66331af5ad153fdd15829b25947ba1fe97ad9382",
+    "repository.actweeter.testing-1.0.1.zip": "8eee2935672b3127140ecf52adc512cebf15bc0cd29e6566cf16c0b7bbbc2cc3"
+  },
+  "automated_tests": {"integration_branch": 246, "publication_source": 109},
+  "mac_runtime": "NOT_TESTED; Master protected",
+  "tvos_runtime": "PENDING_USER_TEST",
+  "stable_untouched": true
+}

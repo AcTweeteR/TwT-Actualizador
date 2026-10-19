@@ -36,6 +36,7 @@ from first_run import (
     REQUIRED_EXTERNAL_ADDON_MINIMUMS,
     REQUIRED_REPAIR_SOURCES,
     SLYGUY_INSTALL_SEQUENCE,
+    repository_candidates,
     addon_version_satisfies,
     claim_process_session,
     completion_blockers,
@@ -68,7 +69,8 @@ from xstream_setup import (
     save_native_profile,
     validate_xtream_credentials,
 )
-from module_catalog import installation_plan
+from module_catalog import all_addons, installation_plan
+from kodi_auto_preview import read_preview_metadata
 from platform_support import detect_platform
 from dependency_graph import inspect_graph
 from pvr_binding import profile_is_bound
@@ -501,9 +503,24 @@ def _is_tvos():
     return bool(xbmc.getCondVisibility("System.Platform.TVOS"))
 
 
+def _enabled_install_sources(dialog, sources):
+    candidates = repository_candidates(sources)
+    enabled = tuple(source for source in candidates if _addon_enabled(source))
+    if enabled:
+        return enabled
+    for source in candidates:
+        if _addon_installed(source) and _ensure_repository_enabled(dialog, source):
+            return (source,)
+    return ()
+
+
 def _request_native_addon_install(dialog, addon_id, source_id, *, required=True,
                                   consent_granted=False, minimum_version=None):
     """Use Kodi's native resolver and wait for a verified installed state."""
+    minimum = minimum_version or REQUIRED_EXTERNAL_ADDON_MINIMUMS.get(addon_id)
+    if _addon_ready(addon_id) and (not minimum or addon_version_satisfies(
+            _addon_version(addon_id), minimum)):
+        return "INSTALLED"
     heading = "Componente obligatorio de AcTweeteR" if required else "Instalar integración opcional"
     role = "dependencia de la skin" if required else "integración adicional"
     if not consent_granted and not dialog.yesno(
@@ -518,7 +535,6 @@ def _request_native_addon_install(dialog, addon_id, source_id, *, required=True,
         try:
             # Kodi's native installer handles dependency resolution, licenses,
             # platform packages, and its own confirmation UI.
-            minimum = minimum_version or REQUIRED_EXTERNAL_ADDON_MINIMUMS.get(addon_id)
             update_needed = (_addon_installed(addon_id)
                              and minimum is not None
                              and not addon_version_satisfies(_addon_version(addon_id), minimum))
@@ -556,36 +572,35 @@ def _request_native_addon_install(dialog, addon_id, source_id, *, required=True,
     return "FAILED"
 
 
+def _slyguy_stack_ready():
+    return all(_addon_ready(addon_id) and addon_version_satisfies(
+        _addon_version(addon_id), minimum)
+        for addon_id, minimum, _source in SLYGUY_INSTALL_SEQUENCE)
+
+
 def _install_slyguy_stack(dialog, *, open_settings=False, consent_granted=False):
     """Bootstrap the official SlyGuy repository, then resolve its dependency chain with Kodi."""
-    already_ready = all(_addon_requirement_ready(addon_id)
-                        for addon_id, _minimum, _source in SLYGUY_INSTALL_SEQUENCE)
+    already_ready = _slyguy_stack_ready()
     if not already_ready and not consent_granted and not dialog.yesno(
             "Preparar SlyGuy Trailers",
             "Kodi instalará repository.slyguy desde el catálogo upstream que AcTweeteR ya consulta; después instalará sus dependencias y Trailers desde repository.slyguy. No se copiarán ZIP de terceros a AcTweeteR. Kodi conservará sus confirmaciones de confianza/licencia y gestionará las actualizaciones oficiales.",
             "Ahora no", "Continuar"):
         return False
 
-    if not _addon_enabled("repository.actweeter"):
-        if not _ensure_repository_enabled(dialog, "repository.actweeter"):
-            dialog.ok("Fuente AcTweeteR no disponible",
-                      "Habilita repository.actweeter y vuelve a intentar la instalación de SlyGuy.")
+    for addon_id, minimum, source_id in SLYGUY_INSTALL_SEQUENCE:
+        if _addon_ready(addon_id) and addon_version_satisfies(_addon_version(addon_id), minimum):
+            continue
+        # Both AcTweeteR manifests aggregate the complete official SlyGuy
+        # index. repository.slyguy itself is a real upstream import dependency.
+        sources = _enabled_install_sources(dialog, (source_id, "repository.actweeter"))
+        if not sources and not _addon_installed(addon_id):
+            dialog.ok("Fuente SlyGuy no disponible",
+                      "Habilita el repositorio AcTweeteR Stable o Testing ya instalado, o repository.slyguy. Los tráilers son opcionales; puedes continuar y reintentarlo después.")
             return False
 
-    for addon_id, minimum, source_id in SLYGUY_INSTALL_SEQUENCE:
-        if source_id != "repository.actweeter" and not _addon_enabled(source_id):
-            if _addon_installed(source_id):
-                if not _ensure_repository_enabled(dialog, source_id):
-                    dialog.ok("Repositorio SlyGuy deshabilitado",
-                              "Kodi necesita repository.slyguy habilitado para resolver sus paquetes oficiales.")
-                    return False
-            else:
-                dialog.ok("Cadena SlyGuy incompleta",
-                          "No se confirmó repository.slyguy. Kodi no puede consultar todavía los paquetes oficiales de SlyGuy.")
-                return False
-
         outcome = _request_native_addon_install(
-            dialog, addon_id, source_id, required=True, consent_granted=True,
+            dialog, addon_id, ", ".join(sources) or "instalación existente de Kodi",
+            required=False, consent_granted=True,
             minimum_version=minimum)
         if outcome != "INSTALLED":
             dialog.ok(
@@ -598,9 +613,7 @@ def _install_slyguy_stack(dialog, *, open_settings=False, consent_granted=False)
             # Kodi's supported built-in refreshes all enabled repository feeds.
             xbmc.executebuiltin("UpdateAddonRepos", True)
 
-    if not all(_addon_ready(addon_id) and addon_version_satisfies(
-            _addon_version(addon_id), minimum)
-            for addon_id, minimum, _source in SLYGUY_INSTALL_SEQUENCE):
+    if not _slyguy_stack_ready():
         dialog.ok("SlyGuy pendiente", "La cadena oficial no quedó instalada y habilitada en las versiones mínimas. No se marcará como lista.")
         return False
 
@@ -871,9 +884,8 @@ def _evaluate_setup_gates(state):
     state = mark_setup_check(
         state, "mandatory_addons",
         "PASS_RUNTIME" if _mandatory_addons_ready() else "FAIL")
-    state = mark_setup_check(state, "trailer_addon_ready", "PASS_RUNTIME" if all(
-        _addon_requirement_ready(addon_id)
-        for addon_id, _minimum, _source in SLYGUY_INSTALL_SEQUENCE) else "FAIL")
+    state = mark_setup_check(state, "trailer_addon_ready",
+                            "PASS_RUNTIME" if _slyguy_stack_ready() else "FAIL")
 
     provider_addon = None
     provider_https = False
@@ -962,7 +974,7 @@ def _show_status(dialog):
         "Series: " + ("%d categorías comprobadas" % evidence["series"] if passed("series_catalog") else "catálogo pendiente"),
         "Televisión: " + ("%d canales sincronizados" % pvr["channels"] if passed("pvr_configuration") else "sincronización pendiente"),
         "Guía: " + ("programación comprobada" if passed("epg_ready_or_not_provided") else "programación todavía no comprobada"),
-        "Tráilers: " + ("componentes preparados" if passed("trailer_addon_ready") else "componentes pendientes"),
+        "Tráilers: " + ("componentes preparados" if passed("trailer_addon_ready") else "opcionales pendientes"),
         "Trakt: opcional; puedes conectarlo desde los ajustes de sus complementos.",
         "La reproducción se comprueba por separado. El detalle técnico está en Diagnosticar instalación.",
     ]
@@ -1015,7 +1027,8 @@ def _open_settings(dialog, key):
             return
 
     source_id = OPTIONAL_ADDON_SOURCES.get(key)
-    source_enabled = _ensure_repository_enabled(dialog, source_id)
+    sources = _enabled_install_sources(dialog, (source_id,)) if source_id else ()
+    source_enabled = bool(sources)
     action = optional_addon_action(
         key, installed, source_enabled, tvos=_is_tvos(), addon_enabled=enabled)
     if action == "ENABLE":
@@ -1045,7 +1058,7 @@ def _open_settings(dialog, key):
             return
         dialog.ok(
             "Repositorio necesario",
-            "Kodi no encuentra %s. AcTweeteR necesita su repositorio Kodi 1.0.3 habilitado para resolver esta dependencia sin un ZIP manual. Completa primero la instalación del repositorio AcTweeteR y vuelve a reparar los componentes." % source_id,
+            "Kodi no encuentra una fuente habilitada para %s. Usa el repositorio AcTweeteR Stable o Testing que ya tengas instalado, o la fuente oficial indicada, y vuelve a reparar los componentes; no es necesario cambiar de canal." % addon_id,
         )
         return
     if action != "OFFER_INSTALL":
@@ -1053,8 +1066,8 @@ def _open_settings(dialog, key):
         return
 
     result = _request_native_addon_install(
-        dialog, addon_id, source_id,
-        required=True)
+        dialog, addon_id, ", ".join(sources),
+        required=all_addons()[addon_id].get("required", True))
     if result != "INSTALLED":
         dialog.ok(
             "Instalación pendiente",
@@ -1281,8 +1294,13 @@ def _configure_xstream_provider(dialog):
 def _missing_components():
     missing = [item["id"] for item in installation_plan(_platform())
                if not item["supported"] or not _addon_requirement_ready(item["id"])]
+    # Optional modules must never block core setup, even when the full
+    # diagnostic dependency graph includes their uninstalled subdependencies.
+    optional_ids = {addon_id for addon_id, item in all_addons().items()
+                    if not item.get("required", True)}
     for item in _installed_dependency_graph():
-        if item["status"] != "READY" and item["id"] not in missing:
+        if (item["id"] not in optional_ids and item["status"] != "READY"
+                and item["id"] not in missing):
             missing.append(item["id"])
     if (_addon_ready("plugin.video.xstream-pro") and not _xstream_refresh_supported()
             and "plugin.video.xstream-pro" not in missing):
@@ -1369,12 +1387,7 @@ def _install_components_once(dialog, *, consent_granted=False, quiet=False,
                 "XStream Pro: pendiente; primero debe existir IPTV Simple tvOS habilitado y >=21.4.0.")
             continue
         sources = REQUIRED_REPAIR_SOURCES.get(addon_id, ("repository.actweeter", "repository.xbmc.org"))
-        for source in sources:
-            if _addon_enabled(source):
-                break
-            if _addon_installed(source) and not _addon_enabled(source):
-                _ensure_repository_enabled(dialog, source)
-        enabled_sources = [source for source in sources if _addon_enabled(source)]
+        enabled_sources = _enabled_install_sources(dialog, sources)
         if not enabled_sources and not _addon_installed(addon_id):
             outcomes.append("%s: fuente requerida no disponible (%s)." %
                             (labels.get(addon_id, addon_id), ", ".join(sources)))
@@ -1510,12 +1523,7 @@ def _auto_preview_focus(args):
             "container": container,
             "focus": focus,
             "position": int(xbmc.getInfoLabel("Container(%d).CurrentItem" % container) or "-1"),
-            "media_type": xbmc.getInfoLabel(prefix + "DBType").lower(),
-            "imdb": xbmc.getInfoLabel(prefix + "UniqueID(imdb)"),
-            "tmdb": xbmc.getInfoLabel(prefix + "UniqueID(tmdb)"),
-            "dbid": xbmc.getInfoLabel(prefix + "DBID"),
-            "title": xbmc.getInfoLabel(prefix + "Title"),
-            "year": xbmc.getInfoLabel(prefix + "Year"),
+            **read_preview_metadata(xbmc, prefix),
             "trailer_id": trailer_id,
             "delay": delay,
         }
@@ -1628,6 +1636,8 @@ def _run_pending_interface_migration(dialog, *, explicit=False):
     """
     window = xbmcgui.Window(10000)
     marker_name = "AcTweeteR.InterfaceMigrationAttempted"
+    if not explicit and window.getProperty("AcTweeteR.InterfaceMigrationDeclined") == "1":
+        return "CUSTOMIZATIONS_PRESERVED"
     session_path = _interface_migration_session_path()
     if explicit:
         window.clearProperty(marker_name)
@@ -1715,6 +1725,8 @@ def _run_pending_interface_migration(dialog, *, explicit=False):
         monitor.waitForAbort, on_attempt=log_attempt, on_retry=log_retry)
 
     if result != "GENERATED":
+        if result == "CUSTOMIZATIONS_PRESERVED":
+            window.setProperty("AcTweeteR.InterfaceMigrationDeclined", "1")
         # This call already performed its bounded retry policy. Clearing the
         # marker for retryable outcomes lets each Skin Shortcuts-triggered
         # Home reload launch another competing migration/build worker.
@@ -2096,7 +2108,7 @@ def main():
         # Upgrades apply AcTweeteR-owned defaults automatically. If the profile
         # contains hand-edited Skin Shortcuts, the layout migrator asks before
         # replacing those files and keeps the pre-migration backup.
-        _prepare_product_interface(dialog, allow_prompt=True)
+        _run_pending_interface_migration(dialog)
         # Skin Shortcuts can rebuild Home during first-run preparation. If that
         # opens the startup mask, release the claim and resume on its on-unload.
         if _intro_blocks_first_run():
