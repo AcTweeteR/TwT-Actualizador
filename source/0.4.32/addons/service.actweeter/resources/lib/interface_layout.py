@@ -858,17 +858,29 @@ def prepare_interface(kodi, addon_factory, vfs, gui, dialog, *, allow_prompt=Fal
     service_root=Path(vfs.translatePath(addon_factory('service.actweeter').getAddonInfo('profile')))
     service_root.mkdir(parents=True,exist_ok=True)
     lock=service_root/'interface-prepare.lock'
-    try:descriptor=os.open(lock,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
-    except FileExistsError:
-        previous=load_state(lock)
-        if remove_stale_preparation_lock(lock, os.getpid()):
-            return prepare_interface(kodi,addon_factory,vfs,gui,dialog,allow_prompt=allow_prompt)
-        return 'PREPARATION_BUSY'
+    # One stale-lock recovery is enough. Repeated replacements by another
+    # process must not recurse indefinitely or remove the new owner's lock.
+    descriptor = None
+    for attempt in range(2):
+        try:
+            descriptor = os.open(lock, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            break
+        except FileExistsError:
+            if attempt or not remove_stale_preparation_lock(lock, os.getpid()):
+                return 'PREPARATION_BUSY'
     try:
-        with os.fdopen(descriptor,'w') as stream:json.dump({'pid':os.getpid()},stream)
+        owned = os.fstat(descriptor)
+        with os.fdopen(descriptor,'w') as stream:
+            json.dump({'pid':os.getpid()},stream)
         return _prepare_interface(kodi,addon_factory,vfs,gui,dialog,allow_prompt=allow_prompt)
     finally:
-        if lock.exists():lock.unlink()
+        try:
+            current = lock.lstat()
+            if (not lock.is_symlink() and current.st_dev == owned.st_dev and
+                    current.st_ino == owned.st_ino):
+                lock.unlink()
+        except FileNotFoundError:
+            pass
 
 def _prepare_interface(kodi, addon_factory, vfs, gui, dialog, *, allow_prompt=False):
     """Kodi adapter: prepare DATA then ask Skin Shortcuts to generate its includes."""

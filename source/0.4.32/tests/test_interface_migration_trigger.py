@@ -344,6 +344,41 @@ class InterfaceMigrationTriggerTests(unittest.TestCase):
         self.assertIn('if explicit', helper_source)
         self.assertIn('window.clearProperty(marker_name)', helper_source)
 
+    def test_preparation_does_not_remove_replaced_lock(self):
+        with tempfile.TemporaryDirectory() as temp:
+            lock = Path(temp) / 'interface-prepare.lock'
+            addon = mock.Mock()
+            addon.getAddonInfo.return_value = temp
+            factory = mock.Mock(return_value=addon)
+            vfs = mock.Mock()
+            vfs.translatePath.side_effect = lambda path: path
+            def replace_lock(*args, **kwargs):
+                lock.unlink()
+                lock.write_text('{"pid":999999}', encoding='utf-8')
+                return 'PREPARED'
+            with mock.patch.object(interface_layout, '_prepare_interface',
+                                   side_effect=replace_lock):
+                self.assertEqual(interface_layout.prepare_interface(
+                    mock.Mock(), factory, vfs, mock.Mock(), mock.Mock()), 'PREPARED')
+            self.assertEqual(lock.read_text(), '{"pid":999999}')
+
+    def test_preparation_stale_lock_recovery_is_bounded(self):
+        with tempfile.TemporaryDirectory() as temp:
+            lock = Path(temp) / 'interface-prepare.lock'
+            lock.write_text('{"pid":123}', encoding='utf-8')
+            addon = mock.Mock()
+            addon.getAddonInfo.return_value = temp
+            factory = mock.Mock(return_value=addon)
+            vfs = mock.Mock()
+            vfs.translatePath.side_effect = lambda path: path
+            with mock.patch.object(interface_layout, 'remove_stale_preparation_lock',
+                                   return_value=True) as cleanup:
+                self.assertEqual(interface_layout.prepare_interface(
+                    mock.Mock(), factory, vfs, mock.Mock(), mock.Mock()),
+                    'PREPARATION_BUSY')
+            cleanup.assert_called_once()
+            self.assertEqual(lock.read_text(), '{"pid":123}')
+
     def test_stale_lock_removed_only_when_owner_is_proven_gone_and_unchanged(self):
         with tempfile.TemporaryDirectory() as temp:
             lock = Path(temp) / "interface-prepare.lock"

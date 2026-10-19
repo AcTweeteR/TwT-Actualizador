@@ -332,3 +332,11 @@ Audited the whole apply/backup/rollback path with a real temporary filesystem (n
 - Apply validates extra snapshot names, refusing traversal, nested paths and collisions with managed/reserved backup entries. No external path can be selected as backup output via the snapshot key.
 - New isolated end-to-end test applies the real skin shortcut documents, verifies a backup is produced, rolls back, and asserts exact original state bytes and no leftover managed shortcuts.
 - 164 automated tests PASS; live GUI consent, Skin Shortcuts build and provider playback are separate remaining gates.
+
+## Interface preparation concurrency/lock lifecycle audit — 2026-10-19
+
+Reviewed lock acquisition, stale-owner recovery, preparation callback, and release as a single concurrency path.
+
+- Previously stale-lock recovery recursively reentered `prepare_interface` with no retry bound under lock contention. It now retries acquisition at most once and returns PREPARATION_BUSY when another owner persists.
+- Previously the finalizer unlinked any file at the lock path, even if another process had replaced it while preparation ran. The finalizer now compares device/inode identity with its own open descriptor and refuses to remove another owner's lock or a symlink.
+- 166 automated tests PASS, including lock replacement during preparation and bounded stale-lock recovery. Multi-process Kodi runtime contention remains a separate QA gate.
