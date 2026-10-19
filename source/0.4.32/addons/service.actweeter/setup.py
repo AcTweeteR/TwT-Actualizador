@@ -1688,7 +1688,8 @@ def _run_pending_interface_migration(dialog, *, explicit=False):
         properties_digest = digest(
             properties_path.read_bytes() if properties_path.is_file() else b"")
         generated_ready, _rows = generated_layout_ready(
-            generated_path, shortcuts_root, documents)
+            generated_path, shortcuts_root, documents,
+            condition_visible=xbmc.getCondVisibility)
         output_inspection_complete = True
     except Exception as exc:
         xbmc.log("[AcTweeteR] INTERFACE_LAYOUT_OUTPUT status=inspection_failed type=%s" %

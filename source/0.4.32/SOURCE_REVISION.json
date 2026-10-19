@@ -1,12 +1,12 @@
 {
-  "release": "0.4.37-beta10",
-  "source_base_commit": "267dcad96074a4f3a70a8148492f4072d1d0fbc3",
-  "source_base_release": "0.4.37-beta9 official Testing feed",
+  "release": "0.4.41-testing",
+  "source_base_commit": "63be13db36edb452009c228d82169e6126c126d1",
+  "source_base_release": "service 0.4.40 and skin beta11 official Testing feed",
   "profile_generated_cache_included": false,
-  "skin_version": "1.2.29~beta10",
-  "service_version": "0.4.37",
-  "xstream_version": "1.1.2.7",
-  "repository_version": "1.0.3",
+  "skin_version": "1.2.29~beta11",
+  "service_version": "0.4.41",
+  "xstream_version": "1.1.2.8",
+  "repository_version": "1.0.1",
   "xstream_package_reused_unchanged": true,
   "runtime_acceptance_required": true
 }

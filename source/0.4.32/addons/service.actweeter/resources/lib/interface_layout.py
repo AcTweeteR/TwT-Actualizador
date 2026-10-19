@@ -268,7 +268,21 @@ def expandable_shortcut_ids(documents):
     return result
 
 
-def generated_shortcut_identities(path, expected_ids):
+def _matches_profile(node, condition_visible):
+    if condition_visible is None:
+        return True
+    conditions = [node.get('condition', '')] + [n.text or '' for n in node.findall('visible')]
+    # Skin Shortcuts emits a separate selector for each profile. Evaluate only
+    # that selector, not transient widget/menu visibility or focus conditions.
+    for condition in conditions:
+        selector = re.match(r'String\.IsEqual\(System\.ProfileName,[^)]*\)',
+                            condition.strip(), flags=re.IGNORECASE)
+        if selector is not None and not condition_visible(selector.group(0)):
+            return False
+    return True
+
+
+def generated_shortcut_identities(path, expected_ids, *, condition_visible=None):
     """Resolve actual group/labelID from Skin Shortcuts generated items.
 
     Skin Shortcuts 2.x property records are keyed by the generated item
@@ -283,6 +297,8 @@ def generated_shortcut_identities(path, expected_ids):
     expected = set(expected_ids)
     found = {}
     for item in root.iter('item'):
+        if not _matches_profile(item, condition_visible):
+            continue
         properties = {}
         for prop in item.findall('property'):
             name = prop.get('name')
@@ -554,7 +570,7 @@ def rollback_layout(shortcuts_root,service_root):
         raise
     return manifest.get('settings',{})
 
-def generated_rows(path):
+def generated_rows(path, *, condition_visible=None):
     """Read generated widget descriptors for diagnostics, never claim rendering."""
     result={}
     try:root=ET.fromstring(as_path(path).read_bytes())
@@ -564,6 +580,8 @@ def generated_rows(path):
         rows=[]
         def nodes(element,visited):
             for node in element.iter('include'):
+                if not _matches_profile(node, condition_visible):
+                    continue
                 yield node
                 reference=(node.text or '').strip()
                 if reference and reference not in visited:
@@ -594,7 +612,7 @@ def generated_rows(path):
     return result
 
 
-def generated_layout_ready(path, shortcuts_root, documents):
+def generated_layout_ready(path, shortcuts_root, documents, *, condition_visible=None):
     """Verify materialized widgets and their profile properties before reuse.
 
     This is deliberately stricter than checking that an include file exists:
@@ -602,7 +620,7 @@ def generated_layout_ready(path, shortcuts_root, documents):
     contains every expected widget group, safe provider routes, expansion
     metadata, and the matching four-field properties in Skin Shortcuts' store.
     """
-    rows = generated_rows(path)
+    rows = generated_rows(path, condition_visible=condition_visible)
     if (not all(len(rows.get(group, [])) >= count for group, count in
                 (('Widgets', 6), ('moviehub', 10), ('tvshowhub', 10)))
             or not all(row['provider_only'] and row['expansion_ready']
@@ -610,7 +628,7 @@ def generated_layout_ready(path, shortcuts_root, documents):
         return False, rows
     try:
         identities = generated_shortcut_identities(
-            path, expandable_shortcut_ids(documents))
+            path, expandable_shortcut_ids(documents), condition_visible=condition_visible)
     except ValueError:
         return False, rows
     return verify_expandable_property_store(
@@ -641,7 +659,7 @@ def second_layout_build_needed(properties_changed, first_output_ready):
 
 
 def persist_generated_expandable_properties(shortcuts_root, service_root,
-                                            generated_path, documents):
+                                            generated_path, documents, *, condition_visible=None):
     """Backup and persist properties using identities from a completed build."""
     shortcuts_root, service_root = as_path(shortcuts_root), Path(service_root)
     properties = shortcuts_root/'skin.actweeter.properties'
@@ -655,7 +673,8 @@ def persist_generated_expandable_properties(shortcuts_root, service_root,
     existing = properties.read_bytes() if properties.is_file() else None
     original_state = state_path.read_bytes() if state_path.is_file() else None
     ids = expandable_shortcut_ids(documents)
-    identities = generated_shortcut_identities(generated_path, ids)
+    identities = generated_shortcut_identities(generated_path, ids,
+                                               condition_visible=condition_visible)
     required = expandable_property_rows(documents, identities)
     merged = merge_expandable_properties(existing, required)
     if merged == existing:
@@ -821,10 +840,10 @@ def layout_validation_due(build_running, now, next_check,
         return False, float(next_check)
     return True, float(now) + max(0.1, float(interval))
 
-def inspect_generated_layout(path, build_running, now, next_check):
+def inspect_generated_layout(path, build_running, now, next_check, *, condition_visible=None):
     """Parse once after a build completes, then retry at a bounded cadence."""
     due,next_check=layout_validation_due(build_running,now,next_check)
-    return (generated_rows(path) if due else None),next_check,due
+    return (generated_rows(path, condition_visible=condition_visible) if due else None),next_check,due
 
 def publish_years(window, now=None):
     year=(now or datetime.datetime.now()).year
@@ -989,7 +1008,8 @@ def _prepare_interface(kodi, addon_factory, vfs, gui, dialog, *, allow_prompt=Fa
     documents=source_documents(skin_root,
                                recommendations_enabled=recommendations_enabled)
     current_ready, _current_rows = generated_layout_ready(
-        generated_path, profile/'addon_data/script.skinshortcuts', documents)
+        generated_path, profile/'addon_data/script.skinshortcuts', documents,
+        condition_visible=kodi.getCondVisibility)
     current_state=load_state(service_root/'interface_layout_state.json')
     if can_reuse_generated_layout(
             result['status'], metadata_result.get('refreshed_metadata_entries',0),
@@ -1009,7 +1029,7 @@ def _prepare_interface(kodi, addon_factory, vfs, gui, dialog, *, allow_prompt=Fa
 
     # First native build materializes the real Skin Shortcuts group/labelID
     # identities. Source DATA names (such as inicio-1) are not runtime groups.
-    first_rows=generated_rows(generated_path)
+    first_rows=generated_rows(generated_path, condition_visible=kodi.getCondVisibility)
     if (not all(len(first_rows.get(group,[]))>=count for group,count in
                 (('Widgets',6),('moviehub',10),('tvshowhub',10)))
             or not all(row['provider_only'] for group in first_rows.values()
@@ -1018,7 +1038,7 @@ def _prepare_interface(kodi, addon_factory, vfs, gui, dialog, *, allow_prompt=Fa
     try:
         property_result=persist_generated_expandable_properties(
             profile/'addon_data/script.skinshortcuts',service_root,
-            generated_path,documents)
+            generated_path,documents, condition_visible=kodi.getCondVisibility)
     except (OSError, ValueError, SyntaxError, UnicodeDecodeError) as exc:
         # Exception text is from this module's fixed validation messages and
         # contains no user paths, property values, credentials, or provider URLs.
@@ -1031,7 +1051,8 @@ def _prepare_interface(kodi, addon_factory, vfs, gui, dialog, *, allow_prompt=Fa
              kodi.LOGINFO)
 
     first_ready, first_rows = generated_layout_ready(
-        generated_path, profile/'addon_data/script.skinshortcuts', documents)
+        generated_path, profile/'addon_data/script.skinshortcuts', documents,
+        condition_visible=kodi.getCondVisibility)
     if second_layout_build_needed(property_result['changed'], first_ready):
         # The second pass is necessary only when writing the dynamic properties
         # changed Skin Shortcuts' input or the first generated output still
@@ -1044,7 +1065,7 @@ def _prepare_interface(kodi, addon_factory, vfs, gui, dialog, *, allow_prompt=Fa
             kodi.log('[AcTweeteR] INTERFACE_LAYOUT status=build_not_confirmed phase=property result=%s'%
                      second_build,kodi.LOGWARNING)
             return second_build
-        rows=generated_rows(generated_path)
+        rows=generated_rows(generated_path, condition_visible=kodi.getCondVisibility)
     else:
         rows=first_rows
         kodi.log('[AcTweeteR] SKINSHORTCUTS_BUILD status=skipped phase=property reason=unchanged_and_verified',
@@ -1059,7 +1080,8 @@ def _prepare_interface(kodi, addon_factory, vfs, gui, dialog, *, allow_prompt=Fa
 
     try:
         identities=generated_shortcut_identities(
-            generated_path,expandable_shortcut_ids(documents))
+            generated_path,expandable_shortcut_ids(documents),
+            condition_visible=kodi.getCondVisibility)
     except ValueError as exc:
         kodi.log('[AcTweeteR] INTERFACE_LAYOUT status=generated_identity_invalid type=%s'%
                  type(exc).__name__,kodi.LOGWARNING)
@@ -1089,7 +1111,8 @@ def interface_report(kodi, addon_factory, vfs):
     service=addon_factory('service.actweeter')
     service_root=Path(vfs.translatePath(service.getAddonInfo('profile')))
     state=load_state(service_root/'interface_layout_state.json')
-    rows=generated_rows(KodiPath(skin.getAddonInfo('path'),vfs)/'1080i/script-skinshortcuts-includes.xml')
+    rows=generated_rows(KodiPath(skin.getAddonInfo('path'),vfs)/'1080i/script-skinshortcuts-includes.xml',
+                        condition_visible=kodi.getCondVisibility)
     property_path=KodiPath('special://profile/addon_data/script.skinshortcuts/skin.actweeter.properties',vfs)
     property_rows=[]
     legacy_widget_property_rows=0
@@ -1110,7 +1133,7 @@ def interface_report(kodi, addon_factory, vfs):
         documents=source_documents(Path(vfs.translatePath(skin.getAddonInfo('path'))))
         identities=generated_shortcut_identities(
             KodiPath(skin.getAddonInfo('path')+'/1080i/script-skinshortcuts-includes.xml',vfs),
-            expandable_shortcut_ids(documents))
+            expandable_shortcut_ids(documents), condition_visible=kodi.getCondVisibility)
     except (OSError,ValueError,ET.ParseError):
         identities={}
     backup=state.get('backup','')

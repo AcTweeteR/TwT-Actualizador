@@ -1,5 +1,11 @@
 # tvOS startup rebuilds — partial diagnosis, publication blocked
 
+**Historical checkpoint:** the subsequent user mission authorized a Testing
+release and moved runtime investigation to Master/Lenovo. New real-data
+evidence and the profile-scope fix are documented in
+`BETA_0_4_41_MASTER_LENOVO.md`. The Apple TV remains untouched and its acceptance
+is still pending; this original report is retained without rewriting history.
+
 ## Scope and baseline
 
 - Base: official main `63be13db36edb452009c228d82169e6126c126d1` (PR #22).

@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TEST_REPOSITORY_ID = "repository.actweeter.testing"
 TEST_REPOSITORY_VERSION = "1.0.1"
 SERVICE_ID = "service.actweeter"
-SERVICE_VERSION = "0.4.40"
+SERVICE_VERSION = "0.4.41"
 XSTREAM_ID = "plugin.video.xstream-pro"
 FIXED_TIME = (2026, 10, 3, 0, 0, 0)
 

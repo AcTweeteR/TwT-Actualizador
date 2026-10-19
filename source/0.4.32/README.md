@@ -1,5 +1,15 @@
 # AcTweeteR Beta widget-navigation source snapshot
 
+## Current candidate: service 0.4.41 / skin 1.2.29~beta11
+
+The Testing-only startup repair scopes generated widget validation and identity
+resolution to the active Kodi profile. Deterministic XML validation failures
+are not retried as transient build errors. Trailer hooks and optional bridge
+consent from PR #22 remain intact. No initialization or playback runtime PASS
+is implied. See `docs/development/BETA_0_4_41_MASTER_LENOVO.md` at repository root
+for evidence, environment policy, installation and acceptance/rollback gates.
+The sections below are historical notes, not current version declarations.
+
 ## Current service: 0.4.39 (installer Beta)
 
 The service recognizes both installed AcTweeteR repository channels for native
