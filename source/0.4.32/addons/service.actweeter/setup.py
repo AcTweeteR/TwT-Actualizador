@@ -2057,7 +2057,10 @@ def main():
     dialog = xbmcgui.Dialog()
     action = sys.argv[1].strip().casefold() if len(sys.argv) > 1 else "wizard"
     args = [part.strip() for part in sys.argv[2:]]
-    if action == 'backup_interface':
+    if action == 'smart_search':
+        from smart_search_ui import run as run_smart_search
+        run_smart_search()
+    elif action == 'backup_interface':
         result=backup_interface(xbmcaddon.Addon,xbmcvfs)
         xbmc.log('[AcTweeteR] INTERFACE_BACKUP status=verified files=%d'%len(result['files']),xbmc.LOGINFO)
     elif action == "catalog_refresh":

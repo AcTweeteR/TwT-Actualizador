@@ -62,6 +62,10 @@ class AutoplaySkinWiringTests(unittest.TestCase):
                 if path.name == 'script-skinshortcuts-includes.xml':
                     # The builder replaces this empty source stub with neutral defaults.
                     continue
+                if path.name == 'Custom_1109_BingieSearch.xml':
+                    # Smart Search intentionally replaces this screen. Its launcher,
+                    # native rows and absence of autoplay have separate contracts.
+                    continue
                 name = 'skin.actweeter/1080i/' + path.name
                 before = ET.fromstring(archive.read(name))
                 after = ET.parse(path).getroot()
@@ -89,7 +93,7 @@ class AutoplaySkinWiringTests(unittest.TestCase):
     def test_requires_current_service_and_preserves_optional_slyguy(self):
         root = ET.parse(SKIN / 'addon.xml').getroot()
         self.assertEqual(root.find("./requires/import[@addon='service.actweeter']").get('version'),
-                         '0.4.40')
+                         '0.4.46')
         self.assertIsNone(root.find("./requires/import[@addon='slyguy.trailers']"))
 
 

@@ -1,0 +1,4 @@
+1.2.30~beta3 — Buscar inteligente (candidato Testing)
+- BUSCAR abre la nueva pantalla visual AcTweeteR del servicio 0.4.46.
+- Los accesos existentes ActivateWindow(1109) siguen siendo compatibles.
+- Resultados independientes de Skin Shortcuts; navegación nativa por filas.
