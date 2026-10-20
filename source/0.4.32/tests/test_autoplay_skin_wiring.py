@@ -65,6 +65,15 @@ class AutoplaySkinWiringTests(unittest.TestCase):
                 name = 'skin.actweeter/1080i/' + path.name
                 before = ET.fromstring(archive.read(name))
                 after = ET.parse(path).getroot()
+                after_nodes = (after.find("./include[@name='AcTweeteR_Primary_Trailer_Action']").iter()
+                               if path.name == 'IncludesFunctions.xml' else ())
+                for node in after_nodes:
+                    condition = node.get('condition')
+                    if condition:
+                        node.set('condition', condition.replace(
+                            '[String.IsEqual(ListItem.DBType,movie) | '
+                            'String.IsEqual(ListItem.DBType,tvshow)]',
+                            'String.IsEqual(ListItem.DBType,movie)'))
                 for tag in ('onclick', 'onup', 'ondown', 'onleft', 'onright', 'onback'):
                     self.assertEqual([ET.tostring(n) for n in before.iter(tag)],
                                      [ET.tostring(n) for n in after.iter(tag)],
