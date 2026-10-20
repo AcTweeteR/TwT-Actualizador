@@ -12,17 +12,24 @@ MANIFEST = json.loads((REPO / "manifests/0.4.29.json").read_text(encoding="utf-8
 
 
 class DistributionArtifactTests(unittest.TestCase):
-    def test_candidate_feed_checksum_and_versions(self):
+    def test_historical_versions_and_current_stable_manifest_are_distinct(self):
+        # Historical ZIPs are immutable, but the live Stable feed advances.
+        historical = {a["id"]: a["version"] for a in MANIFEST["addons"]}
+        self.assertEqual(historical, {
+            "repository.actweeter": "1.0.3",
+            "skin.actweeter": "1.2.28",
+            "service.actweeter": "0.4.29",
+            "plugin.video.xstream-pro": "1.1.2.7",
+        })
+        release = json.loads((REPO / "manifests/unified-stable-20261020.json").read_text())
         payload = (REPO / "repo/addons.xml").read_bytes()
-        expected_md5 = (REPO / "repo/addons.xml.md5").read_text(encoding="ascii").strip()
-        self.assertEqual(hashlib.md5(payload).hexdigest(), expected_md5)
-        root = ET.fromstring(payload)
-        versions = {node.get("id"): node.get("version") for node in root.findall("addon")}
-        self.assertEqual(versions["repository.actweeter"], "1.0.3")
-        self.assertEqual(versions["skin.actweeter"], "1.2.28")
-        self.assertEqual(versions["plugin.video.xstream-pro"], "1.1.2.7")
-        service_version = tuple(map(int, versions["service.actweeter"].split(".")))
-        self.assertGreaterEqual(service_version, (0, 4, 29))
+        self.assertEqual(hashlib.sha256(payload).hexdigest(), release["index_sha256"])
+        self.assertEqual(hashlib.md5(payload).hexdigest(), release["index_md5"])
+        self.assertEqual(
+            (REPO / "repo/addons.xml.md5").read_text(encoding="ascii").strip(),
+            release["index_md5"])
+        current = {a.get("id"): a.get("version") for a in ET.fromstring(payload)}
+        self.assertEqual(current, {a["id"]: a["version"] for a in release["addons"]})
 
     def test_candidate_and_rollback_packages_have_valid_crc_and_manifest_hashes(self):
         for addon in MANIFEST["addons"]:
