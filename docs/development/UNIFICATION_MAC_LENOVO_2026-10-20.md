@@ -23,7 +23,7 @@
 | XStream Pro | `1.1.2.8` | `1.1.2.9` | `1.1.2.10` |
 | Testing repository | — | `1.0.2` | `1.0.2` (unchanged) |
 
-Observed installed versions are historical snapshots from the read-only reconciliation; this report does not claim the candidate is installed on either device.
+Read-only recheck on 2026-10-20 confirmed the same installed versions. Lenovo was identified as `TB330FU`, Android 15, Kodi `21.3` via the existing ADB connection. Mac process `/Applications/Kodi.app/Contents/MacOS/Kodi` (PID 1962) remained running with the listed Master versions. The candidate is not installed on either device.
 
 ## Integrated differences
 
@@ -50,8 +50,8 @@ Observed installed versions are historical snapshots from the read-only reconcil
 
 | Check | Result | Evidence / limitation |
 |---|---|---|
-| Existing Master | `NOT_RUN` for candidate | Existing Kodi process was treated as read-only; candidate was not installed. |
-| Existing Lenovo Beta | `NOT_RUN` for candidate | Existing Beta remains untouched; no candidate deployment authorized. |
+| Existing Master | `PASS_STATIC` version/process identification; candidate `NOT_TESTED` | Read-only process and addon manifest inspection; candidate was not installed. |
+| Existing Lenovo Beta | `PASS_STATIC` device/version identification; candidate `NOT_TESTED` | Existing ADB connection read `TB330FU`, Android 15, Kodi 21.3 and installed add-on manifests; no device files were written. |
 | Candidate trailers, widgets, XStream and PVR | `NOT_TESTED` | Automated contracts/build checks are not real Kodi playback or UI tests. |
 | Stable/Testing separation | `PASS_STATIC` | Candidate builder emits only the Testing repository identity; Stable index hash is unchanged. |
 | Candidate Testing discovery/update | `NOT_TESTED` | Candidate feed is under `/tmp` only and has not been published. |
@@ -67,4 +67,4 @@ No push, PR, release, or device installation has been made. The candidate should
 
 ## Working tree at report time
 
-The branch is three commits ahead of `origin/main`, has a clean working tree, and contains only the source, tests, changelogs, and report described above. No unrelated worktree changes were staged or included. This document records the candidate state, not publication approval.
+The branch contains the source, tests, changelogs, and report described above. The final report update is committed separately after the three integration commits. No unrelated worktree changes were staged or included. This document records the candidate state, not publication approval.
