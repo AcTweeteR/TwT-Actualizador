@@ -1,0 +1,43 @@
+{
+  "release": "unified-stable-20261020",
+  "channel": "repository.actweeter",
+  "candidate_source": "AcTweeteR Testing 2026-10-20 (Service 0.4.45, skin 1.2.30~beta2, XStream Pro 1.1.2.10)",
+  "source_commit": "10e3c373400c3c125ff8ec888a95a330b7c59717",
+  "kodi_baseline": "Kodi 21.3 Omega",
+  "stable_installer_version": "1.0.3 unchanged",
+  "previous_stable_index_sha256": "cada550963d1456d7e3bd5566128fb6cd3936dd2ae8992cceb3673fd2f383976",
+  "index_sha256": "ecb76872ab80cdd4cd4230292682fcbda651b4750ddc5e247a01d29b470185a3",
+  "index_md5": "b5f66e0a257940d0d32dd9ec155b6323",
+  "skin_promotion": "Only addon.xml differs from beta2; new stable changelog added; all other ZIP payloads are byte-identical",
+  "addons": [
+    {
+      "id": "repository.actweeter",
+      "version": "1.0.3",
+      "sha256": "74620e81ff9a161bb7b0650f01e94406ccc9fa9366210ebb36e58872bb4995e8"
+    },
+    {
+      "id": "skin.actweeter",
+      "version": "1.2.30",
+      "sha256": "37e7ee75637e615f7d7d9cd4e76ee758b3136ffae8ccd986723c8bec4912e475"
+    },
+    {
+      "id": "service.actweeter",
+      "version": "0.4.45",
+      "sha256": "6157eb988f0972c22d5ab665b48e90837f607af728684ec7e4a0bd6d7f5cec81"
+    },
+    {
+      "id": "plugin.video.xstream-pro",
+      "version": "1.1.2.10",
+      "sha256": "0824403e46d3d7ac1b8e4949e8d89f78e51727fec60680b015291bbff489bbf7"
+    }
+  ],
+  "testing_feed_sha256_at_publication": "a60aefb0a987a10256bc9927758ff49cca8dae47feb5865440482bdba29e9730",
+  "validation": {
+    "mac_kodi_master": "Service 0.4.45, beta2 skin and XStream 1.1.2.10 runtime validated; IPTV live playback, navigation, manual movie+series trailer, onboarding and setup gates",
+    "android_clean": "user confirmed full installation worked and service updated to 0.4.45 without apparent issues",
+    "lenovo": "three candidate packages installed, complete runtime QA not confirmed",
+    "provider_http_429": "may intermittently occur for SlyGuy; external rate limiting"
+  },
+  "compatibility": "Kodi selects repository sources separately. Keep Testing enabled only intentionally; Kodi global update preference is never changed.",
+  "publication": "not yet published (prepared manifest)"
+}

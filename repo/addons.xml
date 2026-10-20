@@ -32,7 +32,7 @@
 			<icon>resources/icon.png</icon>
 		</assets>
 	</extension>
-</addon><addon id="skin.actweeter" version="1.2.29" name="AcTweeteR" provider-name="AcTweeteR maintainers">
+</addon><addon id="skin.actweeter" version="1.2.30" name="AcTweeteR" provider-name="AcTweeteR maintainers">
 	<requires>
 		<import version="5.17.0" addon="xbmc.gui" />
 		<import addon="script.bingie.helper" version="1.1.2" />
@@ -61,7 +61,7 @@
 		<description lang="es_MX">AcTweeteR - tu espacio de películas, series y televisión.</description>
 		<platform>all</platform>
 		<license>GPL v2.0</license>
-		<news>changelog-1.2.29~beta11.txt</news>
+		<news>changelog-1.2.30.txt</news>
 		<forum />
 		<source />
 		<assets>
@@ -69,7 +69,7 @@
 			<fanart>extras/media/backgrounds/settings_interface.jpg</fanart>
 		</assets>
 	</extension>
-</addon><addon id="service.actweeter" name="AcTweeteR Service" version="0.4.42" provider-name="AcTweeteR maintainers">
+</addon><addon id="service.actweeter" name="AcTweeteR Service" version="0.4.45" provider-name="AcTweeteR maintainers">
   <requires>
     <import addon="xbmc.python" version="3.0.0" />
     <import addon="plugin.video.xstream-pro" version="1.1.2.7" />
@@ -92,9 +92,9 @@
     <description lang="es_ES">Programa actualizaciones del índice XStream y ofrece un asistente reanudable que no se completa hasta superar las comprobaciones funcionales obligatorias. Las credenciales permanecen en los ajustes oficiales de cada complemento.</description>
     <platform>all</platform>
     <license>GPL-2.0-or-later</license>
-    <news>changelog-0.4.41.txt</news>
+    <news>changelog-0.4.45.txt</news>
   </extension>
-</addon><addon id="plugin.video.xstream-pro" name="Xstream Pro" version="1.1.2.8" provider-name="PesicP">
+</addon><addon id="plugin.video.xstream-pro" name="Xstream Pro" version="1.1.2.10" provider-name="PesicP">
     <requires>
         <import addon="xbmc.python" version="3.0.1" />
         <import addon="script.module.requests" version="2.22.0" />
