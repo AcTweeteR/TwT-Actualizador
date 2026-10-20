@@ -91,7 +91,7 @@ class OfficialTestChannelTests(unittest.TestCase):
                 "https://slyguy.uk/.repo/repository.slyguy/addons.xml",
             ])
             self.assertEqual(checksum.read_text().strip(), hashlib.md5(index.read_bytes()).hexdigest())
-            self.assertEqual(ET.parse(ROOT / "repo" / "addons.xml").getroot().find("addon[@id='service.actweeter']").get("version"), "0.4.42")
+            self.assertEqual(ET.parse(ROOT / "repo" / "addons.xml").getroot().find("addon[@id='service.actweeter']").get("version"), "0.4.45")
             self.assertEqual((ROOT / "repo" / "addons.xml").read_bytes(), stable_index)
             with zipfile.ZipFile(bootstrap) as archive:
                 self.assertIsNone(archive.testzip())
@@ -229,8 +229,9 @@ class OfficialTestChannelTests(unittest.TestCase):
         manifest = json.loads((ROOT / "manifests/0.4.44-unified-beta-20261020.json").read_text())
         self.assertEqual(manifest["release"], "0.4.44-unified-beta-20261020")
         self.assertEqual(manifest["channel"], "repository.actweeter.testing")
+        stable_release = json.loads((ROOT / "manifests/unified-stable-20261020.json").read_text())
         self.assertEqual(manifest["stable_index_sha256"],
-                         hashlib.sha256((ROOT / "repo/addons.xml").read_bytes()).hexdigest())
+                         stable_release["previous_stable_index_sha256"])
         # The former rolling index is now historical. Reconstruct it from the
         # immutable versioned ZIPs instead of requiring live Testing to stay old.
         historical = ET.Element("addons")
@@ -259,8 +260,9 @@ class OfficialTestChannelTests(unittest.TestCase):
     def test_configured_onboarding_testing_release_integrity(self):
         manifest = json.loads((ROOT / "manifests/0.4.45-configured-onboarding-20261020.json").read_text())
         self.assertEqual(manifest["channel"], "repository.actweeter.testing")
+        stable_release = json.loads((ROOT / "manifests/unified-stable-20261020.json").read_text())
         self.assertEqual(manifest["stable_index_sha256"],
-                         hashlib.sha256((ROOT / "repo/addons.xml").read_bytes()).hexdigest())
+                         stable_release["previous_stable_index_sha256"])
         index = ROOT / "docs/testing/repo/addons.xml"
         self.assertEqual(manifest["testing_index"]["sha256"], hashlib.sha256(index.read_bytes()).hexdigest())
         self.assertEqual(manifest["testing_index"]["md5"], hashlib.md5(index.read_bytes()).hexdigest())
