@@ -1,0 +1,230 @@
+{
+  "rows": 26337,
+  "warning": "cProfile adds overhead; timings are not runtime Kodi measurements",
+  "builds": {
+    "v13": {
+      "measured": {
+        "wall_ms": 11450.54466700094,
+        "cpu_ms": 11416.368999999999,
+        "block_in": 0,
+        "block_out": 0
+      },
+      "functions": [
+        {
+          "function": "__init__",
+          "calls": 1,
+          "own_ms": 0.049,
+          "cumulative_ms": 11450.448
+        },
+        {
+          "function": "_ensure",
+          "calls": 1,
+          "own_ms": 107.403,
+          "cumulative_ms": 11449.563
+        },
+        {
+          "function": "_catalog_spans",
+          "calls": 26338,
+          "own_ms": 13.96,
+          "cumulative_ms": 10888.024
+        },
+        {
+          "function": "_value_end",
+          "calls": 26339,
+          "own_ms": 256.722,
+          "cumulative_ms": 10871.759
+        },
+        {
+          "function": "_string_end",
+          "calls": 421397,
+          "own_ms": 7269.761,
+          "cumulative_ms": 10525.128
+        },
+        {
+          "function": "_norm",
+          "calls": 26337,
+          "own_ms": 27.817,
+          "cumulative_ms": 166.382
+        },
+        {
+          "function": "<genexpr>",
+          "calls": 289707,
+          "own_ms": 45.572,
+          "cumulative_ms": 68.454
+        },
+        {
+          "function": "<method 'executemany' of 'sqlite3.Connection' objects>",
+          "calls": 53,
+          "own_ms": 41.291,
+          "cumulative_ms": 41.291
+        },
+        {
+          "function": "<method 'commit' of 'sqlite3.Connection' objects>",
+          "calls": 1,
+          "own_ms": 3.785,
+          "cumulative_ms": 3.785
+        },
+        {
+          "function": "<method 'execute' of 'sqlite3.Connection' objects>",
+          "calls": 6,
+          "own_ms": 1.808,
+          "cumulative_ms": 1.808
+        },
+        {
+          "function": "<built-in method _sqlite3.connect>",
+          "calls": 3,
+          "own_ms": 0.545,
+          "cumulative_ms": 0.603
+        },
+        {
+          "function": "_valid",
+          "calls": 1,
+          "own_ms": 0.011,
+          "cumulative_ms": 0.462
+        },
+        {
+          "function": "<method 'close' of 'sqlite3.Connection' objects>",
+          "calls": 3,
+          "own_ms": 0.119,
+          "cumulative_ms": 0.119
+        },
+        {
+          "function": "_provider_source",
+          "calls": 1,
+          "own_ms": 0.019,
+          "cumulative_ms": 0.064
+        },
+        {
+          "function": "_stamp",
+          "calls": 1,
+          "own_ms": 0.017,
+          "cumulative_ms": 0.063
+        },
+        {
+          "function": "<method 'fetchone' of 'sqlite3.Cursor' objects>",
+          "calls": 1,
+          "own_ms": 0.002,
+          "cumulative_ms": 0.002
+        }
+      ]
+    },
+    "v14": {
+      "measured": {
+        "wall_ms": 1231.0202499938896,
+        "cpu_ms": 1219.380000000001,
+        "block_in": 0,
+        "block_out": 0
+      },
+      "functions": [
+        {
+          "function": "__init__",
+          "calls": 1,
+          "own_ms": 0.051,
+          "cumulative_ms": 1230.944
+        },
+        {
+          "function": "_ensure",
+          "calls": 1,
+          "own_ms": 89.732,
+          "cumulative_ms": 1230.509
+        },
+        {
+          "function": "_catalog_spans",
+          "calls": 26338,
+          "own_ms": 15.059,
+          "cumulative_ms": 701.46
+        },
+        {
+          "function": "_value_end",
+          "calls": 26339,
+          "own_ms": 631.312,
+          "cumulative_ms": 683.796
+        },
+        {
+          "function": "_norm",
+          "calls": 26337,
+          "own_ms": 28.34,
+          "cumulative_ms": 161.984
+        },
+        {
+          "function": "<genexpr>",
+          "calls": 289707,
+          "own_ms": 43.814,
+          "cumulative_ms": 66.269
+        },
+        {
+          "function": "<method 'executemany' of 'sqlite3.Connection' objects>",
+          "calls": 53,
+          "own_ms": 21.779,
+          "cumulative_ms": 21.779
+        },
+        {
+          "function": "<method 'execute' of 'sqlite3.Connection' objects>",
+          "calls": 8,
+          "own_ms": 12.167,
+          "cumulative_ms": 12.167
+        },
+        {
+          "function": "<method 'commit' of 'sqlite3.Connection' objects>",
+          "calls": 1,
+          "own_ms": 1.917,
+          "cumulative_ms": 1.917
+        },
+        {
+          "function": "<built-in method _sqlite3.connect>",
+          "calls": 2,
+          "own_ms": 0.325,
+          "cumulative_ms": 0.358
+        },
+        {
+          "function": "_connect",
+          "calls": 1,
+          "own_ms": 0.005,
+          "cumulative_ms": 0.171
+        },
+        {
+          "function": "_stamp",
+          "calls": 2,
+          "own_ms": 0.025,
+          "cumulative_ms": 0.091
+        },
+        {
+          "function": "<method 'close' of 'sqlite3.Connection' objects>",
+          "calls": 2,
+          "own_ms": 0.086,
+          "cumulative_ms": 0.086
+        },
+        {
+          "function": "_provider_source",
+          "calls": 1,
+          "own_ms": 0.011,
+          "cumulative_ms": 0.031
+        },
+        {
+          "function": "_state",
+          "calls": 1,
+          "own_ms": 0.003,
+          "cumulative_ms": 0.02
+        },
+        {
+          "function": "_string_end",
+          "calls": 5,
+          "own_ms": 0.007,
+          "cumulative_ms": 0.011
+        },
+        {
+          "function": "<method 'fetchone' of 'sqlite3.Cursor' objects>",
+          "calls": 3,
+          "own_ms": 0.006,
+          "cumulative_ms": 0.006
+        },
+        {
+          "function": "check_cancel",
+          "calls": 54,
+          "own_ms": 0.005,
+          "cumulative_ms": 0.005
+        }
+      ]
+    }
+  }
+}

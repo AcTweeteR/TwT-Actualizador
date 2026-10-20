@@ -1,0 +1,15 @@
+{
+  "tests": 196,
+  "passed": 196,
+  "candidate_version": "1.1.2.14",
+  "candidate_sha256": "3a31eb9d778c4ae446baa5b4d57f4cc2c4b7d2c63f79a639f3ab79aaa20d29e1",
+  "zip_crc": "passed",
+  "rebuild_byte_identical": true,
+  "stable_files_compared": 130,
+  "stable_bytes_equal_to_base_main": true,
+  "base_main": "19f53e40be0a6553bcc956e1339eb8b119079b76",
+  "runtime_validation_v14": "not performed",
+  "installed": false,
+  "published_testing": false,
+  "merged": false
+}

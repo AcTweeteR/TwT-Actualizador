@@ -1,0 +1,2 @@
+XStream Pro 1.1.2.14 — Candidata Performance 3.1
+Primera consulta con fallback heredado. Construcción de índice derivado por el servicio existente durante inactividad; escáner de bytes optimizado. Reutiliza índices válidos de 1.1.2.13. Telemetría opcional desactivada por defecto. Pendiente de validación runtime. No publicada.

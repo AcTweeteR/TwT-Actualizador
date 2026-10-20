@@ -1,0 +1,983 @@
+{
+  "kind": "synthetic; external Kodi runtime is not measured",
+  "python": "3.14.6 (main, Jun 10 2026, 10:03:53) [Clang 21.0.0 (clang-2100.0.123.102)]",
+  "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+  "results": [
+    {
+      "rows": 26337,
+      "requested": 20,
+      "source_bytes": 62912146,
+      "index_bytes": 2207744,
+      "legacy_v12": {
+        "n": 10,
+        "wall_ms": {
+          "p50": 214.863,
+          "p90": 222.463,
+          "min": 207.064,
+          "max": 228.257
+        },
+        "cpu_ms": {
+          "p50": 214.703,
+          "p90": 222.465,
+          "min": 206.918,
+          "max": 228.257
+        },
+        "block_io_total": {
+          "block_in": 0,
+          "block_out": 0
+        }
+      },
+      "cold_v13": {
+        "n": 10,
+        "wall_ms": {
+          "p50": 3688.191,
+          "p90": 3794.387,
+          "min": 3611.966,
+          "max": 3816.876
+        },
+        "cpu_ms": {
+          "p50": 3680.418,
+          "p90": 3772.353,
+          "min": 3602.553,
+          "max": 3796.891
+        },
+        "block_io_total": {
+          "block_in": 0,
+          "block_out": 0
+        }
+      },
+      "cold_v14_fallback": {
+        "n": 10,
+        "wall_ms": {
+          "p50": 207.06,
+          "p90": 215.579,
+          "min": 198.082,
+          "max": 221.202
+        },
+        "cpu_ms": {
+          "p50": 207.012,
+          "p90": 215.485,
+          "min": 198.031,
+          "max": 221.124
+        },
+        "block_io_total": {
+          "block_in": 0,
+          "block_out": 0
+        }
+      },
+      "background_build_v14": {
+        "n": 10,
+        "wall_ms": {
+          "p50": 870.319,
+          "p90": 885.873,
+          "min": 832.434,
+          "max": 903.892
+        },
+        "cpu_ms": {
+          "p50": 849.742,
+          "p90": 872.436,
+          "min": 821.569,
+          "max": 878.744
+        },
+        "block_io_total": {
+          "block_in": 0,
+          "block_out": 0
+        }
+      },
+      "warm_v13": {
+        "n": 100,
+        "wall_ms": {
+          "p50": 0.353,
+          "p90": 0.444,
+          "min": 0.327,
+          "max": 0.589
+        },
+        "cpu_ms": {
+          "p50": 0.353,
+          "p90": 0.442,
+          "min": 0.326,
+          "max": 0.527
+        },
+        "block_io_total": {
+          "block_in": 0,
+          "block_out": 0
+        }
+      },
+      "warm_v14": {
+        "n": 100,
+        "wall_ms": {
+          "p50": 0.351,
+          "p90": 0.392,
+          "min": 0.328,
+          "max": 0.683
+        },
+        "cpu_ms": {
+          "p50": 0.351,
+          "p90": 0.392,
+          "min": 0.327,
+          "max": 0.475
+        },
+        "block_io_total": {
+          "block_in": 0,
+          "block_out": 0
+        }
+      },
+      "open_v14": {
+        "n": 100,
+        "wall_ms": {
+          "p50": 0.303,
+          "p90": 0.336,
+          "min": 0.277,
+          "max": 0.39
+        },
+        "cpu_ms": {
+          "p50": 0.303,
+          "p90": 0.336,
+          "min": 0.277,
+          "max": 0.391
+        },
+        "block_io_total": {
+          "block_in": 0,
+          "block_out": 0
+        }
+      },
+      "parity": "identical full dictionaries and has_more",
+      "python_peak_bytes": {
+        "legacy": 129282469,
+        "warm_index": 196659
+      },
+      "build_traces": [
+        {
+          "correlation": "94e9a065c2bd484e802f3d1f951b03f5",
+          "counts": {
+            "index.build.rows": 26337,
+            "index.build.started": 1,
+            "index.build.storage_bytes": 2207744,
+            "index.missing": 1
+          },
+          "elapsed_ms": 885.942,
+          "io_delta": {},
+          "media": "other",
+          "phases": {
+            "index.build.close": {
+              "count": 1,
+              "max_ms": 0.059124999097548425,
+              "total_ms": 0.059124999097548425
+            },
+            "index.build.commit": {
+              "count": 1,
+              "max_ms": 2.3989999972400256,
+              "total_ms": 2.3989999972400256
+            },
+            "index.build.decode": {
+              "count": 1,
+              "max_ms": 171.64704029710265,
+              "total_ms": 171.64704029710265
+            },
+            "index.build.duration": {
+              "count": 1,
+              "max_ms": 885.4811249984778,
+              "total_ms": 885.4811249984778
+            },
+            "index.build.fields": {
+              "count": 1,
+              "max_ms": 52.036721717740875,
+              "total_ms": 52.036721717740875
+            },
+            "index.build.insert": {
+              "count": 1,
+              "max_ms": 22.424458002205938,
+              "total_ms": 22.424458002205938
+            },
+            "index.build.publish": {
+              "count": 1,
+              "max_ms": 0.12466699990909547,
+              "total_ms": 0.12466699990909547
+            },
+            "index.build.scan": {
+              "count": 1,
+              "max_ms": 601.6870995808858,
+              "total_ms": 601.6870995808858
+            },
+            "index.build.source": {
+              "count": 1,
+              "max_ms": 0.0191670042113401,
+              "total_ms": 0.0191670042113401
+            },
+            "index.build.sql_indexes": {
+              "count": 1,
+              "max_ms": 9.298666998802219,
+              "total_ms": 9.298666998802219
+            },
+            "index.build.tables": {
+              "count": 1,
+              "max_ms": 0.4738749994430691,
+              "total_ms": 0.4738749994430691
+            },
+            "index.build.validate": {
+              "count": 1,
+              "max_ms": 3.489374998025596,
+              "total_ms": 3.489374998025596
+            }
+          },
+          "process": {
+            "block_in": 0,
+            "block_out": 0,
+            "peak_rss_bytes": 325976064,
+            "system_cpu_s": 0.007954,
+            "user_cpu_s": 0.864525
+          },
+          "route": "unknown",
+          "threads": 1
+        },
+        {
+          "correlation": "01a0a8ac3169499faf749cee13bf42f5",
+          "counts": {
+            "index.build.rows": 26337,
+            "index.build.started": 1,
+            "index.build.storage_bytes": 2207744,
+            "index.missing": 1
+          },
+          "elapsed_ms": 903.96,
+          "io_delta": {},
+          "media": "other",
+          "phases": {
+            "index.build.close": {
+              "count": 1,
+              "max_ms": 0.08979099948192015,
+              "total_ms": 0.08979099948192015
+            },
+            "index.build.commit": {
+              "count": 1,
+              "max_ms": 2.2916669986443594,
+              "total_ms": 2.2916669986443594
+            },
+            "index.build.decode": {
+              "count": 1,
+              "max_ms": 173.25805349537404,
+              "total_ms": 173.25805349537404
+            },
+            "index.build.duration": {
+              "count": 1,
+              "max_ms": 903.4692089990131,
+              "total_ms": 903.4692089990131
+            },
+            "index.build.fields": {
+              "count": 1,
+              "max_ms": 53.53756404656451,
+              "total_ms": 53.53756404656451
+            },
+            "index.build.insert": {
+              "count": 1,
+              "max_ms": 23.3844189933734,
+              "total_ms": 23.3844189933734
+            },
+            "index.build.publish": {
+              "count": 1,
+              "max_ms": 0.15474999963771552,
+              "total_ms": 0.15474999963771552
+            },
+            "index.build.scan": {
+              "count": 1,
+              "max_ms": 604.197418280819,
+              "total_ms": 604.197418280819
+            },
+            "index.build.source": {
+              "count": 1,
+              "max_ms": 0.02408399450359866,
+              "total_ms": 0.02408399450359866
+            },
+            "index.build.sql_indexes": {
+              "count": 1,
+              "max_ms": 8.739582997804973,
+              "total_ms": 8.739582997804973
+            },
+            "index.build.tables": {
+              "count": 1,
+              "max_ms": 0.4461249991436489,
+              "total_ms": 0.4461249991436489
+            },
+            "index.build.validate": {
+              "count": 1,
+              "max_ms": 3.495125005429145,
+              "total_ms": 3.495125005429145
+            }
+          },
+          "process": {
+            "block_in": 0,
+            "block_out": 0,
+            "peak_rss_bytes": 326352896,
+            "system_cpu_s": 0.009884,
+            "user_cpu_s": 0.868901
+          },
+          "route": "unknown",
+          "threads": 1
+        },
+        {
+          "correlation": "d9ff8c04dbc248fd80a17d356c5e997d",
+          "counts": {
+            "index.build.rows": 26337,
+            "index.build.started": 1,
+            "index.build.storage_bytes": 2207744,
+            "index.missing": 1
+          },
+          "elapsed_ms": 837.583,
+          "io_delta": {},
+          "media": "other",
+          "phases": {
+            "index.build.close": {
+              "count": 1,
+              "max_ms": 0.07654200453544036,
+              "total_ms": 0.07654200453544036
+            },
+            "index.build.commit": {
+              "count": 1,
+              "max_ms": 2.5472089982940815,
+              "total_ms": 2.5472089982940815
+            },
+            "index.build.decode": {
+              "count": 1,
+              "max_ms": 161.33799489034573,
+              "total_ms": 161.33799489034573
+            },
+            "index.build.duration": {
+              "count": 1,
+              "max_ms": 837.1163749980042,
+              "total_ms": 837.1163749980042
+            },
+            "index.build.fields": {
+              "count": 1,
+              "max_ms": 48.96698281663703,
+              "total_ms": 48.96698281663703
+            },
+            "index.build.insert": {
+              "count": 1,
+              "max_ms": 20.90875197609421,
+              "total_ms": 20.90875197609421
+            },
+            "index.build.publish": {
+              "count": 1,
+              "max_ms": 0.12245800462551415,
+              "total_ms": 0.12245800462551415
+            },
+            "index.build.scan": {
+              "count": 1,
+              "max_ms": 569.5018836777308,
+              "total_ms": 569.5018836777308
+            },
+            "index.build.source": {
+              "count": 1,
+              "max_ms": 0.029416994948405772,
+              "total_ms": 0.029416994948405772
+            },
+            "index.build.sql_indexes": {
+              "count": 1,
+              "max_ms": 10.54995899903588,
+              "total_ms": 10.54995899903588
+            },
+            "index.build.tables": {
+              "count": 1,
+              "max_ms": 0.44175000221002847,
+              "total_ms": 0.44175000221002847
+            },
+            "index.build.validate": {
+              "count": 1,
+              "max_ms": 3.483125001366716,
+              "total_ms": 3.483125001366716
+            }
+          },
+          "process": {
+            "block_in": 0,
+            "block_out": 0,
+            "peak_rss_bytes": 326352896,
+            "system_cpu_s": 0.010639,
+            "user_cpu_s": 0.815207
+          },
+          "route": "unknown",
+          "threads": 1
+        },
+        {
+          "correlation": "cdc74002292244c8a17d4727ce0ab5c4",
+          "counts": {
+            "index.build.rows": 26337,
+            "index.build.started": 1,
+            "index.build.storage_bytes": 2207744,
+            "index.missing": 1
+          },
+          "elapsed_ms": 832.976,
+          "io_delta": {},
+          "media": "other",
+          "phases": {
+            "index.build.close": {
+              "count": 1,
+              "max_ms": 0.05587500345427543,
+              "total_ms": 0.05587500345427543
+            },
+            "index.build.commit": {
+              "count": 1,
+              "max_ms": 2.254875005746726,
+              "total_ms": 2.254875005746726
+            },
+            "index.build.decode": {
+              "count": 1,
+              "max_ms": 161.68488768744282,
+              "total_ms": 161.68488768744282
+            },
+            "index.build.duration": {
+              "count": 1,
+              "max_ms": 832.5674169973354,
+              "total_ms": 832.5674169973354
+            },
+            "index.build.fields": {
+              "count": 1,
+              "max_ms": 48.99233244213974,
+              "total_ms": 48.99233244213974
+            },
+            "index.build.insert": {
+              "count": 1,
+              "max_ms": 20.95291204022942,
+              "total_ms": 20.95291204022942
+            },
+            "index.build.publish": {
+              "count": 1,
+              "max_ms": 0.1181659972644411,
+              "total_ms": 0.1181659972644411
+            },
+            "index.build.scan": {
+              "count": 1,
+              "max_ms": 568.2548379991204,
+              "total_ms": 568.2548379991204
+            },
+            "index.build.source": {
+              "count": 1,
+              "max_ms": 0.022875006834510714,
+              "total_ms": 0.022875006834510714
+            },
+            "index.build.sql_indexes": {
+              "count": 1,
+              "max_ms": 8.78625000041211,
+              "total_ms": 8.78625000041211
+            },
+            "index.build.tables": {
+              "count": 1,
+              "max_ms": 0.4274159946362488,
+              "total_ms": 0.4274159946362488
+            },
+            "index.build.validate": {
+              "count": 1,
+              "max_ms": 3.256791998865083,
+              "total_ms": 3.256791998865083
+            }
+          },
+          "process": {
+            "block_in": 0,
+            "block_out": 0,
+            "peak_rss_bytes": 327499776,
+            "system_cpu_s": 0.008574,
+            "user_cpu_s": 0.814393
+          },
+          "route": "unknown",
+          "threads": 1
+        },
+        {
+          "correlation": "872af64747f14984bee2ce695df777ef",
+          "counts": {
+            "index.build.rows": 26337,
+            "index.build.started": 1,
+            "index.build.storage_bytes": 2207744,
+            "index.missing": 1
+          },
+          "elapsed_ms": 880.94,
+          "io_delta": {},
+          "media": "other",
+          "phases": {
+            "index.build.close": {
+              "count": 1,
+              "max_ms": 0.06883300375193357,
+              "total_ms": 0.06883300375193357
+            },
+            "index.build.commit": {
+              "count": 1,
+              "max_ms": 2.6591669957269914,
+              "total_ms": 2.6591669957269914
+            },
+            "index.build.decode": {
+              "count": 1,
+              "max_ms": 166.78961708385032,
+              "total_ms": 166.78961708385032
+            },
+            "index.build.duration": {
+              "count": 1,
+              "max_ms": 880.5024159955792,
+              "total_ms": 880.5024159955792
+            },
+            "index.build.fields": {
+              "count": 1,
+              "max_ms": 51.03365693503292,
+              "total_ms": 51.03365693503292
+            },
+            "index.build.insert": {
+              "count": 1,
+              "max_ms": 21.639624021190684,
+              "total_ms": 21.639624021190684
+            },
+            "index.build.publish": {
+              "count": 1,
+              "max_ms": 0.1382910049869679,
+              "total_ms": 0.1382910049869679
+            },
+            "index.build.scan": {
+              "count": 1,
+              "max_ms": 584.9550932107377,
+              "total_ms": 584.9550932107377
+            },
+            "index.build.source": {
+              "count": 1,
+              "max_ms": 0.021166000806260854,
+              "total_ms": 0.021166000806260854
+            },
+            "index.build.sql_indexes": {
+              "count": 1,
+              "max_ms": 8.817207999527454,
+              "total_ms": 8.817207999527454
+            },
+            "index.build.tables": {
+              "count": 1,
+              "max_ms": 0.4255419989931397,
+              "total_ms": 0.4255419989931397
+            },
+            "index.build.validate": {
+              "count": 1,
+              "max_ms": 3.38483299856307,
+              "total_ms": 3.38483299856307
+            }
+          },
+          "process": {
+            "block_in": 0,
+            "block_out": 0,
+            "peak_rss_bytes": 327532544,
+            "system_cpu_s": 0.008175,
+            "user_cpu_s": 0.840719
+          },
+          "route": "unknown",
+          "threads": 1
+        },
+        {
+          "correlation": "73e3fc3de4174e57ad654d244ff6c5a7",
+          "counts": {
+            "index.build.rows": 26337,
+            "index.build.started": 1,
+            "index.build.storage_bytes": 2207744,
+            "index.missing": 1
+          },
+          "elapsed_ms": 874.14,
+          "io_delta": {},
+          "media": "other",
+          "phases": {
+            "index.build.close": {
+              "count": 1,
+              "max_ms": 0.06687499990221113,
+              "total_ms": 0.06687499990221113
+            },
+            "index.build.commit": {
+              "count": 1,
+              "max_ms": 2.473167005518917,
+              "total_ms": 2.473167005518917
+            },
+            "index.build.decode": {
+              "count": 1,
+              "max_ms": 167.10736048116814,
+              "total_ms": 167.10736048116814
+            },
+            "index.build.duration": {
+              "count": 1,
+              "max_ms": 873.7115830008406,
+              "total_ms": 873.7115830008406
+            },
+            "index.build.fields": {
+              "count": 1,
+              "max_ms": 51.041500984865706,
+              "total_ms": 51.041500984865706
+            },
+            "index.build.insert": {
+              "count": 1,
+              "max_ms": 22.222662955755368,
+              "total_ms": 22.222662955755368
+            },
+            "index.build.publish": {
+              "count": 1,
+              "max_ms": 0.11670800449792296,
+              "total_ms": 0.11670800449792296
+            },
+            "index.build.scan": {
+              "count": 1,
+              "max_ms": 586.1847673877492,
+              "total_ms": 586.1847673877492
+            },
+            "index.build.source": {
+              "count": 1,
+              "max_ms": 0.03666700649773702,
+              "total_ms": 0.03666700649773702
+            },
+            "index.build.sql_indexes": {
+              "count": 1,
+              "max_ms": 9.108958998695016,
+              "total_ms": 9.108958998695016
+            },
+            "index.build.tables": {
+              "count": 1,
+              "max_ms": 0.44958299986319616,
+              "total_ms": 0.44958299986319616
+            },
+            "index.build.validate": {
+              "count": 1,
+              "max_ms": 3.3355420018779114,
+              "total_ms": 3.3355420018779114
+            }
+          },
+          "process": {
+            "block_in": 0,
+            "block_out": 0,
+            "peak_rss_bytes": 327532544,
+            "system_cpu_s": 0.008709,
+            "user_cpu_s": 0.841996
+          },
+          "route": "unknown",
+          "threads": 1
+        },
+        {
+          "correlation": "e36fd855f86b4d12b7be7290a83bb6af",
+          "counts": {
+            "index.build.rows": 26337,
+            "index.build.started": 1,
+            "index.build.storage_bytes": 2207744,
+            "index.missing": 1
+          },
+          "elapsed_ms": 832.497,
+          "io_delta": {},
+          "media": "other",
+          "phases": {
+            "index.build.close": {
+              "count": 1,
+              "max_ms": 0.057167002523783594,
+              "total_ms": 0.057167002523783594
+            },
+            "index.build.commit": {
+              "count": 1,
+              "max_ms": 2.2259580000536516,
+              "total_ms": 2.2259580000536516
+            },
+            "index.build.decode": {
+              "count": 1,
+              "max_ms": 161.17876506905304,
+              "total_ms": 161.17876506905304
+            },
+            "index.build.duration": {
+              "count": 1,
+              "max_ms": 832.0949590051896,
+              "total_ms": 832.0949590051896
+            },
+            "index.build.fields": {
+              "count": 1,
+              "max_ms": 48.67306974483654,
+              "total_ms": 48.67306974483654
+            },
+            "index.build.insert": {
+              "count": 1,
+              "max_ms": 20.867835002718493,
+              "total_ms": 20.867835002718493
+            },
+            "index.build.publish": {
+              "count": 1,
+              "max_ms": 0.11654199624899775,
+              "total_ms": 0.11654199624899775
+            },
+            "index.build.scan": {
+              "count": 1,
+              "max_ms": 567.8378851152956,
+              "total_ms": 567.8378851152956
+            },
+            "index.build.source": {
+              "count": 1,
+              "max_ms": 0.020374995074234903,
+              "total_ms": 0.020374995074234903
+            },
+            "index.build.sql_indexes": {
+              "count": 1,
+              "max_ms": 8.746917003009003,
+              "total_ms": 8.746917003009003
+            },
+            "index.build.tables": {
+              "count": 1,
+              "max_ms": 0.4273330050637014,
+              "total_ms": 0.4273330050637014
+            },
+            "index.build.validate": {
+              "count": 1,
+              "max_ms": 3.278290998423472,
+              "total_ms": 3.278290998423472
+            }
+          },
+          "process": {
+            "block_in": 0,
+            "block_out": 0,
+            "peak_rss_bytes": 327532544,
+            "system_cpu_s": 0.008047,
+            "user_cpu_s": 0.813561
+          },
+          "route": "unknown",
+          "threads": 1
+        },
+        {
+          "correlation": "5b18bd40e297455190f833ed3e1c6283",
+          "counts": {
+            "index.build.rows": 26337,
+            "index.build.started": 1,
+            "index.build.storage_bytes": 2207744,
+            "index.missing": 1
+          },
+          "elapsed_ms": 882.76,
+          "io_delta": {},
+          "media": "other",
+          "phases": {
+            "index.build.close": {
+              "count": 1,
+              "max_ms": 0.0838330015540123,
+              "total_ms": 0.0838330015540123
+            },
+            "index.build.commit": {
+              "count": 1,
+              "max_ms": 2.5210000021615997,
+              "total_ms": 2.5210000021615997
+            },
+            "index.build.decode": {
+              "count": 1,
+              "max_ms": 166.86450927954866,
+              "total_ms": 166.86450927954866
+            },
+            "index.build.duration": {
+              "count": 1,
+              "max_ms": 882.2920000020531,
+              "total_ms": 882.2920000020531
+            },
+            "index.build.fields": {
+              "count": 1,
+              "max_ms": 50.83419700531522,
+              "total_ms": 50.83419700531522
+            },
+            "index.build.insert": {
+              "count": 1,
+              "max_ms": 21.655045988154598,
+              "total_ms": 21.655045988154598
+            },
+            "index.build.publish": {
+              "count": 1,
+              "max_ms": 0.11379200441297144,
+              "total_ms": 0.11379200441297144
+            },
+            "index.build.scan": {
+              "count": 1,
+              "max_ms": 586.3556376862107,
+              "total_ms": 586.3556376862107
+            },
+            "index.build.source": {
+              "count": 1,
+              "max_ms": 0.017291997210122645,
+              "total_ms": 0.017291997210122645
+            },
+            "index.build.sql_indexes": {
+              "count": 1,
+              "max_ms": 8.914500001992565,
+              "total_ms": 8.914500001992565
+            },
+            "index.build.tables": {
+              "count": 1,
+              "max_ms": 0.48891600454226136,
+              "total_ms": 0.48891600454226136
+            },
+            "index.build.validate": {
+              "count": 1,
+              "max_ms": 3.664124997158069,
+              "total_ms": 3.664124997158069
+            }
+          },
+          "process": {
+            "block_in": 0,
+            "block_out": 0,
+            "peak_rss_bytes": 327630848,
+            "system_cpu_s": 0.008279,
+            "user_cpu_s": 0.842389
+          },
+          "route": "unknown",
+          "threads": 1
+        },
+        {
+          "correlation": "4720e866a4904117a5cb65ea69d339c4",
+          "counts": {
+            "index.build.rows": 26337,
+            "index.build.started": 1,
+            "index.build.storage_bytes": 2207744,
+            "index.missing": 1
+          },
+          "elapsed_ms": 866.621,
+          "io_delta": {},
+          "media": "other",
+          "phases": {
+            "index.build.close": {
+              "count": 1,
+              "max_ms": 0.05970900383545086,
+              "total_ms": 0.05970900383545086
+            },
+            "index.build.commit": {
+              "count": 1,
+              "max_ms": 2.259875000163447,
+              "total_ms": 2.259875000163447
+            },
+            "index.build.decode": {
+              "count": 1,
+              "max_ms": 167.2802935281652,
+              "total_ms": 167.2802935281652
+            },
+            "index.build.duration": {
+              "count": 1,
+              "max_ms": 866.1652919981861,
+              "total_ms": 866.1652919981861
+            },
+            "index.build.fields": {
+              "count": 1,
+              "max_ms": 51.090848035528325,
+              "total_ms": 51.090848035528325
+            },
+            "index.build.insert": {
+              "count": 1,
+              "max_ms": 22.06004002073314,
+              "total_ms": 22.06004002073314
+            },
+            "index.build.publish": {
+              "count": 1,
+              "max_ms": 0.11337500473018736,
+              "total_ms": 0.11337500473018736
+            },
+            "index.build.scan": {
+              "count": 1,
+              "max_ms": 586.8825859433855,
+              "total_ms": 586.8825859433855
+            },
+            "index.build.source": {
+              "count": 1,
+              "max_ms": 0.023999993572942913,
+              "total_ms": 0.023999993572942913
+            },
+            "index.build.sql_indexes": {
+              "count": 1,
+              "max_ms": 8.612124998762738,
+              "total_ms": 8.612124998762738
+            },
+            "index.build.tables": {
+              "count": 1,
+              "max_ms": 0.4437079987837933,
+              "total_ms": 0.4437079987837933
+            },
+            "index.build.validate": {
+              "count": 1,
+              "max_ms": 3.3274169982178137,
+              "total_ms": 3.3274169982178137
+            }
+          },
+          "process": {
+            "block_in": 0,
+            "block_out": 0,
+            "peak_rss_bytes": 327876608,
+            "system_cpu_s": 0.007101,
+            "user_cpu_s": 0.844155
+          },
+          "route": "unknown",
+          "threads": 1
+        },
+        {
+          "correlation": "8c200b8dfa3744acbff8d8721f48fa4c",
+          "counts": {
+            "index.build.rows": 26337,
+            "index.build.started": 1,
+            "index.build.storage_bytes": 2207744,
+            "index.missing": 1
+          },
+          "elapsed_ms": 834.798,
+          "io_delta": {},
+          "media": "other",
+          "phases": {
+            "index.build.close": {
+              "count": 1,
+              "max_ms": 0.06570800178451464,
+              "total_ms": 0.06570800178451464
+            },
+            "index.build.commit": {
+              "count": 1,
+              "max_ms": 2.6490000018384308,
+              "total_ms": 2.6490000018384308
+            },
+            "index.build.decode": {
+              "count": 1,
+              "max_ms": 161.26116031955462,
+              "total_ms": 161.26116031955462
+            },
+            "index.build.duration": {
+              "count": 1,
+              "max_ms": 834.3564579990925,
+              "total_ms": 834.3564579990925
+            },
+            "index.build.fields": {
+              "count": 1,
+              "max_ms": 49.14370648475597,
+              "total_ms": 49.14370648475597
+            },
+            "index.build.insert": {
+              "count": 1,
+              "max_ms": 21.027537994086742,
+              "total_ms": 21.027537994086742
+            },
+            "index.build.publish": {
+              "count": 1,
+              "max_ms": 0.13941700308350846,
+              "total_ms": 0.13941700308350846
+            },
+            "index.build.scan": {
+              "count": 1,
+              "max_ms": 568.7912220892031,
+              "total_ms": 568.7912220892031
+            },
+            "index.build.source": {
+              "count": 1,
+              "max_ms": 0.018999999156221747,
+              "total_ms": 0.018999999156221747
+            },
+            "index.build.sql_indexes": {
+              "count": 1,
+              "max_ms": 9.111583000048995,
+              "total_ms": 9.111583000048995
+            },
+            "index.build.tables": {
+              "count": 1,
+              "max_ms": 0.4126670028199442,
+              "total_ms": 0.4126670028199442
+            },
+            "index.build.validate": {
+              "count": 1,
+              "max_ms": 3.5579579998739064,
+              "total_ms": 3.5579579998739064
+            }
+          },
+          "process": {
+            "block_in": 0,
+            "block_out": 0,
+            "peak_rss_bytes": 327876608,
+            "system_cpu_s": 0.009394,
+            "user_cpu_s": 0.815094
+          },
+          "route": "unknown",
+          "threads": 1
+        }
+      ]
+    }
+  ]
+}
