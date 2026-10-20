@@ -222,7 +222,7 @@ class OfficialTestChannelTests(unittest.TestCase):
         self.assertEqual(hashlib.md5(payload).hexdigest(),
                          manifest["testing_index"]["md5"])
         self.assertEqual(ET.parse(index).getroot().find(
-            "addon[@id='plugin.video.xstream-pro']").get("version"), "1.1.2.12")
+            "addon[@id='plugin.video.xstream-pro']").get("version"), "1.1.2.13")
 
 
     def test_unified_beta_manifest_matches_immutable_packages_and_stable(self):
@@ -268,8 +268,8 @@ class OfficialTestChannelTests(unittest.TestCase):
             self.assertIsNone(z.testzip())
             self.assertEqual(ET.fromstring(z.read("plugin.video.xstream-pro/addon.xml")).get("version"), "1.1.2.11")
 
-    def test_current_performance_diagnostics_candidate_is_testing_only(self):
-        manifest = json.loads((ROOT / "manifests/xstream-performance-diagnostics-20261020.json").read_text())
+    def test_current_performance3_candidate_is_testing_only(self):
+        manifest = json.loads((ROOT / "manifests/xstream-performance3-catalog-20261020.json").read_text())
         index = ROOT / "docs/testing/repo/addons.xml"
         self.assertEqual(manifest["channel"], "repository.actweeter.testing")
         self.assertEqual(manifest["stable_index"]["sha256"],
@@ -277,13 +277,13 @@ class OfficialTestChannelTests(unittest.TestCase):
         self.assertEqual(manifest["testing_index"]["sha256"], hashlib.sha256(index.read_bytes()).hexdigest())
         self.assertEqual({a.get("id"): a.get("version") for a in ET.parse(index).getroot()},
                          {a["id"]: a["version"] for a in manifest["addons"]})
-        package = ROOT / "docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.12.zip"
+        package = ROOT / "docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.13.zip"
         xstream = next(a for a in manifest["addons"] if a["id"] == "plugin.video.xstream-pro")
         self.assertEqual(xstream["sha256"], hashlib.sha256(package.read_bytes()).hexdigest())
         with zipfile.ZipFile(package) as archive:
             self.assertIsNone(archive.testzip())
             addon = ET.fromstring(archive.read("plugin.video.xstream-pro/addon.xml"))
-            self.assertEqual(addon.get("version"), "1.1.2.12")
+            self.assertEqual(addon.get("version"), "1.1.2.13")
 
     def test_configured_onboarding_testing_release_integrity(self):
         manifest = json.loads((ROOT / "manifests/0.4.45-configured-onboarding-20261020.json").read_text())
