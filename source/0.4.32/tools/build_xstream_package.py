@@ -29,7 +29,9 @@ PATCHES = (
     ("playback_metadata_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-script-trakt.patch"),
     ("search_index_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-search-index-bulk.patch"),
     ("prefetch_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-widget-prefetch.patch"),
+    ("performance_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-performance-diagnostics.patch"),
 )
+DIAGNOSTICS_SOURCE = ROOT / "third_party/xstream/performance_diagnostics.py"
 FIXED_TIME = (2026, 10, 11, 0, 0, 0)
 UPSTREAM_ROOT = "plugin.video.xstream-pro"
 EXCLUDED_SUFFIXES = {".orig", ".pyc", ".pyo"}
@@ -200,6 +202,11 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
                 detail = (result.stdout + result.stderr).strip()
                 raise ValueError(f"patch application failed for {patch_path.name}: {detail}")
 
+        if sha256(DIAGNOSTICS_SOURCE) != data["performance_diagnostics_sha256"]:
+            raise ValueError("performance diagnostics source SHA-256 mismatch")
+        diagnostics_target = root / "resources/lib/performance_diagnostics.py"
+        diagnostics_target.write_bytes(DIAGNOSTICS_SOURCE.read_bytes())
+
         validate_python_sources(root)
 
         distribution_version = data["distribution_version"]
@@ -239,6 +246,9 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             f"AcTweeteR distribution revision: {distribution_version}; upstream remains 1.1.2.\n"
             "The Kodi add-on version is advanced solely to deliver these documented\n"
             "changes through the native repository updater.\n"
+            "Testing-only build 1.1.2.12 adds opt-in, privacy-safe aggregated\n"
+            "performance diagnostics, disabled by default; it does not alter\n"
+            "provider, artwork, playback or menu behavior.\n"
         )
         (root / "ACTWEETER_MODIFICATIONS.txt").write_text(notice, encoding="utf-8")
         # A changed payload must not replace the same published Kodi version.
@@ -274,6 +284,13 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
         validate_python_archive(archive)
         if f"{UPSTREAM_ROOT}/ACTWEETER_MODIFICATIONS.txt" not in archive.namelist():
             raise ValueError("modification attribution missing")
+        diagnostics_member = f"{UPSTREAM_ROOT}/resources/lib/performance_diagnostics.py"
+        if diagnostics_member not in archive.namelist():
+            raise ValueError("performance diagnostics module missing")
+        settings = ET.fromstring(archive.read(f"{UPSTREAM_ROOT}/resources/settings.xml"))
+        diagnostic_setting = settings.find(".//setting[@id='performance_diagnostics_enabled']")
+        if diagnostic_setting is None or diagnostic_setting.get("default") != "false":
+            raise ValueError("diagnostics must be disabled by default")
         patched = archive.read(f"{UPSTREAM_ROOT}/resources/lib/addon.py")
         if b"actweeter_refresh_profile" not in patched:
             raise ValueError("AcTweeteR profile refresh route was not applied")
@@ -282,7 +299,7 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
                 or b"filter_provider=False" not in routes):
             raise ValueError("strict provider-filtered Trakt recommendation route missing")
         premium_routes = archive.read(f"{UPSTREAM_ROOT}/resources/lib/premium_routes.py")
-        if (b"g['series_changes'].record_catalog(g['addon'], pnum, items)" not in premium_routes
+        if (b"g['series_changes'].record_catalog" not in premium_routes
                 or b"if stype == 'series' and items and host and user and password:" not in premium_routes):
             raise ValueError("premium series catalog baseline hook missing")
         playback_metadata = f"{UPSTREAM_ROOT}/resources/lib/trakt_playback_metadata.py"

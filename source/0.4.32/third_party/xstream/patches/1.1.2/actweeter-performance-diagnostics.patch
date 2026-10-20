@@ -1,0 +1,304 @@
+--- a/resources/lib/addon.py
++++ b/resources/lib/addon.py
+@@ -1,4 +1,6 @@
+ # -*- coding: utf-8 -*-
++import time as _actweeter_perf_clock
++_ACTWEETER_PROCESS_STARTED = _actweeter_perf_clock.perf_counter()
+ import json
+ import os
+ import re
+@@ -55,6 +57,16 @@
+ _NO_CREDS_NOTIFICATION_SHOWN = False
+ 
+ addon = xbmcaddon.Addon()
++_PERFORMANCE = None
++try:
++    if addon.getSetting("performance_diagnostics_enabled").lower() == "true":
++        from performance_diagnostics import PerformanceTrace
++        _PERFORMANCE = PerformanceTrace(log=lambda message: __import__("xbmc").log(
++            message, __import__("xbmc").LOGINFO))
++        _PERFORMANCE.timing("startup.imports_to_setup",
++            (_actweeter_perf_clock.perf_counter() - _ACTWEETER_PROCESS_STARTED) * 1000.0)
++except Exception:
++    _PERFORMANCE = None
+ addon_handle = int(sys.argv[1])
+ base_url = sys.argv[0]
+ args = urllib.parse.parse_qs(sys.argv[2][1:])
+@@ -15504,7 +15516,20 @@
+     import pending_adapter
+     globals()["pending_adapter"] = pending_adapter
+     globals()["_series_change_status"] = lambda sid: series_changes.status(addon, pm.active, sid)
+-    premium_routes.dispatch(globals(), args)
++    if _PERFORMANCE:
++        _PERFORMANCE.timing("startup.to_dispatch",
++            (_actweeter_perf_clock.perf_counter() - _ACTWEETER_PROCESS_STARTED) * 1000.0)
++        _PERFORMANCE.set_context(args.get("view", ["catalog"])[0],
++                                 args.get("stype", ["movie"])[0])
++        globals()["_performance"] = _PERFORMANCE
++        _PERFORMANCE.instrument_cache(globals())
++        _PERFORMANCE.instrument_provider(IPTV)
++        try:
++            premium_routes.dispatch(globals(), args)
++        finally:
++            _PERFORMANCE.emit()
++    else:
++        premium_routes.dispatch(globals(), args)
+ elif mode is None:
+     main_menu()
+ elif mode == "live_menu":
+--- a/resources/lib/premium_routes.py
++++ b/resources/lib/premium_routes.py
+@@ -11,6 +11,13 @@
+ import unicodedata
+ from urllib.parse import urlparse
+ import content_state
++
++
++def _performance_call(g, name, function, *args, **kwargs):
++    trace = g.get('_performance')
++    if trace is None:
++        return function(*args, **kwargs)
++    return trace.call(name, function, *args, **kwargs)
+ 
+ 
+ def backdrop(value):
+@@ -66,14 +73,14 @@
+             import trakt
+             import tmdb
+             media = 'tv' if stype == 'series' else 'movie'
+-            source = trakt.public_list(section, media).get('results', [])[:20]
++            source = _performance_call(g, 'external.trakt.public_list', trakt.public_list, section, media).get('results', [])[:20]
+             names = {(normalized(s.get('name')), str(s.get('year') or '')) for s in items}
+             for index, entry in enumerate(source):
+                 title, year = entry.get('title', ''), str(entry.get('year') or '')
+                 titles = [title]
+                 # Bounded localization of ranking names; not a discovery list.
+                 if (normalized(title), year) not in names and index < 8:
+-                    meta = tmdb.details(media, entry.get('tmdb_id'))
++                    meta = _performance_call(g, 'external.tmdb.details', tmdb.details, media, entry.get('tmdb_id'))
+                     titles.append(meta.get('title') or meta.get('name') or '')
+                 ranks.append({'tmdb_id':str(entry.get('tmdb_id') or ''),
+                               'year':year, 'titles':titles})
+@@ -114,14 +121,14 @@
+             tmdb_id = data.get('tmdb_id')
+             if not tmdb_id:
+                 query = re.sub(r'\s*\(\d{4}\)\s*$', '', item.get('name', ''))
+-                matches = [m for m in tmdb.search(media, query).get('results', [])
++                matches = [m for m in _performance_call(g, 'external.tmdb.search', tmdb.search, media, query).get('results', [])
+                     if normalized(m.get('title')) == normalized(query)
+                     and str(m.get('year')) == str(data.get('year'))
+                     and number(data.get('year'))]
+                 if len(matches) == 1:
+                     tmdb_id = matches[0].get('tmdb_id')
+             if tmdb_id:
+-                meta = tmdb.details(media, tmdb_id)
++                meta = _performance_call(g, 'external.tmdb.details', tmdb.details, media, tmdb_id)
+                 # ID from provider is authoritative; fuzzy matches never used.
+                 if meta.get('id'):
+                     extra['tmdb_id'] = str(meta['id'])
+@@ -165,7 +172,7 @@
+             try:
+                 import tmdb
+                 media = 'tv' if stype == 'series' else 'movie'
+-                images = tmdb._request('/%s/%s/images' % (media, data['tmdb_id']),
++                images = _performance_call(g, 'external.tmdb.images', tmdb._request, '/%s/%s/images' % (media, data['tmdb_id']),
+                     {'include_image_language':'es,null,en'}, ttl=168)
+                 logos = [a for a in images.get('logos', []) if a.get('file_path')]
+                 logos.sort(key=lambda a: ({'es':0, None:1, 'en':2}.get(a.get('iso_639_1'), 3),
+@@ -182,19 +189,19 @@
+ 
+ 
+ def catalog(g, stype, pnum, *, force_refresh=False):
+-    creds = g['_get_credentials_for_profile'](pnum)
++    creds = _performance_call(g, 'provider.credentials', g['_get_credentials_for_profile'], pnum)
+     host, user, password = (creds.get(k, '') for k in
+                             ('xtream_url', 'xtream_username', 'xtream_password'))
+-    items = g['_get_cached_xtream_streams'](
++    items = _performance_call(g, 'provider.streams', g['_get_cached_xtream_streams'],
+         host, user, password, stype, None,
+         force_refresh=force_refresh, require_fresh=force_refresh)
+     # Record the unfiltered provider catalogue before UI visibility filters.
+     if stype == 'series' and items and host and user and password:
+         try:
+-            g['series_changes'].record_catalog(g['addon'], pnum, items)
++            _performance_call(g, 'storage.series_catalog_write', g['series_changes'].record_catalog, g['addon'], pnum, items)
+         except Exception as exc:
+             g['_log']('Series baseline refresh failed: %s' % exc)
+-    categories = g['_get_cached_xtream_categories'](
++    categories = _performance_call(g, 'provider.categories', g['_get_cached_xtream_categories'],
+         host, user, password, stype,
+         force_refresh=force_refresh, require_fresh=force_refresh)
+     hidden_cats = set(g['_get_hidden_subcats'](stype, pnum))
+@@ -202,18 +209,24 @@
+     blocked = hidden_cats | {str(c.get('category_id', '')) for c in categories
+                             if g['_is_adult_category'](c.get('category_name', ''))}
+     hidden = set(g['_get_hidden_items'](stype, pnum))
+-    return [s for s in items if isinstance(s, dict)
+-            and provider_id(s, stype) not in hidden
+-            and str(s.get('category_id', '')) not in blocked], (host, user, password)
++    visible = _performance_call(g, 'provider.filter', lambda: [
++        s for s in items if isinstance(s, dict)
++        and provider_id(s, stype) not in hidden
++        and str(s.get('category_id', '')) not in blocked])
++    trace = g.get('_performance')
++    if trace is not None:
++        trace.count('provider.items.input', len(items))
++        trace.count('provider.items.visible', len(visible))
++    return visible, (host, user, password)
+ 
+ 
+ def metadata(g, item, stype, credentials):
+     sid = provider_id(item, stype)
+     if stype == 'movie':
+-        data = g['_enrich_movie_info'](item, *credentials)
++        data = _performance_call(g, 'provider.movie_info', g['_enrich_movie_info'], item, *credentials)
+         raw = g['_cache_load']('vod_info_' + sid) or {}
+     else:
+-        data = g['_enrich_series_info'](item, *credentials)
++        data = _performance_call(g, 'provider.series_info', g['_enrich_series_info'], item, *credentials)
+         raw = g['_cache_load']('series_info_' + sid) or {}
+     cached = raw.get('info') or {}
+     if not isinstance(cached, dict):
+@@ -235,9 +248,9 @@
+     try:
+         changes = g['series_changes']
+         return {
+-            'inventory': changes.inventory_map(g['addon'], profile_num),
+-            'watched': g['WatchedEpisodes'](g['addon'], profile_num=profile_num),
+-            'resume': g['ResumePoints'](g['addon'], profile_num=profile_num).get_all(),
++            'inventory': _performance_call(g, 'storage.series_inventory_read', changes.inventory_map, g['addon'], profile_num),
++            'watched': _performance_call(g, 'storage.watched_read', g['WatchedEpisodes'], g['addon'], profile_num=profile_num),
++            'resume': _performance_call(g, 'storage.resume_read', g['ResumePoints'], g['addon'], profile_num=profile_num).get_all(),
+         }
+     except Exception:
+         return None
+@@ -349,7 +362,8 @@
+         status = g['_series_change_status'](sid)
+         if status:
+             li.setProperty('XStream.ChangeStatus', status)
+-    g['xbmcplugin'].addDirectoryItem(g['addon_handle'], path, li, stype == 'series')
++    _performance_call(g, 'kodi.add_directory_item', g['xbmcplugin'].addDirectoryItem,
++                      g['addon_handle'], path, li, stype == 'series')
+ 
+ 
+ def _search_text(value):
+@@ -603,7 +617,8 @@
+         pending_actions.append((label, 'RunPlugin(%s)' % pending_url))
+     content_state.add_context_actions(li, favorite_actions, watched_actions,
+                                       pending_actions)
+-    g['xbmcplugin'].addDirectoryItem(g['addon_handle'], path, li, stype == 'series')
++    _performance_call(g, 'kodi.add_directory_item', g['xbmcplugin'].addDirectoryItem,
++                      g['addon_handle'], path, li, stype == 'series')
+ 
+ 
+ def dispatch(g, params):
+@@ -635,7 +650,7 @@
+             li = g['_new_listitem'](label)
+             plugin.addDirectoryItem(handle, build({'mode': 'premium',
+                 'view': collection, 'stype': stype, 'profile_num': pnum}), li, True)
+-        plugin.endOfDirectory(handle, cacheToDisc=False)
++        _performance_call(g, 'kodi.end_directory', plugin.endOfDirectory, handle, cacheToDisc=False)
+         return
+     if view == 'favorites_root':
+         plugin.setContent(handle, 'videos')
+@@ -644,7 +659,7 @@
+             li = g['_new_listitem'](label)
+             plugin.addDirectoryItem(handle, build({'mode':'premium',
+                 'view':'favorites', 'stype':kind, 'profile_num':pnum}), li, True)
+-        plugin.endOfDirectory(handle, cacheToDisc=False)
++        _performance_call(g, 'kodi.end_directory', plugin.endOfDirectory, handle, cacheToDisc=False)
+         return
+     if view == 'pending_root':
+         plugin.setContent(handle, 'videos')
+@@ -653,7 +668,7 @@
+             li = g['_new_listitem'](label)
+             plugin.addDirectoryItem(handle, build({'mode':'premium',
+                 'view':'pending', 'stype':kind, 'profile_num':pnum}), li, True)
+-        plugin.endOfDirectory(handle, cacheToDisc=False)
++        _performance_call(g, 'kodi.end_directory', plugin.endOfDirectory, handle, cacheToDisc=False)
+         return
+     if view == 'pending_toggle':
+         if stype not in ('movie', 'series'):
+@@ -683,7 +698,7 @@
+             pending.add(stype, {'id':sid, 'name':item.get('name', ''),
+                 'stype':stype, 'icon':icon, 'url':target})
+         g['xbmc'].executebuiltin('Container.Refresh')
+-        plugin.endOfDirectory(handle, cacheToDisc=False)
++        _performance_call(g, 'kodi.end_directory', plugin.endOfDirectory, handle, cacheToDisc=False)
+         return
+     if view == 'remove_resume':
+         # Continue Watching is backed by ResumePoints only.  Keep WatchHistory
+@@ -770,7 +785,7 @@
+                 if conn is not None:
+                     conn.close()
+         plugin.addSortMethod(handle, plugin.SORT_METHOD_NONE)
+-        plugin.endOfDirectory(handle, cacheToDisc=False)
++        _performance_call(g, 'kodi.end_directory', plugin.endOfDirectory, handle, cacheToDisc=False)
+         return
+     if view in ('continue', 'resume'):
+         entries = g['ResumePoints'](g['addon'], profile_num=pnum).get_all()
+@@ -898,7 +913,7 @@
+             query['page'] = str(page + 1)
+             plugin.addDirectoryItem(handle, build(query),
+                                     g['_new_listitem']('Más títulos'), True)
+-        plugin.endOfDirectory(handle, cacheToDisc=False)
++        _performance_call(g, 'kodi.end_directory', plugin.endOfDirectory, handle, cacheToDisc=False)
+         return
+     if view in ('favorites', 'pending') and stype == 'both':
+         if view == 'pending':
+@@ -937,7 +952,7 @@
+             plugin.addDirectoryItem(handle, build(query),
+                                     g['_new_listitem']('Más títulos'), True)
+         plugin.addSortMethod(handle, plugin.SORT_METHOD_NONE)
+-        plugin.endOfDirectory(handle, cacheToDisc=False)
++        _performance_call(g, 'kodi.end_directory', plugin.endOfDirectory, handle, cacheToDisc=False)
+         return
+     if stype not in ('movie', 'series'):
+         plugin.endOfDirectory(handle, succeeded=False)
+@@ -1012,7 +1027,7 @@
+     offset = (page - 1) * limit
+     selected = items[offset:offset + limit]
+     if stype == 'movie':
+-        g['_prefetch_vod_info_batch'](selected, *credentials)
++        _performance_call(g, 'provider.vod_prefetch', g['_prefetch_vod_info_batch'], selected, *credentials)
+     plugin.setContent(handle, 'movies' if stype == 'movie' else 'tvshows')
+     series_context = (prepare_series_state_context(g, pnum)
+                       if stype == 'series' and selected else None)
+@@ -1038,4 +1053,26 @@
+         li = g['_new_listitem']('Más títulos')
+         plugin.addDirectoryItem(handle, build(q), li, True)
+     plugin.addSortMethod(handle, plugin.SORT_METHOD_NONE)
+-    plugin.endOfDirectory(handle, cacheToDisc=False)
++    _performance_call(g, 'kodi.end_directory', plugin.endOfDirectory, handle, cacheToDisc=False)
++
++
++def _instrument_phase(name, function):
++    def measured(g, *args, **kwargs):
++        trace = g.get('_performance')
++        if trace is None:
++            return function(g, *args, **kwargs)
++        return trace.call(name, function, g, *args, **kwargs)
++    return measured
++
++
++for _function_name, _phase_name in (
++        ('dispatch', 'directory.dispatch'),
++        ('catalog', 'provider.catalog'),
++        ('ranked_provider_items', 'provider.ranking'),
++        ('metadata', 'metadata.provider'),
++        ('enrich', 'metadata.tmdb_enrichment'),
++        ('listitem', 'listitem.build'),
++        ('add_provider_item', 'listitem.complete'),
++        ('prepare_series_state_context', 'storage.series_state_read')):
++    globals()[_function_name] = _instrument_phase(
++        _phase_name, globals()[_function_name])
+--- a/resources/settings.xml
++++ b/resources/settings.xml
+@@ -362,4 +362,7 @@
+         <setting label="Profile 10 Load Movies" type="bool" id="profile_10_load_movies" default="true" visible="false" />
+         <setting label="Profile 10 Load Series" type="bool" id="profile_10_load_series" default="true" visible="false" />
+     </category>
++    <category label="Performance diagnostics">
++        <setting label="Temporary performance diagnostics (Testing build only)" type="bool" id="performance_diagnostics_enabled" default="false" />
++    </category>
+ </settings>
