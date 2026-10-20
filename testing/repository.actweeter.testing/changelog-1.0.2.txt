@@ -1,0 +1,1 @@
+1.0.2: Keep the Testing repository on the AcTweeteR Beta feed only. External BINGIE and SlyGuy feeds remain available for dependencies.

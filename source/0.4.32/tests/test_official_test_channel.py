@@ -77,7 +77,7 @@ class OfficialTestChannelTests(unittest.TestCase):
             root = ET.parse(index).getroot()
             versions = {node.get("id"): node.get("version") for node in root.findall("addon")}
             self.assertEqual(versions, {
-                "repository.actweeter.testing": "1.0.1",
+                "repository.actweeter.testing": "1.0.2",
                 "service.actweeter": build_test_channel.SERVICE_VERSION,
             })
             feed_addon = ET.parse(ROOT / "testing" / "repository.actweeter.testing" / "addon.xml").getroot()
@@ -85,11 +85,13 @@ class OfficialTestChannelTests(unittest.TestCase):
                 "./extension[@point='xbmc.addon.repository']/dir"
             )]
             self.assertIn("https://actweeter.github.io/TwT-Actualizador/testing/repo/addons.xml", endpoints)
-            self.assertIn("https://raw.githubusercontent.com/AcTweeteR/TwT-Actualizador/main/repo/addons.xml", endpoints)
-            self.assertIn("https://raw.githubusercontent.com/matke-84/repository.bingie/main/omega/addons.xml", endpoints)
-            self.assertIn("https://slyguy.uk/.repo/repository.slyguy/addons.xml", endpoints)
+            self.assertEqual(endpoints, [
+                "https://actweeter.github.io/TwT-Actualizador/testing/repo/addons.xml",
+                "https://raw.githubusercontent.com/matke-84/repository.bingie/main/omega/addons.xml",
+                "https://slyguy.uk/.repo/repository.slyguy/addons.xml",
+            ])
             self.assertEqual(checksum.read_text().strip(), hashlib.md5(index.read_bytes()).hexdigest())
-            self.assertEqual(ET.parse(ROOT / "repo" / "addons.xml").getroot().find("addon[@id='service.actweeter']").get("version"), "0.4.31")
+            self.assertEqual(ET.parse(ROOT / "repo" / "addons.xml").getroot().find("addon[@id='service.actweeter']").get("version"), "0.4.42")
             self.assertEqual((ROOT / "repo" / "addons.xml").read_bytes(), stable_index)
             with zipfile.ZipFile(bootstrap) as archive:
                 self.assertIsNone(archive.testzip())
@@ -220,7 +222,7 @@ class OfficialTestChannelTests(unittest.TestCase):
         self.assertEqual(hashlib.md5(payload).hexdigest(),
                          manifest["testing_index"]["md5"])
         self.assertEqual(ET.parse(index).getroot().find(
-            "addon[@id='plugin.video.xstream-pro']").get("version"), "1.1.2.8")
+            "addon[@id='plugin.video.xstream-pro']").get("version"), "1.1.2.9")
 
 
 if __name__ == "__main__":
