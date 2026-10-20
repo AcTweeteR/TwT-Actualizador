@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "source/0.4.30/**"
+      - ".github/workflows/source-reproducibility-0.4.30.yml"
       - "repo/repository.actweeter/repository.actweeter-1.0.3.zip"
       - "repo/skin.actweeter/skin.actweeter-1.2.28.zip"
       - "repo/service.actweeter/service.actweeter-0.4.30.zip"
@@ -12,6 +13,7 @@ on:
   pull_request:
     paths:
       - "source/0.4.30/**"
+      - ".github/workflows/source-reproducibility-0.4.30.yml"
       - "repo/repository.actweeter/repository.actweeter-1.0.3.zip"
       - "repo/skin.actweeter/skin.actweeter-1.2.28.zip"
       - "repo/service.actweeter/service.actweeter-0.4.30.zip"
