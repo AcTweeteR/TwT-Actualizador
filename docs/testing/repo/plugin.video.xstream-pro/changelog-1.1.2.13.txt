@@ -1,0 +1,7 @@
+AcTweeteR Performance 3.0 (Testing candidate)
+
+- Adds a profile- and provider-scoped SQLite offset index for movie catalog, recent, and cached-ranked widgets.
+- Keeps the existing XStream JSON catalog as the authoritative source; the index stores lookup fields and byte offsets, not playback URLs or credentials.
+- Rebuilds stale or damaged derived indexes and falls back to the original catalog route if indexing is unavailable.
+- Retains the opt-in performance diagnostics setting, disabled by default.
+- No runtime validation has been performed on Kodi devices. This package is not installed or published.

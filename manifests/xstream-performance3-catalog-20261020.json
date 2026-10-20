@@ -1,0 +1,48 @@
+{
+  "release": "xstream-performance3-catalog-20261020",
+  "channel": "repository.actweeter.testing",
+  "source_branch": "codex/performance3-catalog-cache",
+  "source_commit": null,
+  "optimization": "profile/provider scoped SQLite byte-offset index for movie catalog, recent and cached-ranked widgets",
+  "stable_index_unchanged": true,
+  "addons": [
+    {
+      "id": "repository.actweeter.testing",
+      "version": "1.0.2",
+      "sha256": "ce0f53ea95ece57f4ced0dd1085457084ad2a333b67bdee4e121ef340376b6e1"
+    },
+    {
+      "id": "skin.actweeter",
+      "version": "1.2.30~beta2",
+      "sha256": "752dffebc825702bbb613dec3939e77c5bb8f57cbd12dd12b7fcc169f677f349"
+    },
+    {
+      "id": "service.actweeter",
+      "version": "0.4.45",
+      "sha256": "6157eb988f0972c22d5ab665b48e90837f607af728684ec7e4a0bd6d7f5cec81"
+    },
+    {
+      "id": "plugin.video.xstream-pro",
+      "version": "1.1.2.13",
+      "sha256": "d6a3a9b5bd88b6c858972d4fbe0a5f2d01fe507f2ab4758989b9a719fbd1147e"
+    }
+  ],
+  "testing_index": {
+    "sha256": "f9356a86f6b0f3e42b5516078561f2598b748d7c4d4860954ab17495037f8cb2",
+    "md5": "e6a4d4aa7a3f273b96a0285820debf21"
+  },
+  "stable_index": {
+    "sha256": "ecb76872ab80cdd4cd4230292682fcbda651b4750ddc5e247a01d29b470185a3"
+  },
+  "upstream": {
+    "version": "1.1.2",
+    "commit": "1aa3e67da7c03c6acc3ec7e1ca579a7f645220f4",
+    "release_zip_sha256": "915f45708670d07e789bb73b7390a7b5cf30175f818ef5da8ea18c9f13f537fe",
+    "license": "CC BY-NC 4.0",
+    "catalog_index_patch_sha256": "b21433974974e72af5014bfe669186b41017083616c28a05f73bf6065236404a",
+    "catalog_index_source_sha256": "a26f383bd86f4156df29ad9b667cfe3b57b476fa4fd69125c81d37a3812b3a14"
+  },
+  "synthetic_benchmark": "docs/development/benchmarks/performance3-catalog-index-2026-10-20.json",
+  "runtime_status": "PACKAGE_BUILT; SYNTHETIC_BENCHMARKS_PASSED; DEVICE_VALIDATION_PENDING",
+  "publication_scope": "candidate ZIP and index are only prepared in this unmerged branch; not installed or published"
+}

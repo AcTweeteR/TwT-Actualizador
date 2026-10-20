@@ -30,8 +30,10 @@ PATCHES = (
     ("search_index_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-search-index-bulk.patch"),
     ("prefetch_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-widget-prefetch.patch"),
     ("performance_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-performance-diagnostics.patch"),
+    ("catalog_index_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-catalog-index.patch"),
 )
 DIAGNOSTICS_SOURCE = ROOT / "third_party/xstream/performance_diagnostics.py"
+CATALOG_INDEX_SOURCE = ROOT / "third_party/xstream/provider_catalog_index.py"
 FIXED_TIME = (2026, 10, 11, 0, 0, 0)
 UPSTREAM_ROOT = "plugin.video.xstream-pro"
 EXCLUDED_SUFFIXES = {".orig", ".pyc", ".pyo"}
@@ -182,7 +184,7 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             raise ValueError("XStream upstream license missing or unexpected")
 
         for manifest_key, patch_path in PATCHES:
-            if manifest_key in ("recommendations_patch", "search_index_patch", "prefetch_patch"):
+            if manifest_key in ("recommendations_patch", "search_index_patch", "prefetch_patch", "catalog_index_patch"):
                 # The pinned upstream archive uses CRLF in these files while
                 # earlier tracked patches add LF. Normalize only these two
                 # already-patched files before applying semantic context.
@@ -190,7 +192,7 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             expected_patch_hash = data[manifest_key + "_sha256"]
             if sha256(patch_path) != expected_patch_hash:
                 raise ValueError(f"patch hash mismatch: {patch_path.name}")
-            if manifest_key in ("recommendations_patch", "search_index_patch", "prefetch_patch"):
+            if manifest_key in ("recommendations_patch", "search_index_patch", "prefetch_patch", "catalog_index_patch"):
                 apply_contextual_unified_patch(root, patch_path)
                 continue
             result = subprocess.run(
@@ -206,6 +208,10 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             raise ValueError("performance diagnostics source SHA-256 mismatch")
         diagnostics_target = root / "resources/lib/performance_diagnostics.py"
         diagnostics_target.write_bytes(DIAGNOSTICS_SOURCE.read_bytes())
+        if sha256(CATALOG_INDEX_SOURCE) != data["catalog_index_source_sha256"]:
+            raise ValueError("catalog index source SHA-256 mismatch")
+        (root / "resources/lib/provider_catalog_index.py").write_bytes(
+            CATALOG_INDEX_SOURCE.read_bytes())
 
         validate_python_sources(root)
 
@@ -246,9 +252,12 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             f"AcTweeteR distribution revision: {distribution_version}; upstream remains 1.1.2.\n"
             "The Kodi add-on version is advanced solely to deliver these documented\n"
             "changes through the native repository updater.\n"
-            "Testing-only build 1.1.2.12 adds opt-in, privacy-safe aggregated\n"
-            "performance diagnostics, disabled by default; it does not alter\n"
-            "provider, artwork, playback or menu behavior.\n"
+            "Testing-only build 1.1.2.14 adds deferred idle-service construction of a\n"
+            "rebuildable SQLite byte-offset index for movie catalog, recent and\n"
+            "cached-ranked widgets; missing indexes immediately use the legacy route.\n"
+            "The privacy-safe performance trace is opt-in and disabled by default.\n"
+            "The index change leaves provider, artwork, playback and menu behavior\n"
+            "unchanged.\n"
         )
         (root / "ACTWEETER_MODIFICATIONS.txt").write_text(notice, encoding="utf-8")
         # A changed payload must not replace the same published Kodi version.
@@ -287,6 +296,9 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
         diagnostics_member = f"{UPSTREAM_ROOT}/resources/lib/performance_diagnostics.py"
         if diagnostics_member not in archive.namelist():
             raise ValueError("performance diagnostics module missing")
+        catalog_index_member = f"{UPSTREAM_ROOT}/resources/lib/provider_catalog_index.py"
+        if catalog_index_member not in archive.namelist():
+            raise ValueError("provider catalog index module missing")
         settings = ET.fromstring(archive.read(f"{UPSTREAM_ROOT}/resources/settings.xml"))
         diagnostic_setting = settings.find(".//setting[@id='performance_diagnostics_enabled']")
         if diagnostic_setting is None or diagnostic_setting.get("default") != "false":
@@ -302,6 +314,9 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
         if (b"g['series_changes'].record_catalog" not in premium_routes
                 or b"if stype == 'series' and items and host and user and password:" not in premium_routes):
             raise ValueError("premium series catalog baseline hook missing")
+        if (b"indexed_movie_page" not in premium_routes
+                or b"index.query.duration" not in premium_routes):
+            raise ValueError("indexed movie catalog routes missing")
         playback_metadata = f"{UPSTREAM_ROOT}/resources/lib/trakt_playback_metadata.py"
         if playback_metadata not in archive.namelist():
             raise ValueError("script.trakt playback metadata bridge missing")

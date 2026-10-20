@@ -2,7 +2,7 @@
   "addon_id": "plugin.video.xstream-pro",
   "upstream_project": "https://github.com/Pesicp/XStreamPro",
   "upstream_version": "1.1.2",
-  "distribution_version": "1.1.2.12",
+  "distribution_version": "1.1.2.14",
   "upstream_ref": "1.1.2",
   "upstream_commit": "1aa3e67da7c03c6acc3ec7e1ca579a7f645220f4",
   "upstream_release_url": "https://github.com/Pesicp/XStreamPro/releases/download/1.1.2/plugin.video.xstream-pro-1.1.2.zip",
@@ -11,10 +11,10 @@
   "upstream_release_zip_sha256": "915f45708670d07e789bb73b7390a7b5cf30175f818ef5da8ea18c9f13f537fe",
   "upstream_license_observed": "CC BY-NC 4.0",
   "local_runtime_sha256": {
-    "addon.xml": "9141945280e0fc23704c1cfc711a6d33ca990e07c3b1ae7a58abefff2c46d3fb",
-    "service.py": "36cb80387d5f9862ee71deee9f993d7d78117f2bdf146623d1feb9d602331539",
+    "addon.xml": "4f8d7d8c55c10a2985b5f83c79380e0ec7695929fe14612f603f150048d244e3",
+    "service.py": "55b6a8b835442fa29b38a2a08890c2cdf8822edd7bb216d223586ec066818de6",
     "resources/lib/addon.py": "4245d60556f967064052dfd5f15f47fbbb9659fafe5810ce1b72e60ae727d750",
-    "resources/lib/premium_routes.py": "46e6d519f7ad18d9c5e420b00a46f2d3a9e5f03e783b2e63064664a4d30f3539",
+    "resources/lib/premium_routes.py": "93c2499f60b8ad415262664e2d96393d1de5dd02d692e2eed6fc9734ff135294",
     "resources/lib/pending_adapter.py": "597765cd319f2ebfc693db6798c15942a6fcac92807eef1fdfe9a75a8a196319",
     "resources/lib/content_state.py": "f47fe49a4acaa54621c8f6e2b8f80b293afa82d9570a1125ed02dae4bc3f97a2",
     "resources/lib/watched_actions.py": "df3ab7675192c82409e9cf112afa08ae75cb261b8c1919c983b7ff5e2274619b",
@@ -23,7 +23,8 @@
     "resources/lib/series_changes.py": "1998697da0e9f1d4bcbf76ae804bebb8a48f327348db919a3a371f308fee829f",
     "resources/lib/series_state.py": "b40ccd6e92f0e3d4c637afca123a0e60cac5f1c5e829078663d931b1c0d4af0b",
     "resources/lib/trakt_playback_metadata.py": "8707619e334b23ce3d4e392155caa595008cb3a599f02859f5e10707ce64e8ba",
-    "resources/lib/performance_diagnostics.py": "c271472cd2f774cfeebab05467010d0719ba1ab4a57d1bb4322fb27b3af24e98"
+    "resources/lib/performance_diagnostics.py": "c271472cd2f774cfeebab05467010d0719ba1ab4a57d1bb4322fb27b3af24e98",
+    "resources/lib/provider_catalog_index.py": "9f446b74bf09fd87d2d54faf9074b6e0dc63ef79496c554b40d01d28826293f8"
   },
   "patch": "third_party/xstream/patches/1.1.2/actweeter-runtime.patch",
   "patch_sha256": "424d4ec62ddbc5ae514256eb8c62859fda2a11e3125cbb188e272812d62c6892",
@@ -47,7 +48,8 @@
     "resources/lib/series_changes.py",
     "resources/lib/series_state.py",
     "resources/lib/pending_adapter.py",
-    "resources/lib/trakt_playback_metadata.py"
+    "resources/lib/trakt_playback_metadata.py",
+    "resources/lib/provider_catalog_index.py"
   ],
   "personal_configuration_included": false,
   "private_runtime_data_included": false,
@@ -64,11 +66,16 @@
     "Unified-diff hunks use unique source context so prior patch offsets cannot insert into unrelated Python blocks.",
     "The package builder parses every Python source before packaging and every Python member after ZIP creation.",
     "The playback metadata adapter sets Kodi movie/episode InfoTag fields and script.trakt's supported script.trakt.ids property; it does not add OAuth, scrobbling, or alter XStream resume storage.",
-    "XStream's CC BY-NC terms prohibit treating these private patch artifacts as an unrestricted public distribution."
+    "XStream's CC BY-NC terms prohibit treating these private patch artifacts as an unrestricted public distribution.",
+    "Performance 3.0 adds a rebuildable SQLite offset index for warm movie catalog, recent and cached-ranked widgets. It stores normalized lookup fields and byte spans only; the provider JSON remains authoritative, and invalid indexes fall back to the original route.",
+    "Performance 3.1 keeps v13 ready indexes compatible; widgets never build synchronously. Credential-free persistent requests are built by one cancellable idle worker owned by the existing XStream service. Byte scanning uses compiled JSON-token regexes; SQLite indexes are built after batched inserts in one transaction."
   ],
   "prefetch_patch": "third_party/xstream/patches/1.1.2/actweeter-widget-prefetch.patch",
   "prefetch_patch_sha256": "44eebe48764e363cc263f6a533a3b0185504b91c143377c3f112396602796202",
   "performance_patch": "third_party/xstream/patches/1.1.2/actweeter-performance-diagnostics.patch",
   "performance_patch_sha256": "e76a67ce9fd922e594e48abb83888d07db779f3f30027c39de15b9ae3f06c493",
-  "performance_diagnostics_sha256": "c271472cd2f774cfeebab05467010d0719ba1ab4a57d1bb4322fb27b3af24e98"
+  "performance_diagnostics_sha256": "c271472cd2f774cfeebab05467010d0719ba1ab4a57d1bb4322fb27b3af24e98",
+  "catalog_index_patch": "third_party/xstream/patches/1.1.2/actweeter-catalog-index.patch",
+  "catalog_index_patch_sha256": "ff55ccd9c3d7523329d2e5fe1beb49a17b7c2d4473569bc4931ed333794cf511",
+  "catalog_index_source_sha256": "9f446b74bf09fd87d2d54faf9074b6e0dc63ef79496c554b40d01d28826293f8"
 }

@@ -1,0 +1,49 @@
+{
+  "release": "xstream-performance31-cold-start-20261020",
+  "channel": "repository.actweeter.testing",
+  "source_branch": "codex/performance3-catalog-cache",
+  "source_commit": "40c48ba5dba2983827d5ac4390260bedd10a9c75",
+  "optimization": "nonblocking legacy fallback; existing XStream service owns an idle cancellable derived-index builder; compiled byte scanner",
+  "stable_index_unchanged": true,
+  "addons": [
+    {
+      "id": "repository.actweeter.testing",
+      "version": "1.0.2",
+      "sha256": "ce0f53ea95ece57f4ced0dd1085457084ad2a333b67bdee4e121ef340376b6e1"
+    },
+    {
+      "id": "skin.actweeter",
+      "version": "1.2.30~beta2",
+      "sha256": "752dffebc825702bbb613dec3939e77c5bb8f57cbd12dd12b7fcc169f677f349"
+    },
+    {
+      "id": "service.actweeter",
+      "version": "0.4.45",
+      "sha256": "6157eb988f0972c22d5ab665b48e90837f607af728684ec7e4a0bd6d7f5cec81"
+    },
+    {
+      "id": "plugin.video.xstream-pro",
+      "version": "1.1.2.14",
+      "sha256": "3a31eb9d778c4ae446baa5b4d57f4cc2c4b7d2c63f79a639f3ab79aaa20d29e1"
+    }
+  ],
+  "testing_index": {
+    "sha256": "cabf2ff9ca22525b63fce1f75821712f17bdadf7b8bae3b0f0c44dcf60f71d66",
+    "md5": "2e15aedc4d75e84282522979c81861a8"
+  },
+  "stable_index": {
+    "sha256": "ecb76872ab80cdd4cd4230292682fcbda651b4750ddc5e247a01d29b470185a3"
+  },
+  "upstream": {
+    "version": "1.1.2",
+    "commit": "1aa3e67da7c03c6acc3ec7e1ca579a7f645220f4",
+    "release_zip_sha256": "915f45708670d07e789bb73b7390a7b5cf30175f818ef5da8ea18c9f13f537fe",
+    "license": "CC BY-NC 4.0",
+    "catalog_index_patch_sha256": "ff55ccd9c3d7523329d2e5fe1beb49a17b7c2d4473569bc4931ed333794cf511",
+    "catalog_index_source_sha256": "9f446b74bf09fd87d2d54faf9074b6e0dc63ef79496c554b40d01d28826293f8"
+  },
+  "synthetic_benchmark": "docs/development/benchmarks/performance31-cold-start-2026-10-20.json",
+  "runtime_status": "REPRODUCIBLE_CANDIDATE; DEVICE_VALIDATION_PENDING",
+  "publication_scope": "candidate ZIP and index are only prepared in this unmerged branch; not installed or published",
+  "rebuild_identical": true
+}
