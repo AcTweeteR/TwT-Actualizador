@@ -1,7 +1,7 @@
 name: Verify current AcTweeteR Beta installer
 on:
   push:
-    branches: [main, codex/beta-installer-0.4.39, codex/tvos-autoplay-skin-wiring, codex/startup-skinshortcuts-idempotence]
+    branches: [main, codex/beta-installer-0.4.39, codex/tvos-autoplay-skin-wiring, codex/startup-skinshortcuts-idempotence, codex/testing-beta-channel-isolation]
   pull_request:
   workflow_dispatch:
 jobs:
@@ -14,21 +14,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Installer tests and reproducible service
+      - name: Installer and channel-isolation tests
         run: |
           python3 -m unittest discover -s source/0.4.32/tests -v
-          python3 source/0.4.32/tools/build_service_package.py --output "$RUNNER_TEMP/service.actweeter-0.4.41.zip"
-          cmp "$RUNNER_TEMP/service.actweeter-0.4.41.zip" docs/testing/repo/service.actweeter/service.actweeter-0.4.41.zip
-          python3 source/0.4.32/tools/build_skin_package.py --output "$RUNNER_TEMP/skin.actweeter-1.2.29~beta11.zip"
-          cmp "$RUNNER_TEMP/skin.actweeter-1.2.29~beta11.zip" docs/testing/repo/skin.actweeter/skin.actweeter-1.2.29~beta11.zip
       - name: Verify isolated Beta feed and immutable dependencies
         run: |
           python3 tools/build_test_channel.py \
-            --service-zip "$RUNNER_TEMP/service.actweeter-0.4.41.zip" \
-            --skin-zip "docs/testing/repo/skin.actweeter/skin.actweeter-1.2.29~beta11.zip" \
-            --xstream-zip docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.8.zip \
+            --service-zip docs/testing/repo/service.actweeter/service.actweeter-0.4.43.zip \
+            --skin-zip docs/testing/repo/skin.actweeter/skin.actweeter-1.2.30~beta1.zip \
+            --xstream-zip docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.9.zip \
             --output "$RUNNER_TEMP/testing"
           cmp "$RUNNER_TEMP/testing/repo/addons.xml" docs/testing/repo/addons.xml
           cmp "$RUNNER_TEMP/testing/repo/addons.xml.md5" docs/testing/repo/addons.xml.md5
-          cmp "$RUNNER_TEMP/testing/bootstrap/repository.actweeter.testing-1.0.1.zip" docs/testing/bootstrap/repository.actweeter.testing-1.0.1.zip
-          git diff --exit-code ecabbe6f8bf5301a153242aa088aecf152bad63e -- repo/ AGENTS.md
+          cmp "$RUNNER_TEMP/testing/bootstrap/repository.actweeter.testing-1.0.2.zip" docs/testing/bootstrap/repository.actweeter.testing-1.0.2.zip
+          cmp "$RUNNER_TEMP/testing/repo/repository.actweeter.testing/repository.actweeter.testing-1.0.2.zip" docs/testing/repo/repository.actweeter.testing/repository.actweeter.testing-1.0.2.zip
+          git diff --exit-code origin/main...HEAD -- repo/

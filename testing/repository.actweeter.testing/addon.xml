@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<addon id="repository.actweeter.testing" name="AcTweeteR Testing Repository" version="1.0.1" provider-name="AcTweeteR">
+<addon id="repository.actweeter.testing" name="AcTweeteR Testing Repository" version="1.0.2" provider-name="AcTweeteR">
 	<extension point="xbmc.addon.repository" name="AcTweeteR Testing Repository">
 		<requires>
 			<import addon="xbmc.addon" version="12.0.0" />
@@ -8,11 +8,6 @@
 			<info compressed="false">https://actweeter.github.io/TwT-Actualizador/testing/repo/addons.xml</info>
 			<checksum>https://actweeter.github.io/TwT-Actualizador/testing/repo/addons.xml.md5</checksum>
 			<datadir zip="true">https://actweeter.github.io/TwT-Actualizador/testing/repo/</datadir>
-		</dir>
-		<dir minversion="20.9.1">
-			<info compressed="false">https://raw.githubusercontent.com/AcTweeteR/TwT-Actualizador/main/repo/addons.xml</info>
-			<checksum>https://raw.githubusercontent.com/AcTweeteR/TwT-Actualizador/main/repo/addons.xml.md5</checksum>
-			<datadir zip="true">https://raw.githubusercontent.com/AcTweeteR/TwT-Actualizador/main/repo/</datadir>
 		</dir>
 		<dir minversion="20.9.1">
 			<info compressed="false">https://raw.githubusercontent.com/matke-84/repository.bingie/main/omega/addons.xml</info>
@@ -32,6 +27,6 @@
 		<description lang="es_ES">Canal explícito de pruebas. Solo muestra candidatos prerelease si se instala deliberadamente este repositorio.</description>
 		<platform>all</platform>
 		<license>MIT</license>
-		<news>changelog-1.0.1.txt</news>
+		<news>changelog-1.0.2.txt</news>
 	</extension>
 </addon>

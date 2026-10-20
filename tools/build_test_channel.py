@@ -19,7 +19,7 @@ from xml.etree import ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 TEST_REPOSITORY_ID = "repository.actweeter.testing"
-TEST_REPOSITORY_VERSION = "1.0.1"
+TEST_REPOSITORY_VERSION = "1.0.2"
 SERVICE_ID = "service.actweeter"
 SERVICE_VERSION = "0.4.41"
 XSTREAM_ID = "plugin.video.xstream-pro"
@@ -94,12 +94,11 @@ def build(repository_source: Path, service_zip: Path, output: Path,
     if repo_addon.get("id") != TEST_REPOSITORY_ID or repo_addon.get("version") != TEST_REPOSITORY_VERSION:
         raise ValueError("test repository identity/version mismatch")
     dirs = repo_addon.findall("./extension[@point='xbmc.addon.repository']/dir")
-    if len(dirs) != 4:
-        raise ValueError("test repository must expose only its candidate and the official stable feed")
+    if len(dirs) != 3:
+        raise ValueError("test repository must expose only its Beta feed and external dependency feeds")
     info_urls = [node.findtext("info", "") for node in dirs]
     if info_urls != [
         "https://actweeter.github.io/TwT-Actualizador/testing/repo/addons.xml",
-        "https://raw.githubusercontent.com/AcTweeteR/TwT-Actualizador/main/repo/addons.xml",
         "https://raw.githubusercontent.com/matke-84/repository.bingie/main/omega/addons.xml",
         "https://slyguy.uk/.repo/repository.slyguy/addons.xml",
     ]:
@@ -187,8 +186,8 @@ def _write_test_channel(output: Path, repository_source: Path, repo_addon: ET.El
         "</html>\n", encoding="utf-8")
     (output / "README.md").write_text(
         "# AcTweeteR Kodi test channel\n\n"
-        "Explicit prerelease channel. The stable index at `/repo/` is not modified. "
-        "The test repository also aggregates the official stable feed for dependencies and rollback.\n",
+        "Explicit prerelease channel. AcTweeteR add-ons are read only from the Testing feed. "
+        "BINGIE and SlyGuy feeds remain available for external dependencies; the Stable feed is not aggregated.\n",
         encoding="utf-8")
     return repo_zip, index, checksum
 

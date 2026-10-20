@@ -1,0 +1,23 @@
+{
+  "release": "repository.actweeter.testing 1.0.2",
+  "base_commit": "93fdcbe05964a483b9381bbf72248fb037aa3857",
+  "purpose": "Remove the AcTweeteR Stable index from the Testing repository while retaining official external dependency feeds.",
+  "stable_untouched": true,
+  "testing_sources": [
+    "https://actweeter.github.io/TwT-Actualizador/testing/repo/addons.xml",
+    "https://raw.githubusercontent.com/matke-84/repository.bingie/main/omega/addons.xml",
+    "https://slyguy.uk/.repo/repository.slyguy/addons.xml"
+  ],
+  "artifacts": [
+    {"id": "repository.actweeter.testing", "version": "1.0.2", "sha256": "ce0f53ea95ece57f4ced0dd1085457084ad2a333b67bdee4e121ef340376b6e1"},
+    {"id": "service.actweeter", "version": "0.4.43", "sha256": "032b33ea84ed61eae05ee52ec8baf61ceedf409daa3e0318682d906c552356dd", "reused": true},
+    {"id": "skin.actweeter", "version": "1.2.30~beta1", "sha256": "766633e4b4903e0c45c6e8bdf2f0d4c90d46d19a5b36d0b8ab12742dbc14b536", "reused": true},
+    {"id": "plugin.video.xstream-pro", "version": "1.1.2.9", "sha256": "c339ca2e64fb831ee3ff2e1f9b9aa1ef069d1d83ff5f2ad96fcb655229518876", "reused": true}
+  ],
+  "testing_index": {
+    "sha256": "d2463b1256a93fabb4d089696ad60fd002774c9f3bab9881353341ad8589092b",
+    "md5": "59fc9154527f549bdcdc29c9db503d1c"
+  },
+  "automated_tests": {"count": 135, "status": "PASS"},
+  "runtime": {"lenovo": "PENDING_OFFICIAL_REPOSITORY_UPDATE", "stable": "UNCHANGED"}
+}
