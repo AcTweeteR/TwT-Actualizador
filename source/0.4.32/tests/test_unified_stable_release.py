@@ -61,8 +61,11 @@ class UnifiedStableReleaseTests(unittest.TestCase):
 
     def test_no_testing_packages_or_index_modified_by_stable_promotion(self):
         manifest = json.loads((ROOT / "manifests/unified-stable-20261020.json").read_text())
-        self.assertEqual(_sha(ROOT / "docs/testing/repo/addons.xml"),
-                         manifest["testing_feed_sha256_at_publication"])
+        historical_beta = json.loads(
+            (ROOT / "manifests/0.4.45-configured-onboarding-20261020.json").read_text())
+        self.assertEqual(manifest["testing_feed_sha256_at_publication"],
+                         historical_beta["testing_index"]["sha256"])
+        # Testing is a rolling channel, unlike this immutable Stable release.
         for kind, path in [
             ("repository", "repo/repository.actweeter/repository.actweeter-1.0.3.zip"),
             ("skin", f"docs/testing/repo/skin.actweeter/skin.actweeter-{BETA_VERSION}.zip"),

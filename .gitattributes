@@ -1,0 +1,2 @@
+# Unified diffs require a single space on empty context lines.
+source/0.4.32/third_party/xstream/patches/1.1.2/actweeter-widget-prefetch.patch whitespace=-blank-at-eol

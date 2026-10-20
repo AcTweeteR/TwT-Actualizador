@@ -1,0 +1,26 @@
+{
+  "release": "xstream-1.1.2.11-widget-performance-20261020",
+  "channel": "repository.actweeter.testing",
+  "stability": "experimental performance candidate",
+  "scope": "XStream provider movie VOD info prefetch only; no UI or credential change",
+  "upstream_sha256": "915f45708670d07e789bb73b7390a7b5cf30175f818ef5da8ea18c9f13f537fe",
+  "source_version": "1.1.2",
+  "prior_testing_xstream_sha256": "0824403e46d3d7ac1b8e4949e8d89f78e51727fec60680b015291bbff489bbf7",
+  "new_xstream_sha256": "d8a868a4354920a3ffb5a087fbbdfedb5628588927b463a6b12e4d35fc6d67b9",
+  "testing_index_sha256": "9818021a9496515a525462658a25c4ae37f16d137eb0f03aaf73191b5543faaf",
+  "stable_index_sha256": "ecb76872ab80cdd4cd4230292682fcbda651b4750ddc5e247a01d29b470185a3",
+  "testing_versions": {
+    "repository.actweeter.testing": "1.0.2",
+    "service.actweeter": "0.4.45",
+    "skin.actweeter": "1.2.30~beta2",
+    "plugin.video.xstream-pro": "1.1.2.11"
+  },
+  "safe_behavior": [
+    "Fully cached VOD metadata skips redundant prefetch threads and delays.",
+    "Disabled provider metadata skips unused VOD-info prefetch.",
+    "Missing provider data still prefetched, capped at four concurrent threads and 200ms interbatch throttle.",
+    "Original XStream and AcTweeteR license notices retained.",
+    "Provider stream URL / credentials / filters unchanged."
+  ],
+  "runtime_validation": "PENDING A/B on Mac and Lenovo; not for Stable"
+}
