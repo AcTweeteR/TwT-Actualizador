@@ -26,6 +26,7 @@ jobs:
             --output "$RUNNER_TEMP/testing"
           cmp "$RUNNER_TEMP/testing/repo/addons.xml" docs/testing/repo/addons.xml
           cmp "$RUNNER_TEMP/testing/repo/addons.xml.md5" docs/testing/repo/addons.xml.md5
+          cmp "$RUNNER_TEMP/testing/bootstrap/index.html" docs/testing/bootstrap/index.html
           cmp "$RUNNER_TEMP/testing/bootstrap/repository.actweeter.testing-1.0.2.zip" docs/testing/bootstrap/repository.actweeter.testing-1.0.2.zip
           cmp "$RUNNER_TEMP/testing/repo/repository.actweeter.testing/repository.actweeter.testing-1.0.2.zip" docs/testing/repo/repository.actweeter.testing/repository.actweeter.testing-1.0.2.zip
           git diff --exit-code origin/main...HEAD -- repo/
