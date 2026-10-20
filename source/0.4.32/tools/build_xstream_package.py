@@ -277,6 +277,10 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
         if (b"_filter_provider_trakt_recommendations" not in routes
                 or b"filter_provider=False" not in routes):
             raise ValueError("strict provider-filtered Trakt recommendation route missing")
+        premium_routes = archive.read(f"{UPSTREAM_ROOT}/resources/lib/premium_routes.py")
+        if (b"g['series_changes'].record_catalog(g['addon'], pnum, items)" not in premium_routes
+                or b"if stype == 'series' and items and host and user and password:" not in premium_routes):
+            raise ValueError("premium series catalog baseline hook missing")
         playback_metadata = f"{UPSTREAM_ROOT}/resources/lib/trakt_playback_metadata.py"
         if playback_metadata not in archive.namelist():
             raise ValueError("script.trakt playback metadata bridge missing")

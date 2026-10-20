@@ -1,0 +1,5 @@
+0.4.44 — Unified source candidate
+- Respect Kodi's existing add-on update preference; the service no longer changes the global setting at startup.
+- Preserve native update notifications and the Stable/Testing repository selected by the user.
+- Keep resumable setup, profile-scoped layout migration, search transactions and optional trailer consent.
+- Candidate only; no runtime deployment or publication is claimed.

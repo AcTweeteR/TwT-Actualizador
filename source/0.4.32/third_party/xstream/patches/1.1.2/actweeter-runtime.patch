@@ -511,7 +511,7 @@ new file mode 100644
 index 0000000000000000000000000000000000000000..f43603caf622701aa4f1bcf8d513e49677651621
 --- /dev/null
 +++ b/resources/lib/premium_routes.py
-@@ -0,0 +1,1004 @@
+@@ -0,0 +1,1010 @@
 +"""Provider-first, bounded widget endpoints. Never returns a discovery item.
 +
 +Called with the existing addon's environment; playback/profile/history remain
@@ -702,6 +702,12 @@ index 0000000000000000000000000000000000000000..f43603caf622701aa4f1bcf8d513e496
 +    items = g['_get_cached_xtream_streams'](
 +        host, user, password, stype, None,
 +        force_refresh=force_refresh, require_fresh=force_refresh)
++    # Record the unfiltered provider catalogue before UI visibility filters.
++    if stype == 'series' and items and host and user and password:
++        try:
++            g['series_changes'].record_catalog(g['addon'], pnum, items)
++        except Exception as exc:
++            g['_log']('Series baseline refresh failed: %s' % exc)
 +    categories = g['_get_cached_xtream_categories'](
 +        host, user, password, stype,
 +        force_refresh=force_refresh, require_fresh=force_refresh)

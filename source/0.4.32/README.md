@@ -1,6 +1,19 @@
-# AcTweeteR Beta widget-navigation source snapshot
+# AcTweeteR unified Mac/Lenovo Beta source candidate
 
-## Current candidate: service 0.4.41 / skin 1.2.29~beta11
+## Candidate: service 0.4.44 / skin 1.2.30~beta2 / XStream Pro 1.1.2.10
+
+This candidate combines the profile-safe Beta initialization with the
+Mac-confirmed manual trailer actions for movies and TV shows, preserves the
+Lenovo automatic-preview guards and series-change tracking, and stops the
+service from changing Kodi's global add-on update preference. It is not
+published or installed. Stable, the installed Mac Master, and Lenovo are
+unchanged by this source candidate.
+
+XStream remains based on the pinned 1.1.2 upstream source and CC BY-NC 4.0
+attribution. Its package build now validates the premium route's provider
+catalog baseline hook in addition to the `series_recent` provider.
+
+## Historical Beta 0.4.41 / skin 1.2.29~beta11 snapshot
 
 The Testing-only startup repair scopes generated widget validation and identity
 resolution to the active Kodi profile. Deterministic XML validation failures

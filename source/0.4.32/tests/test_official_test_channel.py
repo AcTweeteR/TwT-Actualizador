@@ -222,7 +222,34 @@ class OfficialTestChannelTests(unittest.TestCase):
         self.assertEqual(hashlib.md5(payload).hexdigest(),
                          manifest["testing_index"]["md5"])
         self.assertEqual(ET.parse(index).getroot().find(
-            "addon[@id='plugin.video.xstream-pro']").get("version"), "1.1.2.9")
+            "addon[@id='plugin.video.xstream-pro']").get("version"), "1.1.2.10")
+
+
+    def test_unified_beta_manifest_matches_immutable_packages_and_stable(self):
+        manifest = json.loads((ROOT / "manifests/0.4.44-unified-beta-20261020.json").read_text())
+        self.assertEqual(manifest["release"], "0.4.44-unified-beta-20261020")
+        self.assertEqual(manifest["channel"], "repository.actweeter.testing")
+        self.assertEqual(manifest["stable_index_sha256"],
+                         hashlib.sha256((ROOT / "repo/addons.xml").read_bytes()).hexdigest())
+        live_index = ROOT / "docs/testing/repo/addons.xml"
+        self.assertEqual(manifest["testing_index"]["sha256"],
+                         hashlib.sha256(live_index.read_bytes()).hexdigest())
+        self.assertEqual(manifest["testing_index"]["md5"],
+                         hashlib.md5(live_index.read_bytes()).hexdigest())
+        versions = {node.get("id"): node.get("version")
+                    for node in ET.parse(live_index).getroot()}
+        self.assertEqual(versions,
+                         {addon["id"]: addon["version"] for addon in manifest["addons"]})
+        for addon in manifest["addons"]:
+            archive_path = (ROOT / "docs/testing/repo" / addon["id"] /
+                            f'{addon["id"]}-{addon["version"]}.zip')
+            self.assertEqual(hashlib.sha256(archive_path.read_bytes()).hexdigest(),
+                             addon["sha256"])
+            with zipfile.ZipFile(archive_path) as archive:
+                self.assertIsNone(archive.testzip())
+                package = ET.fromstring(archive.read(addon["id"] + "/addon.xml"))
+                self.assertEqual((package.get("id"), package.get("version")),
+                                 (addon["id"], addon["version"]))
 
 
 if __name__ == "__main__":
