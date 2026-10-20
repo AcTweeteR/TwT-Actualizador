@@ -143,6 +143,22 @@ def build(repository_source: Path, service_zip: Path, output: Path,
     return tuple(output / path.relative_to(stage) for path in result)
 
 
+
+def bootstrap_index_html(current_zip_name: str) -> str:
+    """Kodi-compatible browse page: current installer and archived versions only."""
+    if not re.fullmatch(r"repository[.]actweeter[.]testing-[0-9]+[.][0-9]+[.][0-9]+[.]zip",
+                        current_zip_name):
+        raise ValueError("invalid testing bootstrap ZIP name")
+    return chr(10).join([
+        '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">',
+        '<html><head><title>Index of /TwT-Actualizador/testing/bootstrap/</title></head>',
+        '<body><h1>Index of /TwT-Actualizador/testing/bootstrap/</h1><hr><pre>',
+        f'<a href="{current_zip_name}">{current_zip_name}</a>',
+        '<a href="archive/">archive/</a>',
+        '</pre><hr></body></html>'
+    ]) + chr(10)
+
+
 def _write_test_channel(output: Path, repository_source: Path, repo_addon: ET.Element,
                         service_zip: Path, service: ET.Element, skin_zip: Path | None,
                         skin: ET.Element | None, xstream_zip: Path | None,
@@ -181,9 +197,7 @@ def _write_test_channel(output: Path, repository_source: Path, repo_addon: ET.El
     checksum.write_text(hashlib.md5(payload).hexdigest() + "\n", encoding="ascii")
 
     (output / "bootstrap" / "index.html").write_text(
-        "<!doctype html><html lang=\"en\"><meta charset=\"utf-8\"><title>AcTweeteR test bootstrap</title>"
-        f"<p>Install this test-only Kodi repository: <a href=\"{repo_zip.name}\">{repo_zip.name}</a></p>"
-        "</html>\n", encoding="utf-8")
+        bootstrap_index_html(repo_zip.name), encoding="utf-8")
     (output / "README.md").write_text(
         "# AcTweeteR Kodi test channel\n\n"
         "Explicit prerelease channel. AcTweeteR add-ons are read only from the Testing feed. "
