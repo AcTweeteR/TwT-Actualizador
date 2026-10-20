@@ -1,0 +1,45 @@
+diff --git a/resources/lib/addon.py b/resources/lib/addon.py
+--- a/resources/lib/addon.py
++++ b/resources/lib/addon.py
+@@ -1492,8 +1492,19 @@
+ def _prefetch_vod_info_batch(streams, base_url, user, pwd):
+     """Fetch vod_info for a batch of movies in parallel threads."""
+     profile_snapshot = pm.active
+ 
++    # A Kodi widget launches a fresh plugin process on every reload. Previously
++    # 20 already-cached cards still spawned 20 threads and slept four times.
++    # Preserve the existing cold-cache fetches but skip all warm-cache work.
++    if addon.getSetting("provider_movie_enabled").lower() != "true":
++        return
++    pending = [stream for stream in streams
++               if stream.get("stream_id")
++               and not _cache_load("vod_info_" + str(stream["stream_id"]))]
++    if not pending:
++        return
++
+     def _fetch_one(s):
+         original_active = pm.active
+         try:
+             pm.active = profile_snapshot
+@@ -1517,18 +1528,18 @@
+     # to avoid overwhelming the Xtream provider.
+     batch_size = 4
+     delay_ms = 200
+     all_threads = []
+-    for i in range(0, len(streams), batch_size):
+-        batch = streams[i:i + batch_size]
++    for i in range(0, len(pending), batch_size):
++        batch = pending[i:i + batch_size]
+         threads = []
+         for s in batch:
+             t = threading.Thread(target=_fetch_one, args=(s,))
+             t.daemon = True
+             threads.append(t)
+             t.start()
+         all_threads.extend(threads)
+-        if i + batch_size < len(streams):
++        if i + batch_size < len(pending):
+             xbmc.sleep(delay_ms)
+     # Single 15s deadline for the whole batch
+     deadline = time.monotonic() + 15
+     for t in all_threads:

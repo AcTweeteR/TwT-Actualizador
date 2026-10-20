@@ -222,7 +222,7 @@ class OfficialTestChannelTests(unittest.TestCase):
         self.assertEqual(hashlib.md5(payload).hexdigest(),
                          manifest["testing_index"]["md5"])
         self.assertEqual(ET.parse(index).getroot().find(
-            "addon[@id='plugin.video.xstream-pro']").get("version"), "1.1.2.10")
+            "addon[@id='plugin.video.xstream-pro']").get("version"), "1.1.2.11")
 
 
     def test_unified_beta_manifest_matches_immutable_packages_and_stable(self):
@@ -257,17 +257,38 @@ class OfficialTestChannelTests(unittest.TestCase):
                                  (addon["id"], addon["version"]))
 
 
+    def test_current_xstream_performance_candidate_is_testing_only(self):
+        m=json.loads((ROOT/"manifests/xstream-1.1.2.11-widget-performance-20261020.json").read_text())
+        self.assertEqual(m["channel"],"repository.actweeter.testing")
+        self.assertEqual(m["stable_index_sha256"],
+                         hashlib.sha256((ROOT/"repo/addons.xml").read_bytes()).hexdigest())
+        p=ROOT/"docs/testing/repo/addons.xml"
+        self.assertEqual(m["testing_index_sha256"],hashlib.sha256(p.read_bytes()).hexdigest())
+        self.assertEqual({a.get("id"):a.get("version") for a in ET.parse(p).getroot()},
+                         m["testing_versions"])
+        package=ROOT/"docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.11.zip"
+        self.assertEqual(m["new_xstream_sha256"],hashlib.sha256(package.read_bytes()).hexdigest())
+        with zipfile.ZipFile(package) as z:
+            self.assertIsNone(z.testzip())
+            self.assertEqual(ET.fromstring(z.read("plugin.video.xstream-pro/addon.xml")).get("version"), "1.1.2.11")
+
     def test_configured_onboarding_testing_release_integrity(self):
         manifest = json.loads((ROOT / "manifests/0.4.45-configured-onboarding-20261020.json").read_text())
         self.assertEqual(manifest["channel"], "repository.actweeter.testing")
         stable_release = json.loads((ROOT / "manifests/unified-stable-20261020.json").read_text())
         self.assertEqual(manifest["stable_index_sha256"],
                          stable_release["previous_stable_index_sha256"])
-        index = ROOT / "docs/testing/repo/addons.xml"
-        self.assertEqual(manifest["testing_index"]["sha256"], hashlib.sha256(index.read_bytes()).hexdigest())
-        self.assertEqual(manifest["testing_index"]["md5"], hashlib.md5(index.read_bytes()).hexdigest())
-        versions = {x.get("id"): x.get("version") for x in ET.parse(index).getroot()}
-        self.assertEqual(versions, {x["id"]: x["version"] for x in manifest["addons"]})
+        # Historical 0.4.45 index is reconstructed from frozen ZIP metadata;
+        # live Testing may now publish 1.1.2.11 without rewriting history.
+        historical = ET.Element("addons")
+        for addon in manifest["addons"]:
+            archive_path = ROOT / "docs/testing/repo" / addon["id"] / (
+                f'{addon["id"]}-{addon["version"]}.zip')
+            with zipfile.ZipFile(archive_path) as z:
+                historical.append(ET.fromstring(z.read(addon["id"] + "/addon.xml")))
+        payload = ET.tostring(historical, encoding="utf-8", xml_declaration=True) + b"\n"
+        self.assertEqual(manifest["testing_index"]["sha256"], hashlib.sha256(payload).hexdigest())
+        self.assertEqual(manifest["testing_index"]["md5"], hashlib.md5(payload).hexdigest())
         for addon in manifest["addons"]:
             package = ROOT / "docs/testing/repo" / addon["id"] / f'{addon["id"]}-{addon["version"]}.zip'
             self.assertEqual(hashlib.sha256(package.read_bytes()).hexdigest(), addon["sha256"])

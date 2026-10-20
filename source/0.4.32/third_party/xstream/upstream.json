@@ -2,7 +2,7 @@
   "addon_id": "plugin.video.xstream-pro",
   "upstream_project": "https://github.com/Pesicp/XStreamPro",
   "upstream_version": "1.1.2",
-  "distribution_version": "1.1.2.10",
+  "distribution_version": "1.1.2.11",
   "upstream_ref": "1.1.2",
   "upstream_commit": "1aa3e67da7c03c6acc3ec7e1ca579a7f645220f4",
   "upstream_release_url": "https://github.com/Pesicp/XStreamPro/releases/download/1.1.2/plugin.video.xstream-pro-1.1.2.zip",
@@ -11,9 +11,9 @@
   "upstream_release_zip_sha256": "915f45708670d07e789bb73b7390a7b5cf30175f818ef5da8ea18c9f13f537fe",
   "upstream_license_observed": "CC BY-NC 4.0",
   "local_runtime_sha256": {
-    "addon.xml": "13a4849cd1917917c72006d7c3b62c70105a505c52fb0bc25917727805f087ac",
+    "addon.xml": "03a22e80e9895f1f956b9ad924c3f0444cea892763b49882c5d0aec211c577e0",
     "service.py": "36cb80387d5f9862ee71deee9f993d7d78117f2bdf146623d1feb9d602331539",
-    "resources/lib/addon.py": "351d62c70a3781ea49b89e5afcf24ac70af0ecb798dd725d03f612ca5ebb1f37",
+    "resources/lib/addon.py": "43abbb05092b286138abbf12a30121cfeef30a7383d248776059b929c3ae7044",
     "resources/lib/premium_routes.py": "358082f4bbc519f9c1debe5f22f23747e912466d3fdab15f8e3b70badda036e2",
     "resources/lib/pending_adapter.py": "597765cd319f2ebfc693db6798c15942a6fcac92807eef1fdfe9a75a8a196319",
     "resources/lib/content_state.py": "f47fe49a4acaa54621c8f6e2b8f80b293afa82d9570a1125ed02dae4bc3f97a2",
@@ -64,5 +64,7 @@
     "The package builder parses every Python source before packaging and every Python member after ZIP creation.",
     "The playback metadata adapter sets Kodi movie/episode InfoTag fields and script.trakt's supported script.trakt.ids property; it does not add OAuth, scrobbling, or alter XStream resume storage.",
     "XStream's CC BY-NC terms prohibit treating these private patch artifacts as an unrestricted public distribution."
-  ]
+  ],
+  "prefetch_patch": "third_party/xstream/patches/1.1.2/actweeter-widget-prefetch.patch",
+  "prefetch_patch_sha256": "44eebe48764e363cc263f6a533a3b0185504b91c143377c3f112396602796202"
 }
