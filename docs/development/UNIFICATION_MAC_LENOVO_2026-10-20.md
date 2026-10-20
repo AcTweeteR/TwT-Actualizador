@@ -57,8 +57,14 @@ Observed installed versions are historical snapshots from the read-only reconcil
 | Candidate Testing discovery/update | `NOT_TESTED` | Candidate feed is under `/tmp` only and has not been published. |
 | Trakt isolation | `PASS_STATIC` | No authentication or synchronization was performed; Lenovo remains unauthenticated. |
 
-No commit, push, PR, release, or device installation has been made. The candidate should not be promoted or treated as runtime-validated until the owner authorizes and completes a Beta QA deployment through Kodi's Testing repository.
+The source integration is committed locally in three auditable commits:
+
+- `c01c047` — preserve the user's update preference and manual series-trailer actions.
+- `d7fa0e4` — record premium series catalogs and validate the XStream package hook.
+- `47e52d2` — prepare candidate versions and Testing-only feed generation.
+
+No push, PR, release, or device installation has been made. The candidate should not be promoted or treated as runtime-validated until the owner authorizes and completes a Beta QA deployment through Kodi's Testing repository.
 
 ## Working tree at report time
 
-The branch is based on `origin/main` and contains the uncommitted source, tests, and versioned changelog changes described above. No unrelated worktree changes were staged or included. This document records the candidate state, not publication approval.
+The branch is three commits ahead of `origin/main`, has a clean working tree, and contains only the source, tests, changelogs, and report described above. No unrelated worktree changes were staged or included. This document records the candidate state, not publication approval.
