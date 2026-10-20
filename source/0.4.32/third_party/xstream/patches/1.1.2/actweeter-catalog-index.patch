@@ -1,17 +1,18 @@
 diff --git a/resources/lib/premium_routes.py b/resources/lib/premium_routes.py
-index 3869149..da361a9 100644
 --- a/resources/lib/premium_routes.py
 +++ b/resources/lib/premium_routes.py
-@@ -220,6 +220,58 @@ def catalog(g, stype, pnum, *, force_refresh=False):
+@@ -218,6 +218,80 @@
+         trace.count('provider.items.input', len(items))
+         trace.count('provider.items.visible', len(visible))
      return visible, (host, user, password)
- 
- 
++
++
 +def indexed_movie_page(g, pnum, view, get):
 +    """Use a derived offset index for warm movie catalogs; None keeps legacy fallback."""
 +    if view not in ('catalog', 'recent', 'popular', 'trending'):
 +        return None
 +    try:
-+        from provider_catalog_index import CatalogIndex
++        from provider_catalog_index import CatalogIndex, IndexUnavailable, schedule_rebuild
 +        creds = g['_get_credentials_for_profile'](pnum)
 +        host, user, password = (creds.get(key, '') for key in
 +                                ('xtream_url', 'xtream_username', 'xtream_password'))
@@ -27,14 +28,25 @@ index 3869149..da361a9 100644
 +            if cached_ranks.get('expires', 0) <= time.time():
 +                return None
 +        cache_path = g['_cache_path'](cache_key)
++        trace = g.get('_performance')
++        source = '%s|%s|%s' % (host, user, password)
++        try:
++            index = _performance_call(g, 'catalog_index.open', CatalogIndex, cache_path,
++                source, pnum, 'movie', trace=trace)
++        except IndexUnavailable:
++            if trace is not None:
++                trace.count('index.fallback.used')
++            try:
++                schedule_rebuild(cache_path, source, pnum, 'movie', trace)
++            except Exception:
++                if trace is not None:
++                    trace.count('index.rebuild.schedule_failed')
++            return None
 +        categories = g['_get_cached_xtream_categories'](host, user, password, 'movie')
 +        blocked = set(g['_get_hidden_subcats']('movie', pnum))
 +        blocked.update(str(category.get('category_id', '')) for category in categories
 +                       if g['_is_adult_category'](category.get('category_name', '')))
 +        hidden = set(g['_get_hidden_items']('movie', pnum))
-+        index = _performance_call(g, 'catalog_index.open', CatalogIndex, cache_path,
-+            '%s|%s|%s' % (host, user, password), pnum, 'movie')
-+        trace = g.get('_performance')
 +        if trace is not None:
 +            trace.count('catalog_index.hit' if index.reused else 'catalog_index.build')
 +            if index.invalidated:
@@ -46,22 +58,31 @@ index 3869149..da361a9 100644
 +                'browse': get('browse') == '1', 'page': number(get('page', 1)),
 +                'limit': number(get('limit', 24))}
 +        if view in ('popular', 'trending'):
-+            result = _performance_call(g, 'catalog_index.query', index.ranked,
++            result = _performance_call(g, 'index.query.duration', index.ranked,
 +                cached_ranks.get('ranks') or [], **args)
 +        else:
-+            result = _performance_call(g, 'catalog_index.query', index.page,
++            result = _performance_call(g, 'index.query.duration', index.page,
 +                mode='recent' if view == 'recent' else 'catalog', **args)
++        if trace is not None:
++            trace.count('index.query.rows', len(result[0]))
 +        return result[0], result[1], (host, user, password)
 +    except Exception as exc:
++        trace = g.get('_performance')
++        if trace is not None:
++            trace.count('index.fallback.used')
++        if 'cache_path' in locals():
++            try:
++                schedule_rebuild(cache_path, source, pnum, 'movie', trace)
++            except Exception:
++                if trace is not None:
++                    trace.count('index.rebuild.schedule_failed')
 +        g['_log']('Movie catalog index unavailable; using original path error_type=%s' %
 +                  type(exc).__name__)
 +        return None
-+
-+
+ 
+ 
  def metadata(g, item, stype, credentials):
-     sid = provider_id(item, stype)
-     if stype == 'movie':
-@@ -957,7 +1009,12 @@ def dispatch(g, params):
+@@ -957,7 +1031,12 @@
      if stype not in ('movie', 'series'):
          plugin.endOfDirectory(handle, succeeded=False)
          return
@@ -75,7 +96,7 @@ index 3869149..da361a9 100644
      if view == 'play':
          item = next((s for s in items if provider_id(s, stype) == get('id')), None)
          if not item or stype != 'movie':
-@@ -975,17 +1032,17 @@ def dispatch(g, params):
+@@ -975,17 +1054,17 @@
      pending_module = g.get('pending_adapter')
      pending = (pending_module.PendingAdapter(g['_get_profile_fav'](pnum))
                 if pending_module is not None else None)
@@ -96,7 +117,7 @@ index 3869149..da361a9 100644
          events = g['series_changes'].recent(g['addon'], pnum, 50)
          by_id = {provider_id(item, stype):item for item in items}
          ordered = []
-@@ -994,25 +1051,25 @@ def dispatch(g, params):
+@@ -994,25 +1073,25 @@
              if item:
                  ordered.append(item)
          items = ordered
@@ -129,7 +150,7 @@ index 3869149..da361a9 100644
          # One card per exact title/year; retain the first provider edition.
          seen = set()
          unique = []
-@@ -1025,7 +1082,11 @@ def dispatch(g, params):
+@@ -1025,7 +1104,11 @@
      page = max(1, number(get('page', 1)))
      limit = min(48, max(1, number(get('limit', 24))))
      offset = (page - 1) * limit
@@ -142,7 +163,7 @@ index 3869149..da361a9 100644
      if stype == 'movie':
          _performance_call(g, 'provider.vod_prefetch', g['_prefetch_vod_info_batch'], selected, *credentials)
      plugin.setContent(handle, 'movies' if stype == 'movie' else 'tvshows')
-@@ -1038,7 +1099,7 @@ def dispatch(g, params):
+@@ -1038,7 +1121,7 @@
      expandable_views = {'catalog', 'recent', 'popular', 'trending', 'favorites',
                          'pending', 'continue', 'series_recent', 'year', 'premiere', 'genre'}
      if (get('actweeter_expand') == '1' and stype in ('movie', 'series')
@@ -151,7 +172,7 @@ index 3869149..da361a9 100644
          query = {key: values[0] for key, values in params.items() if values}
          query.pop('actweeter_expand', None)
          query['browse'] = '1'
-@@ -1047,7 +1108,7 @@ def dispatch(g, params):
+@@ -1047,7 +1130,7 @@
          li = g['_new_listitem']('[COLOR FFE50914]EXPANDIR[/COLOR]')
          li.setProperty('AcTweeteR.Expand', '1')
          plugin.addDirectoryItem(handle, build(query), li, True)
@@ -160,3 +181,50 @@ index 3869149..da361a9 100644
          q = {key:values[0] for key,values in params.items()}
          q['page'] = page + 1
          li = g['_new_listitem']('Más títulos')
+diff --git a/service.py b/service.py
+--- a/service.py
++++ b/service.py
+@@ -31,6 +31,25 @@
+ 
+ monitor = xbmc.Monitor()
+ try:
++    from provider_catalog_index import IndexBuildWorker
++    def _catalog_trace():
++        if xbmcaddon.Addon().getSetting('performance_diagnostics_enabled').lower() != 'true':
++            return None
++        from performance_diagnostics import PerformanceTrace
++        trace = PerformanceTrace(log=lambda message: xbmc.log(message, xbmc.LOGINFO))
++        trace.set_context('catalog', 'movie')
++        return trace
++    _catalog_player = xbmc.Player()
++    catalog_index_worker = IndexBuildWorker(
++        xbmcvfs.translatePath(xbmcaddon.Addon().getAddonInfo('profile')),
++        idle=lambda: xbmc.getGlobalIdleTime() >= 5 and not _catalog_player.isPlaying(),
++        cancelled=lambda: monitor.abortRequested() or _catalog_player.isPlaying()
++                          or xbmc.getGlobalIdleTime() < 2,
++        trace_factory=_catalog_trace)
++except Exception:
++    catalog_index_worker = None
++    xbmc.log('[Xstream Pro] Catalog index worker unavailable; original catalog route remains active', xbmc.LOGWARNING)
++try:
+     from recent_tv_native import RecentTV
+     recent_tv = RecentTV(xbmcvfs.translatePath(xbmcaddon.Addon().getAddonInfo('profile')), xbmc)
+ except Exception:
+@@ -40,6 +59,11 @@
+ resume_signature = None
+ resume_path = os.path.join(xbmcvfs.translatePath(xbmcaddon.Addon().getAddonInfo('profile')), 'resume_points_p1.json')
+ while not monitor.abortRequested():
++    if catalog_index_worker is not None:
++        try:
++            catalog_index_worker.tick()
++        except Exception:
++            xbmc.log('[Xstream Pro] Catalog index scheduling warning', xbmc.LOGWARNING)
+     if recent_tv is not None:
+         try:
+             recent_tv.tick()
+@@ -65,3 +89,5 @@
+             xbmc.log("[Xstream Pro] PVR group memory service warning: {0}".format(exc), xbmc.LOGWARNING)
+     if monitor.waitForAbort(1.0):
+         break
++if catalog_index_worker is not None:
++    catalog_index_worker.close()

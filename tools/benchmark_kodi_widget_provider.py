@@ -21,9 +21,9 @@ URLS={
 'series-favorites':'plugin://plugin.video.xstream-pro/?mode=premium&view=favorites&stype=series&actweeter_expand=1&limit=20',
 }
 
-def request_directory(host,port,directory,timeout):
+def request_directory(host,port,directory,timeout,properties=('title','uniqueid')):
     req={'jsonrpc':'2.0','id':1,'method':'Files.GetDirectory',
-            'params':{'directory':directory,'media':'video','properties':['title','uniqueid']}}
+            'params':{'directory':directory,'media':'video','properties':list(properties)}}
     with socket.create_connection((host,port),timeout=min(timeout,5.0)) as s:
         s.settimeout(timeout)
         s.sendall((json.dumps(req)+'\r\n').encode())
@@ -52,14 +52,17 @@ def main():
     parser.add_argument('--name',default='Kodi')
     parser.add_argument('--samples',type=int,default=10)
     parser.add_argument('--timeout',type=float,default=60)
+    parser.add_argument('--widgets',nargs='+',choices=tuple(URLS),default=list(URLS))
+    parser.add_argument('--properties',nargs='+',choices=('title','art','uniqueid'),default=['title','uniqueid'])
     args=parser.parse_args()
     if not 1<=args.samples<=100:parser.error('samples must be 1..100')
-    for name,url in URLS.items():
+    for name in args.widgets:
+        url=URLS[name]
         elapsed=[];counts=[]; fingerprints=[]
         for i in range(args.samples):
             start=time.perf_counter()
             try:
-                n,digest=request_directory(args.host,args.port,url,args.timeout)
+                n,digest=request_directory(args.host,args.port,url,args.timeout,args.properties)
                 d=time.perf_counter()-start
                 elapsed.append(d);counts.append(n);fingerprints.append(digest)
                 print(json.dumps({'device':args.name,'widget':name,

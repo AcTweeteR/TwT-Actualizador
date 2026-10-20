@@ -65,8 +65,8 @@ class CandidatePackageBuildTests(unittest.TestCase):
             subprocess.run([sys.executable, str(ROOT / "tools/build_skin_package.py"),
                             "--output", str(skin)], check=True,
                            cwd=ROOT, capture_output=True, text=True)
-            xstream = output / "plugin.video.xstream-pro-1.1.2.13.zip"
-            self._write_addon_fixture(xstream, "plugin.video.xstream-pro", "1.1.2.13")
+            xstream = output / "plugin.video.xstream-pro-1.1.2.14.zip"
+            self._write_addon_fixture(xstream, "plugin.video.xstream-pro", "1.1.2.14")
             index_path, md5_path = build_distribution_index.build(
                 REPOSITORY_ROOT / "docs/testing/repo/repository.actweeter.testing/repository.actweeter.testing-1.0.2.zip",
                 skin,
@@ -80,7 +80,7 @@ class CandidatePackageBuildTests(unittest.TestCase):
                 "repository.actweeter.testing": "1.0.2",
                 "service.actweeter": "0.4.45",
                 "skin.actweeter": "1.2.30~beta2",
-                "plugin.video.xstream-pro": "1.1.2.13",
+                "plugin.video.xstream-pro": "1.1.2.14",
             })
             self.assertEqual(hashlib.md5(payload).hexdigest(),
                              md5_path.read_text(encoding="ascii").strip())

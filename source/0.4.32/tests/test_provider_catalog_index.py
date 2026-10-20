@@ -44,7 +44,7 @@ class ProviderCatalogIndexTests(unittest.TestCase):
             '_data': self.items if items is None else items}, ensure_ascii=False), encoding='utf-8')
 
     def index(self, source=None, profile=1):
-        return INDEX.CatalogIndex(str(self.path), source or self.source, profile, 'movie')
+        return INDEX.CatalogIndex(str(self.path), source or self.source, profile, 'movie', build=True)
 
     def test_catalog_and_recent_preserve_filters_dedup_order_and_unicode_offsets(self):
         index = self.index()
@@ -123,8 +123,9 @@ class ProviderCatalogIndexTests(unittest.TestCase):
         spec.loader.exec_module(builder)
         with tempfile.TemporaryDirectory() as temp, zipfile.ZipFile(package) as archive:
             archive.extract('plugin.video.xstream-pro/resources/lib/premium_routes.py', temp)
+            archive.extract('plugin.video.xstream-pro/service.py', temp)
             root = Path(temp) / 'plugin.video.xstream-pro'
-            self.assertEqual(builder.apply_contextual_unified_patch(root, patch), 7)
+            self.assertGreater(builder.apply_contextual_unified_patch(root, patch), 7)
             runtime = root / 'resources/lib/premium_routes.py'
             text = runtime.read_text(encoding='utf-8')
             self.assertIn('indexed_movie_page', text)

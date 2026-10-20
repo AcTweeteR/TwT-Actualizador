@@ -192,7 +192,7 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             expected_patch_hash = data[manifest_key + "_sha256"]
             if sha256(patch_path) != expected_patch_hash:
                 raise ValueError(f"patch hash mismatch: {patch_path.name}")
-            if manifest_key in ("recommendations_patch", "search_index_patch", "prefetch_patch"):
+            if manifest_key in ("recommendations_patch", "search_index_patch", "prefetch_patch", "catalog_index_patch"):
                 apply_contextual_unified_patch(root, patch_path)
                 continue
             result = subprocess.run(
@@ -252,9 +252,9 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             f"AcTweeteR distribution revision: {distribution_version}; upstream remains 1.1.2.\n"
             "The Kodi add-on version is advanced solely to deliver these documented\n"
             "changes through the native repository updater.\n"
-            "Testing-only build 1.1.2.13 adds an opt-in diagnostic trace and a\n"
+            "Testing-only build 1.1.2.14 adds deferred idle-service construction of a\n"
             "rebuildable SQLite byte-offset index for movie catalog, recent and\n"
-            "cached-ranked widgets; source JSON remains authoritative.\n"
+            "cached-ranked widgets; missing indexes immediately use the legacy route.\n"
             "The privacy-safe performance trace is opt-in and disabled by default.\n"
             "The index change leaves provider, artwork, playback and menu behavior\n"
             "unchanged.\n"
@@ -315,7 +315,7 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
                 or b"if stype == 'series' and items and host and user and password:" not in premium_routes):
             raise ValueError("premium series catalog baseline hook missing")
         if (b"indexed_movie_page" not in premium_routes
-                or b"catalog_index.query" not in premium_routes):
+                or b"index.query.duration" not in premium_routes):
             raise ValueError("indexed movie catalog routes missing")
         playback_metadata = f"{UPSTREAM_ROOT}/resources/lib/trakt_playback_metadata.py"
         if playback_metadata not in archive.namelist():

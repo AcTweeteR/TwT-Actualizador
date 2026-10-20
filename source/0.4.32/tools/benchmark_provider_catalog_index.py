@@ -7,7 +7,6 @@ import statistics
 import tempfile
 import time
 import tracemalloc
-import tracemalloc
 from pathlib import Path
 
 
@@ -55,7 +54,7 @@ def run_size(count, repeats):
         file_bytes = path.stat().st_size
         rows = {}
         build_started = time.perf_counter()
-        index = INDEX.CatalogIndex(str(path), source, 1, 'movie')
+        index = INDEX.CatalogIndex(str(path), source, 1, 'movie', build=True)
         build_seconds = time.perf_counter() - build_started
         for mode in ('catalog', 'recent'):
             old_times, new_times = [], []
