@@ -32,13 +32,14 @@ class XStreamSeriesRecentDistributionTests(unittest.TestCase):
         patch_path = ROOT / manifest["patch"]
         expected_patch_hash = hashlib.sha256(patch_path.read_bytes()).hexdigest()
         self.assertEqual(manifest["patch_sha256"], expected_patch_hash)
-        self.assertEqual(manifest["distribution_version"], "1.1.2.8")
+        self.assertEqual(manifest["distribution_version"], "1.1.2.10")
         self.assertIn("resources/lib/series_changes.py",
                       manifest["local_runtime_sha256"])
 
     def test_builder_rejects_missing_series_recent_symbol(self):
         builder = (ROOT / "tools/build_xstream_package.py").read_text(encoding="utf-8")
         self.assertIn("series_changes.recent route provider is missing", builder)
+        self.assertIn("premium series catalog baseline hook missing", builder)
         self.assertIn("patched runtime hash mismatch", builder)
 
 
