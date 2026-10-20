@@ -342,7 +342,10 @@ def should_offer_first_run(state, core_configured):
     # An already-configured Master upgraded from an older wizard should not
     # be taken hostage by a new automatic modal. Its new runtime checks remain
     # INCOMPLETE and explicitly available via Settings/repair, not marked PASS.
-    if core_configured and state.get("legacy_completed_review"):
+    if core_configured and (state.get("legacy_completed_review")
+                            or state.get("configured_onboarding_declined")):
+        # A conscious "not now" on an already-configured device persists;
+        # incomplete mandatory checks remain incomplete.
         return False
     if (state.get("completed") and state.get("setup_state") == "COMPLETE"
             and state.get("wizard_version", 1) >= WIZARD_VERSION
@@ -451,7 +454,8 @@ def normalize_state(state):
     version = state.get("wizard_version")
     if isinstance(version, int) and not isinstance(version, bool) and 1 <= version <= WIZARD_VERSION:
         result["wizard_version"] = version
-    for key in ("prompted", "completed", "started", "legacy_completed_review"):
+    for key in ("prompted", "completed", "started", "legacy_completed_review",
+                "configured_onboarding_declined"):
         if isinstance(state.get(key), bool):
             result[key] = state[key]
     deferred_process_id = state.get("deferred_process_id")
@@ -558,14 +562,17 @@ def mark_started(state):
                    "prompted": False, "started": True, "setup_state": "INSTALLING_ADDONS",
                    "completed": False, "configuration_status": "INCOMPLETE"})
     result.pop("deferred_process_id", None)
+    result.pop("configured_onboarding_declined", None)
     return result
 
 
-def mark_deferred(state, process_id):
+def mark_deferred(state, process_id, *, core_configured=False):
     """Persist a resumable first-run deferral scoped to this Kodi process."""
     result = normalize_state(state)
     result.update({"schema_version": 1, "wizard_version": WIZARD_VERSION,
                    "prompted": True, "completed": False})
+    if core_configured is True:
+        result["configured_onboarding_declined"] = True
     if isinstance(process_id, int) and not isinstance(process_id, bool) and process_id > 0:
         result["deferred_process_id"] = process_id
     else:

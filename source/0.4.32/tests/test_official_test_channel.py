@@ -231,15 +231,19 @@ class OfficialTestChannelTests(unittest.TestCase):
         self.assertEqual(manifest["channel"], "repository.actweeter.testing")
         self.assertEqual(manifest["stable_index_sha256"],
                          hashlib.sha256((ROOT / "repo/addons.xml").read_bytes()).hexdigest())
-        live_index = ROOT / "docs/testing/repo/addons.xml"
+        # The former rolling index is now historical. Reconstruct it from the
+        # immutable versioned ZIPs instead of requiring live Testing to stay old.
+        historical = ET.Element("addons")
+        for addon in manifest["addons"]:
+            archive_path = ROOT / "docs/testing/repo" / addon["id"] / (
+                f'{addon["id"]}-{addon["version"]}.zip')
+            with zipfile.ZipFile(archive_path) as archive:
+                historical.append(ET.fromstring(archive.read(addon["id"] + "/addon.xml")))
+        payload = ET.tostring(historical, encoding="utf-8", xml_declaration=True) + b"\n"
         self.assertEqual(manifest["testing_index"]["sha256"],
-                         hashlib.sha256(live_index.read_bytes()).hexdigest())
+                         hashlib.sha256(payload).hexdigest())
         self.assertEqual(manifest["testing_index"]["md5"],
-                         hashlib.md5(live_index.read_bytes()).hexdigest())
-        versions = {node.get("id"): node.get("version")
-                    for node in ET.parse(live_index).getroot()}
-        self.assertEqual(versions,
-                         {addon["id"]: addon["version"] for addon in manifest["addons"]})
+                         hashlib.md5(payload).hexdigest())
         for addon in manifest["addons"]:
             archive_path = (ROOT / "docs/testing/repo" / addon["id"] /
                             f'{addon["id"]}-{addon["version"]}.zip')
@@ -250,6 +254,26 @@ class OfficialTestChannelTests(unittest.TestCase):
                 package = ET.fromstring(archive.read(addon["id"] + "/addon.xml"))
                 self.assertEqual((package.get("id"), package.get("version")),
                                  (addon["id"], addon["version"]))
+
+
+    def test_configured_onboarding_testing_release_integrity(self):
+        manifest = json.loads((ROOT / "manifests/0.4.45-configured-onboarding-20261020.json").read_text())
+        self.assertEqual(manifest["channel"], "repository.actweeter.testing")
+        self.assertEqual(manifest["stable_index_sha256"],
+                         hashlib.sha256((ROOT / "repo/addons.xml").read_bytes()).hexdigest())
+        index = ROOT / "docs/testing/repo/addons.xml"
+        self.assertEqual(manifest["testing_index"]["sha256"], hashlib.sha256(index.read_bytes()).hexdigest())
+        self.assertEqual(manifest["testing_index"]["md5"], hashlib.md5(index.read_bytes()).hexdigest())
+        versions = {x.get("id"): x.get("version") for x in ET.parse(index).getroot()}
+        self.assertEqual(versions, {x["id"]: x["version"] for x in manifest["addons"]})
+        for addon in manifest["addons"]:
+            package = ROOT / "docs/testing/repo" / addon["id"] / f'{addon["id"]}-{addon["version"]}.zip'
+            self.assertEqual(hashlib.sha256(package.read_bytes()).hexdigest(), addon["sha256"])
+            with zipfile.ZipFile(package) as z:
+                self.assertIsNone(z.testzip())
+                identity = ET.fromstring(z.read(addon["id"] + "/addon.xml"))
+                self.assertEqual((identity.get("id"),identity.get("version")),
+                                 (addon["id"],addon["version"]))
 
 
 if __name__ == "__main__":

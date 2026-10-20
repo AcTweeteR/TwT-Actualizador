@@ -1888,13 +1888,14 @@ def _connect_xstream_trakt(dialog):
         return status("FAILED_RECOVERABLE")
 
 
-def _run_onboarding(dialog):
+def _run_onboarding(dialog, *, core_configured=False):
     """One sequential setup flow; maintenance is separate from first-run setup."""
     if not dialog.yesno(
             "Bienvenido a AcTweeteR",
             "Configura tu televisión y catálogo multimedia en unos pasos. Prepararemos los componentes y solo te pediremos los datos de tu proveedor y las autorizaciones necesarias.",
             nolabel="Ahora no", yeslabel="COMENZAR"):
-        _write_state(mark_deferred(_read_state(), os.getpid()))
+        _write_state(mark_deferred(_read_state(), os.getpid(),
+                                   core_configured=core_configured))
         return False
     _write_state(mark_started(_read_state()))
     while not xbmc.Monitor().abortRequested():
@@ -1937,9 +1938,9 @@ def _run_onboarding(dialog):
     return _verify_connected_services(dialog)
 
 
-def _wizard(dialog, *, first_run=False):
+def _wizard(dialog, *, first_run=False, core_configured=False):
     if first_run:
-        return _run_onboarding(dialog)
+        return _run_onboarding(dialog, core_configured=core_configured)
 
     options = [
         "Preparar componentes automáticamente",
@@ -2149,7 +2150,7 @@ def main():
                            should_offer_first_run_in_process(state, configured, os.getpid()))
         if offer_first_run:
             xbmc.log("[AcTweeteR] FIRST_RUN_WIZARD status=offered", xbmc.LOGINFO)
-            _wizard(dialog, first_run=True)
+            _wizard(dialog, first_run=True, core_configured=configured)
         else:
             reason = "prompted" if state.get("prompted") else "core_configured"
             xbmc.log("[AcTweeteR] FIRST_RUN_WIZARD status=skipped reason=%s" % reason,

@@ -1,0 +1,6 @@
+0.4.45 — Configured-profile onboarding deferral
+
+- When "Ahora no" is chosen on a configured Xtream profile, suppress repeated welcome prompts across Kodi restarts.
+- Fresh or unconfigured profiles still receive the setup wizard.
+- All runtime setup gates, credentials and Trakt authorizations remain independent and unchanged.
+- Explicitly beginning setup clears the deferral.

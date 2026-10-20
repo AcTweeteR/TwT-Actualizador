@@ -1,6 +1,6 @@
 # AcTweeteR unified Mac/Lenovo Beta source candidate
 
-## Candidate: service 0.4.44 / skin 1.2.30~beta2 / XStream Pro 1.1.2.10
+## Candidate: service 0.4.45 / skin 1.2.30~beta2 / XStream Pro 1.1.2.10
 
 This candidate combines the profile-safe Beta initialization with the
 Mac-confirmed manual trailer actions for movies and TV shows, preserves the
