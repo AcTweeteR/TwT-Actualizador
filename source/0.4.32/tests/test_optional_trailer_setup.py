@@ -68,6 +68,35 @@ class OptionalTrailerSetupTests(unittest.TestCase):
             first_run.normalize_state(old | {"completed": False, "prompted": False}),
             core_configured=True))
 
+    def test_explicit_decline_persists_for_configured_profile_only(self):
+        state = {"schema_version": 1, "wizard_version": 8,
+                 "completed": False, "setup_state": "VERIFYING",
+                 "setup_checks": {"mandatory_addons": "FAIL"}}
+        self.assertTrue(first_run.should_offer_first_run(state, True))
+        saved = first_run.normalize_state(first_run.mark_deferred(
+            state, 12345, core_configured=True))
+        self.assertTrue(saved["configured_onboarding_declined"])
+        self.assertFalse(saved["completed"])
+        self.assertEqual(saved["setup_checks"]["mandatory_addons"], "FAIL")
+        self.assertFalse(first_run.should_offer_first_run(saved, True))
+        self.assertFalse(first_run.should_offer_first_run_in_process(
+            saved, True, 67890))
+        self.assertTrue(first_run.should_offer_first_run(saved, False))
+        reset = first_run.mark_started(saved)
+        self.assertNotIn("configured_onboarding_declined", reset)
+        self.assertTrue(first_run.should_offer_first_run(reset, True))
+
+    def test_unconfigured_profile_is_reoffered_and_malformed_state_rejected(self):
+        state = first_run.mark_deferred(
+            {"schema_version": 1}, 12345, core_configured=False)
+        self.assertNotIn("configured_onboarding_declined", state)
+        self.assertFalse(first_run.should_offer_first_run_in_process(state, False, 12345))
+        self.assertTrue(first_run.should_offer_first_run_in_process(state, False, 67890))
+        bad = first_run.normalize_state({
+            "schema_version": 1,
+            "configured_onboarding_declined": "true"})
+        self.assertNotIn("configured_onboarding_declined", bad)
+
     def test_runtime_gate_does_not_readiness_gate_optional_addons(self):
         setup_path = ROOT / "addons/service.actweeter/setup.py"
         tree = ast.parse(setup_path.read_text(encoding="utf-8"))

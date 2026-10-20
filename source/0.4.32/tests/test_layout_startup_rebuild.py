@@ -123,7 +123,7 @@ class LayoutStartupRebuildTests(unittest.TestCase):
         self.kodi.executebuiltin.assert_not_called()
 
     def test_service_update_does_not_force_a_build_when_layout_is_current(self):
-        self.versions['service.actweeter'] = '0.4.44'
+        self.versions['service.actweeter'] = '0.4.45'
         self.assertEqual(self.prepare(), 'GENERATED')
         self.build.assert_not_called()
 
