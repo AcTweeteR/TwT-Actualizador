@@ -1,0 +1,48 @@
+{
+  "release": "xstream-performance-diagnostics-20261020",
+  "channel": "repository.actweeter.testing",
+  "source_branch": "codex/performance-instrumentation-20261020",
+  "source_commit": null,
+  "kodi_baseline": "21.3 Omega",
+  "instrumentation_only": true,
+  "addons": [
+    {
+      "id": "repository.actweeter.testing",
+      "version": "1.0.2",
+      "sha256": "ce0f53ea95ece57f4ced0dd1085457084ad2a333b67bdee4e121ef340376b6e1"
+    },
+    {
+      "id": "service.actweeter",
+      "version": "0.4.45",
+      "sha256": "6157eb988f0972c22d5ab665b48e90837f607af728684ec7e4a0bd6d7f5cec81"
+    },
+    {
+      "id": "skin.actweeter",
+      "version": "1.2.30~beta2",
+      "sha256": "752dffebc825702bbb613dec3939e77c5bb8f57cbd12dd12b7fcc169f677f349"
+    },
+    {
+      "id": "plugin.video.xstream-pro",
+      "version": "1.1.2.12",
+      "sha256": "f49ffc08f13006a7eca9c371c15d05a45458899daabb7bb63b598d61537f2260"
+    }
+  ],
+  "testing_index": {
+    "sha256": "12cb434eeacb7c1637bb8bebb3a4350d9a84dfad5640b3015c9a4e640ddf7314",
+    "md5": "4b7c8bfc640db1cada99b6297c596afe"
+  },
+  "stable_index": {
+    "sha256": "ecb76872ab80cdd4cd4230292682fcbda651b4750ddc5e247a01d29b470185a3",
+    "md5": "b5f66e0a257940d0d32dd9ec155b6323"
+  },
+  "upstream": {
+    "version": "1.1.2",
+    "commit": "1aa3e67da7c03c6acc3ec7e1ca579a7f645220f4",
+    "release_zip_sha256": "915f45708670d07e789bb73b7390a7b5cf30175f818ef5da8ea18c9f13f537fe",
+    "license": "CC BY-NC 4.0",
+    "performance_patch_sha256": "e76a67ce9fd922e594e48abb83888d07db779f3f30027c39de15b9ae3f06c493",
+    "diagnostics_module_sha256": "c271472cd2f774cfeebab05467010d0719ba1ab4a57d1bb4322fb27b3af24e98"
+  },
+  "runtime_status": "PACKAGE_BUILT; DEVICE_INSTALL_AND_MEASUREMENTS_PENDING",
+  "publication_scope": "docs/testing only; repo/ Stable unchanged"
+}

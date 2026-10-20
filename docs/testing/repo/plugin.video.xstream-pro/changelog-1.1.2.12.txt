@@ -1,0 +1,6 @@
+XStream Pro 1.1.2.12 — AcTweeteR Testing diagnostics
+
+- Add opt-in, privacy-safe per-process performance aggregates, disabled by default.
+- Measure provider/API/cache/storage/ListItem/directory phases and process CPU, peak RSS, threads and available I/O counters.
+- Preserve upstream XStream 1.1.2 source, license and modification attribution.
+- No functional optimization or provider, artwork, playback, menu, or cache-policy change.
