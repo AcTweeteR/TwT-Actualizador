@@ -1,0 +1,5 @@
+1.2.30~beta2 — Unified source candidate
+- Keep configured, focus-driven automatic previews for Spotlight and widgets.
+- Restore the manual SlyGuy trailer action for both movies and TV shows.
+- Preserve the original presentation, focus navigation and return ownership.
+- Candidate only; no runtime deployment or publication is claimed.
