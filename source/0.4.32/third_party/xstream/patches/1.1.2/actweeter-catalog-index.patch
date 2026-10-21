@@ -56,7 +56,7 @@ diff --git a/resources/lib/premium_routes.py b/resources/lib/premium_routes.py
 +        args = {'blocked_categories': blocked, 'hidden_ids': hidden,
 +                'category': get('cat_id'), 'provider_id': get('id'),
 +                'browse': get('browse') == '1', 'page': number(get('page', 1)),
-+                'limit': number(get('limit', 24))}
++                'limit': min(19, number(get('limit', 24))) if get('actweeter_expand') == '1' else number(get('limit', 24))}
 +        if view in ('popular', 'trending'):
 +            result = _performance_call(g, 'index.query.duration', index.ranked,
 +                cached_ranks.get('ranks') or [], **args)
@@ -152,7 +152,8 @@ diff --git a/resources/lib/premium_routes.py b/resources/lib/premium_routes.py
          unique = []
 @@ -1025,7 +1104,11 @@
      page = max(1, number(get('page', 1)))
-     limit = min(48, max(1, number(get('limit', 24))))
+-    limit = min(48, max(1, number(get('limit', 24))))
++    limit = min(19 if get('actweeter_expand') == '1' else 48, max(1, number(get('limit', 24))))
      offset = (page - 1) * limit
 -    selected = items[offset:offset + limit]
 +    if indexed is None:

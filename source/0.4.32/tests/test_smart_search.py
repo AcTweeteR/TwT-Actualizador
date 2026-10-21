@@ -360,6 +360,9 @@ class WindowContractTests(unittest.TestCase):
         controls = {node.get("id"): node for node in xml.iter("control") if node.get("id")}
         self.assertEqual(len(controls), len([n for n in xml.iter("control") if n.get("id")]))
         self.assertEqual(controls["100"].get("type"), "edit")
+        self.assertEqual(controls["106"].get("type"), "button")
+        self.assertEqual(controls["100"].findtext("visible"), "!System.Platform.Android")
+        self.assertEqual(controls["106"].findtext("visible"), "System.Platform.Android")
         # The edit control must not receive initial focus on Android.
         self.assertEqual(xml.findtext("defaultcontrol"), "103")
         self.assertIn('System.Platform.Android', (ROOT / "addons/service.actweeter/resources/lib/smart_search_ui.py").read_text())

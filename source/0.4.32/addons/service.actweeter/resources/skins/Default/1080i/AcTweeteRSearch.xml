@@ -61,10 +61,25 @@
         <texturefocus colordiffuse="FF404550" border="12">diffuse/panel.png</texturefocus>
         <texturenofocus colordiffuse="FF23262D" border="12">diffuse/panel.png</texturenofocus>
         <hinttext>Películas, series, actores, directores y TV…</hinttext>
+        <!-- Android native edit invokes Kodi's platform keyboard on touch/focus.
+             Keep it for programmatic text state but never expose it to touch. -->
+        <visible>!System.Platform.Android</visible>
         <onright>101</onright>
         <onup>104</onup>
         <ondown>111</ondown>
         <onback>104</onback>
+      </control>
+      <control type="button" id="106">
+        <!-- Android-only tappable search field; no native edit/IME. -->
+        <visible>System.Platform.Android</visible>
+        <left>80</left><top>100</top><width>1010</width><height>76</height>
+        <label>$INFO[Control.GetLabel(100)]</label>
+        <font>Reg30</font><align>left</align><aligny>center</aligny>
+        <textoffsetx>28</textoffsetx>
+        <textcolor>FFFFFFFF</textcolor>
+        <texturefocus colordiffuse="FF404550" border="12">diffuse/panel.png</texturefocus>
+        <texturenofocus colordiffuse="FF23262D" border="12">diffuse/panel.png</texturenofocus>
+        <onright>101</onright><onup>104</onup><ondown>111</ondown>
       </control>
       <control type="button" id="101">
         <left>1110</left>

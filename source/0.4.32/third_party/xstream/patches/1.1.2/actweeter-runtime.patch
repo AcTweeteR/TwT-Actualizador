@@ -1312,7 +1312,7 @@ index 0000000000000000000000000000000000000000..f43603caf622701aa4f1bcf8d513e496
 +        catalogs = {}
 +        limit = min(48, max(1, number(get('limit', 24))))
 +        if get('actweeter_expand') == '1':
-+            limit = min(20, limit)
++            limit = min(19, limit)
 +        page = max(1, number(get('page', 1)))
 +        offset = (page - 1) * limit
 +        valid_count = 0
@@ -1403,7 +1403,7 @@ index 0000000000000000000000000000000000000000..f43603caf622701aa4f1bcf8d513e496
 +                        for item in items if provider_id(item, kind) in ids)
 +        limit = min(48, max(1, number(get('limit', 24))))
 +        if get('actweeter_expand') == '1':
-+            limit = min(20, limit)
++            limit = min(19, limit)
 +        page = max(1, number(get('page', 1)))
 +        offset = (page - 1) * limit
 +        selected = rows[offset:offset + limit]

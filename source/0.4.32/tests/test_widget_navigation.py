@@ -115,7 +115,7 @@ class WidgetNavigationTests(unittest.TestCase):
         self.assertTrue(all(node.get("effect") == "fade"
                             for node in home_fades.findall("animation")))
 
-    def test_expansion_literal_selects_21_without_infolabel_lookup(self):
+    def test_expansion_literal_selects_20_without_infolabel_lookup(self):
         root = ET.parse(XML / "IncludesHomeWidgets.xml").getroot()
         base = root.find("include[@name='widget_base_normal']")
         self.assertEqual(base.find("param[@name='widgetExpandable']").get("default"), "false")
@@ -125,7 +125,7 @@ class WidgetNavigationTests(unittest.TestCase):
         self.assertEqual([(n.get("content"), n.get("condition")) for n in branches], [
             ("widget_base_content_expandable", "$PARAM[widgetExpandable]"),
             ("widget_base_content_$PARAM[contentStyle]", "!$PARAM[widgetExpandable]")])
-        self.assertEqual(root.find("include[@name='widget_base_content_expandable']/content").get("limit"), "21")
+        self.assertEqual(root.find("include[@name='widget_base_content_expandable']/content").get("limit"), "20")
         self.assertEqual(root.find("include[@name='widget_base_content_normal']/content").get("limit"), "20")
         template = ET.parse(XML.parent / "shortcuts/template.xml").getroot()
         flags = list(template.iterfind(".//param[@name='widgetExpandable']"))
