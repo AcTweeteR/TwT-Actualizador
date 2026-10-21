@@ -12,7 +12,9 @@ El informe `SMART_SEARCH_2026-10-21.md` conserva la evidencia de esa primera can
 
 - Solo fuentes de este worktree y ejecución de desarrollo en Kodi Mac original 21.3.
 - XStream **1.1.2.14 habilitado**, comprobado mediante JSON-RPC antes y durante las pruebas.
-- No se han instalado estos paquetes, sobrescrito addons del Mac ni copiado perfiles.
+- No se han instalado estos paquetes ni copiado perfiles. Tras autorización expresa
+  adicional se aplicó exclusivamente el parche localizado de tres XML de la skin del Mac,
+  con originales respaldados y verificados; no se sustituyeron directorios de addons.
 - No se han usado Lenovo, Apple TV, QA, ni modificado feeds Stable/Testing.
 - No hay nuevas dependencias obligatorias ni copia de código/assets de los proyectos estudiados.
 - El índice real del proveedor se abre en lectura; el benchmark verifica tamaño/mtime sin cambios.
@@ -164,7 +166,7 @@ Las capturas se observaron durante la sesión; no se incluyen logs personales en
 | Temporada 1 → episodios | PASS_RUNTIME | Siete episodios únicos, T1/E1…E7, imágenes y sinopsis; proveedor devolvía duplicados |
 | Episodio piloto → overlay | PASS_RUNTIME | Título correcto S01E01 y sinopsis; no se reproduce automáticamente |
 | Cruceta y Back entre contextos | PASS_RUNTIME | Resultados, overlay, temporadas, episodios y regreso a Home |
-| Apertura ficha nativa heredada del episodio | PARTIAL | Título/sinopsis correctos, **logo y datos secundarios conservan contenido de Home**; corrección fuente preparada, no instalada |
+| Apertura ficha nativa heredada | PASS_RUNTIME casos ejecutados | Tras autorizar el parche: Matrix, Breaking Bad y piloto sin datos de Home; ver última validación |
 | Teclado nativo Kodi | PASS_RUNTIME apertura/cancelación | Diálogo español QWERTY visible y cancelación conserva consulta; dictado no probado |
 | QWERTY propio | PASS_RUNTIME casos ejecutados | Cruceta: letras, Ñ, espacio, borrar, LISTO y Back; ver cierre |
 | EPG: búsqueda → programa → canal | PASS_RUNTIME | `noticias`: 30 programas; Noticias 24H/La 1 → botón explícito Ver canal en directo; imagen de RTVE observada y JSON-RPC type=channel, speed=1. Canal de prueba detenido con X |
@@ -187,7 +189,8 @@ Las capturas se observaron durante la sesión; no se incluyen logs personales en
    frente a 2h16 de Matrix en el reproductor. `Home.ShowViewSubMenu=show` permanece
    durante el modal; `IsMainMenuOpened` no excluía DialogVideoInfo y habilitaba los
    fallbacks de Home. Corrección compartida y tests añadidos, sin limpiar propiedades
-   globales. Su efectividad visual instalada continúa pendiente: ver bloqueo del cierre.
+   globales. Tras autorizar la prueba de los tres XML se confirma su efectividad visual
+   en Matrix, Breaking Bad y el piloto; ver última validación.
 4. El lanzamiento desde archivo carece del contexto de addon requerido por la API opcional
    de alias. No se sustituye por importación privada ni se considera validado con mocks.
 5. Las llamadas remotas de directorio no exponen cancelación física: una petición lenta
@@ -229,9 +232,9 @@ de servicio en la raíz de dist **no es el final**. Los candidatos actuales se i
 
 Antes de autorizar publicación/instalación desde Testing:
 
-1. Validar en Kodi el parche de contexto modal ya preparado, sin cambiar el contexto global de Home.
+1. Parche de contexto modal probado en Kodi tras autorización adicional, sin cambiar propiedades globales de Home.
 2. Comprobar el adaptador de alias bajo el contexto registrado real del addon.
-3. Repetir regresión de fichas Home/película/serie/temporada/episodio después de instalar el parche.
+3. Regresión realizada: ficha normal Home, película, serie, temporadas navegables y episodio. No existe acción de ficha nativa de temporada en la UI actual.
 4. VOD, EPG→canal y QWERTY con mando ya ejecutados; no sustituyen esa regresión pendiente.
 5. Revisar diff, suite, hashes e índices; después pedir autorización de despliegue Beta.
 
@@ -260,9 +263,9 @@ la ventana de desarrollo deja activos los addons originales del Mac.
 
 ## Cierre de la revalidación — 0.4.48 / beta5
 
-**BETA_READINESS=PARTIAL.** Implementación preparada y VOD comprobado; no se certifica
-la corrección visual nativa sin cargar esos XML en Kodi ni los alias opcionales sin
-un contexto registrado de addon. No hay publicación, push, fusión ni instalación Beta.
+**BETA_READINESS=PARTIAL.** Implementación preparada, VOD y parche visual nativo comprobados
+tras autorización adicional. Falta validar los alias opcionales en un contexto registrado
+de addon. No hay publicación, push, fusión ni instalación Beta.
 
 ### Causas y cambios localizados
 
@@ -276,7 +279,8 @@ un contexto registrado de addon. No hay publicación, push, fusión ni instalaci
    esté vacío, antes del fallback del contenedor/Home. `IncludesBingie.xml:GetResolution`
    agrupa 480/576/540 para que 576/540 no eludan la condición de contexto por precedencia.
    No se escribe ni borra ninguna propiedad global; no se cambia la entrega del ListItem.
-   Las cuatro pruebas XML verifican el contrato compartido, **no su renderizado**.
+   Las cuatro pruebas XML verifican el contrato compartido, **no su renderizado**;
+   la prueba posterior autorizada confirma el renderizado en los casos registrados abajo.
 2. **Vídeo oculto por la búsqueda modal.** Reproducir desde la ficha nativa podía dejar
    el buscador sobre el vídeo activo. `smart_search_ui.py:428,445,570` detecta vídeo
    iniciado mientras esa ficha está abierta y no había vídeo previo; cierra una vez
@@ -307,7 +311,8 @@ un contexto registrado de addon. No hay publicación, push, fusión ni instalaci
 | Nombre incompleto | PASS_RUNTIME | `tom crui` → tarjeta Tom Cruise → filmografía con siete películas y una serie confirmadas en IPTV → Biografía con fotografía/texto → Back; no se confunde con el título TMDb homónimo |
 | EPG → televisión | PASS_RUNTIME | `noticias` → En TV → Las noticias de la mañana/Antena3 → Ver canal en directo. Player.GetItem channel, Antena3, speed1 y ventana12005; imagen real observada y prueba detenida con X |
 | Fallo remoto con resultados locales | PASS_RUNTIME | `matrx`: seis resultados IPTV conservados, aviso de metadatos temporalmente no disponibles; no se bloquea la búsqueda local |
-| Parche de contexto instalado: película/serie/temporada/episodio/Home | NOT_TESTED | La modificación de los tres XML instalados fue rechazada por la revisión del entorno; fuentes y paquetes contienen el parche, Master no |
+| Parche instalado: película/serie/episodio/Home | PASS_RUNTIME casos ejecutados | Después de la autorización adicional: Matrix1999/2h16, Breaking Bad2008/5temporadas y pilotoS1E1/58m; sin logo/año/fanart de Spider-Man; ficha normal de Home conservada |
+| Temporadas | PASS_RUNTIME navegación | Cinco temporadas con identidad propia; Temporada1 abre siete episodios y Back conserva selección. La UI actual no ofrece una ficha nativa individual de temporada; ese modal no se certifica |
 | Alias exportados en contexto registrado | NOT_TESTED | El lanzamiento por archivo sigue sin contexto de addon; no se falsea Addon(), no se importan claves/rutas privadas y no se reemplaza el servicio instalado |
 | Todos los hitboxes, dictado tvOS y táctil Android | NOT_TESTED | Los clics concretos y el contrato XML no equivalen a certificar todos los controles o plataformas |
 
@@ -321,19 +326,19 @@ de las pruebas y se detienen únicamente los vídeos/canal iniciados por esta in
 Antes del intento de prueba de skin se guardaron tres originales en la carpeta privada
 temporal `/private/tmp/actweeter-search-final-EzoKsI/` y se verificaron SHA-256:
 
-| Original instalado | SHA-256 del respaldo y archivo actual |
+| Original instalado | SHA-256 del respaldo anterior al parche |
 |---|---|
 | Includes.xml | `3b7456ca3b5ef62d1997fdb3ad31d1ae39aeeb5fc7236ee11c0a583373e04cbe` |
 | IncludesBingie.xml | `e567fa3735e344215892676ec7735285a0aa2912bf98508b286e65c5ced52da6` |
 | IncludesBackgroundBuilding.xml | `77bb976dd4a42d52196eb85d3ec4719cd84661d8291f9a0830b65ad59a6d67e1` |
 
-La revisión de permisos rechazó editar los XML de producción. **No se aplicó el parche
-instalado**, ni se intentó eludir el rechazo mediante otra herramienta. Se solicitó
-autorización explícita para la prueba localizada con rollback; pendiente de respuesta.
-Los tres archivos actuales se compararon byte a byte con esos respaldos: idénticos.
-No hace falta restaurarlos. Una futura prueba autorizada debe comprobar cero reproducción,
-aplicar solo el diff localizado y, ante regresión, restaurar esos originales verificados
-y recargar la skin; nunca copiar userdata ni reemplazar complementos completos.
+La revisión de permisos inicialmente rechazó editar los XML de producción. No se eludió
+el rechazo: se continuó con trabajos independientes. El usuario respondió después
+«puedes editarlos» y autorizó expresamente la prueba localizada. Se comprobó cero
+reproducción, se aplicó únicamente el diff de esos tres XML y se recargó la skin mediante
+Kodi. No se modificaron manifests instalados, servicios, perfiles ni configuraciones.
+No se detectó regresión en los casos comprobados. Rollback disponible: restaurar únicamente
+esos tres originales verificados y recargar la skin, sin tocar userdata ni otros addons.
 
 Para alias se necesita ejecutar el candidato como addon registrado por un mecanismo
 normal autorizado. Esta misión prohíbe sustituir addons de producción o publicar el feed;
@@ -362,23 +367,24 @@ concretas; no son percentiles ni medición del renderer. Índice tamaño/mtime s
 
 ### Paquetes actuales y controles
 
-Usar exclusivamente `source/0.4.32/dist/smart-search-2-reviewed/` para revisión final:
+Usar exclusivamente `source/0.4.32/dist/smart-search-2-audit-candidate/` para revisión final:
 
 | ZIP | SHA-256 |
 |---|---|
-| service.actweeter-0.4.48.zip | `7eb144dab64be2258d3f3999fb273db5ab9a71e916b875cf419a657d968b15ea` |
+| service.actweeter-0.4.48.zip | `0e4cc8943d810479c8298b418cfa7a2e9c094a2dfb6af846ae55cd0e4ded81a0` |
 | skin.actweeter-1.2.30~beta5.zip | `84cb959a81a3a19a0288d9532bb9ab2a29d19cbe3677745965c36580e4d5c6f5` |
 
-- Segunda compilación en `dist/smart-search-2-reviewed-repeat/`: byte a byte idéntica.
+- Segunda compilación en `dist/smart-search-2-audit-repeat/`: byte a byte idéntica.
 - CRC,37 Python AST,198 XML y350 entradas de texto: PASS_STATIC; sin patrones de
   claves privadas/tokens conocidos/URL usuario:contraseña/rutas personales en paquetes.
   No equivale a una garantía criptográfica de inexistencia de cualquier secreto.
 - Tests comprueban que los ZIP contienen exactamente el UI fuente y los tres XML
   reparados; no basta una coincidencia de versión. Suite final: **262/262**.
-- Feed **solo local** `dist/smart-search-2-reviewed-testing/repo/`: versiones0.4.48,
+- Feed **solo local** `dist/smart-search-2-audit-testing/repo/`: versiones0.4.48,
   beta5, XStream1.1.2.14, Testing1.0.2; MD5 verificado, sin repositorio Stable.
 - Directorios históricos `dist/*` conservados, incluidos acceptance/acceptance-repeat;
-  estos últimos preceden al ajuste de textos de estado y no son el distribuible final.
+  estos últimos preceden al ajuste de textos de estado. Los directorios reviewed también
+  se conservan pero preceden a la corrección final de la cabecera al volver; no son el distribuible final.
 - Feeds `repo/` y `docs/testing/`, parches XStream: sin diff respecto a main. Consulta
   remota final confirma main en `ba87dbc352d5e41059d2dc21808dd275ebe5634b`.
 - Últimas4000 líneas de log: cinco avisos metadata/RuntimeError, agregados sin imprimir
@@ -391,8 +397,42 @@ Commits locales nuevos:
 - `479fabf`: aislamiento del contexto modal de la skin y cuatro contratos XML.
 - `737e514`: handoff/retorno VOD, foco QWERTY y pruebas de comportamiento.
 - `cfb853b`: identidades0.4.48/beta5, changelogs, builders y contratos de paquetes.
+- `83d7049`: informe y benchmark de la primera revalidación.
+- `5a7335a`: cabecera correcta al restaurar resultados anidados.
 
-Siguiente acción exacta: resolver la autorización de prueba localizada de skin y el
-contexto registrado del candidato; comprobar película/serie/temporada/episodio y Home
-sin contaminación, luego alias reales. Solo después reconsiderar READY. No se solicita
-publicación ni instalación desde ZIP local: el despliegue final seguirá siendo Testing.
+Siguiente acción exacta: validar los alias opcionales en el contexto registrado del
+candidato mediante una instalación autorizada normal, sin falsear Addon() ni sustituir
+archivos del servicio de producción. Solo después reconsiderar READY. No se publica
+ni instala desde ZIP local: el despliegue final seguirá siendo Testing cuando se autorice.
+
+### Última validación después de autorizar los XML
+
+Se repitió exactamente la condición problemática: `Home.ShowViewSubMenu=show` continuó
+presente mientras DialogVideoInfo mostraba Matrix, Breaking Bad y el piloto. Se verificó
+mediante consultas de lectura y capturas de la ventana real, no evaluando `$EXP` desde
+JSON-RPC (esa expresión no es una API de diagnóstico del evaluador XML).
+
+- Matrix: título The Matrix,1999,2h16, fanart Matrix y colección Matrix; no logo de Home.
+- Serie: Breaking Bad,2008,5temporadas, creador Vince Gilligan y fanart propio.
+- Piloto: ListItem episode/S1/E1, título/sinopsis propios,58m; al no tener año no hereda2026.
+- Home: ficha de Spider-Man mantiene su logo/fanart/año; fila Continuar viendo accesible,
+  carátulas visibles y preview automático de Matrix observado. Abrir ficha o volver al
+  menú cancela el preview mediante el coordinador existente; no se introduce Stop.
+- Back desde ficha/episodios/temporadas restaura `breaking bad` y el foco de la serie.
+  Se corrigió además la cabecera antigua «Temporada1»: tras repetir el recorrido con
+  fuentes nuevas se observa `Resultados · breaking bad` y «sin repetir consultas».
+
+SHA-256 de los tres archivos instalados **después** del parche autorizado:
+
+| XML | SHA-256 |
+|---|---|
+| Includes.xml | `512b86af2ec791911ea9893182131ac4a4ff4e2fe700db84a5566c9bd2a32911` |
+| IncludesBingie.xml | `8cc4d1fa660c5e69c68bf6f211fc8b9bc2de37f453b6cc2f578fcec5b2b32cc4` |
+| IncludesBackgroundBuilding.xml | `08e408f26ec0a3343eea2dfae810596c8b727cf78abe2dd14cb4fbdadac31b32` |
+
+El servicio candidato sigue ejecutándose desde fuentes; no está instalado como0.4.48.
+La versión instalada de skin no se cambia por aplicar este diff localizado. Final:
+Inicio10000, cero reproductores, XStream1.1.2.14 habilitado. Suite262/262; paquetes
+finales validados otra vez (CRC/AST/XML/reconstrucción/patrones/MD5). Stable y Testing
+públicos intactos. **BETA_READINESS=PARTIAL únicamente por los gates pendientes indicados;
+no se mantiene como pendiente el defecto visual ya probado.**
