@@ -1782,6 +1782,11 @@ def _finish_setup(dialog):
         }
         dialog.ok("Configuración incompleta", "\n".join(reasons.get(key, key) for key in blockers))
         return False
+    try:
+        from addon_update_policy import review as review_updates
+        review_updates(xbmc, ADDON, xbmcvfs, dialog)
+    except Exception as exc:
+        xbmc.log("[AcTweeteR] UPDATE_POLICY review_error=" + type(exc).__name__, xbmc.LOGWARNING)
     dialog.ok("AcTweeteR está preparado",
               "Tus componentes y catálogos están preparados. La reproducción real se comprueba por separado; la disponibilidad de guía depende del proveedor.")
     return True
@@ -1898,6 +1903,8 @@ def _run_onboarding(dialog, *, core_configured=False):
                                    core_configured=core_configured))
         return False
     _write_state(mark_started(_read_state()))
+    from addon_update_policy import configure as configure_updates
+    configure_updates(xbmc, ADDON, xbmcvfs, dialog)
     while not xbmc.Monitor().abortRequested():
         _write_state(mark_step(_read_state(), "Preparar componentes automáticamente", "IN_PROGRESS"))
         if _complete_missing_components(dialog, consent_granted=True, quiet=True):
@@ -1954,6 +1961,7 @@ def _wizard(dialog, *, first_run=False, core_configured=False):
         "Conectar Trakt (opcional)",
         "Vincular recomendaciones de XStream (opcional)",
         "Actualizar catálogo y recomendaciones de XStream",
+        "Actualizaciones y canal",
     ]
     while True:
         state = _read_state()
@@ -1962,6 +1970,10 @@ def _wizard(dialog, *, first_run=False, core_configured=False):
                                preselect=min(start_at, len(options) - 1))
         if choice < 0:
             break
+        if choice == 11:
+            from addon_update_policy import configure as configure_updates
+            configure_updates(xbmc, ADDON, xbmcvfs, dialog)
+            continue
         if choice == 8:
             _connect_trakt(dialog)
             continue
@@ -2176,6 +2188,9 @@ def main():
                     _wizard(dialog)
     elif action in ("services", "status"):
         _show_status(dialog)
+    elif action == "updates":
+        from addon_update_policy import configure as configure_updates
+        configure_updates(xbmc, ADDON, xbmcvfs, dialog)
     elif action in ("diagnostics", "diagnosticar"):
         _run_install_diagnostics(dialog)
     elif action == "intro":

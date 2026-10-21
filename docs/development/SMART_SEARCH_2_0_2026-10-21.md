@@ -497,13 +497,15 @@ No se ha publicado una candidata conocida con este gate incumplido.
 
 ### Actualizaciones automáticas: configuración comprobada, entrega aún no comprobada
 
-Se introspectaron Settings.GetSettingValue y Settings.SetSettingValue en Kodi21.3.
-Con consentimiento expreso se cambió `addons.updatemode` de1 a0 mediante la API oficial.
-Lectura inmediata:0; cierre normal: guisettings guarda0; después de volver a abrir Kodi:
-Settings.GetSettingValue devuelve0. **CONFIGURATION=PERSISTED_RUNTIME**.
-El significado de0 es automático, no notificar, según
-[AddonSystemSettings.h Omega21.3](https://github.com/xbmc/xbmc/blob/21.3-Omega/xbmc/addons/AddonSystemSettings.h#L18).
-No se cambia la preferencia de repositorios ni las configuraciones de otros addons.
+**Corrección de la comprobación anterior:** se confundió `addons.updatemode`, que
+selecciona repositorios, con `general.addonupdates`, que controla el modo automático.
+La primera modificación de1 a0 no demostraba actualización automática y alteró el ajuste
+equivocado. En el requisito adicional se restauró el valor original1 de repositorios y,
+con la autorización ya recibida, se activó el ajuste correcto `general.addonupdates=0`.
+Ambos valores se verificaron en disco tras Cmd+Q y mediante JSON-RPC después de reabrir
+`/Applications/Kodi.app`. Véase el
+[informe de implementación y pruebas](UPDATES_ONBOARDING_2026-10-21.md).
+La comprobación anterior queda explícitamente sustituida, no se considera evidencia válida.
 
 Antes de la instalación local los tres componentes tenían origen Testing. Kodi deja
 vacío el origen del servicio y skin instalados desde ZIP; XStream conserva Testing.
@@ -530,3 +532,19 @@ global autorizada puede actualizar también otros addons habilitados, como se ad
 - `AUTO_UPDATE=PARTIAL`: ajuste global persistido, actualización real no demostrada.
 - `STABLE_UNCHANGED=YES`; Master en Home, sin vídeo de prueba, XStream habilitado.
 - Lenovo, Apple TV y configuraciones Trakt no modificados.
+
+## Requisito adicional: configuración de actualizaciones integrada
+
+Servicio candidato **0.4.49**, skin sin cambios **1.2.30~beta5**. Se incorporan consentimiento
+en primera ejecución, revisión al finalizar la instalación, opción «Actualizaciones y canal»
+y auditoría sin setters al arrancar el servicio. No se fuerza «Cualquier repositorio».
+Suite completa: **278 pruebas correctas**, incluidas16 pruebas nuevas de este requisito.
+Detalles, límites nativos, corrección de identificadores y evidencias runtime:
+[UPDATES_ONBOARDING_2026-10-21.md](UPDATES_ONBOARDING_2026-10-21.md).
+
+ZIP nuevo reproducible, no publicado:
+`source/0.4.32/dist/smart-search-update-policy-final/service.actweeter-0.4.49.zip`.
+SHA-256: `cd148c32c4b7aea04f33e84381524a4442b27c5b603a42582d42e1af05717656`.
+La instalación registrada del Mac sigue en0.4.48/beta5; la pantalla nueva se prueba desde
+fuentes usando las API reales de Kodi, no sustituyendo los archivos del addon instalado.
+La publicación de Smart Search sigue bloqueada por el gate independiente de alias TMDb.

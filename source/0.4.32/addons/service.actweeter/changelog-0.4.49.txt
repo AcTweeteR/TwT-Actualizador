@@ -1,0 +1,7 @@
+0.4.49 — candidata no publicada
+- El asistente ofrece configurar las actualizaciones nativas de Kodi con consentimiento.
+- Usa general.addonupdates para el modo automático y conserva addons.updatemode.
+- Revisa los orígenes Stable/Testing y los bloqueos individuales en modo de solo lectura.
+- Comprueba el guardado en disco sin escribir guisettings ni bases de datos.
+- Revisa cambios de versión y preferencias al arrancar; avisa sin cambiar configuraciones.
+- Conserva Smart Search 2.0. El gate de alias TMDb sigue pendiente; no se declara resuelto.

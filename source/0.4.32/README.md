@@ -1,6 +1,6 @@
 # AcTweeteR Smart Search candidate
 
-## Candidate: service 0.4.48 / skin 1.2.30~beta5
+## Candidate: service 0.4.49 / skin 1.2.30~beta5
 
 Smart Search replaces window 1109 with a compatible launcher and a native
 Kodi search window: live local title matching, movies/series/EPG/person rows,

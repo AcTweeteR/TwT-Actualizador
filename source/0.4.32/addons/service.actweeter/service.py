@@ -799,6 +799,11 @@ def run_service(kodi, addon_factory, vfs, clock=time.time):
     trailer_return_player = SlyGuyTrailerReturnPlayer(kodi, return_monitor,
                                                       auto_preview=auto_preview)
     try:
+        try:
+            from addon_update_policy import review as review_updates
+            review_updates(kodi, ADDON, vfs, xbmcgui.Dialog())
+        except Exception as exc:
+            kodi.log("[AcTweeteR] UPDATE_POLICY review_error=" + type(exc).__name__, kodi.LOGWARNING)
         return _run_coordinator(kodi, addon_factory, vfs, clock=clock,
                                 monitor=return_monitor, performance=performance)
     finally:

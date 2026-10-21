@@ -90,7 +90,7 @@ class AutoplaySkinWiringTests(unittest.TestCase):
                 self.assertFalse(any('preview_focus' in (n.text or '')
                                      for n in root.iter('onfocus')), filename)
 
-    def test_requires_current_service_and_preserves_optional_slyguy(self):
+    def test_requires_smart_search_service_and_preserves_optional_slyguy(self):
         root = ET.parse(SKIN / 'addon.xml').getroot()
         self.assertEqual(root.find("./requires/import[@addon='service.actweeter']").get('version'),
                          '0.4.48')
