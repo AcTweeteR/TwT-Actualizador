@@ -5,3 +5,7 @@ Este cambio Testing añade un estado vacío nativo a las rutas XStream Premium d
 La pulsación larga inyectada con `adb input swipe` no equivale necesariamente a un evento físico Android long-press. `MENU/82` había sido comprobado y abrió las dos acciones. En esta auditoría, dos toques ADB sobre carátulas diferentes abrieron sus fichas respectivas sin error. Esto reduce la evidencia de error táctil reproducible, pero NO acredita pulsación larga física ni permite declarar resuelto un fallo intermitente.
 
 Suite local: 309 tests, incluidos 13 de colecciones; distribución reproducible XStream 1.1.2.17. Se mantienen sin cambios service.actweeter 0.4.53 y skin 1.2.32~beta1 y el árbol Stable. Para completar la aceptación se requieren las pruebas físicas de pulsación larga y de persistencia dentro de un perfil Kodi aislado, o consentimiento expreso para probar colecciones personales; no se atribuye PASS a las pruebas no realizadas.
+
+## Ajuste de rotulación en Lenovo
+
+La primera prueba visual con 1.1.2.17 confirmó el directorio nativo pero su leyenda larga quedaba cortada por la vista de póster. 1.1.2.18 emplea etiquetas breves: «Sin favoritos» / «Sin pendientes», o «No disponible» cuando existen miembros ausentes del catálogo. No altera lógica de negocio.
