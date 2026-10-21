@@ -92,7 +92,7 @@
 			<fanart>extras/media/backgrounds/settings_interface.jpg</fanart>
 		</assets>
 	</extension>
-</addon><addon id="plugin.video.xstream-pro" name="Xstream Pro" version="1.1.2.18" provider-name="PesicP">
+</addon><addon id="plugin.video.xstream-pro" name="Xstream Pro" version="1.1.2.19" provider-name="PesicP">
     <requires>
         <import addon="xbmc.python" version="3.0.1" />
         <import addon="script.module.requests" version="2.22.0" />

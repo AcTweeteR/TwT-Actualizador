@@ -85,8 +85,8 @@ class CandidatePackageBuildTests(unittest.TestCase):
                 for filename in ("Includes.xml", "IncludesBingie.xml", "IncludesBackgroundBuilding.xml"):
                     self.assertEqual(archive.read("skin.actweeter/1080i/" + filename),
                                      (ROOT / "addons/skin.actweeter/1080i" / filename).read_bytes())
-            xstream = output / "plugin.video.xstream-pro-1.1.2.18.zip"
-            self._write_addon_fixture(xstream, "plugin.video.xstream-pro", "1.1.2.18")
+            xstream = output / "plugin.video.xstream-pro-1.1.2.19.zip"
+            self._write_addon_fixture(xstream, "plugin.video.xstream-pro", "1.1.2.19")
             index_path, md5_path = build_distribution_index.build(
                 REPOSITORY_ROOT / "docs/testing/repo/repository.actweeter.testing/repository.actweeter.testing-1.0.2.zip",
                 skin,
@@ -100,7 +100,7 @@ class CandidatePackageBuildTests(unittest.TestCase):
                 "repository.actweeter.testing": "1.0.2",
                 "service.actweeter": "0.4.53",
                 "skin.actweeter": "1.2.32~beta1",
-                "plugin.video.xstream-pro": "1.1.2.18",
+                "plugin.video.xstream-pro": "1.1.2.19",
             })
             self.assertEqual(hashlib.md5(payload).hexdigest(),
                              md5_path.read_text(encoding="ascii").strip())

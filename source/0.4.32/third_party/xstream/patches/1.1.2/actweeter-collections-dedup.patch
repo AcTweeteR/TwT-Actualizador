@@ -1,0 +1,22 @@
+diff --git a/resources/lib/premium_routes.py b/resources/lib/premium_routes.py
+--- a/resources/lib/premium_routes.py
++++ b/resources/lib/premium_routes.py
+@@ -1079,6 +1079,18 @@
+         items = [s for s in items if str(s.get('category_id')) == get('cat_id')]
+     if indexed is None and get('id'):
+         items = [s for s in items if provider_id(s, stype) == get('id')]
++    if indexed is None and view in ('favorites', 'pending'):
++        # Xtream may expose duplicate catalog rows for the same provider ID.
++        # A collection has one saved membership per typed ID, so render one
++        # poster per ID on BOTH expanded (browse=1) and widget routes.
++        seen_collection_ids = set()
++        unique_collection_items = []
++        for item in items:
++            sid = provider_id(item, stype)
++            if sid not in seen_collection_ids:
++                seen_collection_ids.add(sid)
++                unique_collection_items.append(item)
++        items = unique_collection_items
+     if indexed is None and get('browse') != '1' and not get('id'):
+         # One card per exact title/year; retain the first provider edition.
+         seen = set()
