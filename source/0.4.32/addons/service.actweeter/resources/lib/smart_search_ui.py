@@ -536,6 +536,8 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
             self.setProperty("search.hero.title", "")
             self.setProperty("search.hero.plot", "")
             self.setProperty("search.hero.art", "")
+            self.setProperty("search.status", "Explorando · " + self.person["title"] if self.person else
+                             "Resultados · " + self.query)
             self.setProperty("search.remote", "Resultados restaurados · sin repetir consultas")
             self.setFocusId(focus)
         elif self.person:

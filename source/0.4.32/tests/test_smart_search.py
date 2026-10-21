@@ -427,11 +427,13 @@ class WindowBehaviourTests(unittest.TestCase):
             self.window._browse(person)
             self.window._back()
             self.assertEqual(self.window.rows[5104], [person])
+            self.window.setProperty.assert_any_call("search.status", "Explorando · Matrix")
             self.window._back()
         self.assertEqual(self.window.rows[5101], [movie])
         self.assertEqual(self.window.query, "matrix")
         self.assertIsNone(self.window.person)
         self.assertEqual(self.window.history, [])
+        self.window.setProperty.assert_any_call("search.status", "Resultados · matrix")
 
     def test_info_enrichment_keeps_focus_on_the_current_button(self):
         self.window._show_detail(dict(kind="movie", title="Matrix", id="99", available=True), remember=False)
