@@ -64,7 +64,7 @@ class CollectionsIsolationTests(unittest.TestCase):
         import hashlib
         import json
         manifest = json.loads((ROOT / 'third_party/xstream/upstream.json').read_text())
-        package = ROOT.parents[1] / 'docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.17.zip'
+        package = ROOT.parents[1] / 'docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.18.zip'
         with zipfile.ZipFile(package) as archive:
             self.assertIsNone(archive.testzip())
             for name in ('favorites.py', 'pending_adapter.py', 'addon.py', 'premium_routes.py'):
@@ -218,7 +218,7 @@ class CollectionsIsolationTests(unittest.TestCase):
                 route,item,is_folder=rows[0]
                 self.assertTrue(is_folder)
                 self.assertEqual(item.properties['AcTweeteR.EmptyCollection'],'1')
-                self.assertIn('Colección vacía',item.label)
+                self.assertEqual(item.label, 'Sin favoritos' if view == 'favorites' else 'Sin pendientes')
                 q=parse_qs(urlsplit(route).query)
                 self.assertEqual(q['view'],['collections_root'])
                 self.assertEqual(q['stype'],[stype])
@@ -261,6 +261,6 @@ class CollectionsIsolationTests(unittest.TestCase):
             self.assertFalse(ended[-1]['cacheToDisc'])
         self.assertEqual(len(empty_rows), 1)
         self.assertTrue(empty_rows[0][2])
-        self.assertEqual(empty_rows[0][1].label, 'Contenido no disponible en el catálogo actual')
+        self.assertEqual(empty_rows[0][1].label, 'No disponible')
         self.assertEqual(empty_rows[0][1].properties['AcTweeteR.EmptyCollection'], '1')
         self.assertTrue(self.store.is_favorite('999', stype='movie'))

@@ -39,8 +39,8 @@ diff --git a/resources/lib/premium_routes.py b/resources/lib/premium_routes.py
 +        has_members = (bool(g['_get_profile_fav'](pnum).get_favorites(stype))
 +                       if view == 'favorites' else
 +                       bool(pending and pending.list_items(stype)))
-+        message = ('Contenido no disponible en el catálogo actual' if has_members
-+                   else 'Colección vacía: añade títulos desde una carátula')
++        message = ('No disponible' if has_members else
++                   'Sin favoritos' if view == 'favorites' else 'Sin pendientes')
 +        empty_item = g['_new_listitem'](message)
 +        empty_item.setArt({'icon': 'DefaultFolder.png', 'thumb': 'DefaultFolder.png'})
 +        empty_item.setProperty('AcTweeteR.EmptyCollection', '1')
