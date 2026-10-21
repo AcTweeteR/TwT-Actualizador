@@ -202,3 +202,35 @@ MAC_SYNC_RUNTIME=NOT_TESTED
 LENOVO=NOT_TOUCHED
 BETA_PUBLICATION=NOT_STARTED
 STABLE_UNCHANGED=YES
+
+## Continuación: parche Mac autorizado y OAuth nativo abierto
+
+El usuario autorizó expresamente modificar los dos módulos instalados, con copia
+verificable previa. Se comprobó que no había reproductores activos. Nueva copia
+privada (0700), fuera de Git:
+`_local_recovery/trakt-mac-20261021.pj6vve/`.
+Ambos originales coinciden mediante `cmp` y SHA-256 con los hashes anteriores.
+
+El parche versionado se aplicó a Master sin modificar manifiestos, configuración
+ni tokens. Los hashes instalados coinciden con los módulos del candidato:
+
+- `trakt.py`: `529cc01399903c0ebbbd8fa265669ac4c1926740f9591a8e80730a1c90f7d664`.
+- `tmdb_routes.py`: `e435f7cdd8d35658f60c20640e8a978427c8d57cdf062228b411052f34135376`.
+
+Esto es un overlay de desarrollo de dos módulos sobre XStream 1.1.2.19, no una
+instalación completa de 1.1.2.20~beta1. El parche y su constructor ya están
+versionados en `cc4bb98`.
+
+Verificación runtime mediante ruta nativa: 11 entradas, autorización ofrecida,
+sin la antigua exigencia de client secret y sin rutas de cuenta todavía.
+Desde la interfaz nativa XStream → Trakt → Autorizar Trakt se abrió el diálogo
+de dispositivo y Trakt devolvió URL oficial de activación y código de usuario.
+No se conserva ese código temporal en este informe. Se solicitó al usuario
+completar personalmente el consentimiento. La autorización final y las consultas
+autenticadas siguen pendientes; obtener un código no acredita una sesión válida.
+
+Suite completa repetida: **352 tests, OK, 16.844 s**. No se copió ni leyó el token
+de script.trakt. No se enviaron escrituras de historial/progreso, no se cambió
+Stable ni se desplegó en Lenovo. Próximo paso: verificar el resultado OAuth y
+ejecutar consultas autenticadas de lectura; después preparar exportación privada
+verificada antes de solicitar autorización específica para cualquier escritura.
