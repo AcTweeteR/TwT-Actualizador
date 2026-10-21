@@ -20,9 +20,9 @@ class DistributionArtifactTests(unittest.TestCase):
         versions = {node.get("id"): node.get("version") for node in root.findall("addon")}
         self.assertEqual(versions, {
             "repository.actweeter": "1.0.3",
-            "skin.actweeter": "1.2.30",
-            "service.actweeter": "0.4.45",
-            "plugin.video.xstream-pro": "1.1.2.10",
+            "skin.actweeter": "1.2.31",
+            "service.actweeter": "0.4.52",
+            "plugin.video.xstream-pro": "1.1.2.15",
         })
 
     def test_existing_stable_and_rollback_packages_have_valid_crc_and_hashes(self):

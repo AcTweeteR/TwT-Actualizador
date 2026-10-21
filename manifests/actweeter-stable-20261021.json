@@ -1,0 +1,60 @@
+{
+  "release": "actweeter-stable-20261021",
+  "channel": "repository.actweeter",
+  "kodi_baseline": "21.3 Omega",
+  "tested_candidate": {
+    "skin": "1.2.30~beta10",
+    "service": "0.4.52",
+    "xstream": "1.1.2.15",
+    "device": "Lenovo Android tablet",
+    "tested_behaviors": [
+      "red vertical EXPANDIR fully visible",
+      "expand opens provider catalogue",
+      "Android search displays text without extra left keyboard"
+    ]
+  },
+  "promotion": {
+    "skin": "1.2.30~beta10 -> 1.2.31 (manifest and new changelog only)",
+    "service": "byte-for-byte Testing 0.4.52",
+    "xstream": "byte-for-byte Testing 1.1.2.15",
+    "existing_repository_installer": "1.0.3 unchanged"
+  },
+  "previous_stable_index_sha256": "ecb76872ab80cdd4cd4230292682fcbda651b4750ddc5e247a01d29b470185a3",
+  "index_sha256": "ca6781c5c0c7723a2c79681d4ffef85bf8780d8a6588d6e0f767cafd8780e839",
+  "index_md5": "e947fc4ac1b201d1ac2525c4643ce681",
+  "testing_feed_sha256_preserved": "ae95b21eabaca50681eba75c3f13dc9087ca80a2045b62a975e361b6751c34ba",
+  "addons": [
+    {
+      "id": "repository.actweeter",
+      "version": "1.0.3",
+      "path": "repo/repository.actweeter/repository.actweeter-1.0.3.zip",
+      "sha256": "74620e81ff9a161bb7b0650f01e94406ccc9fa9366210ebb36e58872bb4995e8"
+    },
+    {
+      "id": "skin.actweeter",
+      "version": "1.2.31",
+      "path": "repo/skin.actweeter/skin.actweeter-1.2.31.zip",
+      "sha256": "c203f21654272e88c7a1e0f8ae8acdfa1a8dbe07b2a847e69e77fca10f86842d"
+    },
+    {
+      "id": "service.actweeter",
+      "version": "0.4.52",
+      "path": "repo/service.actweeter/service.actweeter-0.4.52.zip",
+      "sha256": "e5ab923ec01a5f20702a3b3d9c62b6578aac5832eaa782636b8964c88855902f"
+    },
+    {
+      "id": "plugin.video.xstream-pro",
+      "version": "1.1.2.15",
+      "path": "repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.15.zip",
+      "sha256": "1901c06eb76eac849f7f6d9bf0c232add53ce9e27b01b5ec1a950af4dd3d0847"
+    }
+  ],
+  "validation": {
+    "automated_suite": "Release candidate: 292 local tests, including 4 new Stable reproducibility tests; CI gating required before merge",
+    "lenovo": "runtime validated candidate beta10 including widget and keyboard; final Stable 1.2.31 runtime not separately installed",
+    "macos": "not revalidated with promoted versions",
+    "tvos": "not revalidated with promoted versions"
+  },
+  "rollback": "Previous versioned Stable ZIPs (skin 1.2.30, service 0.4.45, XStream 1.1.2.10) retained unchanged",
+  "publication": "Publish to official Stable feed repo/ by merging the release PR; verify live index and package URLs after merge."
+}

@@ -21,7 +21,10 @@ class DistributionArtifactTests(unittest.TestCase):
             "service.actweeter": "0.4.29",
             "plugin.video.xstream-pro": "1.1.2.7",
         })
-        release = json.loads((REPO / "manifests/unified-stable-20261020.json").read_text())
+        previous = json.loads((REPO / "manifests/unified-stable-20261020.json").read_text())
+        release = json.loads((REPO / "manifests/actweeter-stable-20261021.json").read_text())
+        self.assertEqual(release["previous_stable_index_sha256"], previous["index_sha256"])
+        self.assertNotEqual(release["index_sha256"], previous["index_sha256"])
         payload = (REPO / "repo/addons.xml").read_bytes()
         self.assertEqual(hashlib.sha256(payload).hexdigest(), release["index_sha256"])
         self.assertEqual(hashlib.md5(payload).hexdigest(), release["index_md5"])

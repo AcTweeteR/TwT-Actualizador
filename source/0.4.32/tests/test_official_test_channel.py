@@ -91,7 +91,7 @@ class OfficialTestChannelTests(unittest.TestCase):
                 "https://slyguy.uk/.repo/repository.slyguy/addons.xml",
             ])
             self.assertEqual(checksum.read_text().strip(), hashlib.md5(index.read_bytes()).hexdigest())
-            self.assertEqual(ET.parse(ROOT / "repo" / "addons.xml").getroot().find("addon[@id='service.actweeter']").get("version"), "0.4.45")
+            self.assertEqual(ET.parse(ROOT / "repo" / "addons.xml").getroot().find("addon[@id='service.actweeter']").get("version"), "0.4.52")
             self.assertEqual((ROOT / "repo" / "addons.xml").read_bytes(), stable_index)
             with zipfile.ZipFile(bootstrap) as archive:
                 self.assertIsNone(archive.testzip())
@@ -261,7 +261,7 @@ class OfficialTestChannelTests(unittest.TestCase):
         m=json.loads((ROOT/"manifests/xstream-1.1.2.11-widget-performance-20261020.json").read_text())
         self.assertEqual(m["channel"],"repository.actweeter.testing")
         self.assertEqual(m["stable_index_sha256"],
-                         hashlib.sha256((ROOT/"repo/addons.xml").read_bytes()).hexdigest())
+                         json.loads((ROOT / "manifests/unified-stable-20261020.json").read_text())["index_sha256"])
         package=ROOT/"docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.11.zip"
         self.assertEqual(m["new_xstream_sha256"],hashlib.sha256(package.read_bytes()).hexdigest())
         with zipfile.ZipFile(package) as z:
@@ -273,7 +273,7 @@ class OfficialTestChannelTests(unittest.TestCase):
         index = ROOT / "docs/testing/repo/addons.xml"
         self.assertEqual(manifest["channel"], "repository.actweeter.testing")
         self.assertEqual(manifest["stable_index"]["sha256"],
-                         hashlib.sha256((ROOT / "repo/addons.xml").read_bytes()).hexdigest())
+                         json.loads((ROOT / "manifests/unified-stable-20261020.json").read_text())["index_sha256"])
         # The historical Performance 3.1 manifest pins its own published index.
         # Subsequent Testing releases must not rewrite that historical record.
         historical_manifest = json.loads((ROOT / "manifests/xstream-performance31-cold-start-20261020.json").read_text())

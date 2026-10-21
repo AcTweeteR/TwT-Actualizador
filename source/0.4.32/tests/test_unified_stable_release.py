@@ -20,12 +20,14 @@ from build_stable_channel import (  # noqa: E402
 class UnifiedStableReleaseTests(unittest.TestCase):
     def test_release_versions_hashes_and_checksum(self):
         m = json.loads((ROOT / "manifests/unified-stable-20261020.json").read_text())
+        from tempfile import TemporaryDirectory
         stable = ROOT / "repo"
-        data = (stable / "addons.xml").read_bytes()
+        with TemporaryDirectory() as tmp:
+            _, historical_index, historical_md5 = build(Path(tmp) / "historical")
+            data = historical_index.read_bytes()
+            self.assertEqual(historical_md5.read_text().strip(), hashlib.md5(data).hexdigest())
         self.assertEqual(m["index_sha256"], hashlib.sha256(data).hexdigest())
         self.assertEqual(m["index_md5"], hashlib.md5(data).hexdigest())
-        self.assertEqual((stable / "addons.xml.md5").read_text().strip(),
-                         hashlib.md5(data).hexdigest())
         addons = ET.fromstring(data)
         self.assertEqual([(a.get("id"), a.get("version")) for a in addons],
                          [("repository.actweeter", "1.0.3"),
@@ -81,8 +83,9 @@ class UnifiedStableReleaseTests(unittest.TestCase):
             skin, xml, md5 = build(dest)
             self.assertEqual(skin.read_bytes(),
                              (ROOT / "repo/skin.actweeter/skin.actweeter-1.2.30.zip").read_bytes())
-            self.assertEqual(xml.read_bytes(), (ROOT / "repo/addons.xml").read_bytes())
-            self.assertEqual(md5.read_bytes(), (ROOT / "repo/addons.xml.md5").read_bytes())
+            self.assertEqual(hashlib.sha256(xml.read_bytes()).hexdigest(),
+                             json.loads((ROOT / "manifests/unified-stable-20261020.json").read_text())["index_sha256"])
+            self.assertEqual(md5.read_text().strip(), hashlib.md5(xml.read_bytes()).hexdigest())
             with self.assertRaisesRegex(ValueError, "refusing to overwrite"):
                 build(dest)
 
