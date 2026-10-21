@@ -436,3 +436,97 @@ Inicio10000, cero reproductores, XStream1.1.2.14 habilitado. Suite262/262; paque
 finales validados otra vez (CRC/AST/XML/reconstrucción/patrones/MD5). Stable y Testing
 públicos intactos. **BETA_READINESS=PARTIAL únicamente por los gates pendientes indicados;
 no se mantiene como pendiente el defecto visual ya probado.**
+
+## Continuación autorizada: instalación registrada y actualizaciones nativas
+
+Esta sección sustituye las limitaciones de autorización de las secciones anteriores.
+El usuario autorizó instalar candidatos en Master y publicar Testing solo tras superar
+los gates. Autorizó además expresamente activar las actualizaciones automáticas globales.
+
+### Protección e instalación ejecutadas
+
+- Respaldo privado en `/private/tmp/actweeter-smartsearch-install-lywb6ube/`, directorio
+  restringido a su propietario. `master-before.tar`: 911 archivos verificados por SHA-256,
+  hash del archivo `5a44d53eb2c2c69d08e09d23c78696ea1c3c8ab293ced1c664318f790333c8ce`.
+  Incluye código instalado del servicio/skin, sus addon_data y guisettings. Copia SQLite
+  consistente de Addons33 mediante backup; no se sobrescribe la base activa.
+- Instalación **nativa desde ZIP**, expresamente autorizada para esta validación en Mac,
+  de servicio0.4.48 y skin1.2.30~beta5, hashes de la tabla final anterior comprobados.
+  No se copian carpetas directamente al perfil, ni se usan dispositivos o perfiles QA.
+- Kodi se cerró mediante Cmd+Q después de comprobar Player.GetActivePlayers vacío.
+  Se abrió exclusivamente `/Applications/Kodi.app`; no se usó la acción de apagado.
+  Master vuelve a Inicio10000, sin reproductores activos y con XStream1.1.2.14 habilitado.
+- Recuperación: conservar el tar/manifest privados y preferir reinstalar las versiones
+  anteriores desde Testing mediante Kodi, sin borrar userdata. Los originales concretos
+  pueden recuperarse del tar con Kodi cerrado si se autoriza una restauración localizada.
+  No restaurar Addons33 ni guisettings encima de una sesión abierta. No se ha ejecutado
+  un rollback ni se certifica una restauración completa mediante una prueba destructiva.
+
+### Alias TMDb: bloqueo real nuevo, no contexto pendiente
+
+`RunScript(service.actweeter,smart_search)` ejecuta ahora el addon **registrado**.
+Consulta real: `war machine`. La búsqueda local termina y la consulta del helper devuelve
+resultados remotos, sin error de contexto de xbmcaddon.Addon(). Sin embargo, el adaptador
+directo de alias emite tres peticiones alternative_titles y recibe HTTP401. Su caché
+contiene tres respuestas vacías; no hay evidencia de títulos alternativos recuperados.
+
+Causa comprobada en BINGIE Helper1.0.3 instalado:
+
+- `resources/tmdbbingiehelper/lib/addon/permissions.py:102`: set_spec_access restringe
+  las importaciones externas de api.*. La excepción que permite importar api.tmdb.api
+  no concede el nivel internal.
+- `resources/tmdbbingiehelper/lib/api/api_keys/tmdb.py`: la rama sin permiso internal
+  asigna una clave vacía. Se comprobó únicamente la condición y si el valor está vacío;
+  no se imprimió ni copió ninguna clave ni token.
+- `resources/tmdbbingiehelper/lib/api/tmdb/api.py:22,137`: el constructor utiliza esa
+  clave por defecto y get_request_lc no recupera permisos internos.
+- El log del arranque registra HTTP401 para las consultas ejecutadas. La caché TMDb
+  leída en modo SQLite read-only confirma tres entradas alternative_titles sin títulos.
+
+Por tanto, **importación exportada no implica una API autenticada reutilizable**.
+Los tests de API simulada no habían detectado esta restricción. No se falsea Addon(),
+no se importa el namespace privado para eludirla y no se extraen credenciales del helper.
+Las rutas públicas de directorio siguen sirviendo búsqueda, personas y títulos originales;
+no se encontró una ruta pública de directorio para alternative_titles en esta versión.
+
+El gate de alias permanece FAIL_RUNTIME y bloquea la publicación exigida por esta misión.
+Para resolverlo hace falta una interfaz autorizada de metadatos que exponga esos títulos,
+o una credencial TMDb propia obtenida/configurada por el usuario. No se incorpora una clave
+ajena ni se redistribuye una modificación del helper como cambio silencioso del servicio.
+No se ha publicado una candidata conocida con este gate incumplido.
+
+### Actualizaciones automáticas: configuración comprobada, entrega aún no comprobada
+
+Se introspectaron Settings.GetSettingValue y Settings.SetSettingValue en Kodi21.3.
+Con consentimiento expreso se cambió `addons.updatemode` de1 a0 mediante la API oficial.
+Lectura inmediata:0; cierre normal: guisettings guarda0; después de volver a abrir Kodi:
+Settings.GetSettingValue devuelve0. **CONFIGURATION=PERSISTED_RUNTIME**.
+El significado de0 es automático, no notificar, según
+[AddonSystemSettings.h Omega21.3](https://github.com/xbmc/xbmc/blob/21.3-Omega/xbmc/addons/AddonSystemSettings.h#L18).
+No se cambia la preferencia de repositorios ni las configuraciones de otros addons.
+
+Antes de la instalación local los tres componentes tenían origen Testing. Kodi deja
+vacío el origen del servicio y skin instalados desde ZIP; XStream conserva Testing.
+No se modifica Addons33 para forzar un origen. La vinculación debe restaurarse mediante
+la instalación **desde Testing** cuando exista la versión validada publicada. No basta
+con tener el repositorio Testing instalado. Véase
+[selección nativa por origen](https://github.com/xbmc/xbmc/blob/21.3-Omega/xbmc/addons/AddonRepos.cpp#L200).
+No se promete una actualización automática para addons cuyo origen está vacío.
+
+No se ha demostrado una descarga/instalación automática real ni una actualización cruzada
+entre canales. Tampoco se cambia de canal ni se toca Stable para probarlo. La preferencia
+global autorizada puede actualizar también otros addons habilitados, como se advirtió.
+
+### Estado verificable al detener la publicación
+
+- Suite completa repetida: **262 pruebas correctas**, 11,524s; diff --check correcto.
+- Versiones realmente instaladas: servicio0.4.48, skin1.2.30~beta5, XStream1.1.2.14 habilitado.
+- Búsqueda registrada ejecutada; no se repiten ni se atribuyen a esta sesión las pruebas
+  VOD, EPG y QWERTY documentadas anteriormente desde las fuentes.
+- Orígenes servicio/skin: vacíos tras instalación nativa local; pendiente instalación
+  desde Testing. Ninguna modificación manual de la base de addons.
+- No hay nuevas versiones públicas, push, PR ni cambios de índices/paquetes Stable/Testing.
+- `SMART_SEARCH_2_BETA=BLOCKED` por alias401; `BETA_READINESS=PARTIAL`.
+- `AUTO_UPDATE=PARTIAL`: ajuste global persistido, actualización real no demostrada.
+- `STABLE_UNCHANGED=YES`; Master en Home, sin vídeo de prueba, XStream habilitado.
+- Lenovo, Apple TV y configuraciones Trakt no modificados.
