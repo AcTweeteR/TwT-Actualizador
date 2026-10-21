@@ -28,6 +28,7 @@ class CollectionsIsolationTests(unittest.TestCase):
         spec.loader.exec_module(builder)
         builder.apply_contextual_unified_patch(cls.root, ROOT / 'third_party/xstream/patches/1.1.2/actweeter-collections.patch')
         builder.apply_contextual_unified_patch(cls.root, ROOT / 'third_party/xstream/patches/1.1.2/actweeter-collections-empty.patch')
+        builder.apply_contextual_unified_patch(cls.root, ROOT / 'third_party/xstream/patches/1.1.2/actweeter-collections-dedup.patch')
 
     @classmethod
     def tearDownClass(cls):
@@ -64,7 +65,7 @@ class CollectionsIsolationTests(unittest.TestCase):
         import hashlib
         import json
         manifest = json.loads((ROOT / 'third_party/xstream/upstream.json').read_text())
-        package = ROOT.parents[1] / 'docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.18.zip'
+        package = ROOT.parents[1] / 'docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.19.zip'
         with zipfile.ZipFile(package) as archive:
             self.assertIsNone(archive.testzip())
             for name in ('favorites.py', 'pending_adapter.py', 'addon.py', 'premium_routes.py'):
@@ -223,6 +224,44 @@ class CollectionsIsolationTests(unittest.TestCase):
                 self.assertEqual(q['view'],['collections_root'])
                 self.assertEqual(q['stype'],[stype])
                 self.assertEqual(q['profile_num'],['1'])
+
+    def test_duplicate_provider_rows_are_one_poster_per_typed_collection_id(self):
+        # Runtime Lenovo: VisionQuest had two catalog entries for series_id=7449,
+        # but exactly one stored favorite/pending membership.
+        namespace = {}
+        with patch.dict(sys.modules, {'content_state': types.SimpleNamespace()}):
+            exec(compile((self.root / 'resources/lib/premium_routes.py').read_bytes(),
+                         'routes.py', 'exec'), namespace)
+        rows = [
+            {'stream_id': '42', 'series_id': '42', 'name': 'First edition'},
+            {'stream_id': '42', 'series_id': '42', 'name': 'Duplicate edition'},
+            {'stream_id': '43', 'series_id': '43', 'name': 'Not saved'},
+        ]
+        namespace['catalog'] = lambda *args: (rows, ('unused', 'unused', 'unused'))
+        namespace['indexed_movie_page'] = lambda *args: None
+        namespace['prepare_series_state_context'] = lambda *args: None
+        shown = []
+        namespace['add_provider_item'] = lambda g, item, stype, *args, **kw: (
+            shown.append((stype, item['name'])))
+        self.store.add(self.item('movie', '42'))
+        self.store.add(self.item('series', '42'))
+        self.pending.add('movie', self.item('movie', '42'))
+        self.pending.add('series', self.item('series', '42'))
+        plugin = types.SimpleNamespace(setContent=lambda *a: None,
+            addSortMethod=lambda *a: None, SORT_METHOD_NONE=0,
+            endOfDirectory=lambda *a, **kw: None)
+        env = {'pm': types.SimpleNamespace(active='1'), 'addon_handle': 1,
+               'xbmcplugin': plugin, 'build_url': lambda _: 'unused',
+               '_get_profile_fav': lambda _: self.store,
+               'pending_adapter': types.SimpleNamespace(PendingAdapter=self.Pending),
+               '_prefetch_vod_info_batch': lambda *a: None}
+        for stype in ('movie', 'series'):
+            for view in ('favorites', 'pending'):
+                shown.clear()
+                namespace['dispatch'](env, {'view': [view], 'stype': [stype],
+                                            'browse': ['1']})
+                self.assertEqual(shown, [(stype, 'First edition')],
+                                 (stype, view, shown))
 
     def test_provider_routes_exclude_pending_only_and_missing_items(self):
         namespace = {}

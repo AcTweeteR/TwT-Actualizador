@@ -2,7 +2,7 @@
   "addon_id": "plugin.video.xstream-pro",
   "upstream_project": "https://github.com/Pesicp/XStreamPro",
   "upstream_version": "1.1.2",
-  "distribution_version": "1.1.2.18",
+  "distribution_version": "1.1.2.19",
   "upstream_ref": "1.1.2",
   "upstream_commit": "1aa3e67da7c03c6acc3ec7e1ca579a7f645220f4",
   "upstream_release_url": "https://github.com/Pesicp/XStreamPro/releases/download/1.1.2/plugin.video.xstream-pro-1.1.2.zip",
@@ -11,10 +11,10 @@
   "upstream_release_zip_sha256": "915f45708670d07e789bb73b7390a7b5cf30175f818ef5da8ea18c9f13f537fe",
   "upstream_license_observed": "CC BY-NC 4.0",
   "local_runtime_sha256": {
-    "addon.xml": "408ad113c9793f8d7b4bee5f35bc0d831e27f72d403205bf9129fdb366ddab24",
+    "addon.xml": "21cc84fe41ab90b009916f5d164a4c6711d1b75369818cdc8399f2fb2585724c",
     "service.py": "55b6a8b835442fa29b38a2a08890c2cdf8822edd7bb216d223586ec066818de6",
     "resources/lib/addon.py": "89acaba717c84e5bce6b0b25172caefc3317dc2793c38c7f25f938013ab65192",
-    "resources/lib/premium_routes.py": "5ea800025b1d189c548b2d7cd9477b966bdcbca6ca34146c0497db7de81bfd94",
+    "resources/lib/premium_routes.py": "ce45d872fafa756e29421caae6c0e433f491380647ae0c63327d7899b9708eda",
     "resources/lib/pending_adapter.py": "757bec5807fd0410025e1a9a7cf1cc31f5371056b027464eeb2ad213c4dfcff4",
     "resources/lib/content_state.py": "f47fe49a4acaa54621c8f6e2b8f80b293afa82d9570a1125ed02dae4bc3f97a2",
     "resources/lib/watched_actions.py": "df3ab7675192c82409e9cf112afa08ae75cb261b8c1919c983b7ff5e2274619b",
@@ -82,5 +82,7 @@
   "collections_patch": "third_party/xstream/patches/1.1.2/actweeter-collections.patch",
   "collections_patch_sha256": "c9bebdde3ef1dbc1c1b3584e75c058fdd6b7a104f39091a3f4a42dba1ed25dec",
   "collections_empty_patch": "third_party/xstream/patches/1.1.2/actweeter-collections-empty.patch",
-  "collections_empty_patch_sha256": "c6f300c881378895769c3cdf54daec0a928eb6fb77b58036df38e82f28cc2ea9"
+  "collections_empty_patch_sha256": "c6f300c881378895769c3cdf54daec0a928eb6fb77b58036df38e82f28cc2ea9",
+  "collections_dedup_patch": "third_party/xstream/patches/1.1.2/actweeter-collections-dedup.patch",
+  "collections_dedup_patch_sha256": "6a8ed0ae4be3e2535a62d51b80a17cbedeccc052d92eabbfcf13185b4b5bd136"
 }
