@@ -27,7 +27,7 @@
     "resources/lib/provider_catalog_index.py": "9f446b74bf09fd87d2d54faf9074b6e0dc63ef79496c554b40d01d28826293f8"
   },
   "patch": "third_party/xstream/patches/1.1.2/actweeter-runtime.patch",
-  "patch_sha256": "354012d74623bce63f352ffa74ae69af10d7cab1b52150803122b8bd20950cbb",
+  "patch_sha256": "bca95062b4b99b7371bc0c7bc85b04f001eccd0ab7763afaaee2c477d72e140f",
   "integration_patch": "third_party/xstream/patches/1.1.2/actweeter-setup-refresh.patch",
   "integration_patch_sha256": "9be496779fbed88901c9da5fbc73aeafc206f0d44e0306cbb8bdf9130f33d04a",
   "recommendations_patch": "third_party/xstream/patches/1.1.2/actweeter-trakt-recommendations.patch",
