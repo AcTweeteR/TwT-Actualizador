@@ -1344,7 +1344,7 @@
 		<value condition="$EXP[IsMainMenuOpened] + String.IsEqual(Window(Home).Property(ListItem.VideoResolution),4K)">4K</value>
 		<value condition="$EXP[IsMainMenuOpened] + String.IsEqual(Window(Home).Property(ListItem.VideoResolution),1080)">FHD</value>
 		<value condition="$EXP[IsMainMenuOpened] + String.IsEqual(Window(Home).Property(ListItem.VideoResolution),720)">HD</value>
-		<value condition="$EXP[IsMainMenuOpened] + String.IsEqual(Window(Home).Property(ListItem.VideoResolution),480) | String.IsEqual(Window(Home).Property(ListItem.VideoResolution),576) | String.IsEqual(Window(Home).Property(ListItem.VideoResolution),540)">SD</value>
+		<value condition="$EXP[IsMainMenuOpened] + [String.IsEqual(Window(Home).Property(ListItem.VideoResolution),480) | String.IsEqual(Window(Home).Property(ListItem.VideoResolution),576) | String.IsEqual(Window(Home).Property(ListItem.VideoResolution),540)]">SD</value>
 	</variable>
 
 	<!-- Audio Channels Info (from 5.1 and up) -->
