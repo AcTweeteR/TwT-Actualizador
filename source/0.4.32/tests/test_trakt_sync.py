@@ -38,7 +38,7 @@ class API:
 
 
 def catalog(kind='movie', provider_id='7', **kwargs):
-    result = {'kind': kind, 'provider_id': provider_id, 'confidence': 'verified',
+    result = {'kind': kind, 'provider_id': provider_id, 'confidence': 'verified', 'profile': '1',
               'duration_seconds': 1000}
     if kind == 'episode':
         result.update(show_ids={'tmdb': '42'}, season=0, episode=1)
@@ -84,7 +84,7 @@ class TraktSyncTests(unittest.TestCase):
 
     def test_native_transport_get_only_and_no_url_or_token_export(self):
         snapshot = sync.fetch_snapshot(self.api.get)
-        self.assertEqual(len(self.api.calls), 9)
+        self.assertEqual(len(self.api.calls), 10)
         self.assertNotIn('token', str(snapshot))
         self.assertNotIn('url', str(snapshot))
         self.assertTrue(all(p.startswith(('/sync/', '/users/')) for p, _ in self.api.calls))
@@ -122,6 +122,12 @@ class TraktSyncTests(unittest.TestCase):
     def test_remote_activity_changed(self):
         stamps = iter([({'all': EARLY}, 1), ({'all': LATE}, 1)])
         self.api.responses['/sync/last_activities'] = lambda _: next(stamps)
+        with self.assertRaises(sync.IncompleteSnapshot): sync.fetch_snapshot(self.api.get)
+
+    def test_account_change_mid_import_is_rejected(self):
+        accounts = iter([({'user': {'ids': {'slug': 'synthetic-user'}}}, 1),
+                         ({'user': {'ids': {'slug': 'another-user'}}}, 1)])
+        self.api.responses['/users/settings'] = lambda _: next(accounts)
         with self.assertRaises(sync.IncompleteSnapshot): sync.fetch_snapshot(self.api.get)
 
     def test_network_and_rate_limit_errors_propagate_without_overwrite(self):
@@ -201,6 +207,13 @@ class TraktSyncTests(unittest.TestCase):
             sync.import_plan(snapshot, [], profile='2', account='someone-else')
         with self.assertRaises(ValueError):
             sync.import_plan(snapshot, [], profile='', account='synthetic-user')
+
+    def test_catalog_from_another_or_unknown_profile_is_not_matched(self):
+        for profile in ('2', ''):
+            self.assertIn('movie:tmdb:42', self.plan([catalog(profile=profile)])['unavailable'])
+
+    def test_tvdb_is_not_a_movie_identity_even_when_other_ids_exist(self):
+        self.assertEqual(sync.identity('movie', {'tmdb': 42, 'tvdb': 99})['ids'], {'tmdb': '42'})
 
 
 if __name__ == '__main__':

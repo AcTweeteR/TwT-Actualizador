@@ -34,6 +34,8 @@ def normalize_ids(value):
 def identity(kind, ids=None, *, show_ids=None, season=None, episode=None):
     """An episode belongs to a show+S/E, never to a movie with the same TMDb ID."""
     values = normalize_ids(show_ids if kind == 'episode' else ids)
+    if kind == 'movie':
+        values.pop('tvdb', None)
     order = ('tmdb', 'imdb', 'trakt') if kind == 'movie' else ('tmdb', 'tvdb', 'imdb', 'trakt')
     primary = next((name for name in order if name in values), None)
     if kind not in ('movie', 'show', 'episode') or primary is None:
@@ -60,10 +62,12 @@ def _timestamp(value):
 
 class ProviderIndex:
     """Rebuildable, typed index of verified IDs, not a title-matching database."""
-    def __init__(self, records):
+    def __init__(self, records, *, profile):
         self.records = []
         self.by_id = {}
         for record in records:
+            if str(record.get('profile', '')) != str(profile):
+                continue
             if record.get('confidence') not in ('exact', 'verified'):
                 continue
             content = identity(record.get('kind'), record.get('ids'),
@@ -198,6 +202,9 @@ def fetch_snapshot(get, *, cancelled=lambda: False, max_pages=1000):
     after, _ = get('/sync/last_activities', {})
     if before != after or cancelled():
         raise IncompleteSnapshot('remote state changed or cancelled')
+    final_account, _ = get('/users/settings', {})
+    if not isinstance(final_account, dict) or final_account.get('user', {}).get('ids', {}).get('slug') != account_id:
+        raise IncompleteSnapshot('account changed during import')
     return snapshot
 
 
@@ -205,7 +212,7 @@ def import_plan(snapshot, provider_records, *, profile, account, local=None):
     """Propose additions only. No store or remote mutation occurs here."""
     if not profile or snapshot['account'] != account:
         raise ValueError('profile/account binding required')
-    index = ProviderIndex(provider_records)
+    index = ProviderIndex(provider_records, profile=profile)
     local = local or {}
     result = {'profile': str(profile), 'account': account, 'items': [], 'conflicts': [],
               'unavailable': [], 'ambiguous': [], 'unidentified': snapshot['unidentified']}
