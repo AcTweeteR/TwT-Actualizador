@@ -99,7 +99,7 @@ class ExpandableWidgetMetadataTests(unittest.TestCase):
             home = ET.fromstring(output["skin.actweeter-inicio-1.DATA.xml"])
             first = home.find("shortcut")
             route = first.findtext("action")
-            self.assertIn("reload=$INFO[Window(Home).Property(R)]&amp;actweeter_expand=1&amp;limit=19", ET.tostring(first, encoding="unicode"))
+            self.assertIn("reload=$INFO[Window(Home).Property(R)]&amp;collections_reload=$INFO[Window(Home).Property(Premium.CollectionsRefresh)]&amp;actweeter_expand=1&amp;limit=19", ET.tostring(first, encoding="unicode"))
             self.assertTrue(first.findtext("defaultID").startswith("actweeter-expand-inicio-1-"))
             self.assertIsNone(first.find("property[@name='widgetExpandable']"))
             self.assertIn("actweeter_expand=1", route)

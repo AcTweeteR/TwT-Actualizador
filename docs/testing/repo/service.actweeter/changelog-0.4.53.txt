@@ -1,0 +1,7 @@
+0.4.53 — Mis Colecciones (candidata Testing, pendiente de validación runtime)
+
+- Migración de interfaz v14 con backup y confirmación ante personalizaciones.
+- Mis Colecciones como última fila de Películas y Series; no se añade en Inicio.
+- Favoritos y Pendientes mantienen el almacenamiento de XStream por perfil.
+- Requiere XStream 1.1.2.16 para aislar carpetas e identidades película/serie.
+- Sin cambios en Trakt, PVR, credenciales ni canal Stable.

@@ -2,6 +2,35 @@
 <!-- BINGIE -->
 <includes>
 
+    <!-- Outside generated items: remains the last row even with custom widgets. -->
+    <include name="AcTweeteRCollectionsWidget">
+        <definition>
+            <include content="widget_base">
+                <param name="widgetid" value="$PARAM[widgetid]" />
+                <param name="widgetPath" value="$PARAM[widgetPath]" />
+                <param name="widgetName" value="Mis Colecciones" />
+                <param name="submenuid" value="" />
+                <param name="contentStyle" value="normal" />
+                <param name="container" value="list" />
+                <param name="position" value="horizontal" />
+                <param name="width" value="100%" />
+                <param name="height" value="341" />
+                <param name="widgetTarget" value="videos" />
+                <param name="widgetExpandable" value="false" />
+                <param name="widgetStyle" value="widget_layout_square" />
+                <param name="widgetTags" value="WidgetTagOverlayDisable" />
+                <param name="widgetSortBy" value="none" />
+                <param name="widgetSortOrder" value="ascending" />
+                <param name="widgetLimit" value="2" />
+            </include>
+            <include content="widget_header_multi">
+                <param name="widgetid" value="$PARAM[widgetid]" />
+                <param name="submenuid" value="" />
+                <param name="widgetName" value="Mis Colecciones" />
+            </include>
+        </definition>
+    </include>
+
     <include name="widget_layout_default">
         <include content="widget_layout_poster" condition="String.IsEqual(Skin.String(widgetstyle),poster)">
             <param name="widgetid" value="$PARAM[widgetid]"/>

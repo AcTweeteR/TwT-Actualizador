@@ -6,5 +6,4 @@
     <shortcut><label>Tendencias</label><label2 /><icon /><thumb /><action>plugin://plugin.video.xstream-pro/?mode=premium&amp;view=trending&amp;stype=movie</action></shortcut>
     <shortcut><label>Películas</label><label2 /><icon /><thumb /><action>plugin://plugin.video.xstream-pro/?mode=premium&amp;stype=movie</action></shortcut>
     <shortcut><label>Series</label><label2 /><icon /><thumb /><action>plugin://plugin.video.xstream-pro/?mode=premium&amp;stype=series</action></shortcut>
-    <shortcut><label>Favoritos</label><label2 /><icon /><thumb /><action>plugin://plugin.video.xstream-pro/?mode=premium&amp;view=favorites&amp;stype=both</action></shortcut>
 </shortcuts>

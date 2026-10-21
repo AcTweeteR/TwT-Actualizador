@@ -1,0 +1,258 @@
+diff --git a/resources/lib/favorites.py b/resources/lib/favorites.py
+--- a/resources/lib/favorites.py
++++ b/resources/lib/favorites.py
+@@ -77,43 +77,45 @@
+     def get_folders(self):
+         return [k for k in self.items.keys() if k != "version"]
+-
++
+-    def is_favorite(self, item_id, folder=None):
+-        if folder:
+-            return any(i.get("id") == item_id for i in self.items.get(folder, []))
+-        return any(
+-            i.get("id") == item_id
+-            for k, items in self.items.items()
+-            if k != "version"
+-            for i in items
+-        )
++    def _favorite_folders(self):
++        # Retain the upstream English folder after a Kodi language change.
++        return {"Favorites", _t(30009) or "Favorites"}
++
++    @staticmethod
++    def _matches(item, item_id, stype=None):
++        return (str(item.get("id")) == str(item_id)
++                and (stype is None or item.get("stype", "live") == stype))
++
++    def get_favorites(self, stype=None):
++        return [item for folder in self.items if folder in self._favorite_folders()
++                for item in self.items[folder]
++                if stype is None or item.get("stype", "live") == stype]
++
++    def is_favorite(self, item_id, folder=None, stype=None):
++        items = self.get_all(folder) if folder else self.get_favorites()
++        return any(self._matches(item, item_id, stype) for item in items)
+-
++
+     def add(self, item, folder=None):
+         if folder is None:
+             folder = _t(30009) or "Favorites"
+         if folder not in self.items:
+             self.items[folder] = []
+-        if not self.is_favorite(item.get("id"), folder):
++        if not self.is_favorite(item.get("id"), folder, item.get("stype", "live")):
+             self.items[folder].append(item)
+             self._save()
+             return True
+         return False
+-
++
+-    def remove(self, item_id, folder=None):
++    def remove(self, item_id, folder=None, stype=None):
+         removed = False
+-        if folder:
+-            before = len(self.items.get(folder, []))
+-            self.items[folder] = [
+-                i for i in self.items.get(folder, []) if i.get("id") != item_id
+-            ]
+-            removed = len(self.items[folder]) < before
+-        else:
+-            for f in self.items:
+-                if f == "version":
+-                    continue
+-                before = len(self.items[f])
+-                self.items[f] = [i for i in self.items[f] if i.get("id") != item_id]
+-                if len(self.items[f]) < before:
+-                    removed = True
++        folders = [folder] if folder else self._favorite_folders()
++        for name in folders:
++            if name not in self.items:
++                continue
++            before = len(self.items[name])
++            self.items[name] = [item for item in self.items[name]
++                                if not self._matches(item, item_id, stype)]
++            removed = removed or len(self.items[name]) < before
+         if removed:
+             self._save()
+         return removed
+@@ -143,8 +145,9 @@
+     def toggle(self, item, folder=None):
+         if folder is None:
+             folder = _t(30009) or "Favorites"
+-        if self.is_favorite(item.get("id")):
+-            self.remove(item.get("id"))
++        stype = item.get("stype", "live")
++        if self.is_favorite(item.get("id"), folder, stype):
++            self.remove(item.get("id"), folder, stype)
+             return False
+         else:
+             self.add(item, folder)
+diff --git a/resources/lib/pending_adapter.py b/resources/lib/pending_adapter.py
+--- a/resources/lib/pending_adapter.py
++++ b/resources/lib/pending_adapter.py
+@@ -48,7 +48,7 @@
+         wanted = str(provider_id or "").strip()
+         if not wanted or not self.contains(normalized, wanted):
+             return False
+-        return bool(self.favorites.remove(wanted, FOLDERS[normalized]))
++        return bool(self.favorites.remove(wanted, FOLDERS[normalized], normalized))
+-
++
+     def reconcile_completion(self, kind, provider_id, complete):
+         """Remove only on positive completion; later inventory never re-adds."""
+diff --git a/resources/lib/addon.py b/resources/lib/addon.py
+--- a/resources/lib/addon.py
++++ b/resources/lib/addon.py
+@@ -1224,6 +1224,8 @@
+     key = str(profile_num)
+     if key not in _profile_fav_instances:
+         _profile_fav_instances[key] = Favorites(addon, key)
++    else:
++        _profile_fav_instances[key].items = _profile_fav_instances[key]._load()
+     return _profile_fav_instances[key]
+-
++
+-
++
+@@ -1255,7 +1257,7 @@
+     ctx = []
+     if profile_num:
+         profile_fav = _get_profile_fav(profile_num)
+-        if profile_fav.is_favorite(item_id):
++        if profile_fav.is_favorite(item_id, stype=stype):
+             ctx.append(
+                 (
+                     _t(30747),
+@@ -1270,7 +1272,16 @@
+                 )
+             )
+-
++
+-    protected_folders = {"Favorites", _t(30009) or "Favorites"}
++    if profile_num and stype in ("movie", "series"):
++        from pending_adapter import PendingAdapter
++        pending = PendingAdapter(profile_fav)
++        label = "Quitar de pendientes" if pending.contains(stype, item_id) else "Añadir a pendientes"
++        pending_url = build_url({'mode': 'premium', 'view': 'pending_toggle',
++                                 'stype': stype, 'id': item_id, 'profile_num': profile_num})
++        ctx.append((label, f"RunPlugin({pending_url})"))
++
++    protected_folders = {"Favorites", _t(30009) or "Favorites",
++                         "AcTweeteR Pending - Movies", "AcTweeteR Pending - Series"}
+     for gname in fav.get_folders():
+         if gname in protected_folders:
+             continue
+@@ -9141,8 +9152,8 @@
+         "catchup_source": catchup_source,
+         "catchup_days": catchup_days,
+     }
+-    if fav.is_favorite(item_id, folder):
+-        fav.remove(item_id, folder)
++    if fav.is_favorite(item_id, folder, stype):
++        fav.remove(item_id, folder, stype)
+         xbmcgui.Dialog().notification("Xstream Pro", _t(30085).format(folder))
+         xbmc.executebuiltin("Container.Refresh")
+         return
+@@ -16990,13 +17001,14 @@
+         "url": args.get("url", [""])[0],
+         "epg_id": args.get("epg_id", [""])[0],
+     }
+-    if profile_fav.is_favorite(item["id"]):
+-        profile_fav.remove(item["id"])
++    if profile_fav.is_favorite(item["id"], stype=item["stype"]):
++        profile_fav.remove(item["id"], stype=item["stype"])
+         xbmcgui.Dialog().notification("Xstream Pro", _t(30747))
+     else:
+         profile_fav.add(item)
+         xbmcgui.Dialog().notification("Xstream Pro", _t(30746))
+     _invalidate_profile_fav(pnum)
++    xbmcgui.Window(10000).setProperty("Premium.CollectionsRefresh", str(time.time_ns()))
+     xbmc.executebuiltin("Container.Refresh")
+ elif mode == "fav_new_folder":
+     name = xbmcgui.Dialog().input(_t(30143))
+diff --git a/resources/lib/premium_routes.py b/resources/lib/premium_routes.py
+--- a/resources/lib/premium_routes.py
++++ b/resources/lib/premium_routes.py
+@@ -423,15 +423,7 @@
+         profile_num=pnum, include_download=False)
+     watched_actions = (content_state.watched_context(
+         g, 'movie', data.get('tmdb_id'), profile_num=pnum) if stype == 'movie' else [])
+-    pending_actions = []
+-    if pending is not None:
+-        label = ('Quitar de Pendiente' if pending.contains(stype, sid)
+-                 else 'Añadir a Pendiente')
+-        pending_url = g['build_url']({'mode':'premium', 'view':'pending_toggle',
+-            'stype':stype, 'id':sid, 'profile_num':pnum})
+-        pending_actions.append((label, 'RunPlugin(%s)' % pending_url))
+-    content_state.add_context_actions(li, favorite_actions, watched_actions,
+-                                      pending_actions)
++    content_state.add_context_actions(li, favorite_actions, watched_actions)
+     if stype == 'series':
+         status = g['_series_change_status'](sid)
+         if status:
+@@ -680,17 +672,7 @@
+         sid, title, stype, poster, path, profile_num=pnum, include_download=False)
+     watched_actions = (content_state.watched_context(
+         g, 'movie', data.get('tmdb_id'), profile_num=pnum) if stype == 'movie' else [])
+-    pending_actions = []
+-    pending_module = g.get('pending_adapter')
+-    if pending_module is not None:
+-        pending = pending_module.PendingAdapter(g['_get_profile_fav'](pnum))
+-        label = ('Quitar de Pendiente' if pending.contains(stype, sid)
+-                 else 'Añadir a Pendiente')
+-        pending_url = g['build_url']({'mode':'premium', 'view':'pending_toggle',
+-            'stype':stype, 'id':sid, 'profile_num':pnum})
+-        pending_actions.append((label, 'RunPlugin(%s)' % pending_url))
+-    content_state.add_context_actions(li, favorite_actions, watched_actions,
+-                                      pending_actions)
++    content_state.add_context_actions(li, favorite_actions, watched_actions)
+     _performance_call(g, 'kodi.add_directory_item', g['xbmcplugin'].addDirectoryItem,
+                       g['addon_handle'], path, li, stype == 'series')
+-
++
+@@ -718,12 +700,16 @@
+             plugin.endOfDirectory(handle, succeeded=False, cacheToDisc=False)
+             return
+         plugin.setContent(handle, 'videos')
+-        plugin.setPluginCategory(handle, 'Mis colecciones')
++        plugin.setPluginCategory(handle, 'Mis Colecciones')
+         for collection, label in (('favorites', 'Favoritos'),
+-                                  ('pending', 'Pendiente')):
++                                  ('pending', 'Pendientes')):
+             li = g['_new_listitem'](label)
++            li.setArt({'icon': 'DefaultFolder.png', 'thumb': 'DefaultFolder.png',
++                       'poster': 'DefaultFolder.png'})
++            li.setProperty('AcTweeteR.CollectionFolder', '1')
+             plugin.addDirectoryItem(handle, build({'mode': 'premium',
+-                'view': collection, 'stype': stype, 'profile_num': pnum}), li, True)
++                'view': collection, 'stype': stype, 'profile_num': pnum,
++                'browse': '1'}), li, True)
+         _performance_call(g, 'kodi.end_directory', plugin.endOfDirectory, handle, cacheToDisc=False)
+         return
+     if view == 'favorites_root':
+@@ -771,6 +757,7 @@
+                                 'profile_num':pnum})
+             pending.add(stype, {'id':sid, 'name':item.get('name', ''),
+                 'stype':stype, 'icon':icon, 'url':target})
++        g['xbmcgui'].Window(10000).setProperty('Premium.CollectionsRefresh', str(time.time_ns()))
+         g['xbmc'].executebuiltin('Container.Refresh')
+         _performance_call(g, 'kodi.end_directory', plugin.endOfDirectory, handle, cacheToDisc=False)
+         return
+@@ -993,7 +980,7 @@
+         if view == 'pending':
+             plugin.endOfDirectory(handle, succeeded=False, cacheToDisc=False)
+             return
+-        favorites = g['_get_profile_fav'](pnum).get_all()
++        favorites = g['_get_profile_fav'](pnum).get_favorites()
+         plugin.setContent(handle, 'videos')
+         rows = []
+         for kind in ('movie', 'series'):
+@@ -1055,7 +1042,7 @@
+     pending = (pending_module.PendingAdapter(g['_get_profile_fav'](pnum))
+                if pending_module is not None else None)
+     if indexed is None and view == 'favorites':
+-        favorites = g['_get_profile_fav'](pnum).get_all()
++        favorites = g['_get_profile_fav'](pnum).get_favorites(stype)
+         ids = {str(f.get('id')) for f in favorites if f.get('stype') == stype}
+         items = [s for s in items if provider_id(s, stype) in ids]
+     elif indexed is None and view == 'pending':

@@ -1,0 +1,20 @@
+{
+  "release": "0.4.53-collections-beta",
+  "channel": "repository.actweeter.testing",
+  "source_commit": "39720dd",
+  "base_commit": "067df3770d79f4bb01d242fdefddd4d4fedafb8e",
+  "stable_tree": "551a296452cf3412f673c390374e811c42c4a106",
+  "stable_unchanged": true,
+  "automated_tests": {"count": 308, "status": "PASS_AUTOMATED"},
+  "runtime_status": {"mac": "NOT_TESTED", "lenovo": "NOT_TESTED"},
+  "testing_index": {
+    "sha256": "d00aeaf78a6bd4438bebb018e57975cfec572ae7041728f526201676a04c31ee",
+    "md5": "35b77359abe03770e63835d1adf60968"
+  },
+  "addons": [
+    {"id": "service.actweeter", "version": "0.4.53", "sha256": "55455ea23da04124f4e52f66c24fcb7fa3df366844c9859fcdf38ace8e72c958"},
+    {"id": "skin.actweeter", "version": "1.2.32~beta1", "sha256": "3e7cf74ad59cd7d9b3ee8be9b399f4974816890a2f2dd31ed9cfea3e9121d08b"},
+    {"id": "plugin.video.xstream-pro", "version": "1.1.2.16", "sha256": "1161eedf5e1b5aa49570753781f99c286130c70f56a760a32802b7a271a74a0f"}
+  ],
+  "functional_acceptance": "PARTIAL; native Kodi installation and real interaction remain pending"
+}
