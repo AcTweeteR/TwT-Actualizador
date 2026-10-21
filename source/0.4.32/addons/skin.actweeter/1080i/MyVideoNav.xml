@@ -31,6 +31,17 @@
 		<include>NowPlayingBackground</include>
 		<!-- all Views -->
         <include>allViews</include>
+        <control type="label">
+            <visible>!Container.IsUpdating + Integer.IsEqual(Container.NumItems,0) + String.Contains(Container.FolderPath,plugin.video.xstream-pro) + [String.Contains(Container.FolderPath,view=favorites) | String.Contains(Container.FolderPath,view=pending)]</visible>
+            <left>10%</left>
+            <top>50%</top>
+            <width>80%</width>
+            <height>90</height>
+            <align>center</align>
+            <font>reg30</font>
+            <textcolor>$INFO[Skin.String(BingiePrimaryTextColor)]</textcolor>
+            <label>Esta colección está vacía. Añade títulos desde el menú contextual de una carátula.</label>
+        </control>
         <!--Sub Menu-->
         <control type="group">
 			<include>SideBladeModern</include>

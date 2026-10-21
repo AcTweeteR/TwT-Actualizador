@@ -10,5 +10,4 @@
     <shortcut><label>Estrenos $INFO[Window(Home).Property(AcTweeteR.PreviousYear)]</label><label2 /><icon /><thumb /><action>plugin://plugin.video.xstream-pro/?mode=premium&amp;view=premiere&amp;stype=movie&amp;offset=1</action></shortcut>
     <shortcut><label>Todas las películas</label><label2 /><icon /><thumb /><action>plugin://plugin.video.xstream-pro/?mode=premium&amp;stype=movie</action></shortcut>
     <shortcut><label>Géneros y categorías</label><label2 /><icon /><thumb /><action>plugin://plugin.video.xstream-pro/?mode=movies_menu</action></shortcut>
-    <shortcut><label>Mis colecciones</label><label2 /><icon /><thumb /><action>plugin://plugin.video.xstream-pro/?mode=premium&amp;view=collections_root&amp;stype=movie</action></shortcut>
 </shortcuts>

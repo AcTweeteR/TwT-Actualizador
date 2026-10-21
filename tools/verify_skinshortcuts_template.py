@@ -17,7 +17,8 @@ def verify(implementation, template):
     data = Path(implementation).read_bytes()
     parsed = ast.parse(data)
     cls = next(n for n in parsed.body if isinstance(n, ast.ClassDef) and n.name == "Template")
-    method = next(n for n in cls.body if isinstance(n, ast.FunctionDef) and n.name == "get_properties")
+    method = next(n for n in cls.body if isinstance(n, ast.FunctionDef)
+                  and n.name in ("get_properties", "getProperties"))
     namespace = {"log": lambda *_: None}
     exec(compile(ast.Module(body=[method], type_ignores=[]), str(implementation), "exec"), namespace)
     root = ET.parse(template).getroot()
@@ -31,7 +32,7 @@ def verify(implementation, template):
             item = ET.Element("item", id="100")
             if supplied is not None:
                 ET.SubElement(item, "property", name="widgetExpandable").text = supplied
-            properties = namespace["get_properties"](instance, group, item)
+            properties = namespace[method.name](instance, group, item)
             assert properties["widgetExpandable"] == expected, (group.tag, supplied, expected)
             for flag in group.iterfind(".//param[@name='widgetExpandable']"):
                 assert flag.get("value") == "$SKINSHORTCUTS[widgetExpandable]"

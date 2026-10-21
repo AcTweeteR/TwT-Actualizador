@@ -15,8 +15,8 @@ import urllib.parse
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-LAYOUT_VERSION = 13
-LAYOUT_MIGRATION_ID = 'interface-layout-v13-default-navigation'
+LAYOUT_VERSION = 14
+LAYOUT_MIGRATION_ID = 'interface-layout-v14-collections-widgets'
 GROUPS = ('mainmenu', 'powermenu', 'inicio-1', '10000-1', 'moviehub', 'tvshowhub')
 # Exact profile copies shipped as defaults in Beta 8. They may be updated when
 # older state files do not yet track ownership; any byte-level customization
@@ -217,8 +217,10 @@ def source_documents(skin_root, *, recommendations_enabled=True):
             if 'profile_num=' in action or '/Users/' in action:
                 raise ValueError('installation-specific widget source')
             if group not in ('mainmenu', 'powermenu'):
+                if 'collections_reload=' not in action:
+                    action += '&collections_reload=$INFO[Window(Home).Property(Premium.CollectionsRefresh)]'
                 expanded_action, expandable = expandable_widget_action(action)
-                if expanded_action != action:
+                if expanded_action != action_node.text:
                     action_node.text = expanded_action
                     changed = True
                 # Skin Shortcuts 2.x does not promote arbitrary <property>
@@ -622,7 +624,7 @@ def generated_layout_ready(path, shortcuts_root, documents, *, condition_visible
     """
     rows = generated_rows(path, condition_visible=condition_visible)
     if (not all(len(rows.get(group, [])) >= count for group, count in
-                (('Widgets', 6), ('moviehub', 10), ('tvshowhub', 10)))
+                (('Widgets', 5), ('moviehub', 10), ('tvshowhub', 10)))
             or not all(row['provider_only'] and row['expansion_ready']
                        for group in rows.values() for row in group)):
         return False, rows
@@ -1031,7 +1033,7 @@ def _prepare_interface(kodi, addon_factory, vfs, gui, dialog, *, allow_prompt=Fa
     # identities. Source DATA names (such as inicio-1) are not runtime groups.
     first_rows=generated_rows(generated_path, condition_visible=kodi.getCondVisibility)
     if (not all(len(first_rows.get(group,[]))>=count for group,count in
-                (('Widgets',6),('moviehub',10),('tvshowhub',10)))
+                (('Widgets',5),('moviehub',10),('tvshowhub',10)))
             or not all(row['provider_only'] for group in first_rows.values()
                        for row in group)):
         return 'BUILD_OUTPUT_INVALID'
@@ -1071,7 +1073,7 @@ def _prepare_interface(kodi, addon_factory, vfs, gui, dialog, *, allow_prompt=Fa
         kodi.log('[AcTweeteR] SKINSHORTCUTS_BUILD status=skipped phase=property reason=unchanged_and_verified',
                  kodi.LOGINFO)
     if (not all(len(rows.get(group,[]))>=count for group,count in
-                (('Widgets',6),('moviehub',10),('tvshowhub',10)))
+                (('Widgets',5),('moviehub',10),('tvshowhub',10)))
             or not all(row['provider_only'] and row['expansion_ready']
                        for group in rows.values() for row in group)):
         kodi.log('[AcTweeteR] INTERFACE_LAYOUT status=generated_xml_property_missing',

@@ -1,0 +1,8 @@
+1.2.32~beta1 — Mis Colecciones (candidata Testing)
+
+- Última fila de Películas y Series con Favoritos y Pendientes separados.
+- Dos carpetas visibles aunque estén vacías, sin duplicar accesos del lateral.
+- Inicio deja de incluir Favoritos/Pendientes en sus valores predeterminados.
+- Apertura nativa de carpetas con retorno y estado vacío comprensible.
+- Mantiene los widgets personalizados y EXPANDIR de la base estable 1.2.31.
+- Validación real de foco, menús contextuales y retorno pendiente.

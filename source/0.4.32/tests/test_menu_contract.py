@@ -161,7 +161,7 @@ class MenuContractTests(unittest.TestCase):
                 result = interface_layout.apply_layout(
                     shortcuts, service, ADDON, interface_layout.SETTINGS)
                 self.assertEqual(result["status"], "APPLIED")
-                self.assertEqual(interface_layout.LAYOUT_VERSION, 13)
+                self.assertEqual(interface_layout.LAYOUT_VERSION, 14)
                 for name, wanted in (("skin.actweeter-mainmenu.DATA.xml",
                                       (ADDON / "shortcuts/mainmenu.DATA.xml").read_bytes()),
                                      ("skin.actweeter-powermenu.DATA.xml",

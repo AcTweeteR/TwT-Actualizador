@@ -14,21 +14,21 @@ class CandidateSourceMetadataTests(unittest.TestCase):
         repository = ET.parse(ROOT / "addons/repository.actweeter/addon.xml").getroot()
         xstream = json.loads((ROOT / "third_party/xstream/upstream.json").read_text())
         self.assertEqual((service.get("id"), service.get("version")),
-                         ("service.actweeter", "0.4.52"))
+                         ("service.actweeter", "0.4.53"))
         self.assertEqual((skin.get("id"), skin.get("version")),
-                         ("skin.actweeter", "1.2.30~beta10"))
+                         ("skin.actweeter", "1.2.32~beta1"))
         self.assertEqual((repository.get("id"), repository.get("version")),
                          ("repository.actweeter", "1.0.3"))
-        self.assertEqual(xstream["distribution_version"], "1.1.2.15")
+        self.assertEqual(xstream["distribution_version"], "1.1.2.16")
 
     def test_migration_is_versioned_after_official_0_4_31_layout(self):
         sys_path = ROOT / "addons/service.actweeter/resources/lib"
         import sys
         sys.path.insert(0, str(sys_path))
         import interface_layout
-        self.assertEqual(interface_layout.LAYOUT_VERSION, 13)
+        self.assertEqual(interface_layout.LAYOUT_VERSION, 14)
         self.assertEqual(interface_layout.LAYOUT_MIGRATION_ID,
-                         "interface-layout-v13-default-navigation")
+                         "interface-layout-v14-collections-widgets")
         self.assertTrue(interface_layout.interface_migration_due({"layout_version": 12}))
 
     def test_candidate_manifest_does_not_claim_runtime_or_publication(self):

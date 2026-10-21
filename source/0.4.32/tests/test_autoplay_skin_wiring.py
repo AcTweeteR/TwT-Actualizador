@@ -79,9 +79,16 @@ class AutoplaySkinWiringTests(unittest.TestCase):
                             'String.IsEqual(ListItem.DBType,tvshow)]',
                             'String.IsEqual(ListItem.DBType,movie)'))
                 for tag in ('onclick', 'onup', 'ondown', 'onleft', 'onright', 'onback'):
-                    self.assertEqual([ET.tostring(n) for n in before.iter(tag)],
-                                     [ET.tostring(n) for n in after.iter(tag)],
+                    def actions(root):
+                        return [(n.attrib, n.text) for n in root.iter(tag)
+                                if 'AcTweeteR.CollectionFolder' not in n.get('condition', '')]
+                    self.assertEqual(actions(before), actions(after),
                                      (path.name, tag))
+                if path.name == 'IncludesBingie.xml':
+                    folders = [n for n in after.iter('onclick')
+                               if 'AcTweeteR.CollectionFolder' in n.get('condition', '')]
+                    self.assertEqual(len(folders), 1)
+                    self.assertEqual(folders[0].text, 'ActivateWindow(Videos,$INFO[Container($PARAM[widgetid]).ListItem.FileNameAndPath],return)')
 
     def test_published_baseline_exposes_the_missing_wiring(self):
         with zipfile.ZipFile(BASELINE) as archive:
@@ -93,7 +100,7 @@ class AutoplaySkinWiringTests(unittest.TestCase):
     def test_requires_smart_search_service_and_preserves_optional_slyguy(self):
         root = ET.parse(SKIN / 'addon.xml').getroot()
         self.assertEqual(root.find("./requires/import[@addon='service.actweeter']").get('version'),
-                         '0.4.48')
+                         '0.4.53')
         self.assertIsNone(root.find("./requires/import[@addon='slyguy.trailers']"))
 
 

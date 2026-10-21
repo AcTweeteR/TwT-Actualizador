@@ -10,5 +10,4 @@
     <shortcut><label>Estrenos $INFO[Window(Home).Property(AcTweeteR.PreviousYear)]</label><label2 /><icon /><thumb /><action>plugin://plugin.video.xstream-pro/?mode=premium&amp;view=premiere&amp;stype=series&amp;offset=1</action></shortcut>
     <shortcut><label>Catálogo del proveedor</label><label2 /><icon /><thumb /><action>plugin://plugin.video.xstream-pro/?mode=premium&amp;stype=series</action></shortcut>
     <shortcut><label>Categorías del proveedor</label><label2 /><icon /><thumb /><action>plugin://plugin.video.xstream-pro/?mode=series_menu</action></shortcut>
-    <shortcut><label>Mis colecciones</label><label2 /><icon /><thumb /><action>plugin://plugin.video.xstream-pro/?mode=premium&amp;view=collections_root&amp;stype=series</action></shortcut>
 </shortcuts>
