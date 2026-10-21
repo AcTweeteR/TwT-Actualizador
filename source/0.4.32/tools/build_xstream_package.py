@@ -34,6 +34,7 @@ PATCHES = (
     ("collections_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-collections.patch"),
     ("collections_empty_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-collections-empty.patch"),
     ("collections_dedup_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-collections-dedup.patch"),
+    ("trakt_device_auth_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-trakt-device-auth.patch"),
 )
 DIAGNOSTICS_SOURCE = ROOT / "third_party/xstream/performance_diagnostics.py"
 CATALOG_INDEX_SOURCE = ROOT / "third_party/xstream/provider_catalog_index.py"
@@ -187,6 +188,13 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             raise ValueError("XStream upstream license missing or unexpected")
 
         for manifest_key, patch_path in PATCHES:
+            if manifest_key == "trakt_device_auth_patch":
+                if sha256(patch_path) != data[manifest_key + "_sha256"]:
+                    raise ValueError("Trakt OAuth patch hash mismatch")
+                target = root / "resources/lib/trakt.py"
+                target.write_bytes(target.read_bytes().replace(b"\r\n", b"\n"))
+                apply_contextual_unified_patch(root, patch_path)
+                continue
             if manifest_key in ("recommendations_patch", "search_index_patch", "prefetch_patch", "catalog_index_patch", "collections_patch", "collections_empty_patch", "collections_dedup_patch"):
                 # The pinned upstream archive uses CRLF in these files while
                 # earlier tracked patches add LF. Normalize only these two
@@ -249,6 +257,9 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             "Beta 11 corrects the unified-diff line count for the series-change "
             "provider so the series_recent route is included in the distributed "
             "runtime package.\n"
+            "The native Trakt Device Code flow uses the official authentication "
+            "host and public application ID, without sending a desktop client secret. "
+            "No third-party account token is copied and no new scrobbler is added.\n"
             "AcTweeteR 1.1.2.11 skips background VOD-info threads and their "
             "per-batch delays when provider metadata is off or already cached, "
             "but preserves cold-cache prefetch and full provider art.\n"

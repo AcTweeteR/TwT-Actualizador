@@ -1,5 +1,15 @@
 # AcTweeteR Smart Search candidate
 
+## Unpublished Trakt Mac-first candidate
+
+Service `0.4.54` contains a read-only universal identity/import planner; it is
+not scheduled and does not apply states to the user profile. XStream candidate
+`1.1.2.20~beta1` removes the obsolete desktop client-secret requirement from
+its native Device Code flow and uses Trakt's current authentication host.
+The existing scrobbler and account stores remain the owners of playback and
+OAuth. No feed has been updated. Mac authorization and real two-way sync remain
+blocking acceptance gates; see `docs/development/TRAKT_SYNC_MAC_2026-10-21.md`.
+
 ## Candidate: service 0.4.49 / skin 1.2.30~beta5
 
 Smart Search replaces window 1109 with a compatible launcher and a native
