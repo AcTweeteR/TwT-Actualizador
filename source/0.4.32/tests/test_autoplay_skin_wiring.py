@@ -93,7 +93,7 @@ class AutoplaySkinWiringTests(unittest.TestCase):
     def test_requires_current_service_and_preserves_optional_slyguy(self):
         root = ET.parse(SKIN / 'addon.xml').getroot()
         self.assertEqual(root.find("./requires/import[@addon='service.actweeter']").get('version'),
-                         '0.4.47')
+                         '0.4.48')
         self.assertIsNone(root.find("./requires/import[@addon='slyguy.trailers']"))
 
 

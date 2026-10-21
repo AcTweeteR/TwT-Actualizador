@@ -1,11 +1,11 @@
 # AcTweeteR Smart Search candidate
 
-## Candidate: service 0.4.47 / skin 1.2.30~beta4
+## Candidate: service 0.4.48 / skin 1.2.30~beta5
 
 Smart Search replaces window 1109 with a compatible launcher and a native
 Kodi search window: live local title matching, movies/series/EPG/person rows,
 TMDb biographies/filmographies, canonical title enrichment and platform keyboard
-input. It does not change Home, trailer ownership, provider credentials or
+input. Modal metadata fallbacks are scoped away from Home. It does not change trailer ownership, provider credentials or
 Skin Shortcuts. Existing XStream and Testing repository packages are reused.
 
 Candidate packages must be installed through the official Testing feed after

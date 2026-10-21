@@ -1,0 +1,5 @@
+0.4.48 — Smart Search 2.0 (candidato privado; no publicado)
+- Suspende el buscador al iniciar vídeo desde la ficha y restaura consulta, filas y foco al detenerlo.
+- Entrega el foco al QWERTY cuando Kodi confirma que es visible.
+- Conserva catálogo, cachés compartidas, rutas XStream y preferencias del usuario.
+- Reproducción de película y episodio comprobada en Kodi Mac desde fuentes; validación instalada pendiente.
