@@ -82,6 +82,10 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
         self.shared_index = None
         self.monitor = xbmc.Monitor()
 
+    def _search_focus(self):
+        # Never focus Android's native edit control: Kodi opens its side IME.
+        return 106 if getattr(xbmc, "getCondVisibility", lambda _: False)("System.Platform.Android") else 100
+
     def onInit(self):
         if self.ready:
             if self.suspended:
@@ -94,7 +98,7 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
                     self._fill(control, values)
                     if values:
                         self.getControl(control).selectItem(self.resume_positions.get(control, 0))
-                self.setFocusId(701 if self.detail else 100)
+                self.setFocusId(701 if self.detail else self._search_focus())
                 self.suspended = False
             return
         self.ready = True
@@ -104,7 +108,7 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
         self.getControl(120).addItems([xbmcgui.ListItem(label=key) for key in KEYS])
         # Android Kodi opens its side-mounted native keyboard on edit focus.
         # Start on QWERTY instead: no keyboard is shown until explicitly requested.
-        self.setFocusId(103 if xbmc.getCondVisibility("System.Platform.Android") else 100)
+        self.setFocusId(self._search_focus())
         for target in (self._local_worker, self._epg_worker, self._metadata_worker, self._pump):
             threading.Thread(target=target, daemon=True).start()
 
@@ -369,7 +373,10 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
     def onClick(self, control):
         if self.detail and control not in (701, 702, 703, 704, 705, 707):
             return
-        if control == 101:
+        if control == 106:
+            # Touching the faux edit field opens only the explicit QWERTY grid.
+            self.onClick(103)
+        elif control == 101:
             value = xbmcgui.Dialog().input("Buscar · teclado del dispositivo / dictado si está disponible",
                 defaultt=self.getControl(100).getText(), type=xbmcgui.INPUT_ALPHANUM)
             if value:
@@ -378,7 +385,7 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
         elif control == 102:
             self.person = None
             self.getControl(100).setText("")
-            self.setFocusId(100)
+            self.setFocusId(self._search_focus())
         elif control == 103:
             opened = self.getProperty("search.keyboard") != "true"
             self.setProperty("search.keyboard", "true" if opened else "false")
@@ -397,7 +404,7 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
             text = self.getControl(100).getText()
             if key == "LISTO":
                 self.setProperty("search.keyboard", "false")
-                self.setFocusId(100)
+                self.setFocusId(self._search_focus())
             else:
                 self.person = None
                 self.getControl(100).setText((text[:-1] if key == "BORRAR" else
@@ -521,7 +528,7 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
         elif self.getProperty("search.keyboard") == "true":
             self.keyboard_focus_pending = False
             self.setProperty("search.keyboard", "false")
-            self.setFocusId(100)
+            self.setFocusId(self._search_focus())
         elif self.person and self.history:
             self.serial += 1
             self.remote.invalidate()
@@ -546,7 +553,7 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
             self.person = None
             self.query = ""
             self.setProperty("search.person", "")
-            self.setFocusId(100)
+            self.setFocusId(self._search_focus())
         else:
             self._shutdown()
 

@@ -39,7 +39,7 @@ EXPANDABLE_PREMIUM_VIEWS = {
     '', 'continue', 'recent', 'trending', 'popular', 'favorites',
     'series_recent', 'premiere', 'year', 'genre', 'catalog'
 }
-EXPANSION_QUERY = '&actweeter_expand=1&limit=20'
+EXPANSION_QUERY = '&actweeter_expand=1&limit=19'
 BUILD_RETRY_DELAYS = (1.0, 2.0, 4.0, 8.0, 15.0)
 RETRYABLE_INTERFACE_RESULTS = frozenset({
     # PREPARATION_BUSY means another AcTweeteR coordinator owns the exclusive
@@ -71,7 +71,7 @@ def expandable_widget_action(action):
     if any(key.lower() in {'username', 'password', 'token', 'auth', 'url', 'server', 'api_key'}
            for key in query):
         return action, False
-    if query.get('actweeter_expand') == '1' and query.get('limit') == '20':
+    if query.get('actweeter_expand') == '1' and query.get('limit') in ('19', '20'):
         return action, True
     separator = '&' if parsed.query else '?'
     return action + separator + EXPANSION_QUERY.lstrip('&'), True
@@ -600,7 +600,7 @@ def generated_rows(path, *, condition_visible=None):
                     route_expandable=expandable_widget_action(route)[1] if provider_only else False
                     metadata_expandable=params.get('widgetExpandable','').strip().lower()=='true'
                     route_has_expansion=(query.get('actweeter_expand')==['1']
-                                         and query.get('limit')==['20'])
+                                         and query.get('limit') in (['19'], ['20']))
                     expansion_ready=(not route_expandable or
                                       (metadata_expandable and route_has_expansion))
                     rows.append({'label':params.get('widgetName') or params.get('label',''),

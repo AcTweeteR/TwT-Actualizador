@@ -32,7 +32,7 @@ class ExpandableWidgetMetadataTests(unittest.TestCase):
         expanded, enabled = interface_layout.expandable_widget_action(route)
         self.assertTrue(enabled)
         self.assertTrue(expanded.startswith(route + "&"))
-        self.assertIn("actweeter_expand=1&limit=20", expanded)
+        self.assertIn("actweeter_expand=1&limit=19", expanded)
         self.assertEqual(interface_layout.expandable_widget_action(expanded), (expanded, True))
 
     def test_non_list_and_non_provider_routes_are_not_expandable(self):
@@ -77,7 +77,7 @@ class ExpandableWidgetMetadataTests(unittest.TestCase):
             home = ET.fromstring(output["skin.actweeter-inicio-1.DATA.xml"])
             first = home.find("shortcut")
             route = first.findtext("action")
-            self.assertIn("reload=$INFO[Window(Home).Property(R)]&amp;actweeter_expand=1&amp;limit=20", ET.tostring(first, encoding="unicode"))
+            self.assertIn("reload=$INFO[Window(Home).Property(R)]&amp;actweeter_expand=1&amp;limit=19", ET.tostring(first, encoding="unicode"))
             self.assertTrue(first.findtext("defaultID").startswith("actweeter-expand-inicio-1-"))
             self.assertIsNone(first.find("property[@name='widgetExpandable']"))
             self.assertIn("actweeter_expand=1", route)

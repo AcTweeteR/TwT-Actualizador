@@ -1,0 +1,1 @@
+1.2.30~beta7: Fix truncated EXPANDIR by reserving the twentieth widget slot for the red expansion card. Android search uses a touch-safe entry button; the embedded QWERTY opens on demand.

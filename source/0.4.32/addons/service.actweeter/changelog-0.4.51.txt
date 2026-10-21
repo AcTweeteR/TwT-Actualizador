@@ -1,0 +1,1 @@
+0.4.51: Android search uses a touch-safe button instead of a native edit field; all focus paths avoid Android IME. Existing text and search remain intact. Widget provider route uses 19+EXPANDIR slots.

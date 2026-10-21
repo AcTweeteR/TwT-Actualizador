@@ -16,7 +16,7 @@ REPOSITORY_ROOT = ROOT.parents[1]
 class CandidatePackageBuildTests(unittest.TestCase):
     def test_service_zip_is_reproducible_and_well_formed(self):
         with tempfile.TemporaryDirectory() as temp:
-            package = Path(temp) / "service.actweeter-0.4.50.zip"
+            package = Path(temp) / "service.actweeter-0.4.51.zip"
             subprocess.run([sys.executable, str(ROOT / "tools/build_service_package.py"),
                             "--output", str(package)], check=True,
                            cwd=ROOT, capture_output=True, text=True)
@@ -29,8 +29,8 @@ class CandidatePackageBuildTests(unittest.TestCase):
             with zipfile.ZipFile(package) as archive:
                 self.assertIsNone(archive.testzip())
                 addon = ET.fromstring(archive.read("service.actweeter/addon.xml"))
-                self.assertEqual(addon.get("version"), "0.4.50")
-                self.assertIn("service.actweeter/changelog-0.4.50.txt",
+                self.assertEqual(addon.get("version"), "0.4.51")
+                self.assertIn("service.actweeter/changelog-0.4.51.txt",
                               archive.namelist())
                 for relative in ("resources/lib/addon_update_policy.py",
                                  "resources/lib/smart_search_engine.py",
@@ -71,11 +71,11 @@ class CandidatePackageBuildTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp:
             output = Path(temp)
-            service = output / "service.actweeter-0.4.50.zip"
+            service = output / "service.actweeter-0.4.51.zip"
             subprocess.run([sys.executable, str(ROOT / "tools/build_service_package.py"),
                             "--output", str(service)], check=True,
                            cwd=ROOT, capture_output=True, text=True)
-            skin = output / "skin.actweeter-1.2.30~beta6.zip"
+            skin = output / "skin.actweeter-1.2.30~beta7.zip"
             subprocess.run([sys.executable, str(ROOT / "tools/build_skin_package.py"),
                             "--output", str(skin)], check=True,
                            cwd=ROOT, capture_output=True, text=True)
@@ -85,8 +85,8 @@ class CandidatePackageBuildTests(unittest.TestCase):
                 for filename in ("Includes.xml", "IncludesBingie.xml", "IncludesBackgroundBuilding.xml"):
                     self.assertEqual(archive.read("skin.actweeter/1080i/" + filename),
                                      (ROOT / "addons/skin.actweeter/1080i" / filename).read_bytes())
-            xstream = output / "plugin.video.xstream-pro-1.1.2.14.zip"
-            self._write_addon_fixture(xstream, "plugin.video.xstream-pro", "1.1.2.14")
+            xstream = output / "plugin.video.xstream-pro-1.1.2.15.zip"
+            self._write_addon_fixture(xstream, "plugin.video.xstream-pro", "1.1.2.15")
             index_path, md5_path = build_distribution_index.build(
                 REPOSITORY_ROOT / "docs/testing/repo/repository.actweeter.testing/repository.actweeter.testing-1.0.2.zip",
                 skin,
@@ -98,9 +98,9 @@ class CandidatePackageBuildTests(unittest.TestCase):
                         for node in ET.fromstring(payload).findall("addon")}
             self.assertEqual(versions, {
                 "repository.actweeter.testing": "1.0.2",
-                "service.actweeter": "0.4.50",
-                "skin.actweeter": "1.2.30~beta6",
-                "plugin.video.xstream-pro": "1.1.2.14",
+                "service.actweeter": "0.4.51",
+                "skin.actweeter": "1.2.30~beta7",
+                "plugin.video.xstream-pro": "1.1.2.15",
             })
             self.assertEqual(hashlib.md5(payload).hexdigest(),
                              md5_path.read_text(encoding="ascii").strip())
