@@ -5,3 +5,4 @@
 - Comprueba el guardado en disco sin escribir guisettings ni bases de datos.
 - Revisa cambios de versión y preferencias al arrancar; avisa sin cambiar configuraciones.
 - Conserva Smart Search 2.0. Los alias externos son opcionales: requieren clave API v3 TMDb propia; sin clave no se consultan y el buscador local sigue operativo. No utiliza claves privadas del helper.
+- Nuevo asistente TMDb opcional: ofrece clave propia en primeras instalaciones y una vez tras actualización, valida conexión y conserva cancelaciones; disponible desde Configuración → TMDb.
