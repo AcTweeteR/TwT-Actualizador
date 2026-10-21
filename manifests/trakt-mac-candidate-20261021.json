@@ -1,0 +1,19 @@
+{
+  "release_kind": "local development candidate; not published or installed",
+  "base_commit": "df96268",
+  "branch": "codex/trakt-sync-mac-2026-10-21",
+  "components": [
+    {"id": "service.actweeter", "version": "0.4.54", "sha256": "86db4e571a9be54464146a669ac0e4615d63717ad81edbde4004483a1cabe5c7"},
+    {"id": "plugin.video.xstream-pro", "version": "1.1.2.20~beta1", "sha256": "650b46c5e58f1ea067f7f6de1f4bc7f701c5a062a9a52d7788341625e53729d6"}
+  ],
+  "automated_tests": {"count": 352, "result": "PASS_AUTOMATED"},
+  "runtime": {
+    "mac_native_menu_diagnostic": "PASS_RUNTIME: account configuration required by installed client",
+    "mac_patched_oauth": "NOT_TESTED: direct installed-file edit denied by environment",
+    "bidirectional_sync": "NOT_TESTED; planner not connected to personal stores or scheduler",
+    "lenovo": "NOT_TOUCHED"
+  },
+  "public_feeds_changed": false,
+  "remote_history_writes": false,
+  "personal_tokens_included": false
+}

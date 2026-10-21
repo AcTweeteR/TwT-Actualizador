@@ -78,7 +78,125 @@ ausencia de secretos. Después: GET reales desde el contexto nativo autorizado,
 exportación privada, consentimiento específico para escritura y prueba VOD
 inequívoca. Lenovo y publicación Beta solo después de validación Mac.
 
-ESTADO=EN_CURSO
+## Resultado de este bloque
+
+### Defecto nativo confirmado y corrección preparada
+
+El Mac respondió por JSON-RPC TCP local (9090): Kodi 21.3, cero reproductores
+activos antes de las pruebas. HTTP 8080 no está disponible; no se cambió ningún
+servicio ni preferencia para habilitarlo.
+
+`Files.GetDirectory` sobre `xstream_tmdb_trakt_menu` devolvió 11 entradas en
+1,20–1,24 s. El resumen de las rutas muestra:
+
+```
+authorization_offered=false
+account_configuration_offered=true
+account_routes_present=false
+```
+
+La rama de `tmdb_routes.trakt_menu()` que produce ese resultado depende de
+`trakt.auth_configured() == false`, no de un historial vacío. La función exige
+client ID **y secreto**. El contrato oficial actual declara el secreto opcional
+y desaconseja enviarlo desde aplicaciones de escritorio. Se preserva el OAuth
+nativo de XStream: no se extraen ni copian tokens o claves de script.trakt.
+El parche nuevo elimina ese requisito, deja de enviar el secreto y utiliza
+`https://auth.trakt.tv` para Device Code, Device Token y renovación.
+Esto confirma un bloqueo del acceso a funciones de cuenta, NO demuestra todavía
+la sincronización ni que la aplicación OAuth acepte realmente la autorización.
+
+Referencias adicionales verificadas:
+
+- [Device OAuth y hostname oficial](https://github.com/trakt/api-help/blob/master/projects/api/src/contracts/oauth/index.ts).
+- [Secreto opcional, no para escritorio](https://github.com/trakt/api-help/blob/master/projects/api/src/contracts/oauth/schema/request/clientSecretSchema.ts).
+- [Kodi 21.3 JSON-RPC](https://github.com/xbmc/xbmc/blob/21.3-Omega/xbmc/interfaces/json-rpc/schema/methods.json).
+
+### Código preparado, sin activar sincronización
+
+- `resources/lib/trakt_sync.py` del servicio: identidades tipadas, índice de
+  coincidencias verificadas por perfil, lectura paginada de vistos/historial/
+  playback, vallado por actividad y cuenta, y plan conservador sin borrados.
+  Conflictos o duración desconocida impiden sobrescribir progresos.
+- `actweeter-trakt-device-auth.patch`: cambio localizado del cliente OAuth
+  existente. El constructor verifica hash del parche y de los archivos finales.
+- `tools/probe_trakt_mac.py`: diagnóstico por rutas nativas permitidas;
+  imprime cantidades/estados, no títulos, URLs de reproducción ni tokens.
+- Se diferencian las pruebas de paquetes **publicados** de la versión fuente
+  **candidata**, sin modificar índices públicos ni reducir las comprobaciones
+  de CRC, identidades, aislamiento o reproducibilidad.
+
+El planificador NO está conectado a un temporizador ni a los stores personales.
+No hay una importación aplicada, cola de envío funcional, UI de sincronización
+completa ni sincronización bidireccional validada. Los widgets de recomendaciones
+existentes se conservan; sus resultados de cuenta quedan NOT_TESTED.
+
+### Pruebas y artefactos locales
+
+| Comprobación | Resultado |
+|---|---|
+| Suite completa | PASS_AUTOMATED: 352 tests (310 de base + 31 de importación + 11 OAuth/diagnóstico) |
+| Identidades/paginación/perfiles/progreso | PASS_AUTOMATED con API sintética, no cuenta personal |
+| OAuth nativo parcheado | PASS_AUTOMATED: secreto no leído/enviado, host oficial, pending/errores, conservación ante rate limit |
+| GET del menú XStream instalado en Mac | PASS_RUNTIME para diagnóstico; funciones de cuenta no expuestas |
+| OAuth corregido en Mac | NOT_TESTED: modificación instalada rechazada por el control de permisos |
+| Importación real / envío / reanudación / recomendaciones | NOT_TESTED; no confundir con las pruebas sintéticas |
+| Reproducibilidad | PASS_AUTOMATED: dos reconstrucciones independientes idénticas por componente |
+| Integridad de paquetes | CRC/AST/XML verificados; la comprobación inicial recorrió 225 miembros, 70 Python y 5 XML |
+| Revisión de artefactos privados | Sin userdata, DB ni bytecode; sin claves privadas o tokens GitHub reconocibles por los patrones examinados. No equivale a detección universal de secretos |
+| Stable/Testing públicos | Sin modificaciones en `repo/`, `docs/testing/` ni `testing/` |
+
+Versiones propuestas, **no publicadas ni instaladas**:
+
+| Paquete | SHA-256 |
+|---|---|
+| service.actweeter 0.4.54 | `86db4e571a9be54464146a669ac0e4615d63717ad81edbde4004483a1cabe5c7` |
+| plugin.video.xstream-pro 1.1.2.20~beta1 | `650b46c5e58f1ea067f7f6de1f4bc7f701c5a062a9a52d7788341625e53729d6` |
+
+Skin sin cambios. Servicio final local en
+`/private/tmp/actweeter-trakt-final.KJwnUS/`; XStream en
+`/private/tmp/actweeter-trakt-candidate.NwyZcq/`. Los primeros builds del servicio
+son anteriores al refuerzo de aislamiento: NO son los artefactos finales de esta
+tabla. Los constructores no permitieron sobrescribirlos; se usó otra carpeta.
+
+### Protección de Master y bloqueo real
+
+Se verificó que los dos módulos instalados coinciden con el ZIP oficial 1.1.2.19.
+Antes del intento de cambio se respaldaron ambos y se verificaron con `cmp` y
+SHA-256 en la carpeta privada de modo 0700:
+
+`_local_recovery/trakt-mac-20261021.5Mj1Sz/` (fuera del worktree Git).
+
+- Original `trakt.py`: `971103887851c84556a81e5776e84c995dbb29b4359a9f3aad33ff8e2d928403`.
+- Original `tmdb_routes.py`: `5ed659bc75514908eaa6596dd979700021e9f06f4006c024a4bfbb92a487a478`.
+
+El control de permisos rechazó aplicar el parche directamente a Master:
+considera necesaria autorización explícita para modificar esos archivos de la
+instalación activa. No se eludió el rechazo. Los SHA-256 posteriores siguen
+siendo los originales. No hace falta restaurar: no se aplicó modificación.
+
+Solo hubo navegación/consultas nativas, lectura de flags de scrobbling no
+sensibles y backup de código. No se leyeron tokens privados de script.trakt,
+ni se cambiaron ajustes, credenciales, perfiles, listas o historial.
+
+### Continuación exacta
+
+1. Obtener autorización explícita para aplicar a Master los dos módulos
+   respaldados, sin cambiar settings ni tokens. No usar una vía alternativa
+   para eludir la restricción del entorno.
+2. Comprobar que el menú nativo ofrece autorización; realizar OAuth con el
+   usuario. No confundir el diálogo cerrado con autorización correcta.
+3. Verificar GET autenticados y preparar exportación remota privada íntegra.
+4. Con el resultado real, integrar proyección aditiva, persistencia y UI;
+   resolver propiedad única del scrobbling y reintentos de resultados inciertos.
+5. Solicitar permiso específico antes de pruebas que escriban historial remoto.
+6. Validar recomendaciones/progreso/vistos en Mac. Solo después preparar el
+   despliegue Testing a Lenovo solicitado por el usuario.
+
+Commits de base funcional: `128907e` (planificador), `6e58285` (cuenta/perfil).
+Parche OAuth, constructor, metadatos, pruebas y probe: `cc4bb98`.
+Los commits permanecen locales; no se ha abierto PR ni actualizado ningún feed.
+
+ESTADO=PARTIAL
 REMOTE_WRITES=NONE
 MAC_SYNC_RUNTIME=NOT_TESTED
 LENOVO=NOT_TOUCHED
