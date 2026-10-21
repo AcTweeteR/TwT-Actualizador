@@ -78,7 +78,7 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
         self.suspended = False
         self.resume_positions = {}
         self.keyboard_focus_pending = False
-        self.metadata = Metadata(xbmc)
+        self.metadata = Metadata(xbmc, alias_api_key=xbmcaddon.Addon("service.actweeter").getSetting("tmdb_alias_api_key"))
         self.shared_index = None
         self.monitor = xbmc.Monitor()
 

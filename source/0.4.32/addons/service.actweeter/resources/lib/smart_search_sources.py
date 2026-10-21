@@ -107,10 +107,11 @@ def metadata_row(item):
 
 
 class Metadata:
-    def __init__(self, kodi, clock=time.monotonic):
+    def __init__(self, kodi, clock=time.monotonic, *, alias_api_key=""):
         self.kodi, self.clock, self.cache = kodi, clock, OrderedDict()
         self.alias_cache = OrderedDict()
         self.alias_api_factory = None
+        self.alias_api_key = alias_api_key if isinstance(alias_api_key, str) and re.fullmatch(r"[0-9a-fA-F]{32}", alias_api_key) else ""
         self.retry_after, self.alias_retry_after = 0, 0
 
     def _directory(self, params):
@@ -155,8 +156,8 @@ class Metadata:
         return item
 
     def aliases(self, items, current=lambda: True, budget=3):
-        """Use the helper's exported API/cache, not copied API keys or private imports."""
-        if self.alias_api_factory is False:
+        """The exported API requires the user's own key; the helper's key is private."""
+        if not self.alias_api_key or self.alias_api_factory is False:
             return items
         if self.alias_api_factory is None:
             try:
@@ -175,8 +176,10 @@ class Metadata:
                 if key not in self.alias_cache and budget and self.clock() >= self.alias_retry_after:
                     budget -= 1
                     try:
-                        api = api or self.alias_api_factory()
+                        api = api or self.alias_api_factory(api_key=self.alias_api_key)
                         payload = api.get_request_lc(kind, identity, "alternative_titles") or {}
+                        if not isinstance(payload, dict) or not isinstance(payload.get("titles", payload.get("results")), list):
+                            raise ValueError("alias response unavailable")
                         self.alias_cache[key] = [r["title"] for r in
                             (payload.get("titles") or payload.get("results") or [])
                             if isinstance(r, dict) and isinstance(r.get("title"), str)][:80]

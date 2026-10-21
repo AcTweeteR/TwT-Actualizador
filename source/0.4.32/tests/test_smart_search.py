@@ -195,10 +195,12 @@ class MetadataTests(unittest.TestCase):
     def test_alias_api_is_bounded_cached_and_does_not_extract_credentials(self):
         calls = []
         class API:
+            def __init__(self, api_key):
+                self.api_key = api_key
             def get_request_lc(self, kind, identity, route):
                 calls.append((kind, identity, route))
                 return {"titles": [{"title": "Máquina de guerra"}]}
-        source = Metadata(Mock())
+        source = Metadata(Mock(), alias_api_key="0" * 32)
         rows = [dict(kind="movie", tmdb_id=str(n)) for n in range(8)]
         with patch.dict(sys.modules, {"tmdbbingiehelper_lib.api.tmdb.api": types.SimpleNamespace(TMDb=API)}):
             result = source.aliases(rows)
@@ -208,6 +210,29 @@ class MetadataTests(unittest.TestCase):
             self.assertEqual(len(calls), 3)
             source.aliases(rows, lambda: False)
             self.assertEqual(len(calls), 3)
+
+    def test_aliases_without_own_key_do_not_import_helper_or_make_requests(self):
+        rows = [dict(kind="movie", tmdb_id="603")]
+        for key in ("", "not-an-api-key", "a\r\nb", None):
+            source = Metadata(Mock(), alias_api_key=key)
+            source.alias_api_factory = Mock(side_effect=AssertionError("no credential: no request"))
+            self.assertEqual(source.aliases(rows), rows)
+            source.alias_api_factory.assert_not_called()
+
+    def test_alias_empty_error_response_is_not_cached_as_success_and_cools_down(self):
+        clock = Mock(return_value=100)
+        source = Metadata(Mock(), clock, alias_api_key="0" * 32)
+        api = Mock()
+        source.alias_api_factory = Mock(return_value=api)
+        api.get_request_lc.return_value = {}
+        rows = [dict(kind="movie", tmdb_id="603")]
+        self.assertEqual(source.aliases(rows), rows)
+        self.assertEqual(source.alias_cache, {})
+        source.aliases(rows)
+        self.assertEqual(api.get_request_lc.call_count, 1)
+        clock.return_value = 111
+        api.get_request_lc.return_value = {"titles": [{"title": "Matrix"}]}
+        self.assertEqual(source.aliases(rows)[0]["aliases"], ["Matrix"])
 
     def test_details_do_not_replace_verified_playback_destination(self):
         source = Metadata(Mock())
