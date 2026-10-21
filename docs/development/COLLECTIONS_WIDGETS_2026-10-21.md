@@ -100,7 +100,28 @@ Después de instalar desde Testing:
    de versión y cualquier restauración deben realizarse por vías nativas y con
    comprobación del backup, nunca copiando a ciegas carpetas al dispositivo.
 
-PUBLICATION_STATUS=PENDING_CHECKS
+## Publicación comprobada
+
+- PR: https://github.com/AcTweeteR/TwT-Actualizador/pull/43 (MERGED).
+- Commit oficial: `ace5183794e3a9cf28d141b9da8202c891b652f2`.
+- Ocho checks del PR aprobados, sin omitir comprobaciones ni forzar la fusión.
+- Pages: https://github.com/AcTweeteR/TwT-Actualizador/actions/runs/39633555125 (SUCCESS).
+- Índice público: https://actweeter.github.io/TwT-Actualizador/testing/repo/addons.xml
+  anuncia servicio 0.4.53, skin 1.2.32~beta1, XStream 1.1.2.16 y Testing 1.0.2.
+- SHA-256 del índice: `d00aeaf78a6bd4438bebb018e57975cfec572ae7041728f526201676a04c31ee`.
+- MD5 descargado y recalculado: `35b77359abe03770e63835d1adf60968`.
+- Los tres ZIP se han vuelto a descargar por HTTPS; CRC, manifiestos y SHA-256
+  coinciden con los artefactos de la tabla anterior.
+- Stable se ha leído desde la URL realmente declarada por repository.actweeter:
+  `https://raw.githubusercontent.com/AcTweeteR/TwT-Actualizador/main/repo/addons.xml`.
+  Sus bytes son idénticos al índice Stable anterior. La ruta Pages `/repo/`
+  no es la fuente Stable declarada por ese complemento.
+
+La publicación Beta está comprobada; no equivale a aceptación funcional en Mac
+o Lenovo. No se ha actualizado ninguna instalación personal durante este trabajo.
+La autorización solicitada para actualizar Lenovo desde Testing sigue pendiente.
+
+PUBLICATION_STATUS=PUBLISHED_BETA
 FUNCTIONAL_ACCEPTANCE=PARTIAL
 STABLE_UNCHANGED=YES
 PERSONAL_INSTALLATIONS_MODIFIED=NO
