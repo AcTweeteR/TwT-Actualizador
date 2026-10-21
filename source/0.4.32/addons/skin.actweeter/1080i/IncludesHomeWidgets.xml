@@ -224,6 +224,29 @@
          <include condition="Skin.HasSetting(EnableSnowAnimation)">SnowAnimation</include>
     </include>
 
+    <!-- Explicit folder card: never display a fake video/play placeholder. -->
+    <include name="AcTweeteRExpandCard">
+        <control type="group">
+            <visible>String.IsEqual(ListItem.Property(AcTweeteR.Expand),1)</visible>
+            <width>$PARAM[cardwidth]</width>
+            <height>$PARAM[cardheight]</height>
+            <control type="image">
+                <width>100%</width><height>100%</height>
+                <texture colordiffuse="FF17191F">colors/color_white.png</texture>
+            </control>
+            <control type="image">
+                <left>8</left><top>8</top><right>8</right><bottom>8</bottom>
+                <texture colordiffuse="FFE50914">colors/color_white.png</texture>
+            </control>
+            <control type="label">
+                <width>100%</width><height>100%</height>
+                <align>center</align><aligny>center</aligny>
+                <font>Bold30</font><textcolor>FFE50914</textcolor>
+                <label>[B]EXPANDIR[/B]</label>
+            </control>
+        </control>
+    </include>
+
     <!-- Poster Layout -->
     <include name="widget_layout_poster">
         <height>$PARAM[height]</height>
@@ -235,6 +258,7 @@
                 <width>240</width>
                 <height>340</height>
                 <include>PosterPanelBingieLayout</include>
+                <include content="AcTweeteRExpandCard"><param name="cardwidth" value="239"/><param name="cardheight" value="339"/></include>
 				<include>PosterTagOverlayBingieNoOverride</include>
                 <control type="group">
                     <description>widget label overlay</description>
@@ -261,6 +285,7 @@
                     <include>thumbsborder_focused</include>
                 </control>
                 <include>PosterPanelBingieLayout</include>
+                <include content="AcTweeteRExpandCard"><param name="cardwidth" value="239"/><param name="cardheight" value="339"/></include>
 				<include>PosterTagOverlayBingieNoOverride</include>
                 <control type="group">
                     <description>widget label overlay</description>
@@ -284,6 +309,7 @@
                 <width>240</width>
                 <height>340</height>
                 <include>PosterPanelBingieLayout</include>
+                <include content="AcTweeteRExpandCard"><param name="cardwidth" value="239"/><param name="cardheight" value="339"/></include>
 				<include>PosterTagOverlayBingieNoOverride</include>
                 <control type="group">
                     <description>widget label overlay</description>
@@ -312,6 +338,7 @@
                 <width>280</width>
                 <height>280</height>
                 <include>SquarePosterPanelBingieLayout</include>
+                <include content="AcTweeteRExpandCard"><param name="cardwidth" value="279"/><param name="cardheight" value="279"/></include>
 			<control type="label">
 				<!--Label-->
 				<left>8</left>
@@ -335,6 +362,7 @@
                 <width>280</width>
                 <height>280</height>
                 <include>SquarePosterPanelBingieLayout</include>
+                <include content="AcTweeteRExpandCard"><param name="cardwidth" value="279"/><param name="cardheight" value="279"/></include>
 			<control type="label">
 				<!--Label-->
 				<left>8</left>
@@ -367,6 +395,7 @@
 					<include>thumbsborder_focused</include>
 				</control>
                 <include>SquarePosterPanelBingieLayout</include>
+                <include content="AcTweeteRExpandCard"><param name="cardwidth" value="279"/><param name="cardheight" value="279"/></include>
 			<control type="label">
 				<!--Label-->
 				<left>8</left>
@@ -400,6 +429,7 @@
                 <width>419</width>
                 <height>242</height>
                 <include>ThumbsViewBingieLayout</include>
+                <include content="AcTweeteRExpandCard"><param name="cardwidth" value="418"/><param name="cardheight" value="242"/></include>
 			<control type="image">
 				<!-- fallback logo image -->
 				<height>242</height>
@@ -467,6 +497,7 @@
                     <include>thumbsborder_focused</include>
                 </control>
                 <include>ThumbsViewItemBingieLayout</include>
+                <include content="AcTweeteRExpandCard"><param name="cardwidth" value="418"/><param name="cardheight" value="242"/></include>
 				<control type="image">
 					<!-- fallback logo image -->
 					<height>242</height>
@@ -535,6 +566,7 @@
                 <width>419</width>
                 <height>242</height>
                 <include>ThumbsViewItemBingieLayout</include>
+                <include content="AcTweeteRExpandCard"><param name="cardwidth" value="418"/><param name="cardheight" value="242"/></include>
 			<control type="image">
 				<!-- fallback logo image -->
 				<height>242</height>
@@ -736,7 +768,8 @@
                 <param name="widgetTags" value="$PARAM[widgetTags]" />
 				<param name="height" value="$PARAM[height]" />
             </include>
-            <!-- Eligible AcTweeteR routes return up to 20 provider entries plus one EXPANDIR folder. -->
+            <!-- Eligible AcTweeteR routes return up to 20 provider entries plus one EXPANDIR folder.
+                 The folder is a genuine selectable 21st item, not a play shortcut. -->
             <!-- The parameter is a boolean literal, not an InfoLabel. -->
             <include content="widget_base_content_expandable" condition="$PARAM[widgetExpandable]">
                 <param name="widgetid" value="$PARAM[widgetid]" />

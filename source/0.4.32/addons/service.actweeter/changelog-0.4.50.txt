@@ -1,0 +1,3 @@
+0.4.50 - Android Smart Search keyboard
+- On Android open Smart Search without triggering the native side keyboard; the QWERTY button explicitly controls the embedded keyboard.
+- No profile, Trakt or IPTV credential changes.
