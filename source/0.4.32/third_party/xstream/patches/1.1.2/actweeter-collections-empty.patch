@@ -1,0 +1,53 @@
+diff --git a/resources/lib/premium_routes.py b/resources/lib/premium_routes.py
+--- a/resources/lib/premium_routes.py
++++ b/resources/lib/premium_routes.py
+@@ -410,9 +410,9 @@
+             if stype == 'movie' else
+             li.getProperty('XStream.SeriesComplete') == 'true')
+         if complete:
+             pending.reconcile_completion(stype, sid, True)
+-            return
++            return False
+     q = ({'mode':'xtream_series', 'series_id':sid, 'profile_num':pnum}
+          if stype == 'series' else {'mode':'premium', 'view':'play', 'stype':stype,
+                                    'id':sid, 'profile_num':pnum})
+     path = g['build_url'](q)
+@@ -429,4 +429,5 @@
+         if status:
+             li.setProperty('XStream.ChangeStatus', status)
+     _performance_call(g, 'kodi.add_directory_item', g['xbmcplugin'].addDirectoryItem,
+                       g['addon_handle'], path, li, stype == 'series')
++    return True
+@@ -1100,12 +1101,29 @@
+         _performance_call(g, 'provider.vod_prefetch', g['_prefetch_vod_info_batch'], selected, *credentials)
+     plugin.setContent(handle, 'movies' if stype == 'movie' else 'tvshows')
+     series_context = (prepare_series_state_context(g, pnum)
+                       if stype == 'series' and selected else None)
++    visible_items = 0
+     for item in selected:
+-        add_provider_item(g, item, stype, credentials, pnum, budget,
+-                          series_context=series_context, pending=pending,
+-                          reconcile_pending=(view == 'pending'))
++        result = add_provider_item(g, item, stype, credentials, pnum, budget,
++                                   series_context=series_context, pending=pending,
++                                   reconcile_pending=(view == 'pending'))
++        # False means Pending was positively completed and removed.
++        if result is not False:
++            visible_items += 1
++    if view in ('favorites', 'pending') and not visible_items and page == 1:
++        # Native Kodi directory entry, not an overlay dependent on NumItems=0.
++        has_members = (bool(g['_get_profile_fav'](pnum).get_favorites(stype))
++                       if view == 'favorites' else
++                       bool(pending and pending.list_items(stype)))
++        message = ('Contenido no disponible en el catálogo actual' if has_members
++                   else 'Colección vacía: añade títulos desde una carátula')
++        empty_item = g['_new_listitem'](message)
++        empty_item.setArt({'icon': 'DefaultFolder.png', 'thumb': 'DefaultFolder.png'})
++        empty_item.setProperty('AcTweeteR.EmptyCollection', '1')
++        plugin.addDirectoryItem(handle, build({'mode': 'premium',
++            'view': 'collections_root', 'stype': stype, 'profile_num': pnum}),
++            empty_item, True)
+     expandable_views = {'catalog', 'recent', 'popular', 'trending', 'favorites',
+                         'pending', 'continue', 'series_recent', 'year', 'premiere', 'genre'}
+     if (get('actweeter_expand') == '1' and stype in ('movie', 'series')
+             and view in expandable_views and has_more):

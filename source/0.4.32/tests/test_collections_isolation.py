@@ -27,6 +27,7 @@ class CollectionsIsolationTests(unittest.TestCase):
         builder = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(builder)
         builder.apply_contextual_unified_patch(cls.root, ROOT / 'third_party/xstream/patches/1.1.2/actweeter-collections.patch')
+        builder.apply_contextual_unified_patch(cls.root, ROOT / 'third_party/xstream/patches/1.1.2/actweeter-collections-empty.patch')
 
     @classmethod
     def tearDownClass(cls):
@@ -63,7 +64,7 @@ class CollectionsIsolationTests(unittest.TestCase):
         import hashlib
         import json
         manifest = json.loads((ROOT / 'third_party/xstream/upstream.json').read_text())
-        package = ROOT.parents[1] / 'docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.16.zip'
+        package = ROOT.parents[1] / 'docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.17.zip'
         with zipfile.ZipFile(package) as archive:
             self.assertIsNone(archive.testzip())
             for name in ('favorites.py', 'pending_adapter.py', 'addon.py', 'premium_routes.py'):
@@ -182,6 +183,47 @@ class CollectionsIsolationTests(unittest.TestCase):
                 self.assertEqual(item.properties['AcTweeteR.CollectionFolder'], '1')
                 self.assertNotIn('AcTweeteR.Expand', item.properties)
 
+    def test_empty_collections_render_native_navigation_and_do_not_write(self):
+        from urllib.parse import urlencode, urlsplit, parse_qs
+        namespace = {}
+        with patch.dict(sys.modules, {'content_state': types.SimpleNamespace()}):
+            exec(compile((self.root / 'resources/lib/premium_routes.py').read_bytes(), 'routes.py', 'exec'), namespace)
+        namespace['catalog'] = lambda *args: ([], ('unused', 'unused', 'unused'))
+        namespace['indexed_movie_page'] = lambda *args: None
+        namespace['add_provider_item'] = lambda *args, **kw: self.fail('empty must not render provider media')
+        class Item:
+            def __init__(self, label): self.label, self.properties = label, {}
+            def setArt(self, art): self.art = art
+            def setProperty(self, key, value): self.properties[key] = value
+        rows = []
+        plugin = types.SimpleNamespace(setContent=lambda *a: None,
+            addSortMethod=lambda *a: None, SORT_METHOD_NONE=0,
+            endOfDirectory=lambda *a, **kw: None,
+            addDirectoryItem=lambda handle, route, li, is_folder: rows.append((route,li,is_folder)))
+        env = {'pm': types.SimpleNamespace(active='1'), 'addon_handle': 1,
+               'xbmcplugin': plugin, 'build_url': lambda q:'plugin://synthetic/?'+urlencode(q),
+               '_get_profile_fav': lambda _:self.store, '_new_listitem': Item,
+               'pending_adapter': types.SimpleNamespace(PendingAdapter=self.Pending),
+               '_prefetch_vod_info_batch': lambda *args: None}
+        from pathlib import Path
+        favorite_file = Path(self.store.file)
+        for stype in ('movie','series'):
+            for view in ('favorites','pending'):
+                rows.clear()
+                before = favorite_file.read_bytes() if favorite_file.exists() else None
+                namespace['dispatch'](env, {'view':[view], 'stype':[stype], 'browse':['1']})
+                after = favorite_file.read_bytes() if favorite_file.exists() else None
+                self.assertEqual(before,after)
+                self.assertEqual(len(rows),1)
+                route,item,is_folder=rows[0]
+                self.assertTrue(is_folder)
+                self.assertEqual(item.properties['AcTweeteR.EmptyCollection'],'1')
+                self.assertIn('Colección vacía',item.label)
+                q=parse_qs(urlsplit(route).query)
+                self.assertEqual(q['view'],['collections_root'])
+                self.assertEqual(q['stype'],[stype])
+                self.assertEqual(q['profile_num'],['1'])
+
     def test_provider_routes_exclude_pending_only_and_missing_items(self):
         namespace = {}
         with patch.dict(sys.modules, {'content_state': types.SimpleNamespace()}):
@@ -196,17 +238,29 @@ class CollectionsIsolationTests(unittest.TestCase):
         self.store.add(self.item('series'))
         self.pending.add('movie', self.item('movie', '43'))
         self.store.add(self.item('movie', '999'))  # No longer in the provider catalog.
+        class Item:
+            def __init__(self, label): self.label, self.properties = label, {}
+            def setArt(self, art): self.art = art
+            def setProperty(self, key, value): self.properties[key] = value
+        empty_rows = []
         plugin = types.SimpleNamespace(setContent=lambda *a: None,
             addSortMethod=lambda *a: None, SORT_METHOD_NONE=0,
-            endOfDirectory=lambda *a, **kw: ended.append(kw))
+            endOfDirectory=lambda *a, **kw: ended.append(kw),
+            addDirectoryItem=lambda handle, route, item, folder:
+                empty_rows.append((route, item, folder)))
         env = {'pm': types.SimpleNamespace(active='1'), 'addon_handle': 1,
                'xbmcplugin': plugin, 'build_url': lambda _: 'unused',
                '_get_profile_fav': lambda _: self.store,
                'pending_adapter': types.SimpleNamespace(PendingAdapter=self.Pending),
-               '_prefetch_vod_info_batch': lambda *a: None}
+               '_prefetch_vod_info_batch': lambda *a: None,
+               '_new_listitem': Item}
         for kind, expected in (('movie', []), ('series', [('series', 'Synthetic')])):
             shown.clear()
             namespace['dispatch'](env, {'view': ['favorites'], 'stype': [kind], 'browse': ['1']})
             self.assertEqual(shown, expected)
             self.assertFalse(ended[-1]['cacheToDisc'])
+        self.assertEqual(len(empty_rows), 1)
+        self.assertTrue(empty_rows[0][2])
+        self.assertEqual(empty_rows[0][1].label, 'Contenido no disponible en el catálogo actual')
+        self.assertEqual(empty_rows[0][1].properties['AcTweeteR.EmptyCollection'], '1')
         self.assertTrue(self.store.is_favorite('999', stype='movie'))
