@@ -240,14 +240,13 @@
                 <left>0</left><top>0</top><width>6</width><height>100%</height>
                 <texture colordiffuse="FFE50914">colors/color_white.png</texture>
             </control>
-            <control type="label">
-                <!-- Kodi's positive 90 degrees reads from bottom to top. -->
-                <left>22</left><top>305</top>
-                <width>270</width><height>42</height>
-                <angle>90</angle>
-                <align>left</align><aligny>center</aligny>
-                <font>Bold30</font><textcolor>FFE50914</textcolor>
-                <label>[B]EXPANDIR[/B]</label>
+            <control type="image">
+                <!-- A pre-rotated, transparent 44x310 texture avoids Kodi label
+                     clipping at the last widget slot; reads bottom to top. -->
+                <left>7</left><top>14</top>
+                <width>40</width><height>310</height>
+                <aspectratio>keep</aspectratio>
+                <texture>actweeter/expand_vertical.png</texture>
             </control>
         </control>
     </include>

@@ -75,7 +75,7 @@ class CandidatePackageBuildTests(unittest.TestCase):
             subprocess.run([sys.executable, str(ROOT / "tools/build_service_package.py"),
                             "--output", str(service)], check=True,
                            cwd=ROOT, capture_output=True, text=True)
-            skin = output / "skin.actweeter-1.2.30~beta9.zip"
+            skin = output / "skin.actweeter-1.2.30~beta10.zip"
             subprocess.run([sys.executable, str(ROOT / "tools/build_skin_package.py"),
                             "--output", str(skin)], check=True,
                            cwd=ROOT, capture_output=True, text=True)
@@ -99,7 +99,7 @@ class CandidatePackageBuildTests(unittest.TestCase):
             self.assertEqual(versions, {
                 "repository.actweeter.testing": "1.0.2",
                 "service.actweeter": "0.4.52",
-                "skin.actweeter": "1.2.30~beta9",
+                "skin.actweeter": "1.2.30~beta10",
                 "plugin.video.xstream-pro": "1.1.2.15",
             })
             self.assertEqual(hashlib.md5(payload).hexdigest(),
