@@ -1,7 +1,7 @@
-0.4.49 — candidata no publicada
+0.4.49 — Smart Search 2.0 (Testing)
 - El asistente ofrece configurar las actualizaciones nativas de Kodi con consentimiento.
 - Usa general.addonupdates para el modo automático y conserva addons.updatemode.
 - Revisa los orígenes Stable/Testing y los bloqueos individuales en modo de solo lectura.
 - Comprueba el guardado en disco sin escribir guisettings ni bases de datos.
 - Revisa cambios de versión y preferencias al arrancar; avisa sin cambiar configuraciones.
-- Conserva Smart Search 2.0. El gate de alias TMDb sigue pendiente; no se declara resuelto.
+- Conserva Smart Search 2.0. Los alias externos son opcionales: requieren clave API v3 TMDb propia; sin clave no se consultan y el buscador local sigue operativo. No utiliza claves privadas del helper.
