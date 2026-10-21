@@ -230,17 +230,22 @@
             <visible>String.IsEqual(ListItem.Property(AcTweeteR.Expand),1)</visible>
             <width>$PARAM[cardwidth]</width>
             <height>$PARAM[cardheight]</height>
+            <!-- Keep the call to action in the FIRST 70px of the last slot.
+                 The Lenovo widget viewport clips the card at its right edge. -->
             <control type="image">
                 <width>100%</width><height>100%</height>
-                <texture colordiffuse="FF17191F">colors/color_white.png</texture>
+                <texture colordiffuse="FF000000">colors/color_white.png</texture>
             </control>
             <control type="image">
-                <left>8</left><top>8</top><right>8</right><bottom>8</bottom>
+                <left>0</left><top>0</top><width>6</width><height>100%</height>
                 <texture colordiffuse="FFE50914">colors/color_white.png</texture>
             </control>
             <control type="label">
-                <width>100%</width><height>100%</height>
-                <align>center</align><aligny>center</aligny>
+                <!-- Kodi's positive 90 degrees reads from bottom to top. -->
+                <left>50</left><top>305</top>
+                <width>270</width><height>42</height>
+                <angle>90</angle>
+                <align>left</align><aligny>center</aligny>
                 <font>Bold30</font><textcolor>FFE50914</textcolor>
                 <label>[B]EXPANDIR[/B]</label>
             </control>
