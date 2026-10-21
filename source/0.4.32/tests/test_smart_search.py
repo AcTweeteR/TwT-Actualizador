@@ -363,6 +363,9 @@ class WindowContractTests(unittest.TestCase):
         self.assertEqual(controls["106"].get("type"), "button")
         self.assertEqual(controls["100"].findtext("visible"), "!System.Platform.Android")
         self.assertEqual(controls["106"].findtext("visible"), "System.Platform.Android")
+        self.assertEqual(controls["106"].findtext("label"), "$INFO[Window.Property(search.query)]")
+        self.assertNotIn("Control.GetLabel(100)", path.read_text())
+        self.assertIn("String.IsEmpty(Window.Property(search.query))", path.read_text())
         # The edit control must not receive initial focus on Android.
         self.assertEqual(xml.findtext("defaultcontrol"), "103")
         self.assertIn('System.Platform.Android', (ROOT / "addons/service.actweeter/resources/lib/smart_search_ui.py").read_text())
@@ -423,6 +426,16 @@ class WindowBehaviourTests(unittest.TestCase):
         self.window.setProperty = Mock()
         self.window.getProperty = Mock(return_value="")
         self.window.getControl.return_value.getSelectedPosition.return_value = 0
+
+    def test_visible_android_query_tracks_text_and_clear_without_edit_focus(self):
+        self.window._set_edit_text("Matrix")
+        self.window.getControl.assert_called_with(100)
+        self.window.getControl.return_value.setText.assert_called_with("Matrix")
+        self.window.setProperty.assert_called_with("search.query", "Matrix")
+        self.window._set_edit_text("")
+        self.window.getControl.return_value.setText.assert_called_with("")
+        self.window.setProperty.assert_called_with("search.query", "")
+        self.window.setFocusId.assert_not_called()
 
     def test_local_worker_executes_query_and_publishes_shared_snapshot(self):
         self.window.jobs = Mock()

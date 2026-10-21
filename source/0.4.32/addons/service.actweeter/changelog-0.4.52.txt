@@ -1,0 +1,1 @@
+0.4.52 (Testing): Android visual search field now displays the current query from a window property, updated when typing, clearing or restoring. The native Android edit control remains hidden, preventing the unwanted side keyboard. No skin, XStream or Stable changes.

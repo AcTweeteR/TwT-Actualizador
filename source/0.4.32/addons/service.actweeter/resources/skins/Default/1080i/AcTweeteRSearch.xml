@@ -73,7 +73,7 @@
         <!-- Android-only tappable search field; no native edit/IME. -->
         <visible>System.Platform.Android</visible>
         <left>80</left><top>100</top><width>1010</width><height>76</height>
-        <label>$INFO[Control.GetLabel(100)]</label>
+        <label>$INFO[Window.Property(search.query)]</label>
         <font>Reg30</font><align>left</align><aligny>center</aligny>
         <textoffsetx>28</textoffsetx>
         <textcolor>FFFFFFFF</textcolor>
@@ -166,7 +166,7 @@
         <font>Reg28</font>
         <textcolor>FF9CA5B4</textcolor>
         <label>Películas, series, actores, directores y TV…</label>
-        <visible>String.IsEmpty(Control.GetLabel(100).index(1))</visible>
+        <visible>String.IsEmpty(Window.Property(search.query))</visible>
       </control>
       <control type="group">
         <visible>!String.IsEqual(Window.Property(search.keyboard),true)</visible>

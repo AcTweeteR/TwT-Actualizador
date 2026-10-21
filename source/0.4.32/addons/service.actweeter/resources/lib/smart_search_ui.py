@@ -86,12 +86,18 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
         # Never focus Android's native edit control: Kodi opens its side IME.
         return 106 if getattr(xbmc, "getCondVisibility", lambda _: False)("System.Platform.Android") else 100
 
+    def _set_edit_text(self, value):
+        """Update Kodi's edit state and the visible Android text separately."""
+        value = (value or "")[:MAX_QUERY]
+        self.getControl(100).setText(value)
+        self.setProperty("search.query", value)
+
     def onInit(self):
         if self.ready:
             if self.suspended:
                 rows = self.rows
                 self.rows = {key: [] for key in ROWS}
-                self.getControl(100).setText(self.query)
+                self._set_edit_text(self.query)
                 self.getControl(120).reset()
                 self.getControl(120).addItems([xbmcgui.ListItem(label=key) for key in KEYS])
                 for control, values in rows.items():
@@ -102,6 +108,7 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
                 self.suspended = False
             return
         self.ready = True
+        self.setProperty("search.query", self.getControl(100).getText()[:MAX_QUERY])
         self.setProperty("search.facet", "all")
         self.setProperty("search.series.heading", "Series · en tu catálogo")
         self.setProperty("search.status", "Un título, un actor, un director o un programa. Empieza a escribir.")
@@ -250,7 +257,10 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
                     continue
                 now = time.monotonic()
                 self._focus_keyboard_if_ready()
-                query = self.getControl(100).getText()[:MAX_QUERY].strip()
+                raw_query = self.getControl(100).getText()[:MAX_QUERY]
+                query = raw_query.strip()
+                if self.getProperty("search.query") != raw_query:
+                    self.setProperty("search.query", raw_query)
                 scope = self.scope
                 if now >= context_at:
                     try:
@@ -381,10 +391,10 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
                 defaultt=self.getControl(100).getText(), type=xbmcgui.INPUT_ALPHANUM)
             if value:
                 self.person = None
-                self.getControl(100).setText(value[:MAX_QUERY])
+                self._set_edit_text(value)
         elif control == 102:
             self.person = None
-            self.getControl(100).setText("")
+            self._set_edit_text("")
             self.setFocusId(self._search_focus())
         elif control == 103:
             opened = self.getProperty("search.keyboard") != "true"
@@ -407,8 +417,8 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
                 self.setFocusId(self._search_focus())
             else:
                 self.person = None
-                self.getControl(100).setText((text[:-1] if key == "BORRAR" else
-                    text + (" " if key == "ESPACIO" else key.lower()))[:MAX_QUERY])
+                self._set_edit_text(text[:-1] if key == "BORRAR" else
+                    text + (" " if key == "ESPACIO" else key.lower()))
         elif control in ROWS:
             position = self.getControl(control).getSelectedPosition()
             if not 0 <= position < len(self.rows[control]):
