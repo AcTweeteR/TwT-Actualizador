@@ -11,6 +11,18 @@ sys.path.insert(0, str(ROOT / "addons/service.actweeter/resources/lib"))
 import interface_layout  # noqa: E402
 
 
+class ExpandCardAppearanceTests(unittest.TestCase):
+    def test_expansion_folder_has_red_label_and_no_fake_poster(self):
+        path = ROOT / "addons/skin.actweeter/1080i/IncludesHomeWidgets.xml"
+        xml = ET.parse(path).getroot()
+        card = xml.find(".//include[@name='AcTweeteRExpandCard']")
+        self.assertIsNotNone(card)
+        self.assertIn('String.IsEqual(ListItem.Property(AcTweeteR.Expand),1)', ET.tostring(card, encoding='unicode'))
+        self.assertIn('FFE50914', ET.tostring(card, encoding='unicode'))
+        self.assertIn('EXPANDIR', ET.tostring(card, encoding='unicode'))
+        self.assertGreaterEqual(len(xml.findall(".//include[@content='AcTweeteRExpandCard']")), 7)
+
+
 class ExpandableWidgetMetadataTests(unittest.TestCase):
     def test_supported_provider_list_route_gets_expansion_without_rewriting_reload(self):
         route = (

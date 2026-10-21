@@ -102,7 +102,9 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
         self.setProperty("search.series.heading", "Series · en tu catálogo")
         self.setProperty("search.status", "Un título, un actor, un director o un programa. Empieza a escribir.")
         self.getControl(120).addItems([xbmcgui.ListItem(label=key) for key in KEYS])
-        self.setFocusId(100)
+        # Android Kodi opens its side-mounted native keyboard on edit focus.
+        # Start on QWERTY instead: no keyboard is shown until explicitly requested.
+        self.setFocusId(103 if xbmc.getCondVisibility("System.Platform.Android") else 100)
         for target in (self._local_worker, self._epg_worker, self._metadata_worker, self._pump):
             threading.Thread(target=target, daemon=True).start()
 

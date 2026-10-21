@@ -1,0 +1,3 @@
+1.2.30~beta6 - Expand widget cards
+- Display a full red EXPANDIR card for the existing provider folder instead of a missing-poster/play placeholder, in poster, square and landscape widget layouts.
+- Preserve existing widget contents, browsing and focus.
