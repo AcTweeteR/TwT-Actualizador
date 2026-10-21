@@ -375,6 +375,14 @@ class WindowBehaviourTests(unittest.TestCase):
         self.window.facet = "all"
         self.window.detail = None
         self.window.in_info = False
+        self.window.info_can_launch = False
+        self.window.info_close_requested = False
+        self.window.suspended = False
+        self.window.resume_positions = {}
+        self.window.keyboard_focus_pending = False
+        self.window.close = Mock()
+        modules["xbmc"].Player = Mock(return_value=Mock(isPlayingVideo=Mock(return_value=False)))
+        modules["xbmc"].executebuiltin = Mock()
         self.window.jobs, self.window.remote, self.window.epg_jobs = LatestRequest(), LatestRequest(), LatestRequest()
         self.window.history, self.window.person = [], None
         self.window.serial, self.window.query, self.window.scope = 0, "matrix", ("/catalogue", 1)
@@ -470,6 +478,71 @@ class WindowBehaviourTests(unittest.TestCase):
             self.window.onClick(701)
         dialog.info.assert_called_once_with("selected-item")
         self.assertFalse(self.window.in_info)
+        self.assertFalse(self.window.suspended)
+        self.window.close.assert_not_called()
+
+    def test_native_info_playback_suspends_search_without_stopping_the_player(self):
+        self.window.detail = dict(kind="movie", title="Matrix", id="1", available=True)
+        self.ui.xbmc.Player.return_value.isPlayingVideo.side_effect = [False, True]
+        dialog = Mock()
+        with patch.object(self.ui.xbmcgui, "Dialog", return_value=dialog, create=True), \
+             patch.object(self.ui, "listitem", return_value="selected-item"), \
+             patch.object(self.ui, "context", return_value=self.window.scope):
+            self.window.onClick(701)
+        self.assertTrue(self.window.suspended)
+        self.window.close.assert_called_once()
+        self.assertFalse(self.window.stop.is_set())
+        self.ui.xbmc.executebuiltin.assert_called_once_with("ActivateWindow(fullscreenvideo)")
+        self.ui.xbmc.Player.return_value.stop.assert_not_called()
+
+    def test_playback_return_restores_query_rows_and_selection_without_new_workers(self):
+        self.window.ready = self.window.suspended = True
+        self.window.detail = dict(kind="movie", title="Matrix")
+        self.window.rows[5101] = [dict(kind="movie", id="1", title="Matrix")]
+        self.window.resume_positions = {5101: 0}
+        with patch.object(self.ui, "listitem", side_effect=lambda row: row), \
+             patch.object(self.ui.xbmcgui, "ListItem", create=True), \
+             patch.object(self.ui.threading, "Thread") as thread:
+            self.window.onInit()
+        self.assertFalse(self.window.suspended)
+        self.assertEqual(self.window.rows[5101][0]["title"], "Matrix")
+        self.window.getControl.return_value.setText.assert_called_once_with("matrix")
+        self.window.setFocusId.assert_called_with(701)
+        thread.assert_not_called()
+
+    def test_info_playback_closes_modal_once_but_never_stops_content(self):
+        self.window.in_info = self.window.info_can_launch = True
+        self.ui.xbmc.Player.return_value.isPlayingVideo.return_value = True
+        self.window._handoff_info_playback()
+        self.window._handoff_info_playback()
+        self.ui.xbmc.executebuiltin.assert_called_once_with("Dialog.Close(movieinformation)")
+        self.ui.xbmc.Player.return_value.stop.assert_not_called()
+
+    def test_preexisting_video_does_not_trigger_info_playback_handoff(self):
+        self.window.in_info = True
+        self.ui.xbmc.Player.return_value.isPlayingVideo.return_value = True
+        self.window._handoff_info_playback()
+        self.ui.xbmc.executebuiltin.assert_not_called()
+
+    def test_qwerty_focus_waits_for_actual_control_visibility_not_a_timer(self):
+        self.window.getProperty.return_value = "false"
+        self.window.onClick(103)
+        self.assertTrue(self.window.keyboard_focus_pending)
+        self.window.setFocusId.assert_called_with(103)
+        self.ui.xbmc.getCondVisibility = Mock(return_value=False)
+        self.window._focus_keyboard_if_ready()
+        self.window.setFocusId.assert_called_with(103)
+        self.ui.xbmc.getCondVisibility.return_value = True
+        self.window._focus_keyboard_if_ready()
+        self.assertFalse(self.window.keyboard_focus_pending)
+        self.window.setFocusId.assert_called_with(120)
+
+    def test_back_cancels_pending_qwerty_focus(self):
+        self.window.keyboard_focus_pending = True
+        self.window.getProperty.return_value = "true"
+        self.window._back()
+        self.assertFalse(self.window.keyboard_focus_pending)
+        self.window.setFocusId.assert_called_with(100)
 
     def test_changed_profile_cannot_open_old_playback_item(self):
         self.window.detail = dict(kind="movie", title="Matrix", id="99", available=True)

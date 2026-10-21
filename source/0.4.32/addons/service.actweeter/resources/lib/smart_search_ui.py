@@ -73,12 +73,29 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
         self.detail = None
         self.detail_origin = 100
         self.in_info = False
+        self.info_can_launch = False
+        self.info_close_requested = False
+        self.suspended = False
+        self.resume_positions = {}
+        self.keyboard_focus_pending = False
         self.metadata = Metadata(xbmc)
         self.shared_index = None
         self.monitor = xbmc.Monitor()
 
     def onInit(self):
         if self.ready:
+            if self.suspended:
+                rows = self.rows
+                self.rows = {key: [] for key in ROWS}
+                self.getControl(100).setText(self.query)
+                self.getControl(120).reset()
+                self.getControl(120).addItems([xbmcgui.ListItem(label=key) for key in KEYS])
+                for control, values in rows.items():
+                    self._fill(control, values)
+                    if values:
+                        self.getControl(control).selectItem(self.resume_positions.get(control, 0))
+                self.setFocusId(701 if self.detail else 100)
+                self.suspended = False
             return
         self.ready = True
         self.setProperty("search.facet", "all")
@@ -221,10 +238,12 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
         last_selected = None
         try:
             while not self.stop.is_set() and not self.monitor.abortRequested():
-                if self.in_info:
+                if self.in_info or self.suspended:
+                    self._handoff_info_playback()
                     self.stop.wait(0.08)
                     continue
                 now = time.monotonic()
+                self._focus_keyboard_if_ready()
                 query = self.getControl(100).getText()[:MAX_QUERY].strip()
                 scope = self.scope
                 if now >= context_at:
@@ -289,7 +308,7 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
                             self._merge(control, [row for row in data if row["kind"] == kind])
                         count = len(data)
                         self.setProperty("search.status", "%d coincidencias en tu catálogo · %.0f ms" % (count, elapsed)
-                                         if count else "Sin coincidencias locales. Buscando títulos alternativos…")
+                                         if count else "Sin coincidencias por título en IPTV. Consulta personas, guía y TMDb.")
                         self.setProperty("search.local_ready_ms", str(round((time.monotonic() - changed_at) * 1000)))
                     elif source == "local_error":
                         enabled = xbmc.getCondVisibility("System.AddonIsEnabled(plugin.video.xstream-pro)")
@@ -312,7 +331,7 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
                         for control, kind in ((5101, "movie"), (5102, "series")):
                             self._merge(control, [row for row in matched if row["kind"] == kind])
                         self._fill(5105, other)
-                        self.setProperty("search.remote", "TMDb · Personas y títulos alternativos actualizados")
+                        self.setProperty("search.remote", "TMDb · Resultados y personas actualizados")
                     elif source == "metadata_error":
                         self.setProperty("search.remote", "Metadatos temporalmente no disponibles · tu catálogo sigue funcionando")
                     elif source == "epg_error":
@@ -361,7 +380,8 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
         elif control == 103:
             opened = self.getProperty("search.keyboard") != "true"
             self.setProperty("search.keyboard", "true" if opened else "false")
-            self.setFocusId(120 if opened else 100)
+            self.keyboard_focus_pending = opened
+            self.setFocusId(103 if opened else 100)
         elif control == 104:
             self._back()
         elif control == 105 and self.person:
@@ -405,15 +425,33 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
             if context(xbmcaddon.Addon, xbmcvfs, xbmc) != self.scope:
                 self.setProperty("search.detail.subtitle", "El perfil ha cambiado. Vuelve a buscar antes de reproducir.")
                 return
+            self.info_can_launch = not xbmc.Player().isPlayingVideo()
+            self.info_close_requested = False
             self.in_info = True
             try:
                 xbmcgui.Dialog().info(listitem(self.detail))
             finally:
                 self.in_info = False
+                if self.info_can_launch and xbmc.Player().isPlayingVideo():
+                    self.resume_positions = {key: self.getControl(key).getSelectedPosition() for key in ROWS}
+                    self.suspended = True
+                    self.close()
+                    xbmc.executebuiltin("ActivateWindow(fullscreenvideo)")
         elif control == 701 and self.detail and self.detail.get("live"):
             row = self.detail
             self._shutdown()
             rpc(xbmc, "Player.Open", {"item": {"channelid": row["channel_id"]}})
+
+    def _handoff_info_playback(self):
+        # Native info can remain modal after Play; close it only for video started in this context.
+        if self.in_info and self.info_can_launch and not self.info_close_requested and xbmc.Player().isPlayingVideo():
+            self.info_close_requested = True
+            xbmc.executebuiltin("Dialog.Close(movieinformation)")
+
+    def _focus_keyboard_if_ready(self):
+        if self.keyboard_focus_pending and xbmc.getCondVisibility("Control.IsVisible(120)"):
+            self.keyboard_focus_pending = False
+            self.setFocusId(120)
 
     def _show_detail(self, row, remember=True):
         if remember:
@@ -479,6 +517,7 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
         if self.detail:
             self.onClick(702)
         elif self.getProperty("search.keyboard") == "true":
+            self.keyboard_focus_pending = False
             self.setProperty("search.keyboard", "false")
             self.setFocusId(100)
         elif self.person and self.history:
@@ -528,7 +567,12 @@ def run():
     root = str(Path(__file__).resolve().parents[2])
     window = SearchWindow("AcTweeteRSearch.xml", root, "Default", "1080i")
     try:
-        window.doModal()
+        while not window.stop.is_set() and not window.monitor.abortRequested():
+            window.doModal()
+            if not window.suspended:
+                break
+            while xbmc.Player().isPlayingVideo() and not window.monitor.abortRequested():
+                window.monitor.waitForAbort(0.1)
     finally:
         window.stop.set()
         window.jobs.close()
