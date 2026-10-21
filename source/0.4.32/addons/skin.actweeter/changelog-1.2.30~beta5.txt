@@ -1,0 +1,5 @@
+1.2.30~beta5 — Smart Search 2.0 (candidato privado; no publicado)
+- Acota los fallbacks de Home para que no contaminen los metadatos de DialogVideoInfo.
+- El fanart de la ficha modal procede exclusivamente del elemento de esa ficha.
+- Corrige la agrupación lógica del fallback SD de Home.
+- Requiere service.actweeter 0.4.48. Corrección XML validada estáticamente; runtime instalado pendiente.

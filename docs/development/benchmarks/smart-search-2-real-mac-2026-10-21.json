@@ -1,0 +1,117 @@
+{
+  "measurement": "REAL_MAC_BACKEND_EXISTING_CATALOGUE",
+  "not_measured": [
+    "physical_disk_cold_cache",
+    "UI_end_to_end",
+    "provider_network",
+    "tvOS",
+    "Android"
+  ],
+  "python": "3.14.6",
+  "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+  "baseline_ref": "3d4a8c3",
+  "rounds": 20,
+  "baseline": {
+    "cold_new_session": {
+      "p50_ms": 148.446,
+      "p90_ms": 163.429
+    },
+    "titles": 18004,
+    "warm": {
+      "maquina guerra": {
+        "p50_ms": 0.215,
+        "p90_ms": 0.253,
+        "results": 2
+      },
+      "máquina de guerra": {
+        "p50_ms": 0.22,
+        "p90_ms": 0.335,
+        "results": 2
+      },
+      "matrix": {
+        "p50_ms": 0.257,
+        "p90_ms": 0.271,
+        "results": 6
+      },
+      "matrx": {
+        "p50_ms": 0.665,
+        "p90_ms": 0.723,
+        "results": 6
+      },
+      "casa pap": {
+        "p50_ms": 0.243,
+        "p90_ms": 0.308,
+        "results": 3
+      },
+      "guerra": {
+        "p50_ms": 1.437,
+        "p90_ms": 1.661,
+        "results": 50
+      },
+      "tom cruise": {
+        "p50_ms": 0.465,
+        "p90_ms": 0.516,
+        "results": 0
+      }
+    },
+    "typing_backend_queries": {
+      "p50_ms": 0.492,
+      "p90_ms": 1.189,
+      "samples": 200
+    },
+    "two_worker_index_peak_mib": 37.862,
+    "shared_rows": false
+  },
+  "candidate": {
+    "cold_new_session": {
+      "p50_ms": 148.937,
+      "p90_ms": 149.794
+    },
+    "titles": 18004,
+    "warm": {
+      "maquina guerra": {
+        "p50_ms": 0.264,
+        "p90_ms": 0.357,
+        "results": 2
+      },
+      "máquina de guerra": {
+        "p50_ms": 0.224,
+        "p90_ms": 0.228,
+        "results": 2
+      },
+      "matrix": {
+        "p50_ms": 0.297,
+        "p90_ms": 0.344,
+        "results": 6
+      },
+      "matrx": {
+        "p50_ms": 0.692,
+        "p90_ms": 0.756,
+        "results": 6
+      },
+      "casa pap": {
+        "p50_ms": 0.259,
+        "p90_ms": 0.268,
+        "results": 3
+      },
+      "guerra": {
+        "p50_ms": 1.78,
+        "p90_ms": 1.979,
+        "results": 50
+      },
+      "tom cruise": {
+        "p50_ms": 0.453,
+        "p90_ms": 0.492,
+        "results": 0
+      }
+    },
+    "typing_backend_queries": {
+      "p50_ms": 0.594,
+      "p90_ms": 1.155,
+      "samples": 200
+    },
+    "two_worker_index_peak_mib": 19.72,
+    "shared_rows": true
+  },
+  "index_file_unchanged": true
+}

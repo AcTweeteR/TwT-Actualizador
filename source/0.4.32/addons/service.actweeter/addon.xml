@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-  <addon id="service.actweeter" name="AcTweeteR Service" version="0.4.45" provider-name="AcTweeteR maintainers">
+  <addon id="service.actweeter" name="AcTweeteR Service" version="0.4.49" provider-name="AcTweeteR maintainers">
   <requires>
     <import addon="xbmc.python" version="3.0.0" />
     <import addon="plugin.video.xstream-pro" version="1.1.2.7" />
@@ -7,6 +7,7 @@
     <import addon="slyguy.trailers" version="0.2.1" optional="true" />
     <import addon="plugin.video.youtube" />
     <import addon="script.trakt" version="3.9.0" optional="true" />
+    <import addon="plugin.video.tmdb.bingie.helper" version="1.0.1" optional="true" />
   </requires>
   <extension point="xbmc.service" library="service.py" start="startup" />
   <extension point="xbmc.python.script" library="setup.py">
@@ -19,9 +20,9 @@
     <summary lang="en_GB">AcTweeteR search, setup and service-status helper</summary>
     <summary lang="es_ES">Ayudante de búsqueda, configuración y estado de servicios de AcTweeteR</summary>
     <description lang="en_GB">Schedules provider-only XStream search-index refreshes and offers a resumable setup wizard that remains incomplete until required runtime checks pass. Credentials remain in official add-on settings.</description>
-    <description lang="es_ES">Programa actualizaciones del índice XStream y ofrece un asistente reanudable que no se completa hasta superar las comprobaciones funcionales obligatorias. Las credenciales permanecen en los ajustes oficiales de cada complemento.</description>
+    <description lang="es_ES">Búsqueda visual inteligente de películas, series, programas y personas. Consulta el índice local de XStream, la guía EPG y los metadatos del helper TMDb existente. Coordina la configuración reanudable y las actualizaciones del catálogo. Las credenciales permanecen en los ajustes oficiales de cada complemento.</description>
     <platform>all</platform>
     <license>GPL-2.0-or-later</license>
-    <news>changelog-0.4.45.txt</news>
+    <news>changelog-0.4.49.txt</news>
   </extension>
 </addon>

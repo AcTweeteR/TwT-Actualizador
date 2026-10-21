@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <settings version="1">
   <section id="service.actweeter">
+    <category id="search" label="32002">
+      <group id="1">
+        <setting id="tmdb_alias_api_key" type="string" label="32003" help="32004">
+          <level>0</level>
+          <default />
+          <constraints><allowempty>true</allowempty></constraints>
+          <control type="edit" format="string">
+            <heading>32003</heading>
+            <hidden>true</hidden>
+          </control>
+        </setting>
+      </group>
+    </category>
     <category id="diagnostics" label="32000">
       <group id="1">
         <setting id="performance_metrics_enabled" type="boolean" label="32001">

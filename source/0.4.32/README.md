@@ -1,6 +1,19 @@
-# AcTweeteR unified Mac/Lenovo Beta source candidate
+# AcTweeteR Smart Search candidate
 
-## Candidate: service 0.4.45 / skin 1.2.30~beta2 / XStream Pro 1.1.2.10
+## Candidate: service 0.4.49 / skin 1.2.30~beta5
+
+Smart Search replaces window 1109 with a compatible launcher and a native
+Kodi search window: live local title matching, movies/series/EPG/person rows,
+TMDb biographies/filmographies, canonical title enrichment and platform keyboard
+input. Modal metadata fallbacks are scoped away from Home. It does not change trailer ownership, provider credentials or
+Skin Shortcuts. Existing XStream and Testing repository packages are reused.
+
+Candidate packages must be installed through the official Testing feed after
+review, not copied into a profile. No feed has been changed by this work.
+See `docs/development/SMART_SEARCH_2_0_2026-10-21.md` at repository root for runtime
+evidence, keyboard limitations, checksums and remaining acceptance gates.
+
+## Previous unified candidate
 
 This candidate combines the profile-safe Beta initialization with the
 Mac-confirmed manual trailer actions for movies and TV shows, preserves the

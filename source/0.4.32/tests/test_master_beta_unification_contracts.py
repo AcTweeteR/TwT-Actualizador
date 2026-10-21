@@ -1,4 +1,5 @@
 """Regression contracts for behavior recovered from Master and Lenovo Beta."""
+import ast
 import re
 import unittest
 import xml.etree.ElementTree as ET
@@ -58,9 +59,17 @@ class MasterBetaUnificationContracts(unittest.TestCase):
 
     def test_service_does_not_override_kodi_wide_addon_update_preference(self):
         service = (ROOT / "addons/service.actweeter/service.py").read_text()
-        self.assertNotIn("addon_update_policy", service)
-        self.assertNotIn("ADDON_UPDATE_POLICY", service)
-        self.assertFalse((ROOT / "addons/service.actweeter/resources/lib/addon_update_policy.py").exists())
+        self.assertNotIn("Settings.SetSettingValue", service)
+        self.assertNotIn("configure_updates", service)
+        self.assertIn("review_updates(kodi, ADDON, vfs, xbmcgui.Dialog())", service)
+        tree = ast.parse((ROOT / "addons/service.actweeter/resources/lib/addon_update_policy.py").read_text())
+        review = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "review")
+        calls = {node.func.id for node in ast.walk(review)
+                 if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
+        self.assertNotIn("configure", calls)
+        self.assertNotIn("_rpc", calls)
+        self.assertNotIn("yesno", {node.func.attr for node in ast.walk(review)
+                                    if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)})
 
     def test_xstream_setup_accepts_installed_beta_and_candidate_versions(self):
         source = (ROOT / "addons/service.actweeter/resources/lib/xstream_setup.py").read_text()

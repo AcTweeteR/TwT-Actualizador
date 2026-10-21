@@ -10,3 +10,15 @@ msgstr "Diagnóstico"
 msgctxt "#32001"
 msgid "Activar métricas de rendimiento (requiere reinicio)"
 msgstr "Activar métricas de rendimiento (requiere reinicio)"
+
+msgctxt "#32002"
+msgid "Smart Search"
+msgstr "Smart Search"
+
+msgctxt "#32003"
+msgid "Personal TMDb API key (optional aliases)"
+msgstr "API key TMDb propia (alias opcionales)"
+
+msgctxt "#32004"
+msgid "Optional v3 key from your TMDb account API settings. Local search works without it. Hidden input is not encryption: Kodi stores it in this add-on's local settings. Never share your settings file. Reopen Search after changing the key."
+msgstr "Clave v3 opcional de los ajustes API de tu cuenta TMDb. La búsqueda local funciona sin ella. El campo oculto no cifra: Kodi la guarda en los ajustes locales de este addon. No compartas ese archivo. Reabre Buscar después de cambiar la clave."

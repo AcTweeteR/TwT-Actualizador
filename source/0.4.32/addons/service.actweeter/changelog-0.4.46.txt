@@ -1,0 +1,7 @@
+0.4.46 — Smart Search (candidato Testing)
+- Búsqueda por filas: películas, series, guía TV, personas y exploración TMDb.
+- Coincidencias locales tolerantes a acentos, artículos, orden y erratas leves.
+- Metadatos, biografías y filmografía mediante TMDb Bingie Helper existente.
+- Entrada física instantánea, QWERTY integrado y teclado nativo cuando Kodi lo ofrece.
+- Debounce, coalescencia de peticiones, rechazo de resultados obsoletos y lectura sin modificar catálogo/EPG.
+- Sin autoplay ni cambios de perfiles, credenciales, historial o política de actualizaciones.

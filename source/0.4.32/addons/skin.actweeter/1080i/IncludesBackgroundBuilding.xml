@@ -351,6 +351,8 @@
     </variable>
 
     <variable name="fanartBackground">
+        <!-- A modal item with no artwork must not inherit the underlying container's artwork. -->
+        <value condition="Window.IsVisible(DialogVideoInfo.xml)">$INFO[ListItem.Art(fanart)]</value>
 		<!-- pvr -->
 		<value condition="!String.IsEmpty(Container(17195).ListItem.Art(fanart)) + [Window.IsActive(tvchannels) | Window.IsActive(tvguide) | Window.IsActive(tvrecordings) | Window.IsActive(tvtimers) | Window.IsActive(tvsearch)]">$INFO[Container(17195).ListItem.Art(fanart)]</value> 
 		<!-- extra fanart -->
