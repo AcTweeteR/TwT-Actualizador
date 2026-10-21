@@ -207,6 +207,8 @@
     </include>
 	<include name="PosterTagOverlayBingie">
         <control type="group">
+            <!-- Avoid the standard horizontal poster title on EXPANDIR: it overprints the vertical call to action. -->
+            <visible>!String.IsEqual(ListItem.Property(AcTweeteR.Expand),1)</visible>
 			<visible>!String.IsEqual(ListItem.Label,..)</visible>
 			<visible>!String.Contains(ListItem.Label,$LOCALIZE[33078])</visible>
 			<visible>![$EXP[IsTvShowDBType] + $EXP[IsTVShowInLastEpisodes] + Skin.HasSetting(EnableNewEpisodesIndicator)]</visible>
@@ -251,6 +253,8 @@
     </include>
 	<include name="PosterTagOverlayBingieNoOverride">
         <control type="group">
+            <!-- Avoid the standard horizontal poster title on EXPANDIR: it overprints the vertical call to action. -->
+            <visible>!String.IsEqual(ListItem.Property(AcTweeteR.Expand),1)</visible>
 			<visible>!String.IsEqual(ListItem.Label,..)</visible>
 			<visible>!String.Contains(ListItem.Label,$LOCALIZE[33078])</visible>
 			<visible>![$EXP[IsTvShowDBType] + $EXP[IsTVShowInLastEpisodes] + Skin.HasSetting(EnableNewEpisodesIndicator)]</visible>

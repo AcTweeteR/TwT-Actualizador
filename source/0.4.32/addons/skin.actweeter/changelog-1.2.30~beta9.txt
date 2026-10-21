@@ -1,0 +1,1 @@
+1.2.30~beta9 (Testing): Increase visibility of vertical EXPANDIR at clipped widget edge by moving the red, bottom-to-top rotated label into the first 25px of the black card. Suppress the usual horizontal poster title overlay for expansion folders so it cannot obscure the vertical word. Service 0.4.52 and XStream unchanged.
