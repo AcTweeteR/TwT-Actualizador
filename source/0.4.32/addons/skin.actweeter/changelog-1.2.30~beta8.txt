@@ -1,0 +1,1 @@
+1.2.30~beta8 (Testing): EXPANDIR widget card uses a black background and red vertical label at the card's left edge, reading bottom to top, so it remains legible in the clipped terminal widget slot. Existing provider navigation, 19+EXPANDIR capacity and other add-ons remain unchanged.

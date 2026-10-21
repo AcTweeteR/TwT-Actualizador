@@ -21,7 +21,7 @@ jobs:
         run: |
           python3 tools/build_test_channel.py \
             --service-zip docs/testing/repo/service.actweeter/service.actweeter-0.4.52.zip \
-            --skin-zip docs/testing/repo/skin.actweeter/skin.actweeter-1.2.30~beta7.zip \
+            --skin-zip docs/testing/repo/skin.actweeter/skin.actweeter-1.2.30~beta8.zip \
             --xstream-zip docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.15.zip \
             --output "$RUNNER_TEMP/testing"
           cmp "$RUNNER_TEMP/testing/repo/addons.xml" docs/testing/repo/addons.xml

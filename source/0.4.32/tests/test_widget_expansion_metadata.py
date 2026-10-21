@@ -21,6 +21,18 @@ class ExpandCardAppearanceTests(unittest.TestCase):
         self.assertIn('FFE50914', ET.tostring(card, encoding='unicode'))
         self.assertIn('EXPANDIR', ET.tostring(card, encoding='unicode'))
         self.assertGreaterEqual(len(xml.findall(".//include[@content='AcTweeteRExpandCard']")), 7)
+        # A horizontal word in the centre was clipped by Kodi's right viewport.
+        group = card.find("./control[@type='group']")
+        background = group.findall("./control[@type='image']")[0]
+        accent = group.findall("./control[@type='image']")[1]
+        label = group.find("./control[@type='label']")
+        self.assertEqual(background.find("texture").get("colordiffuse"), "FF000000")
+        self.assertEqual(accent.findtext("left"), "0")
+        self.assertEqual(accent.findtext("width"), "6")
+        self.assertEqual(label.findtext("angle"), "90")
+        self.assertLessEqual(int(label.findtext("left")), 70)
+        self.assertEqual(label.findtext("textcolor"), "FFE50914")
+        self.assertEqual(label.findtext("label"), "[B]EXPANDIR[/B]")
 
 
 class ExpandableWidgetMetadataTests(unittest.TestCase):
