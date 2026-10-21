@@ -1,0 +1,1 @@
+1.2.30~beta10 (Testing): EXPANDIR now uses a transparent pre-rotated red text texture anchored to the left edge of its black card, bottom-to-top. Avoids the truncation Kodi produces with rotated labels at the clipped last widget slot. Suppresses standard horizontal poster overlay only for expansion cards. All routes and other add-ons unchanged.

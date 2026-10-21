@@ -19,20 +19,24 @@ class ExpandCardAppearanceTests(unittest.TestCase):
         self.assertIsNotNone(card)
         self.assertIn('String.IsEqual(ListItem.Property(AcTweeteR.Expand),1)', ET.tostring(card, encoding='unicode'))
         self.assertIn('FFE50914', ET.tostring(card, encoding='unicode'))
-        self.assertIn('EXPANDIR', ET.tostring(card, encoding='unicode'))
+        self.assertIn('expand_vertical.png', ET.tostring(card, encoding='unicode'))
         self.assertGreaterEqual(len(xml.findall(".//include[@content='AcTweeteRExpandCard']")), 7)
         # A horizontal word in the centre was clipped by Kodi's right viewport.
         group = card.find("./control[@type='group']")
         background = group.findall("./control[@type='image']")[0]
         accent = group.findall("./control[@type='image']")[1]
-        label = group.find("./control[@type='label']")
+        image = group.findall("./control[@type='image']")[2]
         self.assertEqual(background.find("texture").get("colordiffuse"), "FF000000")
         self.assertEqual(accent.findtext("left"), "0")
         self.assertEqual(accent.findtext("width"), "6")
-        self.assertEqual(label.findtext("angle"), "90")
-        self.assertLessEqual(int(label.findtext("left")), 25)
-        self.assertEqual(label.findtext("textcolor"), "FFE50914")
-        self.assertEqual(label.findtext("label"), "[B]EXPANDIR[/B]")
+        self.assertLessEqual(int(image.findtext("left")), 10)
+        self.assertLessEqual(int(image.findtext("width")), 45)
+        self.assertEqual(image.findtext("texture"), "actweeter/expand_vertical.png")
+        asset = ROOT / "addons/skin.actweeter/media/actweeter/expand_vertical.png"
+        payload = asset.read_bytes()
+        self.assertEqual(payload[:8], b"\x89PNG\r\n\x1a\n")
+        import struct
+        self.assertEqual(struct.unpack(">II", payload[16:24]), (44, 310))
         overlays = ET.parse(ROOT / "addons/skin.actweeter/1080i/IncludesViewsLayoutPoster.xml").getroot()
         for name in ("PosterTagOverlayBingie", "PosterTagOverlayBingieNoOverride"):
             overlay = overlays.find(".//include[@name='%s']" % name)
