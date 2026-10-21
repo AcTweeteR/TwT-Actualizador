@@ -30,9 +30,15 @@ class ExpandCardAppearanceTests(unittest.TestCase):
         self.assertEqual(accent.findtext("left"), "0")
         self.assertEqual(accent.findtext("width"), "6")
         self.assertEqual(label.findtext("angle"), "90")
-        self.assertLessEqual(int(label.findtext("left")), 70)
+        self.assertLessEqual(int(label.findtext("left")), 25)
         self.assertEqual(label.findtext("textcolor"), "FFE50914")
         self.assertEqual(label.findtext("label"), "[B]EXPANDIR[/B]")
+        overlays = ET.parse(ROOT / "addons/skin.actweeter/1080i/IncludesViewsLayoutPoster.xml").getroot()
+        for name in ("PosterTagOverlayBingie", "PosterTagOverlayBingieNoOverride"):
+            overlay = overlays.find(".//include[@name='%s']" % name)
+            self.assertIsNotNone(overlay)
+            self.assertEqual(overlay.find("./control[@type='group']/visible").text,
+                             "!String.IsEqual(ListItem.Property(AcTweeteR.Expand),1)")
 
 
 class ExpandableWidgetMetadataTests(unittest.TestCase):
