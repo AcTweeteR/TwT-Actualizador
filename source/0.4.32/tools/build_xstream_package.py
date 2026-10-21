@@ -32,6 +32,7 @@ PATCHES = (
     ("performance_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-performance-diagnostics.patch"),
     ("catalog_index_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-catalog-index.patch"),
     ("collections_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-collections.patch"),
+    ("collections_empty_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-collections-empty.patch"),
 )
 DIAGNOSTICS_SOURCE = ROOT / "third_party/xstream/performance_diagnostics.py"
 CATALOG_INDEX_SOURCE = ROOT / "third_party/xstream/provider_catalog_index.py"
@@ -185,7 +186,7 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             raise ValueError("XStream upstream license missing or unexpected")
 
         for manifest_key, patch_path in PATCHES:
-            if manifest_key in ("recommendations_patch", "search_index_patch", "prefetch_patch", "catalog_index_patch", "collections_patch"):
+            if manifest_key in ("recommendations_patch", "search_index_patch", "prefetch_patch", "catalog_index_patch", "collections_patch", "collections_empty_patch"):
                 # The pinned upstream archive uses CRLF in these files while
                 # earlier tracked patches add LF. Normalize only these two
                 # already-patched files before applying semantic context.
@@ -193,7 +194,7 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             expected_patch_hash = data[manifest_key + "_sha256"]
             if sha256(patch_path) != expected_patch_hash:
                 raise ValueError(f"patch hash mismatch: {patch_path.name}")
-            if manifest_key in ("recommendations_patch", "search_index_patch", "prefetch_patch", "catalog_index_patch", "collections_patch"):
+            if manifest_key in ("recommendations_patch", "search_index_patch", "prefetch_patch", "catalog_index_patch", "collections_patch", "collections_empty_patch"):
                 apply_contextual_unified_patch(root, patch_path)
                 continue
             result = subprocess.run(

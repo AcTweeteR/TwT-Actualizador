@@ -3,7 +3,7 @@ name: Verify XStream Widget Performance Candidate
 on:
   pull_request:
     paths:
-      - 'docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.16.zip'
+      - 'docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.17.zip'
       - 'docs/testing/repo/addons.xml'
       - 'source/0.4.32/**'
       - '.github/workflows/xstream-widget-performance.yml'
@@ -29,8 +29,8 @@ jobs:
           url=https://github.com/Pesicp/XStreamPro/releases/download/1.1.2/plugin.video.xstream-pro-1.1.2.zip
           curl -fsSL --retry 3 "$url" -o "$RUNNER_TEMP/xstream-original.zip"
           echo '915f45708670d07e789bb73b7390a7b5cf30175f818ef5da8ea18c9f13f537fe  '"$RUNNER_TEMP/xstream-original.zip" | shasum -a256 --check
-          python3 source/0.4.32/tools/build_xstream_package.py --upstream-zip "$RUNNER_TEMP/xstream-original.zip" --output "$RUNNER_TEMP/plugin.video.xstream-pro-1.1.2.16.zip"
-          cmp "$RUNNER_TEMP/plugin.video.xstream-pro-1.1.2.16.zip" docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.16.zip
+          python3 source/0.4.32/tools/build_xstream_package.py --upstream-zip "$RUNNER_TEMP/xstream-original.zip" --output "$RUNNER_TEMP/plugin.video.xstream-pro-1.1.2.17.zip"
+          cmp "$RUNNER_TEMP/plugin.video.xstream-pro-1.1.2.17.zip" docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.17.zip
       - name: Verify immutable Stable channel remains unchanged
         run: |
           set -eu
