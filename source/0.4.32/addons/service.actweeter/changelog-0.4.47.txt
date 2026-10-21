@@ -1,0 +1,9 @@
+0.4.47 — Smart Search 2.0 (candidato no publicado)
+- Fichas enriquecidas bajo demanda: título original, géneros, dirección y reparto.
+- Película → reparto/equipo → persona → filmografía, con retorno al contexto anterior.
+- Títulos alternativos mediante la API exportada y caché del helper TMDb existente, con presupuesto acotado.
+- Temporadas y episodios por rutas devueltas por XStream; sin fabricar URLs de reproducción.
+- Índice de títulos compartido entre trabajadores, EPG independiente y cancelación de consultas obsoletas.
+- Mayor relevancia de títulos que comienzan por la consulta; deduplicación conservadora.
+- Espera de diez segundos tras errores de metadatos; contenido local independiente.
+- Sin cambios de credenciales, perfiles, Trakt, Performance 3.1, Stable ni Testing público.

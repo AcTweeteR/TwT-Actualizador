@@ -1,0 +1,4 @@
+1.2.30~beta4 — Smart Search 2.0 (candidato no publicado)
+- Mantiene el acceso BUSCAR y la apariencia AcTweeteR.
+- Requiere service.actweeter 0.4.47 para la búsqueda, fichas y exploración enlazada.
+- No modifica Home, Skin Shortcuts ni las acciones existentes de reproducción o tráilers.

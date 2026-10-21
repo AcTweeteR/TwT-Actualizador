@@ -5,1017 +5,1190 @@
     <system>1</system>
   </coordinates>
   <controls>
-    <control type="image">
-      <left>0</left>
-      <top>0</top>
-      <width>1920</width>
-      <height>1080</height>
-      <texture colordiffuse="FF101216">colors/color_white.png</texture>
-    </control>
-    <control type="image">
-      <left>1040</left>
-      <top>0</top>
-      <width>880</width>
-      <height>420</height>
-      <texture background="true">$INFO[Window.Property(search.hero.art)]</texture>
-      <aspectratio>scale</aspectratio>
-      <colordiffuse>334B5362</colordiffuse>
-    </control>
-    <control type="label">
-      <left>80</left>
-      <top>32</top>
-      <width>1100</width>
-      <height>48</height>
-      <font>Bold38</font>
-      <textcolor>FFFFFFFF</textcolor>
-      <label>BUSCAR [COLOR FFE50914]·[/COLOR] AcTweeteR</label>
-    </control>
-    <control type="button" id="105">
-      <left>1400</left>
-      <top>24</top>
-      <width>240</width>
-      <height>62</height>
-      <visible>!String.IsEmpty(Window.Property(search.person))</visible>
-      <label>Biografía</label>
-      <font>Reg26</font>
-      <textcolor>FFFFFFFF</textcolor>
-      <texturefocus colordiffuse="FF50545C">diffuse/panel.png</texturefocus>
-      <texturenofocus colordiffuse="FF25282E">diffuse/panel.png</texturenofocus>
-      <onleft>100</onleft>
-      <onright>104</onright>
-      <ondown>100</ondown>
-    </control>
-    <control type="edit" id="100">
-      <left>80</left>
-      <top>100</top>
-      <width>1010</width>
-      <height>76</height>
-      <font>Reg30</font>
-      <align>left</align>
-      <aligny>center</aligny>
-      <textoffsetx>28</textoffsetx>
-      <textcolor>FFFFFFFF</textcolor>
-      <focusedcolor>FFFFFFFF</focusedcolor>
-      <texturefocus colordiffuse="FF404550" border="12">diffuse/panel.png</texturefocus>
-      <texturenofocus colordiffuse="FF23262D" border="12">diffuse/panel.png</texturenofocus>
-      <hinttext>Películas, series, actores, directores y TV…</hinttext>
-      <onright>101</onright>
-      <onup>104</onup>
-      <ondown>111</ondown>
-      <onback>104</onback>
-    </control>
-    <control type="button" id="101">
-      <left>1110</left>
-      <top>107</top>
-      <width>280</width>
-      <height>62</height>
-      <align>center</align>
-      <aligny>center</aligny>
-      <textoffsetx>0</textoffsetx>
-      <label>Teclado / voz</label>
-      <font>Reg26</font>
-      <textcolor>FFE4E7EA</textcolor>
-      <focusedcolor>FF101216</focusedcolor>
-      <texturefocus colordiffuse="FFFFFFFF" border="12">diffuse/panel.png</texturefocus>
-      <texturenofocus colordiffuse="FF25282E" border="12">diffuse/panel.png</texturenofocus>
-      <onup>104</onup>
-      <ondown>111</ondown>
-      <onleft>100</onleft>
-      <onright>103</onright>
-    </control>
-    <control type="button" id="103">
-      <left>1410</left>
-      <top>107</top>
-      <width>190</width>
-      <height>62</height>
-      <align>center</align>
-      <aligny>center</aligny>
-      <textoffsetx>0</textoffsetx>
-      <label>QWERTY</label>
-      <font>Reg26</font>
-      <textcolor>FFE4E7EA</textcolor>
-      <focusedcolor>FF101216</focusedcolor>
-      <texturefocus colordiffuse="FFFFFFFF" border="12">diffuse/panel.png</texturefocus>
-      <texturenofocus colordiffuse="FF25282E" border="12">diffuse/panel.png</texturenofocus>
-      <onup>104</onup>
-      <ondown>111</ondown>
-      <onleft>101</onleft>
-      <onright>102</onright>
-    </control>
-    <control type="button" id="102">
-      <left>1620</left>
-      <top>107</top>
-      <width>220</width>
-      <height>62</height>
-      <align>center</align>
-      <aligny>center</aligny>
-      <textoffsetx>0</textoffsetx>
-      <label>Limpiar</label>
-      <font>Reg26</font>
-      <textcolor>FFE4E7EA</textcolor>
-      <focusedcolor>FF101216</focusedcolor>
-      <texturefocus colordiffuse="FFFFFFFF" border="12">diffuse/panel.png</texturefocus>
-      <texturenofocus colordiffuse="FF25282E" border="12">diffuse/panel.png</texturenofocus>
-      <onup>104</onup>
-      <ondown>111</ondown>
-      <onleft>103</onleft>
-      <onright>100</onright>
-    </control>
-    <control type="button" id="104">
-      <left>1660</left>
-      <top>24</top>
-      <width>180</width>
-      <height>62</height>
-      <align>center</align>
-      <aligny>center</aligny>
-      <textoffsetx>0</textoffsetx>
-      <label>Volver</label>
-      <font>Reg26</font>
-      <textcolor>FFE4E7EA</textcolor>
-      <focusedcolor>FF101216</focusedcolor>
-      <texturefocus colordiffuse="FFFFFFFF" border="12">diffuse/panel.png</texturefocus>
-      <texturenofocus colordiffuse="FF25282E" border="12">diffuse/panel.png</texturenofocus>
-      <onup>100</onup>
-      <ondown>102</ondown>
-      <onleft condition="!String.IsEmpty(Window.Property(search.person))">105</onleft>
-      <onleft condition="String.IsEmpty(Window.Property(search.person))">100</onleft>
-      <onright>100</onright>
-    </control>
-    <control type="label">
-      <left>108</left>
-      <top>115</top>
-      <width>940</width>
-      <height>50</height>
-      <font>Reg28</font>
-      <textcolor>FF9CA5B4</textcolor>
-      <label>Películas, series, actores, directores y TV…</label>
-      <visible>String.IsEmpty(Control.GetLabel(100).index(1))</visible>
-    </control>
     <control type="group">
-      <visible>!String.IsEqual(Window.Property(search.keyboard),true)</visible>
-      <control type="label">
-        <left>80</left>
-        <top>193</top>
-        <width>1720</width>
-        <height>40</height>
-        <font>Reg24</font>
-        <textcolor>FFBAC1CD</textcolor>
-        <label>$INFO[Window.Property(search.status)]</label>
-      </control>
-      <control type="label">
-        <left>80</left>
-        <top>236</top>
-        <width>1720</width>
-        <height>48</height>
-        <font>Bold30</font>
-        <textcolor>FFFFFFFF</textcolor>
-        <label>$INFO[Window.Property(search.hero.title)]</label>
-      </control>
-      <control type="textbox">
-        <left>80</left>
-        <top>286</top>
-        <width>1440</width>
-        <height>64</height>
-        <font>Reg24</font>
-        <textcolor>FFB6BCC7</textcolor>
-        <label>$INFO[Window.Property(search.hero.plot)]</label>
-      </control>
-    </control>
-    <control type="group">
-      <visible>String.IsEqual(Window.Property(search.keyboard),true)</visible>
+      <visible>!String.IsEqual(Window.Property(search.detail),true)</visible>
       <control type="image">
-        <left>72</left>
-        <top>185</top>
-        <width>1780</width>
-        <height>180</height>
+        <left>0</left>
+        <top>0</top>
+        <width>1920</width>
+        <height>1080</height>
         <texture colordiffuse="FF101216">colors/color_white.png</texture>
       </control>
-      <control type="panel" id="120">
+      <control type="image">
+        <left>1040</left>
+        <top>0</top>
+        <width>880</width>
+        <height>420</height>
+        <texture background="true">$INFO[Window.Property(search.hero.art)]</texture>
+        <aspectratio>scale</aspectratio>
+        <colordiffuse>334B5362</colordiffuse>
+      </control>
+      <control type="label">
         <left>80</left>
-        <top>192</top>
-        <width>1760</width>
-        <height>174</height>
-        <orientation>vertical</orientation>
-        <onup>103</onup>
+        <top>32</top>
+        <width>1100</width>
+        <height>48</height>
+        <font>Bold38</font>
+        <textcolor>FFFFFFFF</textcolor>
+        <label>BUSCAR [COLOR FFE50914]·[/COLOR] AcTweeteR</label>
+      </control>
+      <control type="button" id="105">
+        <left>1400</left>
+        <top>24</top>
+        <width>240</width>
+        <height>62</height>
+        <visible>!String.IsEmpty(Window.Property(search.person))</visible>
+        <label>$INFO[Window.Property(search.subject.label)]</label>
+        <font>Reg26</font>
+        <textcolor>FFFFFFFF</textcolor>
+        <texturefocus colordiffuse="FF50545C">diffuse/panel.png</texturefocus>
+        <texturenofocus colordiffuse="FF25282E">diffuse/panel.png</texturenofocus>
+        <onleft>100</onleft>
+        <onright>104</onright>
+        <ondown>100</ondown>
+      </control>
+      <control type="edit" id="100">
+        <left>80</left>
+        <top>100</top>
+        <width>1010</width>
+        <height>76</height>
+        <font>Reg30</font>
+        <align>left</align>
+        <aligny>center</aligny>
+        <textoffsetx>28</textoffsetx>
+        <textcolor>FFFFFFFF</textcolor>
+        <focusedcolor>FFFFFFFF</focusedcolor>
+        <texturefocus colordiffuse="FF404550" border="12">diffuse/panel.png</texturefocus>
+        <texturenofocus colordiffuse="FF23262D" border="12">diffuse/panel.png</texturenofocus>
+        <hinttext>Películas, series, actores, directores y TV…</hinttext>
+        <onright>101</onright>
+        <onup>104</onup>
         <ondown>111</ondown>
-        <scrolltime>120</scrolltime>
-        <itemlayout width="176" height="56">
+        <onback>104</onback>
+      </control>
+      <control type="button" id="101">
+        <left>1110</left>
+        <top>107</top>
+        <width>280</width>
+        <height>62</height>
+        <align>center</align>
+        <aligny>center</aligny>
+        <textoffsetx>0</textoffsetx>
+        <label>Teclado / voz</label>
+        <font>Reg26</font>
+        <textcolor>FFE4E7EA</textcolor>
+        <focusedcolor>FF101216</focusedcolor>
+        <texturefocus colordiffuse="FFFFFFFF" border="12">diffuse/panel.png</texturefocus>
+        <texturenofocus colordiffuse="FF25282E" border="12">diffuse/panel.png</texturenofocus>
+        <onup>104</onup>
+        <ondown>111</ondown>
+        <onleft>100</onleft>
+        <onright>103</onright>
+      </control>
+      <control type="button" id="103">
+        <left>1410</left>
+        <top>107</top>
+        <width>190</width>
+        <height>62</height>
+        <align>center</align>
+        <aligny>center</aligny>
+        <textoffsetx>0</textoffsetx>
+        <label>QWERTY</label>
+        <font>Reg26</font>
+        <textcolor>FFE4E7EA</textcolor>
+        <focusedcolor>FF101216</focusedcolor>
+        <texturefocus colordiffuse="FFFFFFFF" border="12">diffuse/panel.png</texturefocus>
+        <texturenofocus colordiffuse="FF25282E" border="12">diffuse/panel.png</texturenofocus>
+        <onup>104</onup>
+        <ondown>111</ondown>
+        <onleft>101</onleft>
+        <onright>102</onright>
+      </control>
+      <control type="button" id="102">
+        <left>1620</left>
+        <top>107</top>
+        <width>220</width>
+        <height>62</height>
+        <align>center</align>
+        <aligny>center</aligny>
+        <textoffsetx>0</textoffsetx>
+        <label>Limpiar</label>
+        <font>Reg26</font>
+        <textcolor>FFE4E7EA</textcolor>
+        <focusedcolor>FF101216</focusedcolor>
+        <texturefocus colordiffuse="FFFFFFFF" border="12">diffuse/panel.png</texturefocus>
+        <texturenofocus colordiffuse="FF25282E" border="12">diffuse/panel.png</texturenofocus>
+        <onup>104</onup>
+        <ondown>111</ondown>
+        <onleft>103</onleft>
+        <onright>100</onright>
+      </control>
+      <control type="button" id="104">
+        <left>1660</left>
+        <top>24</top>
+        <width>180</width>
+        <height>62</height>
+        <align>center</align>
+        <aligny>center</aligny>
+        <textoffsetx>0</textoffsetx>
+        <label>Volver</label>
+        <font>Reg26</font>
+        <textcolor>FFE4E7EA</textcolor>
+        <focusedcolor>FF101216</focusedcolor>
+        <texturefocus colordiffuse="FFFFFFFF" border="12">diffuse/panel.png</texturefocus>
+        <texturenofocus colordiffuse="FF25282E" border="12">diffuse/panel.png</texturenofocus>
+        <onup>100</onup>
+        <ondown>102</ondown>
+        <onleft condition="!String.IsEmpty(Window.Property(search.person))">105</onleft>
+        <onleft condition="String.IsEmpty(Window.Property(search.person))">100</onleft>
+        <onright>100</onright>
+      </control>
+      <control type="label">
+        <left>108</left>
+        <top>115</top>
+        <width>940</width>
+        <height>50</height>
+        <font>Reg28</font>
+        <textcolor>FF9CA5B4</textcolor>
+        <label>Películas, series, actores, directores y TV…</label>
+        <visible>String.IsEmpty(Control.GetLabel(100).index(1))</visible>
+      </control>
+      <control type="group">
+        <visible>!String.IsEqual(Window.Property(search.keyboard),true)</visible>
+        <control type="label">
+          <left>80</left>
+          <top>193</top>
+          <width>1720</width>
+          <height>40</height>
+          <font>Reg24</font>
+          <textcolor>FFBAC1CD</textcolor>
+          <label>$INFO[Window.Property(search.status)]</label>
+        </control>
+        <control type="label">
+          <left>80</left>
+          <top>236</top>
+          <width>1720</width>
+          <height>48</height>
+          <font>Bold30</font>
+          <textcolor>FFFFFFFF</textcolor>
+          <label>$INFO[Window.Property(search.hero.title)]</label>
+        </control>
+        <control type="textbox">
+          <left>80</left>
+          <top>286</top>
+          <width>1440</width>
+          <height>64</height>
+          <font>Reg24</font>
+          <textcolor>FFB6BCC7</textcolor>
+          <label>$INFO[Window.Property(search.hero.plot)]</label>
+        </control>
+      </control>
+      <control type="group">
+        <visible>String.IsEqual(Window.Property(search.keyboard),true)</visible>
+        <control type="image">
+          <left>72</left>
+          <top>185</top>
+          <width>1780</width>
+          <height>180</height>
+          <texture colordiffuse="FF101216">colors/color_white.png</texture>
+        </control>
+        <control type="panel" id="120">
+          <left>80</left>
+          <top>192</top>
+          <width>1760</width>
+          <height>174</height>
+          <orientation>vertical</orientation>
+          <onup>103</onup>
+          <ondown>111</ondown>
+          <scrolltime>120</scrolltime>
+          <itemlayout width="176" height="56">
+            <control type="label">
+              <width>166</width>
+              <height>50</height>
+              <font>Reg24</font>
+              <align>center</align>
+              <aligny>center</aligny>
+              <textcolor>FFE4E7EA</textcolor>
+              <label>$INFO[ListItem.Label]</label>
+            </control>
+          </itemlayout>
+          <focusedlayout width="176" height="56">
+            <control type="image">
+              <left>0</left>
+              <top>0</top>
+              <width>166</width>
+              <height>50</height>
+              <texture colordiffuse="FFFFFFFF">diffuse/panel.png</texture>
+            </control>
+            <control type="label">
+              <width>166</width>
+              <height>50</height>
+              <font>Reg24</font>
+              <align>center</align>
+              <aligny>center</aligny>
+              <textcolor>FF101216</textcolor>
+              <label>$INFO[ListItem.Label]</label>
+            </control>
+          </focusedlayout>
+        </control>
+      </control>
+      <control type="button" id="111">
+        <left>80</left>
+        <top>365</top>
+        <width>190</width>
+        <height>62</height>
+        <align>center</align>
+        <aligny>center</aligny>
+        <textoffsetx>0</textoffsetx>
+        <label>Todo</label>
+        <font>Reg26</font>
+        <textcolor>FFE4E7EA</textcolor>
+        <focusedcolor>FF101216</focusedcolor>
+        <texturefocus colordiffuse="FFFFFFFF" border="12">diffuse/panel.png</texturefocus>
+        <texturenofocus colordiffuse="FF25282E" border="12">diffuse/panel.png</texturenofocus>
+        <onup>100</onup>
+        <ondown condition="String.IsEqual(Window.Property(search.show.movie),true)">5101</ondown>
+        <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + String.IsEqual(Window.Property(search.show.series),true)">5102</ondown>
+        <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + String.IsEqual(Window.Property(search.show.programme),true)">5103</ondown>
+        <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + String.IsEqual(Window.Property(search.show.person),true)">5104</ondown>
+        <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + !String.IsEqual(Window.Property(search.show.person),true) + String.IsEqual(Window.Property(search.show.discovery),true)">5105</ondown>
+        <onleft>100</onleft>
+        <onright>112</onright>
+      </control>
+      <control type="button" id="112">
+        <left>284</left>
+        <top>365</top>
+        <width>240</width>
+        <height>62</height>
+        <align>center</align>
+        <aligny>center</aligny>
+        <textoffsetx>0</textoffsetx>
+        <label>Películas</label>
+        <font>Reg26</font>
+        <textcolor>FFE4E7EA</textcolor>
+        <focusedcolor>FF101216</focusedcolor>
+        <texturefocus colordiffuse="FFFFFFFF" border="12">diffuse/panel.png</texturefocus>
+        <texturenofocus colordiffuse="FF25282E" border="12">diffuse/panel.png</texturenofocus>
+        <onup>100</onup>
+        <ondown condition="String.IsEqual(Window.Property(search.show.movie),true)">5101</ondown>
+        <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + String.IsEqual(Window.Property(search.show.series),true)">5102</ondown>
+        <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + String.IsEqual(Window.Property(search.show.programme),true)">5103</ondown>
+        <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + String.IsEqual(Window.Property(search.show.person),true)">5104</ondown>
+        <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + !String.IsEqual(Window.Property(search.show.person),true) + String.IsEqual(Window.Property(search.show.discovery),true)">5105</ondown>
+        <onleft>111</onleft>
+        <onright>113</onright>
+      </control>
+      <control type="button" id="113">
+        <left>538</left>
+        <top>365</top>
+        <width>200</width>
+        <height>62</height>
+        <align>center</align>
+        <aligny>center</aligny>
+        <textoffsetx>0</textoffsetx>
+        <label>Series</label>
+        <font>Reg26</font>
+        <textcolor>FFE4E7EA</textcolor>
+        <focusedcolor>FF101216</focusedcolor>
+        <texturefocus colordiffuse="FFFFFFFF" border="12">diffuse/panel.png</texturefocus>
+        <texturenofocus colordiffuse="FF25282E" border="12">diffuse/panel.png</texturenofocus>
+        <onup>100</onup>
+        <ondown condition="String.IsEqual(Window.Property(search.show.movie),true)">5101</ondown>
+        <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + String.IsEqual(Window.Property(search.show.series),true)">5102</ondown>
+        <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + String.IsEqual(Window.Property(search.show.programme),true)">5103</ondown>
+        <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + String.IsEqual(Window.Property(search.show.person),true)">5104</ondown>
+        <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + !String.IsEqual(Window.Property(search.show.person),true) + String.IsEqual(Window.Property(search.show.discovery),true)">5105</ondown>
+        <onleft>112</onleft>
+        <onright>114</onright>
+      </control>
+      <control type="button" id="114">
+        <left>752</left>
+        <top>365</top>
+        <width>200</width>
+        <height>62</height>
+        <align>center</align>
+        <aligny>center</aligny>
+        <textoffsetx>0</textoffsetx>
+        <label>En TV</label>
+        <font>Reg26</font>
+        <textcolor>FFE4E7EA</textcolor>
+        <focusedcolor>FF101216</focusedcolor>
+        <texturefocus colordiffuse="FFFFFFFF" border="12">diffuse/panel.png</texturefocus>
+        <texturenofocus colordiffuse="FF25282E" border="12">diffuse/panel.png</texturenofocus>
+        <onup>100</onup>
+        <ondown condition="String.IsEqual(Window.Property(search.show.movie),true)">5101</ondown>
+        <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + String.IsEqual(Window.Property(search.show.series),true)">5102</ondown>
+        <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + String.IsEqual(Window.Property(search.show.programme),true)">5103</ondown>
+        <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + String.IsEqual(Window.Property(search.show.person),true)">5104</ondown>
+        <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + !String.IsEqual(Window.Property(search.show.person),true) + String.IsEqual(Window.Property(search.show.discovery),true)">5105</ondown>
+        <onleft>113</onleft>
+        <onright>115</onright>
+      </control>
+      <control type="button" id="115">
+        <left>966</left>
+        <top>365</top>
+        <width>240</width>
+        <height>62</height>
+        <align>center</align>
+        <aligny>center</aligny>
+        <textoffsetx>0</textoffsetx>
+        <label>Personas</label>
+        <font>Reg26</font>
+        <textcolor>FFE4E7EA</textcolor>
+        <focusedcolor>FF101216</focusedcolor>
+        <texturefocus colordiffuse="FFFFFFFF" border="12">diffuse/panel.png</texturefocus>
+        <texturenofocus colordiffuse="FF25282E" border="12">diffuse/panel.png</texturenofocus>
+        <onup>100</onup>
+        <ondown condition="String.IsEqual(Window.Property(search.show.movie),true)">5101</ondown>
+        <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + String.IsEqual(Window.Property(search.show.series),true)">5102</ondown>
+        <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + String.IsEqual(Window.Property(search.show.programme),true)">5103</ondown>
+        <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + String.IsEqual(Window.Property(search.show.person),true)">5104</ondown>
+        <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + !String.IsEqual(Window.Property(search.show.person),true) + String.IsEqual(Window.Property(search.show.discovery),true)">5105</ondown>
+        <onleft>114</onleft>
+        <onright>116</onright>
+      </control>
+      <control type="button" id="116">
+        <left>1220</left>
+        <top>365</top>
+        <width>290</width>
+        <height>62</height>
+        <align>center</align>
+        <aligny>center</aligny>
+        <textoffsetx>0</textoffsetx>
+        <label>Explorar TMDb</label>
+        <font>Reg26</font>
+        <textcolor>FFE4E7EA</textcolor>
+        <focusedcolor>FF101216</focusedcolor>
+        <texturefocus colordiffuse="FFFFFFFF" border="12">diffuse/panel.png</texturefocus>
+        <texturenofocus colordiffuse="FF25282E" border="12">diffuse/panel.png</texturenofocus>
+        <onup>100</onup>
+        <ondown condition="String.IsEqual(Window.Property(search.show.movie),true)">5101</ondown>
+        <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + String.IsEqual(Window.Property(search.show.series),true)">5102</ondown>
+        <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + String.IsEqual(Window.Property(search.show.programme),true)">5103</ondown>
+        <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + String.IsEqual(Window.Property(search.show.person),true)">5104</ondown>
+        <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + !String.IsEqual(Window.Property(search.show.person),true) + String.IsEqual(Window.Property(search.show.discovery),true)">5105</ondown>
+        <onleft>115</onleft>
+        <onright>100</onright>
+      </control>
+      <control type="image">
+        <left>80</left>
+        <top>428</top>
+        <width>190</width>
+        <height>4</height>
+        <texture colordiffuse="FFE50914">colors/color_white.png</texture>
+        <visible>String.IsEqual(Window.Property(search.facet),all)</visible>
+      </control>
+      <control type="image">
+        <left>284</left>
+        <top>428</top>
+        <width>240</width>
+        <height>4</height>
+        <texture colordiffuse="FFE50914">colors/color_white.png</texture>
+        <visible>String.IsEqual(Window.Property(search.facet),movie)</visible>
+      </control>
+      <control type="image">
+        <left>538</left>
+        <top>428</top>
+        <width>200</width>
+        <height>4</height>
+        <texture colordiffuse="FFE50914">colors/color_white.png</texture>
+        <visible>String.IsEqual(Window.Property(search.facet),series)</visible>
+      </control>
+      <control type="image">
+        <left>752</left>
+        <top>428</top>
+        <width>200</width>
+        <height>4</height>
+        <texture colordiffuse="FFE50914">colors/color_white.png</texture>
+        <visible>String.IsEqual(Window.Property(search.facet),programme)</visible>
+      </control>
+      <control type="image">
+        <left>966</left>
+        <top>428</top>
+        <width>240</width>
+        <height>4</height>
+        <texture colordiffuse="FFE50914">colors/color_white.png</texture>
+        <visible>String.IsEqual(Window.Property(search.facet),person)</visible>
+      </control>
+      <control type="image">
+        <left>1220</left>
+        <top>428</top>
+        <width>290</width>
+        <height>4</height>
+        <texture colordiffuse="FFE50914">colors/color_white.png</texture>
+        <visible>String.IsEqual(Window.Property(search.facet),discovery)</visible>
+      </control>
+      <control type="grouplist" id="5000">
+        <left>80</left>
+        <top>444</top>
+        <width>1770</width>
+        <height>570</height>
+        <orientation>vertical</orientation>
+        <itemgap>24</itemgap>
+        <scrolltime>180</scrolltime>
+        <usecontrolcoords>false</usecontrolcoords>
+        <onup>111</onup>
+        <onback>104</onback>
+        <control type="group">
+          <height>360</height>
+          <visible>String.IsEqual(Window.Property(search.show.movie),true)</visible>
           <control type="label">
-            <width>166</width>
-            <height>50</height>
-            <font>Reg24</font>
-            <align>center</align>
-            <aligny>center</aligny>
-            <textcolor>FFE4E7EA</textcolor>
-            <label>$INFO[ListItem.Label]</label>
-          </control>
-        </itemlayout>
-        <focusedlayout width="176" height="56">
-          <control type="image">
             <left>0</left>
             <top>0</top>
-            <width>166</width>
-            <height>50</height>
-            <texture colordiffuse="FFFFFFFF">diffuse/panel.png</texture>
+            <width>1750</width>
+            <height>44</height>
+            <font>Bold28</font>
+            <textcolor>FFFFFFFF</textcolor>
+            <label>Películas · en tu catálogo [COLOR FF8791A1]($INFO[Window.Property(search.count.movie)])[/COLOR]</label>
           </control>
+          <control type="list" id="5101">
+            <top>50</top>
+            <left>0</left>
+            <width>1760</width>
+            <height>310</height>
+            <orientation>horizontal</orientation>
+            <scrolltime>160</scrolltime>
+            <preloaditems>3</preloaditems>
+            <onleft>100</onleft>
+            <onright>noop</onright>
+            <onback>104</onback>
+            <onup condition="true">111</onup>
+            <ondown condition="String.IsEqual(Window.Property(search.show.series),true)">5102</ondown>
+            <ondown condition="!String.IsEqual(Window.Property(search.show.series),true) + String.IsEqual(Window.Property(search.show.programme),true)">5103</ondown>
+            <ondown condition="!String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + String.IsEqual(Window.Property(search.show.person),true)">5104</ondown>
+            <ondown condition="!String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + !String.IsEqual(Window.Property(search.show.person),true) + String.IsEqual(Window.Property(search.show.discovery),true)">5105</ondown>
+            <itemlayout width="190" height="310">
+              <control type="image">
+                <left>0</left>
+                <top>0</top>
+                <width>180</width>
+                <height>236</height>
+                <texture colordiffuse="FF252932">diffuse/panel.png</texture>
+              </control>
+              <control type="image">
+                <left>3</left>
+                <top>3</top>
+                <width>174</width>
+                <height>230</height>
+                <texture colordiffuse="FF252932">colors/color_white.png</texture>
+              </control>
+              <control type="image">
+                <left>3</left>
+                <top>3</top>
+                <width>174</width>
+                <height>230</height>
+                <texture background="true" fallback="DefaultVideo.png">$INFO[ListItem.Art(poster)]</texture>
+                <aspectratio>scale</aspectratio>
+              </control>
+              <control type="label">
+                <left>3</left>
+                <top>240</top>
+                <width>174</width>
+                <height>34</height>
+                <font>Reg24</font>
+                <textcolor>FFFFFFFF</textcolor>
+                <label>$INFO[ListItem.Label]</label>
+                <scroll>false</scroll>
+              </control>
+              <control type="label">
+                <left>3</left>
+                <top>274</top>
+                <width>174</width>
+                <height>30</height>
+                <font>Reg20</font>
+                <textcolor>FFAAB4C4</textcolor>
+                <label>$INFO[ListItem.Label2]</label>
+              </control>
+              <control type="image">
+                <left>6</left>
+                <top>6</top>
+                <width>114</width>
+                <height>30</height>
+                <texture colordiffuse="DD101216">colors/color_white.png</texture>
+              </control>
+              <control type="label">
+                <left>8</left>
+                <top>8</top>
+                <width>155</width>
+                <height>28</height>
+                <font>Reg20</font>
+                <textcolor>FFFFFFFF</textcolor>
+                <shadowcolor>FF000000</shadowcolor>
+                <label>$INFO[ListItem.Property(search.badge)]</label>
+              </control>
+            </itemlayout>
+            <focusedlayout width="190" height="310">
+              <control type="image">
+                <left>0</left>
+                <top>0</top>
+                <width>180</width>
+                <height>236</height>
+                <texture colordiffuse="FFFFFFFF">diffuse/panel.png</texture>
+              </control>
+              <control type="image">
+                <left>3</left>
+                <top>3</top>
+                <width>174</width>
+                <height>230</height>
+                <texture colordiffuse="FF252932">colors/color_white.png</texture>
+              </control>
+              <control type="image">
+                <left>3</left>
+                <top>3</top>
+                <width>174</width>
+                <height>230</height>
+                <texture background="true" fallback="DefaultVideo.png">$INFO[ListItem.Art(poster)]</texture>
+                <aspectratio>scale</aspectratio>
+              </control>
+              <control type="label">
+                <left>3</left>
+                <top>240</top>
+                <width>174</width>
+                <height>34</height>
+                <font>Reg24</font>
+                <textcolor>FFFFFFFF</textcolor>
+                <label>$INFO[ListItem.Label]</label>
+                <scroll>true</scroll>
+              </control>
+              <control type="label">
+                <left>3</left>
+                <top>274</top>
+                <width>174</width>
+                <height>30</height>
+                <font>Reg20</font>
+                <textcolor>FFAAB4C4</textcolor>
+                <label>$INFO[ListItem.Label2]</label>
+              </control>
+              <control type="image">
+                <left>6</left>
+                <top>6</top>
+                <width>114</width>
+                <height>30</height>
+                <texture colordiffuse="DD101216">colors/color_white.png</texture>
+              </control>
+              <control type="label">
+                <left>8</left>
+                <top>8</top>
+                <width>155</width>
+                <height>28</height>
+                <font>Reg20</font>
+                <textcolor>FFFFFFFF</textcolor>
+                <shadowcolor>FF000000</shadowcolor>
+                <label>$INFO[ListItem.Property(search.badge)]</label>
+              </control>
+            </focusedlayout>
+          </control>
+        </control>
+        <control type="group">
+          <height>360</height>
+          <visible>String.IsEqual(Window.Property(search.show.series),true)</visible>
           <control type="label">
-            <width>166</width>
-            <height>50</height>
-            <font>Reg24</font>
-            <align>center</align>
-            <aligny>center</aligny>
-            <textcolor>FF101216</textcolor>
-            <label>$INFO[ListItem.Label]</label>
+            <left>0</left>
+            <top>0</top>
+            <width>1750</width>
+            <height>44</height>
+            <font>Bold28</font>
+            <textcolor>FFFFFFFF</textcolor>
+            <label>$INFO[Window.Property(search.series.heading)] [COLOR FF8791A1]($INFO[Window.Property(search.count.series)])[/COLOR]</label>
           </control>
-        </focusedlayout>
-      </control>
-    </control>
-    <control type="button" id="111">
-      <left>80</left>
-      <top>365</top>
-      <width>190</width>
-      <height>62</height>
-      <align>center</align>
-      <aligny>center</aligny>
-      <textoffsetx>0</textoffsetx>
-      <label>Todo</label>
-      <font>Reg26</font>
-      <textcolor>FFE4E7EA</textcolor>
-      <focusedcolor>FF101216</focusedcolor>
-      <texturefocus colordiffuse="FFFFFFFF" border="12">diffuse/panel.png</texturefocus>
-      <texturenofocus colordiffuse="FF25282E" border="12">diffuse/panel.png</texturenofocus>
-      <onup>100</onup>
-      <ondown condition="String.IsEqual(Window.Property(search.show.movie),true)">5101</ondown>
-      <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + String.IsEqual(Window.Property(search.show.series),true)">5102</ondown>
-      <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + String.IsEqual(Window.Property(search.show.programme),true)">5103</ondown>
-      <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + String.IsEqual(Window.Property(search.show.person),true)">5104</ondown>
-      <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + !String.IsEqual(Window.Property(search.show.person),true) + String.IsEqual(Window.Property(search.show.discovery),true)">5105</ondown>
-      <onleft>100</onleft>
-      <onright>112</onright>
-    </control>
-    <control type="button" id="112">
-      <left>284</left>
-      <top>365</top>
-      <width>240</width>
-      <height>62</height>
-      <align>center</align>
-      <aligny>center</aligny>
-      <textoffsetx>0</textoffsetx>
-      <label>Películas</label>
-      <font>Reg26</font>
-      <textcolor>FFE4E7EA</textcolor>
-      <focusedcolor>FF101216</focusedcolor>
-      <texturefocus colordiffuse="FFFFFFFF" border="12">diffuse/panel.png</texturefocus>
-      <texturenofocus colordiffuse="FF25282E" border="12">diffuse/panel.png</texturenofocus>
-      <onup>100</onup>
-      <ondown condition="String.IsEqual(Window.Property(search.show.movie),true)">5101</ondown>
-      <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + String.IsEqual(Window.Property(search.show.series),true)">5102</ondown>
-      <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + String.IsEqual(Window.Property(search.show.programme),true)">5103</ondown>
-      <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + String.IsEqual(Window.Property(search.show.person),true)">5104</ondown>
-      <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + !String.IsEqual(Window.Property(search.show.person),true) + String.IsEqual(Window.Property(search.show.discovery),true)">5105</ondown>
-      <onleft>111</onleft>
-      <onright>113</onright>
-    </control>
-    <control type="button" id="113">
-      <left>538</left>
-      <top>365</top>
-      <width>200</width>
-      <height>62</height>
-      <align>center</align>
-      <aligny>center</aligny>
-      <textoffsetx>0</textoffsetx>
-      <label>Series</label>
-      <font>Reg26</font>
-      <textcolor>FFE4E7EA</textcolor>
-      <focusedcolor>FF101216</focusedcolor>
-      <texturefocus colordiffuse="FFFFFFFF" border="12">diffuse/panel.png</texturefocus>
-      <texturenofocus colordiffuse="FF25282E" border="12">diffuse/panel.png</texturenofocus>
-      <onup>100</onup>
-      <ondown condition="String.IsEqual(Window.Property(search.show.movie),true)">5101</ondown>
-      <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + String.IsEqual(Window.Property(search.show.series),true)">5102</ondown>
-      <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + String.IsEqual(Window.Property(search.show.programme),true)">5103</ondown>
-      <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + String.IsEqual(Window.Property(search.show.person),true)">5104</ondown>
-      <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + !String.IsEqual(Window.Property(search.show.person),true) + String.IsEqual(Window.Property(search.show.discovery),true)">5105</ondown>
-      <onleft>112</onleft>
-      <onright>114</onright>
-    </control>
-    <control type="button" id="114">
-      <left>752</left>
-      <top>365</top>
-      <width>200</width>
-      <height>62</height>
-      <align>center</align>
-      <aligny>center</aligny>
-      <textoffsetx>0</textoffsetx>
-      <label>En TV</label>
-      <font>Reg26</font>
-      <textcolor>FFE4E7EA</textcolor>
-      <focusedcolor>FF101216</focusedcolor>
-      <texturefocus colordiffuse="FFFFFFFF" border="12">diffuse/panel.png</texturefocus>
-      <texturenofocus colordiffuse="FF25282E" border="12">diffuse/panel.png</texturenofocus>
-      <onup>100</onup>
-      <ondown condition="String.IsEqual(Window.Property(search.show.movie),true)">5101</ondown>
-      <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + String.IsEqual(Window.Property(search.show.series),true)">5102</ondown>
-      <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + String.IsEqual(Window.Property(search.show.programme),true)">5103</ondown>
-      <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + String.IsEqual(Window.Property(search.show.person),true)">5104</ondown>
-      <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + !String.IsEqual(Window.Property(search.show.person),true) + String.IsEqual(Window.Property(search.show.discovery),true)">5105</ondown>
-      <onleft>113</onleft>
-      <onright>115</onright>
-    </control>
-    <control type="button" id="115">
-      <left>966</left>
-      <top>365</top>
-      <width>240</width>
-      <height>62</height>
-      <align>center</align>
-      <aligny>center</aligny>
-      <textoffsetx>0</textoffsetx>
-      <label>Personas</label>
-      <font>Reg26</font>
-      <textcolor>FFE4E7EA</textcolor>
-      <focusedcolor>FF101216</focusedcolor>
-      <texturefocus colordiffuse="FFFFFFFF" border="12">diffuse/panel.png</texturefocus>
-      <texturenofocus colordiffuse="FF25282E" border="12">diffuse/panel.png</texturenofocus>
-      <onup>100</onup>
-      <ondown condition="String.IsEqual(Window.Property(search.show.movie),true)">5101</ondown>
-      <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + String.IsEqual(Window.Property(search.show.series),true)">5102</ondown>
-      <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + String.IsEqual(Window.Property(search.show.programme),true)">5103</ondown>
-      <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + String.IsEqual(Window.Property(search.show.person),true)">5104</ondown>
-      <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + !String.IsEqual(Window.Property(search.show.person),true) + String.IsEqual(Window.Property(search.show.discovery),true)">5105</ondown>
-      <onleft>114</onleft>
-      <onright>116</onright>
-    </control>
-    <control type="button" id="116">
-      <left>1220</left>
-      <top>365</top>
-      <width>290</width>
-      <height>62</height>
-      <align>center</align>
-      <aligny>center</aligny>
-      <textoffsetx>0</textoffsetx>
-      <label>Explorar TMDb</label>
-      <font>Reg26</font>
-      <textcolor>FFE4E7EA</textcolor>
-      <focusedcolor>FF101216</focusedcolor>
-      <texturefocus colordiffuse="FFFFFFFF" border="12">diffuse/panel.png</texturefocus>
-      <texturenofocus colordiffuse="FF25282E" border="12">diffuse/panel.png</texturenofocus>
-      <onup>100</onup>
-      <ondown condition="String.IsEqual(Window.Property(search.show.movie),true)">5101</ondown>
-      <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + String.IsEqual(Window.Property(search.show.series),true)">5102</ondown>
-      <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + String.IsEqual(Window.Property(search.show.programme),true)">5103</ondown>
-      <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + String.IsEqual(Window.Property(search.show.person),true)">5104</ondown>
-      <ondown condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + !String.IsEqual(Window.Property(search.show.person),true) + String.IsEqual(Window.Property(search.show.discovery),true)">5105</ondown>
-      <onleft>115</onleft>
-      <onright>100</onright>
-    </control>
-    <control type="image">
-      <left>80</left>
-      <top>428</top>
-      <width>190</width>
-      <height>4</height>
-      <texture colordiffuse="FFE50914">colors/color_white.png</texture>
-      <visible>String.IsEqual(Window.Property(search.facet),all)</visible>
-    </control>
-    <control type="image">
-      <left>284</left>
-      <top>428</top>
-      <width>240</width>
-      <height>4</height>
-      <texture colordiffuse="FFE50914">colors/color_white.png</texture>
-      <visible>String.IsEqual(Window.Property(search.facet),movie)</visible>
-    </control>
-    <control type="image">
-      <left>538</left>
-      <top>428</top>
-      <width>200</width>
-      <height>4</height>
-      <texture colordiffuse="FFE50914">colors/color_white.png</texture>
-      <visible>String.IsEqual(Window.Property(search.facet),series)</visible>
-    </control>
-    <control type="image">
-      <left>752</left>
-      <top>428</top>
-      <width>200</width>
-      <height>4</height>
-      <texture colordiffuse="FFE50914">colors/color_white.png</texture>
-      <visible>String.IsEqual(Window.Property(search.facet),programme)</visible>
-    </control>
-    <control type="image">
-      <left>966</left>
-      <top>428</top>
-      <width>240</width>
-      <height>4</height>
-      <texture colordiffuse="FFE50914">colors/color_white.png</texture>
-      <visible>String.IsEqual(Window.Property(search.facet),person)</visible>
-    </control>
-    <control type="image">
-      <left>1220</left>
-      <top>428</top>
-      <width>290</width>
-      <height>4</height>
-      <texture colordiffuse="FFE50914">colors/color_white.png</texture>
-      <visible>String.IsEqual(Window.Property(search.facet),discovery)</visible>
-    </control>
-    <control type="grouplist" id="5000">
-      <left>80</left>
-      <top>444</top>
-      <width>1770</width>
-      <height>570</height>
-      <orientation>vertical</orientation>
-      <itemgap>24</itemgap>
-      <scrolltime>180</scrolltime>
-      <usecontrolcoords>false</usecontrolcoords>
-      <onup>111</onup>
-      <onback>104</onback>
-      <control type="group">
-        <height>360</height>
-        <visible>String.IsEqual(Window.Property(search.show.movie),true)</visible>
-        <control type="label">
-          <left>0</left>
-          <top>0</top>
-          <width>1750</width>
-          <height>44</height>
-          <font>Bold28</font>
-          <textcolor>FFFFFFFF</textcolor>
-          <label>Películas · en tu catálogo [COLOR FF8791A1]($INFO[Window.Property(search.count.movie)])[/COLOR]</label>
+          <control type="list" id="5102">
+            <top>50</top>
+            <left>0</left>
+            <width>1760</width>
+            <height>310</height>
+            <orientation>horizontal</orientation>
+            <scrolltime>160</scrolltime>
+            <preloaditems>3</preloaditems>
+            <onleft>100</onleft>
+            <onright>noop</onright>
+            <onback>104</onback>
+            <onup condition="String.IsEqual(Window.Property(search.show.movie),true)">5101</onup>
+            <onup condition="!String.IsEqual(Window.Property(search.show.movie),true)">111</onup>
+            <ondown condition="String.IsEqual(Window.Property(search.show.programme),true)">5103</ondown>
+            <ondown condition="!String.IsEqual(Window.Property(search.show.programme),true) + String.IsEqual(Window.Property(search.show.person),true)">5104</ondown>
+            <ondown condition="!String.IsEqual(Window.Property(search.show.programme),true) + !String.IsEqual(Window.Property(search.show.person),true) + String.IsEqual(Window.Property(search.show.discovery),true)">5105</ondown>
+            <itemlayout width="190" height="310">
+              <control type="image">
+                <left>0</left>
+                <top>0</top>
+                <width>180</width>
+                <height>236</height>
+                <texture colordiffuse="FF252932">diffuse/panel.png</texture>
+              </control>
+              <control type="image">
+                <left>3</left>
+                <top>3</top>
+                <width>174</width>
+                <height>230</height>
+                <texture colordiffuse="FF252932">colors/color_white.png</texture>
+              </control>
+              <control type="image">
+                <left>3</left>
+                <top>3</top>
+                <width>174</width>
+                <height>230</height>
+                <texture background="true" fallback="DefaultVideo.png">$INFO[ListItem.Art(poster)]</texture>
+                <aspectratio>scale</aspectratio>
+              </control>
+              <control type="label">
+                <left>3</left>
+                <top>240</top>
+                <width>174</width>
+                <height>34</height>
+                <font>Reg24</font>
+                <textcolor>FFFFFFFF</textcolor>
+                <label>$INFO[ListItem.Label]</label>
+                <scroll>false</scroll>
+              </control>
+              <control type="label">
+                <left>3</left>
+                <top>274</top>
+                <width>174</width>
+                <height>30</height>
+                <font>Reg20</font>
+                <textcolor>FFAAB4C4</textcolor>
+                <label>$INFO[ListItem.Label2]</label>
+              </control>
+              <control type="image">
+                <left>6</left>
+                <top>6</top>
+                <width>114</width>
+                <height>30</height>
+                <texture colordiffuse="DD101216">colors/color_white.png</texture>
+              </control>
+              <control type="label">
+                <left>8</left>
+                <top>8</top>
+                <width>155</width>
+                <height>28</height>
+                <font>Reg20</font>
+                <textcolor>FFFFFFFF</textcolor>
+                <shadowcolor>FF000000</shadowcolor>
+                <label>$INFO[ListItem.Property(search.badge)]</label>
+              </control>
+            </itemlayout>
+            <focusedlayout width="190" height="310">
+              <control type="image">
+                <left>0</left>
+                <top>0</top>
+                <width>180</width>
+                <height>236</height>
+                <texture colordiffuse="FFFFFFFF">diffuse/panel.png</texture>
+              </control>
+              <control type="image">
+                <left>3</left>
+                <top>3</top>
+                <width>174</width>
+                <height>230</height>
+                <texture colordiffuse="FF252932">colors/color_white.png</texture>
+              </control>
+              <control type="image">
+                <left>3</left>
+                <top>3</top>
+                <width>174</width>
+                <height>230</height>
+                <texture background="true" fallback="DefaultVideo.png">$INFO[ListItem.Art(poster)]</texture>
+                <aspectratio>scale</aspectratio>
+              </control>
+              <control type="label">
+                <left>3</left>
+                <top>240</top>
+                <width>174</width>
+                <height>34</height>
+                <font>Reg24</font>
+                <textcolor>FFFFFFFF</textcolor>
+                <label>$INFO[ListItem.Label]</label>
+                <scroll>true</scroll>
+              </control>
+              <control type="label">
+                <left>3</left>
+                <top>274</top>
+                <width>174</width>
+                <height>30</height>
+                <font>Reg20</font>
+                <textcolor>FFAAB4C4</textcolor>
+                <label>$INFO[ListItem.Label2]</label>
+              </control>
+              <control type="image">
+                <left>6</left>
+                <top>6</top>
+                <width>114</width>
+                <height>30</height>
+                <texture colordiffuse="DD101216">colors/color_white.png</texture>
+              </control>
+              <control type="label">
+                <left>8</left>
+                <top>8</top>
+                <width>155</width>
+                <height>28</height>
+                <font>Reg20</font>
+                <textcolor>FFFFFFFF</textcolor>
+                <shadowcolor>FF000000</shadowcolor>
+                <label>$INFO[ListItem.Property(search.badge)]</label>
+              </control>
+            </focusedlayout>
+          </control>
         </control>
-        <control type="list" id="5101">
-          <top>50</top>
-          <left>0</left>
-          <width>1760</width>
+        <control type="group">
           <height>310</height>
-          <orientation>horizontal</orientation>
-          <scrolltime>160</scrolltime>
-          <preloaditems>3</preloaditems>
-          <onleft>100</onleft>
-          <onright>noop</onright>
-          <onback>104</onback>
-          <onup condition="true">111</onup>
-          <ondown condition="String.IsEqual(Window.Property(search.show.series),true)">5102</ondown>
-          <ondown condition="!String.IsEqual(Window.Property(search.show.series),true) + String.IsEqual(Window.Property(search.show.programme),true)">5103</ondown>
-          <ondown condition="!String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + String.IsEqual(Window.Property(search.show.person),true)">5104</ondown>
-          <ondown condition="!String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + !String.IsEqual(Window.Property(search.show.person),true) + String.IsEqual(Window.Property(search.show.discovery),true)">5105</ondown>
-          <itemlayout width="190" height="310">
-            <control type="image">
-              <left>0</left>
-              <top>0</top>
-              <width>180</width>
-              <height>236</height>
-              <texture colordiffuse="FF252932">diffuse/panel.png</texture>
-            </control>
-            <control type="image">
-              <left>3</left>
-              <top>3</top>
-              <width>174</width>
-              <height>230</height>
-              <texture colordiffuse="FF252932">colors/color_white.png</texture>
-            </control>
-            <control type="image">
-              <left>3</left>
-              <top>3</top>
-              <width>174</width>
-              <height>230</height>
-              <texture background="true" fallback="DefaultVideo.png">$INFO[ListItem.Art(poster)]</texture>
-              <aspectratio>scale</aspectratio>
-            </control>
-            <control type="label">
-              <left>3</left>
-              <top>240</top>
-              <width>174</width>
-              <height>34</height>
-              <font>Reg24</font>
-              <textcolor>FFFFFFFF</textcolor>
-              <label>$INFO[ListItem.Label]</label>
-              <scroll>false</scroll>
-            </control>
-            <control type="label">
-              <left>3</left>
-              <top>274</top>
-              <width>174</width>
-              <height>30</height>
-              <font>Reg20</font>
-              <textcolor>FFAAB4C4</textcolor>
-              <label>$INFO[ListItem.Label2]</label>
-            </control>
-          </itemlayout>
-          <focusedlayout width="190" height="310">
-            <control type="image">
-              <left>0</left>
-              <top>0</top>
-              <width>180</width>
-              <height>236</height>
-              <texture colordiffuse="FFFFFFFF">diffuse/panel.png</texture>
-            </control>
-            <control type="image">
-              <left>3</left>
-              <top>3</top>
-              <width>174</width>
-              <height>230</height>
-              <texture colordiffuse="FF252932">colors/color_white.png</texture>
-            </control>
-            <control type="image">
-              <left>3</left>
-              <top>3</top>
-              <width>174</width>
-              <height>230</height>
-              <texture background="true" fallback="DefaultVideo.png">$INFO[ListItem.Art(poster)]</texture>
-              <aspectratio>scale</aspectratio>
-            </control>
-            <control type="label">
-              <left>3</left>
-              <top>240</top>
-              <width>174</width>
-              <height>34</height>
-              <font>Reg24</font>
-              <textcolor>FFFFFFFF</textcolor>
-              <label>$INFO[ListItem.Label]</label>
-              <scroll>true</scroll>
-            </control>
-            <control type="label">
-              <left>3</left>
-              <top>274</top>
-              <width>174</width>
-              <height>30</height>
-              <font>Reg20</font>
-              <textcolor>FFAAB4C4</textcolor>
-              <label>$INFO[ListItem.Label2]</label>
-            </control>
-          </focusedlayout>
+          <visible>String.IsEqual(Window.Property(search.show.programme),true)</visible>
+          <control type="label">
+            <left>0</left>
+            <top>0</top>
+            <width>1750</width>
+            <height>44</height>
+            <font>Bold28</font>
+            <textcolor>FFFFFFFF</textcolor>
+            <label>En TV · ahora y próximos días [COLOR FF8791A1]($INFO[Window.Property(search.count.programme)])[/COLOR]</label>
+          </control>
+          <control type="list" id="5103">
+            <top>50</top>
+            <left>0</left>
+            <width>1760</width>
+            <height>260</height>
+            <orientation>horizontal</orientation>
+            <scrolltime>160</scrolltime>
+            <preloaditems>3</preloaditems>
+            <onleft>100</onleft>
+            <onright>noop</onright>
+            <onback>104</onback>
+            <onup condition="String.IsEqual(Window.Property(search.show.series),true)">5102</onup>
+            <onup condition="!String.IsEqual(Window.Property(search.show.series),true) + String.IsEqual(Window.Property(search.show.movie),true)">5101</onup>
+            <onup condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true)">111</onup>
+            <ondown condition="String.IsEqual(Window.Property(search.show.person),true)">5104</ondown>
+            <ondown condition="!String.IsEqual(Window.Property(search.show.person),true) + String.IsEqual(Window.Property(search.show.discovery),true)">5105</ondown>
+            <itemlayout width="320" height="260">
+              <control type="image">
+                <left>0</left>
+                <top>0</top>
+                <width>310</width>
+                <height>186</height>
+                <texture colordiffuse="FF252932">diffuse/panel.png</texture>
+              </control>
+              <control type="image">
+                <left>3</left>
+                <top>3</top>
+                <width>304</width>
+                <height>180</height>
+                <texture colordiffuse="FF252932">colors/color_white.png</texture>
+              </control>
+              <control type="image">
+                <left>3</left>
+                <top>3</top>
+                <width>304</width>
+                <height>180</height>
+                <texture background="true" fallback="DefaultVideo.png">$INFO[ListItem.Art(poster)]</texture>
+                <aspectratio>scale</aspectratio>
+              </control>
+              <control type="label">
+                <left>3</left>
+                <top>190</top>
+                <width>304</width>
+                <height>34</height>
+                <font>Reg24</font>
+                <textcolor>FFFFFFFF</textcolor>
+                <label>$INFO[ListItem.Label]</label>
+                <scroll>false</scroll>
+              </control>
+              <control type="label">
+                <left>3</left>
+                <top>224</top>
+                <width>304</width>
+                <height>30</height>
+                <font>Reg20</font>
+                <textcolor>FFAAB4C4</textcolor>
+                <label>$INFO[ListItem.Label2]</label>
+              </control>
+              <control type="image">
+                <left>6</left>
+                <top>6</top>
+                <width>114</width>
+                <height>30</height>
+                <texture colordiffuse="DD101216">colors/color_white.png</texture>
+              </control>
+              <control type="label">
+                <left>8</left>
+                <top>8</top>
+                <width>155</width>
+                <height>28</height>
+                <font>Reg20</font>
+                <textcolor>FFFFFFFF</textcolor>
+                <shadowcolor>FF000000</shadowcolor>
+                <label>$INFO[ListItem.Property(search.badge)]</label>
+              </control>
+            </itemlayout>
+            <focusedlayout width="320" height="260">
+              <control type="image">
+                <left>0</left>
+                <top>0</top>
+                <width>310</width>
+                <height>186</height>
+                <texture colordiffuse="FFFFFFFF">diffuse/panel.png</texture>
+              </control>
+              <control type="image">
+                <left>3</left>
+                <top>3</top>
+                <width>304</width>
+                <height>180</height>
+                <texture colordiffuse="FF252932">colors/color_white.png</texture>
+              </control>
+              <control type="image">
+                <left>3</left>
+                <top>3</top>
+                <width>304</width>
+                <height>180</height>
+                <texture background="true" fallback="DefaultVideo.png">$INFO[ListItem.Art(poster)]</texture>
+                <aspectratio>scale</aspectratio>
+              </control>
+              <control type="label">
+                <left>3</left>
+                <top>190</top>
+                <width>304</width>
+                <height>34</height>
+                <font>Reg24</font>
+                <textcolor>FFFFFFFF</textcolor>
+                <label>$INFO[ListItem.Label]</label>
+                <scroll>true</scroll>
+              </control>
+              <control type="label">
+                <left>3</left>
+                <top>224</top>
+                <width>304</width>
+                <height>30</height>
+                <font>Reg20</font>
+                <textcolor>FFAAB4C4</textcolor>
+                <label>$INFO[ListItem.Label2]</label>
+              </control>
+              <control type="image">
+                <left>6</left>
+                <top>6</top>
+                <width>114</width>
+                <height>30</height>
+                <texture colordiffuse="DD101216">colors/color_white.png</texture>
+              </control>
+              <control type="label">
+                <left>8</left>
+                <top>8</top>
+                <width>155</width>
+                <height>28</height>
+                <font>Reg20</font>
+                <textcolor>FFFFFFFF</textcolor>
+                <shadowcolor>FF000000</shadowcolor>
+                <label>$INFO[ListItem.Property(search.badge)]</label>
+              </control>
+            </focusedlayout>
+          </control>
+        </control>
+        <control type="group">
+          <height>360</height>
+          <visible>String.IsEqual(Window.Property(search.show.person),true)</visible>
+          <control type="label">
+            <left>0</left>
+            <top>0</top>
+            <width>1750</width>
+            <height>44</height>
+            <font>Bold28</font>
+            <textcolor>FFFFFFFF</textcolor>
+            <label>Personas · actores y creadores [COLOR FF8791A1]($INFO[Window.Property(search.count.person)])[/COLOR]</label>
+          </control>
+          <control type="list" id="5104">
+            <top>50</top>
+            <left>0</left>
+            <width>1760</width>
+            <height>310</height>
+            <orientation>horizontal</orientation>
+            <scrolltime>160</scrolltime>
+            <preloaditems>3</preloaditems>
+            <onleft>100</onleft>
+            <onright>noop</onright>
+            <onback>104</onback>
+            <onup condition="String.IsEqual(Window.Property(search.show.programme),true)">5103</onup>
+            <onup condition="!String.IsEqual(Window.Property(search.show.programme),true) + String.IsEqual(Window.Property(search.show.series),true)">5102</onup>
+            <onup condition="!String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + String.IsEqual(Window.Property(search.show.movie),true)">5101</onup>
+            <onup condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true)">111</onup>
+            <ondown condition="String.IsEqual(Window.Property(search.show.discovery),true)">5105</ondown>
+            <itemlayout width="190" height="310">
+              <control type="image">
+                <left>0</left>
+                <top>0</top>
+                <width>180</width>
+                <height>236</height>
+                <texture colordiffuse="FF252932">diffuse/panel.png</texture>
+              </control>
+              <control type="image">
+                <left>3</left>
+                <top>3</top>
+                <width>174</width>
+                <height>230</height>
+                <texture colordiffuse="FF252932">colors/color_white.png</texture>
+              </control>
+              <control type="image">
+                <left>3</left>
+                <top>3</top>
+                <width>174</width>
+                <height>230</height>
+                <texture background="true" fallback="DefaultVideo.png">$INFO[ListItem.Art(poster)]</texture>
+                <aspectratio>scale</aspectratio>
+              </control>
+              <control type="label">
+                <left>3</left>
+                <top>240</top>
+                <width>174</width>
+                <height>34</height>
+                <font>Reg24</font>
+                <textcolor>FFFFFFFF</textcolor>
+                <label>$INFO[ListItem.Label]</label>
+                <scroll>false</scroll>
+              </control>
+              <control type="label">
+                <left>3</left>
+                <top>274</top>
+                <width>174</width>
+                <height>30</height>
+                <font>Reg20</font>
+                <textcolor>FFAAB4C4</textcolor>
+                <label>$INFO[ListItem.Label2]</label>
+              </control>
+              <control type="image">
+                <left>6</left>
+                <top>6</top>
+                <width>114</width>
+                <height>30</height>
+                <texture colordiffuse="DD101216">colors/color_white.png</texture>
+              </control>
+              <control type="label">
+                <left>8</left>
+                <top>8</top>
+                <width>155</width>
+                <height>28</height>
+                <font>Reg20</font>
+                <textcolor>FFFFFFFF</textcolor>
+                <shadowcolor>FF000000</shadowcolor>
+                <label>$INFO[ListItem.Property(search.badge)]</label>
+              </control>
+            </itemlayout>
+            <focusedlayout width="190" height="310">
+              <control type="image">
+                <left>0</left>
+                <top>0</top>
+                <width>180</width>
+                <height>236</height>
+                <texture colordiffuse="FFFFFFFF">diffuse/panel.png</texture>
+              </control>
+              <control type="image">
+                <left>3</left>
+                <top>3</top>
+                <width>174</width>
+                <height>230</height>
+                <texture colordiffuse="FF252932">colors/color_white.png</texture>
+              </control>
+              <control type="image">
+                <left>3</left>
+                <top>3</top>
+                <width>174</width>
+                <height>230</height>
+                <texture background="true" fallback="DefaultVideo.png">$INFO[ListItem.Art(poster)]</texture>
+                <aspectratio>scale</aspectratio>
+              </control>
+              <control type="label">
+                <left>3</left>
+                <top>240</top>
+                <width>174</width>
+                <height>34</height>
+                <font>Reg24</font>
+                <textcolor>FFFFFFFF</textcolor>
+                <label>$INFO[ListItem.Label]</label>
+                <scroll>true</scroll>
+              </control>
+              <control type="label">
+                <left>3</left>
+                <top>274</top>
+                <width>174</width>
+                <height>30</height>
+                <font>Reg20</font>
+                <textcolor>FFAAB4C4</textcolor>
+                <label>$INFO[ListItem.Label2]</label>
+              </control>
+              <control type="image">
+                <left>6</left>
+                <top>6</top>
+                <width>114</width>
+                <height>30</height>
+                <texture colordiffuse="DD101216">colors/color_white.png</texture>
+              </control>
+              <control type="label">
+                <left>8</left>
+                <top>8</top>
+                <width>155</width>
+                <height>28</height>
+                <font>Reg20</font>
+                <textcolor>FFFFFFFF</textcolor>
+                <shadowcolor>FF000000</shadowcolor>
+                <label>$INFO[ListItem.Property(search.badge)]</label>
+              </control>
+            </focusedlayout>
+          </control>
+        </control>
+        <control type="group">
+          <height>360</height>
+          <visible>String.IsEqual(Window.Property(search.show.discovery),true)</visible>
+          <control type="label">
+            <left>0</left>
+            <top>0</top>
+            <width>1750</width>
+            <height>44</height>
+            <font>Bold28</font>
+            <textcolor>FFFFFFFF</textcolor>
+            <label>Más títulos · TMDb · disponibilidad sin confirmar [COLOR FF8791A1]($INFO[Window.Property(search.count.discovery)])[/COLOR]</label>
+          </control>
+          <control type="list" id="5105">
+            <top>50</top>
+            <left>0</left>
+            <width>1760</width>
+            <height>310</height>
+            <orientation>horizontal</orientation>
+            <scrolltime>160</scrolltime>
+            <preloaditems>3</preloaditems>
+            <onleft>100</onleft>
+            <onright>noop</onright>
+            <onback>104</onback>
+            <onup condition="String.IsEqual(Window.Property(search.show.person),true)">5104</onup>
+            <onup condition="!String.IsEqual(Window.Property(search.show.person),true) + String.IsEqual(Window.Property(search.show.programme),true)">5103</onup>
+            <onup condition="!String.IsEqual(Window.Property(search.show.programme),true) + !String.IsEqual(Window.Property(search.show.person),true) + String.IsEqual(Window.Property(search.show.series),true)">5102</onup>
+            <onup condition="!String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + !String.IsEqual(Window.Property(search.show.person),true) + String.IsEqual(Window.Property(search.show.movie),true)">5101</onup>
+            <onup condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + !String.IsEqual(Window.Property(search.show.person),true)">111</onup>
+            <itemlayout width="190" height="310">
+              <control type="image">
+                <left>0</left>
+                <top>0</top>
+                <width>180</width>
+                <height>236</height>
+                <texture colordiffuse="FF252932">diffuse/panel.png</texture>
+              </control>
+              <control type="image">
+                <left>3</left>
+                <top>3</top>
+                <width>174</width>
+                <height>230</height>
+                <texture colordiffuse="FF252932">colors/color_white.png</texture>
+              </control>
+              <control type="image">
+                <left>3</left>
+                <top>3</top>
+                <width>174</width>
+                <height>230</height>
+                <texture background="true" fallback="DefaultVideo.png">$INFO[ListItem.Art(poster)]</texture>
+                <aspectratio>scale</aspectratio>
+              </control>
+              <control type="label">
+                <left>3</left>
+                <top>240</top>
+                <width>174</width>
+                <height>34</height>
+                <font>Reg24</font>
+                <textcolor>FFFFFFFF</textcolor>
+                <label>$INFO[ListItem.Label]</label>
+                <scroll>false</scroll>
+              </control>
+              <control type="label">
+                <left>3</left>
+                <top>274</top>
+                <width>174</width>
+                <height>30</height>
+                <font>Reg20</font>
+                <textcolor>FFAAB4C4</textcolor>
+                <label>$INFO[ListItem.Label2]</label>
+              </control>
+              <control type="image">
+                <left>6</left>
+                <top>6</top>
+                <width>114</width>
+                <height>30</height>
+                <texture colordiffuse="DD101216">colors/color_white.png</texture>
+              </control>
+              <control type="label">
+                <left>8</left>
+                <top>8</top>
+                <width>155</width>
+                <height>28</height>
+                <font>Reg20</font>
+                <textcolor>FFFFFFFF</textcolor>
+                <shadowcolor>FF000000</shadowcolor>
+                <label>$INFO[ListItem.Property(search.badge)]</label>
+              </control>
+            </itemlayout>
+            <focusedlayout width="190" height="310">
+              <control type="image">
+                <left>0</left>
+                <top>0</top>
+                <width>180</width>
+                <height>236</height>
+                <texture colordiffuse="FFFFFFFF">diffuse/panel.png</texture>
+              </control>
+              <control type="image">
+                <left>3</left>
+                <top>3</top>
+                <width>174</width>
+                <height>230</height>
+                <texture colordiffuse="FF252932">colors/color_white.png</texture>
+              </control>
+              <control type="image">
+                <left>3</left>
+                <top>3</top>
+                <width>174</width>
+                <height>230</height>
+                <texture background="true" fallback="DefaultVideo.png">$INFO[ListItem.Art(poster)]</texture>
+                <aspectratio>scale</aspectratio>
+              </control>
+              <control type="label">
+                <left>3</left>
+                <top>240</top>
+                <width>174</width>
+                <height>34</height>
+                <font>Reg24</font>
+                <textcolor>FFFFFFFF</textcolor>
+                <label>$INFO[ListItem.Label]</label>
+                <scroll>true</scroll>
+              </control>
+              <control type="label">
+                <left>3</left>
+                <top>274</top>
+                <width>174</width>
+                <height>30</height>
+                <font>Reg20</font>
+                <textcolor>FFAAB4C4</textcolor>
+                <label>$INFO[ListItem.Label2]</label>
+              </control>
+              <control type="image">
+                <left>6</left>
+                <top>6</top>
+                <width>114</width>
+                <height>30</height>
+                <texture colordiffuse="DD101216">colors/color_white.png</texture>
+              </control>
+              <control type="label">
+                <left>8</left>
+                <top>8</top>
+                <width>155</width>
+                <height>28</height>
+                <font>Reg20</font>
+                <textcolor>FFFFFFFF</textcolor>
+                <shadowcolor>FF000000</shadowcolor>
+                <label>$INFO[ListItem.Property(search.badge)]</label>
+              </control>
+            </focusedlayout>
+          </control>
         </control>
       </control>
-      <control type="group">
-        <height>360</height>
-        <visible>String.IsEqual(Window.Property(search.show.series),true)</visible>
-        <control type="label">
-          <left>0</left>
-          <top>0</top>
-          <width>1750</width>
-          <height>44</height>
-          <font>Bold28</font>
-          <textcolor>FFFFFFFF</textcolor>
-          <label>Series · en tu catálogo [COLOR FF8791A1]($INFO[Window.Property(search.count.series)])[/COLOR]</label>
-        </control>
-        <control type="list" id="5102">
-          <top>50</top>
-          <left>0</left>
-          <width>1760</width>
-          <height>310</height>
-          <orientation>horizontal</orientation>
-          <scrolltime>160</scrolltime>
-          <preloaditems>3</preloaditems>
-          <onleft>100</onleft>
-          <onright>noop</onright>
-          <onback>104</onback>
-          <onup condition="String.IsEqual(Window.Property(search.show.movie),true)">5101</onup>
-          <onup condition="!String.IsEqual(Window.Property(search.show.movie),true)">111</onup>
-          <ondown condition="String.IsEqual(Window.Property(search.show.programme),true)">5103</ondown>
-          <ondown condition="!String.IsEqual(Window.Property(search.show.programme),true) + String.IsEqual(Window.Property(search.show.person),true)">5104</ondown>
-          <ondown condition="!String.IsEqual(Window.Property(search.show.programme),true) + !String.IsEqual(Window.Property(search.show.person),true) + String.IsEqual(Window.Property(search.show.discovery),true)">5105</ondown>
-          <itemlayout width="190" height="310">
-            <control type="image">
-              <left>0</left>
-              <top>0</top>
-              <width>180</width>
-              <height>236</height>
-              <texture colordiffuse="FF252932">diffuse/panel.png</texture>
-            </control>
-            <control type="image">
-              <left>3</left>
-              <top>3</top>
-              <width>174</width>
-              <height>230</height>
-              <texture colordiffuse="FF252932">colors/color_white.png</texture>
-            </control>
-            <control type="image">
-              <left>3</left>
-              <top>3</top>
-              <width>174</width>
-              <height>230</height>
-              <texture background="true" fallback="DefaultVideo.png">$INFO[ListItem.Art(poster)]</texture>
-              <aspectratio>scale</aspectratio>
-            </control>
-            <control type="label">
-              <left>3</left>
-              <top>240</top>
-              <width>174</width>
-              <height>34</height>
-              <font>Reg24</font>
-              <textcolor>FFFFFFFF</textcolor>
-              <label>$INFO[ListItem.Label]</label>
-              <scroll>false</scroll>
-            </control>
-            <control type="label">
-              <left>3</left>
-              <top>274</top>
-              <width>174</width>
-              <height>30</height>
-              <font>Reg20</font>
-              <textcolor>FFAAB4C4</textcolor>
-              <label>$INFO[ListItem.Label2]</label>
-            </control>
-          </itemlayout>
-          <focusedlayout width="190" height="310">
-            <control type="image">
-              <left>0</left>
-              <top>0</top>
-              <width>180</width>
-              <height>236</height>
-              <texture colordiffuse="FFFFFFFF">diffuse/panel.png</texture>
-            </control>
-            <control type="image">
-              <left>3</left>
-              <top>3</top>
-              <width>174</width>
-              <height>230</height>
-              <texture colordiffuse="FF252932">colors/color_white.png</texture>
-            </control>
-            <control type="image">
-              <left>3</left>
-              <top>3</top>
-              <width>174</width>
-              <height>230</height>
-              <texture background="true" fallback="DefaultVideo.png">$INFO[ListItem.Art(poster)]</texture>
-              <aspectratio>scale</aspectratio>
-            </control>
-            <control type="label">
-              <left>3</left>
-              <top>240</top>
-              <width>174</width>
-              <height>34</height>
-              <font>Reg24</font>
-              <textcolor>FFFFFFFF</textcolor>
-              <label>$INFO[ListItem.Label]</label>
-              <scroll>true</scroll>
-            </control>
-            <control type="label">
-              <left>3</left>
-              <top>274</top>
-              <width>174</width>
-              <height>30</height>
-              <font>Reg20</font>
-              <textcolor>FFAAB4C4</textcolor>
-              <label>$INFO[ListItem.Label2]</label>
-            </control>
-          </focusedlayout>
-        </control>
+      <control type="label">
+        <left>80</left>
+        <top>1028</top>
+        <width>1760</width>
+        <height>36</height>
+        <font>Reg20</font>
+        <textcolor>FF8791A1</textcolor>
+        <label>$INFO[Window.Property(search.remote)]   $INFO[Window.Property(search.epg)]</label>
       </control>
-      <control type="group">
-        <height>310</height>
-        <visible>String.IsEqual(Window.Property(search.show.programme),true)</visible>
-        <control type="label">
-          <left>0</left>
-          <top>0</top>
-          <width>1750</width>
-          <height>44</height>
-          <font>Bold28</font>
-          <textcolor>FFFFFFFF</textcolor>
-          <label>En TV · ahora y próximos días [COLOR FF8791A1]($INFO[Window.Property(search.count.programme)])[/COLOR]</label>
-        </control>
-        <control type="list" id="5103">
-          <top>50</top>
-          <left>0</left>
-          <width>1760</width>
-          <height>260</height>
-          <orientation>horizontal</orientation>
-          <scrolltime>160</scrolltime>
-          <preloaditems>3</preloaditems>
-          <onleft>100</onleft>
-          <onright>noop</onright>
-          <onback>104</onback>
-          <onup condition="String.IsEqual(Window.Property(search.show.series),true)">5102</onup>
-          <onup condition="!String.IsEqual(Window.Property(search.show.series),true) + String.IsEqual(Window.Property(search.show.movie),true)">5101</onup>
-          <onup condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true)">111</onup>
-          <ondown condition="String.IsEqual(Window.Property(search.show.person),true)">5104</ondown>
-          <ondown condition="!String.IsEqual(Window.Property(search.show.person),true) + String.IsEqual(Window.Property(search.show.discovery),true)">5105</ondown>
-          <itemlayout width="320" height="260">
-            <control type="image">
-              <left>0</left>
-              <top>0</top>
-              <width>310</width>
-              <height>186</height>
-              <texture colordiffuse="FF252932">diffuse/panel.png</texture>
-            </control>
-            <control type="image">
-              <left>3</left>
-              <top>3</top>
-              <width>304</width>
-              <height>180</height>
-              <texture colordiffuse="FF252932">colors/color_white.png</texture>
-            </control>
-            <control type="image">
-              <left>3</left>
-              <top>3</top>
-              <width>304</width>
-              <height>180</height>
-              <texture background="true" fallback="DefaultVideo.png">$INFO[ListItem.Art(poster)]</texture>
-              <aspectratio>scale</aspectratio>
-            </control>
-            <control type="label">
-              <left>3</left>
-              <top>190</top>
-              <width>304</width>
-              <height>34</height>
-              <font>Reg24</font>
-              <textcolor>FFFFFFFF</textcolor>
-              <label>$INFO[ListItem.Label]</label>
-              <scroll>false</scroll>
-            </control>
-            <control type="label">
-              <left>3</left>
-              <top>224</top>
-              <width>304</width>
-              <height>30</height>
-              <font>Reg20</font>
-              <textcolor>FFAAB4C4</textcolor>
-              <label>$INFO[ListItem.Label2]</label>
-            </control>
-          </itemlayout>
-          <focusedlayout width="320" height="260">
-            <control type="image">
-              <left>0</left>
-              <top>0</top>
-              <width>310</width>
-              <height>186</height>
-              <texture colordiffuse="FFFFFFFF">diffuse/panel.png</texture>
-            </control>
-            <control type="image">
-              <left>3</left>
-              <top>3</top>
-              <width>304</width>
-              <height>180</height>
-              <texture colordiffuse="FF252932">colors/color_white.png</texture>
-            </control>
-            <control type="image">
-              <left>3</left>
-              <top>3</top>
-              <width>304</width>
-              <height>180</height>
-              <texture background="true" fallback="DefaultVideo.png">$INFO[ListItem.Art(poster)]</texture>
-              <aspectratio>scale</aspectratio>
-            </control>
-            <control type="label">
-              <left>3</left>
-              <top>190</top>
-              <width>304</width>
-              <height>34</height>
-              <font>Reg24</font>
-              <textcolor>FFFFFFFF</textcolor>
-              <label>$INFO[ListItem.Label]</label>
-              <scroll>true</scroll>
-            </control>
-            <control type="label">
-              <left>3</left>
-              <top>224</top>
-              <width>304</width>
-              <height>30</height>
-              <font>Reg20</font>
-              <textcolor>FFAAB4C4</textcolor>
-              <label>$INFO[ListItem.Label2]</label>
-            </control>
-          </focusedlayout>
-        </control>
-      </control>
-      <control type="group">
-        <height>360</height>
-        <visible>String.IsEqual(Window.Property(search.show.person),true)</visible>
-        <control type="label">
-          <left>0</left>
-          <top>0</top>
-          <width>1750</width>
-          <height>44</height>
-          <font>Bold28</font>
-          <textcolor>FFFFFFFF</textcolor>
-          <label>Personas · actores y creadores [COLOR FF8791A1]($INFO[Window.Property(search.count.person)])[/COLOR]</label>
-        </control>
-        <control type="list" id="5104">
-          <top>50</top>
-          <left>0</left>
-          <width>1760</width>
-          <height>310</height>
-          <orientation>horizontal</orientation>
-          <scrolltime>160</scrolltime>
-          <preloaditems>3</preloaditems>
-          <onleft>100</onleft>
-          <onright>noop</onright>
-          <onback>104</onback>
-          <onup condition="String.IsEqual(Window.Property(search.show.programme),true)">5103</onup>
-          <onup condition="!String.IsEqual(Window.Property(search.show.programme),true) + String.IsEqual(Window.Property(search.show.series),true)">5102</onup>
-          <onup condition="!String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + String.IsEqual(Window.Property(search.show.movie),true)">5101</onup>
-          <onup condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true)">111</onup>
-          <ondown condition="String.IsEqual(Window.Property(search.show.discovery),true)">5105</ondown>
-          <itemlayout width="190" height="310">
-            <control type="image">
-              <left>0</left>
-              <top>0</top>
-              <width>180</width>
-              <height>236</height>
-              <texture colordiffuse="FF252932">diffuse/panel.png</texture>
-            </control>
-            <control type="image">
-              <left>3</left>
-              <top>3</top>
-              <width>174</width>
-              <height>230</height>
-              <texture colordiffuse="FF252932">colors/color_white.png</texture>
-            </control>
-            <control type="image">
-              <left>3</left>
-              <top>3</top>
-              <width>174</width>
-              <height>230</height>
-              <texture background="true" fallback="DefaultVideo.png">$INFO[ListItem.Art(poster)]</texture>
-              <aspectratio>scale</aspectratio>
-            </control>
-            <control type="label">
-              <left>3</left>
-              <top>240</top>
-              <width>174</width>
-              <height>34</height>
-              <font>Reg24</font>
-              <textcolor>FFFFFFFF</textcolor>
-              <label>$INFO[ListItem.Label]</label>
-              <scroll>false</scroll>
-            </control>
-            <control type="label">
-              <left>3</left>
-              <top>274</top>
-              <width>174</width>
-              <height>30</height>
-              <font>Reg20</font>
-              <textcolor>FFAAB4C4</textcolor>
-              <label>$INFO[ListItem.Label2]</label>
-            </control>
-          </itemlayout>
-          <focusedlayout width="190" height="310">
-            <control type="image">
-              <left>0</left>
-              <top>0</top>
-              <width>180</width>
-              <height>236</height>
-              <texture colordiffuse="FFFFFFFF">diffuse/panel.png</texture>
-            </control>
-            <control type="image">
-              <left>3</left>
-              <top>3</top>
-              <width>174</width>
-              <height>230</height>
-              <texture colordiffuse="FF252932">colors/color_white.png</texture>
-            </control>
-            <control type="image">
-              <left>3</left>
-              <top>3</top>
-              <width>174</width>
-              <height>230</height>
-              <texture background="true" fallback="DefaultVideo.png">$INFO[ListItem.Art(poster)]</texture>
-              <aspectratio>scale</aspectratio>
-            </control>
-            <control type="label">
-              <left>3</left>
-              <top>240</top>
-              <width>174</width>
-              <height>34</height>
-              <font>Reg24</font>
-              <textcolor>FFFFFFFF</textcolor>
-              <label>$INFO[ListItem.Label]</label>
-              <scroll>true</scroll>
-            </control>
-            <control type="label">
-              <left>3</left>
-              <top>274</top>
-              <width>174</width>
-              <height>30</height>
-              <font>Reg20</font>
-              <textcolor>FFAAB4C4</textcolor>
-              <label>$INFO[ListItem.Label2]</label>
-            </control>
-          </focusedlayout>
-        </control>
-      </control>
-      <control type="group">
-        <height>360</height>
-        <visible>String.IsEqual(Window.Property(search.show.discovery),true)</visible>
-        <control type="label">
-          <left>0</left>
-          <top>0</top>
-          <width>1750</width>
-          <height>44</height>
-          <font>Bold28</font>
-          <textcolor>FFFFFFFF</textcolor>
-          <label>Más títulos · TMDb · disponibilidad sin confirmar [COLOR FF8791A1]($INFO[Window.Property(search.count.discovery)])[/COLOR]</label>
-        </control>
-        <control type="list" id="5105">
-          <top>50</top>
-          <left>0</left>
-          <width>1760</width>
-          <height>310</height>
-          <orientation>horizontal</orientation>
-          <scrolltime>160</scrolltime>
-          <preloaditems>3</preloaditems>
-          <onleft>100</onleft>
-          <onright>noop</onright>
-          <onback>104</onback>
-          <onup condition="String.IsEqual(Window.Property(search.show.person),true)">5104</onup>
-          <onup condition="!String.IsEqual(Window.Property(search.show.person),true) + String.IsEqual(Window.Property(search.show.programme),true)">5103</onup>
-          <onup condition="!String.IsEqual(Window.Property(search.show.programme),true) + !String.IsEqual(Window.Property(search.show.person),true) + String.IsEqual(Window.Property(search.show.series),true)">5102</onup>
-          <onup condition="!String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + !String.IsEqual(Window.Property(search.show.person),true) + String.IsEqual(Window.Property(search.show.movie),true)">5101</onup>
-          <onup condition="!String.IsEqual(Window.Property(search.show.movie),true) + !String.IsEqual(Window.Property(search.show.series),true) + !String.IsEqual(Window.Property(search.show.programme),true) + !String.IsEqual(Window.Property(search.show.person),true)">111</onup>
-          <itemlayout width="190" height="310">
-            <control type="image">
-              <left>0</left>
-              <top>0</top>
-              <width>180</width>
-              <height>236</height>
-              <texture colordiffuse="FF252932">diffuse/panel.png</texture>
-            </control>
-            <control type="image">
-              <left>3</left>
-              <top>3</top>
-              <width>174</width>
-              <height>230</height>
-              <texture colordiffuse="FF252932">colors/color_white.png</texture>
-            </control>
-            <control type="image">
-              <left>3</left>
-              <top>3</top>
-              <width>174</width>
-              <height>230</height>
-              <texture background="true" fallback="DefaultVideo.png">$INFO[ListItem.Art(poster)]</texture>
-              <aspectratio>scale</aspectratio>
-            </control>
-            <control type="label">
-              <left>3</left>
-              <top>240</top>
-              <width>174</width>
-              <height>34</height>
-              <font>Reg24</font>
-              <textcolor>FFFFFFFF</textcolor>
-              <label>$INFO[ListItem.Label]</label>
-              <scroll>false</scroll>
-            </control>
-            <control type="label">
-              <left>3</left>
-              <top>274</top>
-              <width>174</width>
-              <height>30</height>
-              <font>Reg20</font>
-              <textcolor>FFAAB4C4</textcolor>
-              <label>$INFO[ListItem.Label2]</label>
-            </control>
-          </itemlayout>
-          <focusedlayout width="190" height="310">
-            <control type="image">
-              <left>0</left>
-              <top>0</top>
-              <width>180</width>
-              <height>236</height>
-              <texture colordiffuse="FFFFFFFF">diffuse/panel.png</texture>
-            </control>
-            <control type="image">
-              <left>3</left>
-              <top>3</top>
-              <width>174</width>
-              <height>230</height>
-              <texture colordiffuse="FF252932">colors/color_white.png</texture>
-            </control>
-            <control type="image">
-              <left>3</left>
-              <top>3</top>
-              <width>174</width>
-              <height>230</height>
-              <texture background="true" fallback="DefaultVideo.png">$INFO[ListItem.Art(poster)]</texture>
-              <aspectratio>scale</aspectratio>
-            </control>
-            <control type="label">
-              <left>3</left>
-              <top>240</top>
-              <width>174</width>
-              <height>34</height>
-              <font>Reg24</font>
-              <textcolor>FFFFFFFF</textcolor>
-              <label>$INFO[ListItem.Label]</label>
-              <scroll>true</scroll>
-            </control>
-            <control type="label">
-              <left>3</left>
-              <top>274</top>
-              <width>174</width>
-              <height>30</height>
-              <font>Reg20</font>
-              <textcolor>FFAAB4C4</textcolor>
-              <label>$INFO[ListItem.Label2]</label>
-            </control>
-          </focusedlayout>
-        </control>
-      </control>
-    </control>
-    <control type="label">
-      <left>80</left>
-      <top>1028</top>
-      <width>1760</width>
-      <height>36</height>
-      <font>Reg20</font>
-      <textcolor>FF8791A1</textcolor>
-      <label>$INFO[Window.Property(search.remote)]   $INFO[Window.Property(search.epg)]</label>
     </control>
     <control type="group">
       <visible>String.IsEqual(Window.Property(search.detail),true)</visible>
@@ -1024,7 +1197,7 @@
         <top>0</top>
         <width>1920</width>
         <height>1080</height>
-        <texture colordiffuse="F7101216">colors/color_white.png</texture>
+        <texture colordiffuse="FF101216">colors/color_white.png</texture>
       </control>
       <control type="image">
         <left>210</left>
@@ -1063,15 +1236,18 @@
         <left>680</left>
         <top>395</top>
         <width>960</width>
-        <height>350</height>
+        <height>300</height>
         <font>Reg28</font>
         <textcolor>FFE4E7EA</textcolor>
         <label>$INFO[Window.Property(search.detail.plot)]</label>
         <onup>702</onup>
-        <ondown>702</ondown>
+        <ondown condition="String.IsEqual(Window.Property(search.detail.seasons),true)">707</ondown>
+        <ondown condition="!String.IsEqual(Window.Property(search.detail.seasons),true) + String.IsEqual(Window.Property(search.detail.play),true)">701</ondown>
+        <ondown condition="!String.IsEqual(Window.Property(search.detail.play),true) + String.IsEqual(Window.Property(search.detail.related),true)">704</ondown>
+        <ondown condition="!String.IsEqual(Window.Property(search.detail.play),true) + !String.IsEqual(Window.Property(search.detail.related),true)">702</ondown>
       </control>
       <control type="group">
-        <visible>String.IsEqual(Window.Property(search.detail.live),true)</visible>
+        <visible>String.IsEqual(Window.Property(search.detail.live),true) | String.IsEqual(Window.Property(search.detail.play),true)</visible>
         <control type="button" id="701">
           <left>680</left>
           <top>805</top>
@@ -1080,21 +1256,79 @@
           <align>center</align>
           <aligny>center</aligny>
           <textoffsetx>0</textoffsetx>
-          <label>Ver canal en directo</label>
+          <label>$INFO[Window.Property(search.detail.action)]</label>
           <font>Reg26</font>
           <textcolor>FFE4E7EA</textcolor>
           <focusedcolor>FF101216</focusedcolor>
           <texturefocus colordiffuse="FFFFFFFF" border="12">diffuse/panel.png</texturefocus>
           <texturenofocus colordiffuse="FF25282E" border="12">diffuse/panel.png</texturenofocus>
-          <onup>703</onup>
+          <onup condition="String.IsEqual(Window.Property(search.detail.seasons),true)">707</onup>
+          <onup condition="!String.IsEqual(Window.Property(search.detail.seasons),true)">703</onup>
           <ondown>702</ondown>
           <onleft>702</onleft>
-          <onright>702</onright>
+          <onright>704</onright>
         </control>
+      </control>
+      <control type="button" id="707">
+        <left>680</left>
+        <top>720</top>
+        <width>960</width>
+        <height>62</height>
+        <visible>String.IsEqual(Window.Property(search.detail.seasons),true)</visible>
+        <label>Explorar temporadas y episodios</label>
+        <font>Reg26</font>
+        <align>center</align>
+        <textoffsetx>0</textoffsetx>
+        <textcolor>FFE4E7EA</textcolor>
+        <focusedcolor>FF101216</focusedcolor>
+        <texturefocus colordiffuse="FFFFFFFF" border="12">diffuse/panel.png</texturefocus>
+        <texturenofocus colordiffuse="FF25282E" border="12">diffuse/panel.png</texturenofocus>
+        <onup>703</onup>
+        <ondown>701</ondown>
+        <onleft>702</onleft>
+        <onright>704</onright>
+      </control>
+      <control type="button" id="704">
+        <left>1080</left>
+        <top>805</top>
+        <width>270</width>
+        <height>62</height>
+        <visible>String.IsEqual(Window.Property(search.detail.related),true)</visible>
+        <label>Reparto / equipo</label>
+        <font>Reg24</font>
+        <align>center</align>
+        <textoffsetx>0</textoffsetx>
+        <textcolor>FFE4E7EA</textcolor>
+        <focusedcolor>FF101216</focusedcolor>
+        <texturefocus colordiffuse="FFFFFFFF" border="12">diffuse/panel.png</texturefocus>
+        <texturenofocus colordiffuse="FF25282E" border="12">diffuse/panel.png</texturenofocus>
+        <onup>703</onup>
+        <ondown>702</ondown>
+        <onleft>701</onleft>
+        <onright>705</onright>
+      </control>
+      <control type="button" id="705">
+        <left>1370</left>
+        <top>805</top>
+        <width>270</width>
+        <height>62</height>
+        <visible>String.IsEqual(Window.Property(search.detail.related),true)</visible>
+        <label>Relacionadas</label>
+        <font>Reg24</font>
+        <align>center</align>
+        <textoffsetx>0</textoffsetx>
+        <textcolor>FFE4E7EA</textcolor>
+        <focusedcolor>FF101216</focusedcolor>
+        <texturefocus colordiffuse="FFFFFFFF" border="12">diffuse/panel.png</texturefocus>
+        <texturenofocus colordiffuse="FF25282E" border="12">diffuse/panel.png</texturenofocus>
+        <onup>703</onup>
+        <ondown>702</ondown>
+        <onleft>704</onleft>
+        <onright>702</onright>
       </control>
       <control type="button" id="702">
         <left>1100</left>
-        <top>805</top>
+        <top>880</top>
         <width>360</width>
         <height>62</height>
         <align>center</align>
@@ -1108,7 +1342,9 @@
         <texturenofocus colordiffuse="FF25282E" border="12">diffuse/panel.png</texturenofocus>
         <onup>703</onup>
         <ondown>703</ondown>
-        <onleft>701</onleft>
+        <onleft condition="String.IsEqual(Window.Property(search.detail.related),true)">705</onleft>
+        <onleft condition="!String.IsEqual(Window.Property(search.detail.related),true) + [String.IsEqual(Window.Property(search.detail.play),true) | String.IsEqual(Window.Property(search.detail.live),true)]">701</onleft>
+        <onleft condition="!String.IsEqual(Window.Property(search.detail.related),true) + !String.IsEqual(Window.Property(search.detail.play),true) + !String.IsEqual(Window.Property(search.detail.live),true)">703</onleft>
         <onright>703</onright>
       </control>
     </control>

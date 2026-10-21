@@ -1,6 +1,6 @@
 # AcTweeteR Smart Search candidate
 
-## Candidate: service 0.4.46 / skin 1.2.30~beta3
+## Candidate: service 0.4.47 / skin 1.2.30~beta4
 
 Smart Search replaces window 1109 with a compatible launcher and a native
 Kodi search window: live local title matching, movies/series/EPG/person rows,
@@ -10,7 +10,7 @@ Skin Shortcuts. Existing XStream and Testing repository packages are reused.
 
 Candidate packages must be installed through the official Testing feed after
 review, not copied into a profile. No feed has been changed by this work.
-See `docs/development/SMART_SEARCH_2026-10-21.md` at repository root for runtime
+See `docs/development/SMART_SEARCH_2_0_2026-10-21.md` at repository root for runtime
 evidence, keyboard limitations, checksums and remaining acceptance gates.
 
 ## Previous unified candidate

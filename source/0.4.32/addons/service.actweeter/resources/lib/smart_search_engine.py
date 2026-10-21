@@ -38,6 +38,22 @@ def title_words(title, year):
                  not (len(tokens) > 1 and str(year)[:4] == t))
 
 
+def unique_rows(rows):
+    """Collapse confirmed identities or same-title/year editions, never unknown remakes."""
+    output, seen = [], set()
+    for row in rows:
+        if row.get("tmdb_id"):
+            key = row["kind"], "tmdb", str(row["tmdb_id"]), bool(row.get("available"))
+        elif row.get("year") and row["kind"] in ("movie", "series"):
+            key = row["kind"], title_words(row["title"], row["year"]), str(row["year"])[:4]
+        else:
+            key = row["kind"], str(row["id"])
+        if key not in seen:
+            output.append(row)
+            seen.add(key)
+    return output
+
+
 def trigrams(value):
     return {value[i:i + 3] for i in range(max(1, len(value) - 2))}
 
@@ -70,6 +86,13 @@ class CatalogSearch:
         self.rows, self.inverted, self.grams = [], defaultdict(set), defaultdict(set)
         self.signature = None
         self.vocabulary = []
+
+    def fork(self):
+        """Share a completed immutable title snapshot; refresh replaces, never edits it."""
+        view = CatalogSearch(self.path, self.profile)
+        view.rows, view.inverted, view.grams = self.rows, self.inverted, self.grams
+        view.vocabulary, view.signature = self.vocabulary, self.signature
+        return view
 
     def refresh(self):
         stat = self.path.stat()
@@ -151,8 +174,9 @@ class CatalogSearch:
             row = self.rows[index]
             exact = normalize(row[2]) == phrase
             canonical = row[4] == tokens
+            leading = " ".join(row[4]).startswith(" ".join(tokens))
             score = sum(quality[index, i] for i in range(len(tokens))) / len(tokens)
-            return (-int(exact), -int(canonical), -score, len(row[4]), normalize(row[2]), row[1])
+            return (-int(exact), -int(canonical), -int(leading), -score, len(row[4]), normalize(row[2]), row[1])
         selected = sorted(candidates, key=rank)
         counts, chosen = defaultdict(int), []
         for index in selected:
@@ -162,7 +186,7 @@ class CatalogSearch:
                 counts[row[0]] += 1
             if len(chosen) >= limit * 2:
                 break
-        return self.details(chosen)
+        return unique_rows(self.details(chosen))
 
     def details(self, selected):
         if not selected:
@@ -195,13 +219,16 @@ class CatalogSearch:
             kind = item.get("kind")
             if kind not in ("movie", "series"):
                 continue
-            for name in (item.get("title"), item.get("originaltitle")):
+            for name in (item.get("title"), item.get("originaltitle"), *item.get("aliases", ())):
                 tokens = words(name)
                 if not tokens:
                     continue
                 matches = set.intersection(*(self.inverted.get(t, set()) for t in tokens))
-                for index in sorted(matches):
-                    row = self.rows[index]
+                eligible = [self.rows[index] for index in sorted(matches)
+                            if self.rows[index][0] == kind and set(self.rows[index][4]) == set(tokens)]
+                if not item.get("year") and len({str(row[3]) for row in eligible}) > 1:
+                    continue
+                for row in eligible:
                     if row[0] != kind or set(row[4]) != set(tokens):
                         continue
                     year, provider_year = str(item.get("year") or "")[:4], str(row[3] or "")[:4]
@@ -219,7 +246,7 @@ class CatalogSearch:
             for key in ("poster", "fanart", "plot"):
                 if extra.get(key):
                     row[key] = extra[key]
-        return result
+        return unique_rows(result)
 
 
 class LatestRequest:

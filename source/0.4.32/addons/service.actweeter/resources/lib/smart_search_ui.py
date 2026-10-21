@@ -12,8 +12,8 @@ import xbmcaddon
 import xbmcgui
 import xbmcvfs
 
-from smart_search_engine import LatestRequest, MAX_QUERY, normalize, words
-from smart_search_sources import Metadata, catalogue, context, programmes, rpc
+from smart_search_engine import LatestRequest, MAX_QUERY, normalize, unique_rows, words
+from smart_search_sources import Metadata, catalogue, context, programmes, provider_children, rpc
 
 ROWS = {5101: "movie", 5102: "series", 5103: "programme", 5104: "person", 5105: "discovery"}
 KEYS = list("QWERTYUIOPASDFGHJKLÑZXCVBNM") + ["ESPACIO", "BORRAR", "LISTO"]
@@ -25,19 +25,33 @@ def listitem(row):
         path=row.get("path", ""))
     item.setArt({"poster": row.get("poster", ""), "thumb": row.get("poster", ""),
                  "fanart": row.get("fanart", ""), "icon": "DefaultVideo.png"})
-    if row["kind"] in ("movie", "series"):
+    if row["kind"] in ("movie", "series", "season", "episode"):
         tag = item.getVideoInfoTag()
         tag.setTitle(row.get("canonical_title") or row["title"])
-        tag.setMediaType("movie" if row["kind"] == "movie" else "tvshow")
+        tag.setMediaType("tvshow" if row["kind"] == "series" else row["kind"])
+        if row["kind"] in ("season", "episode"):
+            tag.setSeason(row["season"])
+            tag.setEpisode(row["episode"])
         tag.setPlot(row.get("plot", ""))
+        genre, directors = row.get("genre") or [], row.get("director") or []
+        tag.setGenres([genre] if isinstance(genre, str) else genre)
+        tag.setDirectors([directors] if isinstance(directors, str) else directors)
+        cast = row.get("cast") or []
+        if cast:
+            tag.setCast([xbmc.Actor(name=person["name"], role=person.get("role", ""),
+                order=person.get("order", n), thumbnail=person.get("thumbnail", ""))
+                for n, person in enumerate(cast) if isinstance(person, dict) and person.get("name")])
         year = str(row.get("year") or "")[:4]
         if year.isdigit():
             tag.setYear(int(year))
         if row.get("tmdb_id"):
             tag.setUniqueIDs({"tmdb": str(row["tmdb_id"])})
-        item.setProperty("IsPlayable", "true" if row.get("available") and row["kind"] == "movie" else "false")
+        item.setProperty("IsPlayable", "true" if row.get("available") and row["kind"] in ("movie", "episode") else "false")
     item.setProperty("search.availability", "EN TU CATÁLOGO" if row.get("available") else
                      ("ACTORES Y CREADORES" if row["kind"] == "person" else "SOLO INFORMACIÓN · TMDb"))
+    item.setProperty("search.badge", "TV / EPG" if row["kind"] == "programme" else
+                     "PERSONA" if row["kind"] == "person" else "EN IPTV" if row.get("available") else "TMDb")
+    item.setProperty("path", row.get("path", ""))
     return item
 
 
@@ -46,17 +60,21 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
         super().__init__(*args, **kwargs)
         self.stop = threading.Event()
         self.jobs, self.remote = LatestRequest(), LatestRequest()
+        self.epg_jobs = LatestRequest()
         self.updates = queue.Queue(maxsize=12)
         self.ready = False
         self.rows = {key: [] for key in ROWS}
         self.serial, self.query, self.scope = 0, "", None
+        self.rows_serial = 0
         self.person = None
         self.person_facet = "all"
+        self.history = []
         self.facet = "all"
         self.detail = None
         self.detail_origin = 100
         self.in_info = False
         self.metadata = Metadata(xbmc)
+        self.shared_index = None
         self.monitor = xbmc.Monitor()
 
     def onInit(self):
@@ -64,10 +82,11 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
             return
         self.ready = True
         self.setProperty("search.facet", "all")
+        self.setProperty("search.series.heading", "Series · en tu catálogo")
         self.setProperty("search.status", "Un título, un actor, un director o un programa. Empieza a escribir.")
         self.getControl(120).addItems([xbmcgui.ListItem(label=key) for key in KEYS])
         self.setFocusId(100)
-        for target in (self._local_worker, self._metadata_worker, self._pump):
+        for target in (self._local_worker, self._epg_worker, self._metadata_worker, self._pump):
             threading.Thread(target=target, daemon=True).start()
 
     def _post(self, serial, source, data, elapsed=0):
@@ -89,14 +108,21 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
                 if scope != previous:
                     engine, previous = catalogue(scope), scope
                 rows = engine.search(query)
+                self.shared_index = engine.fork()
                 self._post(serial, "local", rows, (time.perf_counter() - started) * 1000)
             except (OSError, ValueError, RuntimeError, sqlite3.Error):
                 self._post(serial, "local_error", [])
-            if self.jobs.current(generation):
-                try:
-                    epg = programmes(xbmcvfs.translatePath("special://database"), query)
+
+    def _epg_worker(self):
+        while (job := self.epg_jobs.take()) is not None:
+            generation, (serial, query) = job
+            current = lambda: self.epg_jobs.current(generation) and not self.stop.is_set()
+            try:
+                epg = programmes(xbmcvfs.translatePath("special://database"), query, current=current)
+                if current():
                     self._post(serial, "epg", epg)
-                except (OSError, ValueError, RuntimeError, sqlite3.Error):
+            except (OSError, ValueError, RuntimeError, sqlite3.Error):
+                if current():
                     self._post(serial, "epg_error", [])
 
     def _metadata_worker(self):
@@ -106,12 +132,25 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
             current = lambda: self.remote.current(generation) and not self.stop.is_set()
             started = time.perf_counter()
             try:
-                rows = self.metadata.credits(person, current) if person else self.metadata.search(query)
+                if person and person.get("_section") == "provider":
+                    rows = provider_children(xbmc, person, scope)
+                    if current():
+                        self._post(serial, "children", rows)
+                    continue
+                if person and person.get("_section") == "details":
+                    detail = self.metadata.details(person)
+                    if current():
+                        self._post(serial, "detail", detail)
+                    continue
+                if person and person["kind"] != "person":
+                    rows = self.metadata.related(person, person["_section"], current)
+                else:
+                    rows = self.metadata.credits(person, current) if person else self.metadata.search(query)
                 if not current():
                     continue
+                people = [row for row in rows if row["kind"] == "person"]
+                self._post(serial, "people", people)
                 if not person:
-                    people = [row for row in rows if row["kind"] == "person"]
-                    self._post(serial, "people", people)
                     # A name search returns the person's available films as well as their card.
                     exact_person = next((p for p in people if normalize(p["title"]) == normalize(query)), None)
                     if exact_person and len(words(query)) > 1:
@@ -121,7 +160,15 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
                 try:
                     if scope != previous:
                         engine, previous = catalogue(scope), scope
+                    shared = self.shared_index
+                    if shared and shared.path == engine.path and shared.profile == engine.profile:
+                        engine = shared.fork()
                     matched = engine.match_metadata(rows)
+                    matched_ids = {(row["kind"], row.get("tmdb_id")) for row in matched}
+                    unmatched = [row for row in rows if row["kind"] in ("movie", "series") and
+                                 (row["kind"], row.get("tmdb_id")) not in matched_ids]
+                    if current() and unmatched:
+                        matched += engine.match_metadata(self.metadata.aliases(unmatched, current))
                 except (OSError, ValueError, RuntimeError, sqlite3.Error):
                     matched = []
                 matched_ids = {(row["kind"], row.get("tmdb_id")) for row in matched}
@@ -132,7 +179,7 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
                 # Kodi cannot cancel an in-flight plugin directory request. Only the latest
                 # generation can publish; failures never clear already visible local results.
                 xbmc.log("[AcTweeteR] SEARCH source=metadata error_type=" + type(exc).__name__, xbmc.LOGWARNING)
-                self._post(serial, "metadata_error", [])
+                self._post(serial, "provider_error" if person and person.get("_section") == "provider" else "metadata_error", [])
 
     def _clear_rows(self):
         for control in ROWS:
@@ -141,7 +188,7 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
     def _fill(self, control, rows):
         if self.stop.is_set():
             return
-        rows = rows[:40]
+        rows = unique_rows(rows)[:40]
         if rows == self.rows[control]:
             return
         listing = self.getControl(control)
@@ -170,11 +217,11 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
         self._fill(control, list(by_id.values()))
 
     def _pump(self):
-        pending, changed_at, remote_sent, context_at = None, 0, False, 0
+        pending, changed_at, remote_sent, epg_sent, context_at = None, 0, False, False, 0
         last_selected = None
         try:
             while not self.stop.is_set() and not self.monitor.abortRequested():
-                if self.in_info or self.detail:
+                if self.in_info:
                     self.stop.wait(0.08)
                     continue
                 now = time.monotonic()
@@ -188,18 +235,26 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
                     context_at = now + 1
                 if scope != self.scope:
                     self.person = None
+                    self.history.clear()
+                    self.detail = None
+                    self.setProperty("search.detail", "false")
                     self.setProperty("search.person", "")
                 if self.person and query != self.query:
                     self.person = None
+                    self.history.clear()
                     self.setProperty("search.person", "")
                 if (query != self.query or scope != self.scope) and not self.person:
+                    clear = scope != self.scope or len(query) < 2
                     self.query, self.scope = query, scope
                     self.serial += 1
                     self.jobs.invalidate()
+                    self.epg_jobs.invalidate()
                     # Invalidate previous metadata immediately, before the longer debounce.
                     self.remote.invalidate()
-                    pending, changed_at, remote_sent = (self.serial, query, scope), now, False
-                    self._clear_rows()
+                    pending, changed_at, remote_sent, epg_sent = (self.serial, query, scope), now, False, False
+                    if clear:
+                        self._clear_rows()
+                    self.setProperty("search.loading", "true" if len(query) >= 2 else "false")
                     self.setProperty("search.hero.title", "")
                     self.setProperty("search.hero.plot", "")
                     self.setProperty("search.hero.art", "")
@@ -207,11 +262,15 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
                     self.setProperty("search.remote", "")
                     self.setProperty("search.status", "Buscando en tu catálogo…" if len(query) >= 2 else
                                      "Escribe al menos dos caracteres. Títulos, personas y programas, en un mismo lugar.")
-                if pending and now - changed_at >= 0.20:
+                if pending and now - changed_at >= 0.12:
                     serial, text, source = pending
                     if len(text) >= 2:
                         self.jobs.submit((serial, text, source))
                     pending = None
+                if self.query and not epg_sent and not self.person and now - changed_at >= 0.45:
+                    if len(self.query) >= 2:
+                        self.epg_jobs.submit((self.serial, self.query))
+                    epg_sent = True
                 if self.query and not remote_sent and not self.person and now - changed_at >= 0.65:
                     if len(self.query) >= 2:
                         self.remote.submit((self.serial, self.query, self.scope, None))
@@ -221,20 +280,33 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
                     serial, source, data, elapsed = self.updates.get_nowait()
                     if serial != self.serial:
                         continue
+                    if source != "detail" and self.rows_serial != self.serial:
+                        self._clear_rows()
+                        self.rows_serial = self.serial
+                        self.setProperty("search.loading", "false")
                     if source == "local":
                         for control, kind in ((5101, "movie"), (5102, "series")):
                             self._merge(control, [row for row in data if row["kind"] == kind])
                         count = len(data)
                         self.setProperty("search.status", "%d coincidencias en tu catálogo · %.0f ms" % (count, elapsed)
                                          if count else "Sin coincidencias locales. Buscando títulos alternativos…")
+                        self.setProperty("search.local_ready_ms", str(round((time.monotonic() - changed_at) * 1000)))
                     elif source == "local_error":
                         enabled = xbmc.getCondVisibility("System.AddonIsEnabled(plugin.video.xstream-pro)")
                         self.setProperty("search.status", "Índice del proveedor no disponible. Los metadatos siguen accesibles."
                                          if enabled else "XStream está deshabilitado. Puedes consultar personas, metadatos y la guía TV.")
                     elif source == "epg":
                         self._fill(5103, data)
+                    elif source == "detail":
+                        if self.detail and data.get("id") == self.detail.get("id"):
+                            self._show_detail(data, remember=False)
                     elif source == "people":
                         self._fill(5104, data)
+                    elif source == "children":
+                        self._fill(5102, data)
+                        self.setProperty("search.remote", "%d elementos · rutas del proveedor" % len(data))
+                    elif source == "provider_error":
+                        self.setProperty("search.remote", "No se pudieron cargar las temporadas o episodios. Puedes volver y reintentar.")
                     elif source == "metadata":
                         matched, other = data
                         for control, kind in ((5101, "movie"), (5102, "series")):
@@ -250,12 +322,19 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
                     control = self.getFocusId()
                     if control in ROWS:
                         index = self.getControl(control).getSelectedPosition()
-                        if (control, index) != last_selected and 0 <= index < len(self.rows[control]):
+                        if 0 <= index < len(self.rows[control]):
                             row = self.rows[control][index]
+                            signature = control, index, row.get("id"), row.get("canonical_title"), row.get("plot")
+                            if signature == last_selected:
+                                self.stop.wait(0.08)
+                                continue
                             self.setProperty("search.hero.title", row.get("canonical_title") or row["title"])
                             self.setProperty("search.hero.plot", row.get("plot", "")[:380])
                             self.setProperty("search.hero.art", row.get("fanart") or row.get("poster", ""))
-                            last_selected = control, index
+                            last_selected = signature
+                            self.setProperty("search.hero.availability", row.get("canonical_title") and
+                                "EN TU CATÁLOGO · título identificado" or
+                                ("EN TU CATÁLOGO" if row.get("available") else "TMDb · disponibilidad sin confirmar"))
                 except (RuntimeError, IndexError):
                     pass
                 self.stop.wait(0.08)
@@ -263,10 +342,11 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
             xbmc.log("[AcTweeteR] SEARCH source=window error_type=" + type(exc).__name__, xbmc.LOGERROR)
         finally:
             self.jobs.close()
+            self.epg_jobs.close()
             self.remote.close()
 
     def onClick(self, control):
-        if self.detail and control not in (701, 702, 703):
+        if self.detail and control not in (701, 702, 703, 704, 705, 707):
             return
         if control == 101:
             value = xbmcgui.Dialog().input("Buscar · teclado del dispositivo / dictado si está disponible",
@@ -306,47 +386,94 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
                 return
             row = self.rows[control][position]
             if row["kind"] == "person":
-                self.person = row
-                self.person_facet, self.facet = self.facet, "all"
-                self.setProperty("search.facet", "all")
-                self.serial += 1
-                self.jobs.invalidate()
-                self._clear_rows()
-                self.setProperty("search.person", row["title"])
-                self.setProperty("search.hero.title", row["title"])
-                self.setProperty("search.hero.plot", row.get("plot") or "Filmografía · títulos disponibles en tu catálogo y otras obras")
-                self.setProperty("search.hero.art", row.get("poster", ""))
-                self.setProperty("search.remote", "Cargando filmografía de " + row["title"] + "…")
-                self.remote.submit((self.serial, self.query, self.scope, row))
-                self.setFocusId(104)
-            elif row["kind"] == "programme" or not row.get("available"):
-                self._show_detail(row)
+                self._browse(row)
+            elif row["kind"] == "season":
+                self._browse(row, "provider")
             else:
-                self.in_info = True
-                try:
-                    xbmcgui.Dialog().info(listitem(row))
-                finally:
-                    self.in_info = False
+                self._show_detail(row)
+                if row.get("tmdb_id"):
+                    self.remote.submit((self.serial, self.query, self.scope, dict(row, _section="details")))
         elif control == 702:
             self.detail = None
             self.setProperty("search.detail", "false")
             self.setFocusId(self.detail_origin)
+        elif control in (704, 705) and self.detail and self.detail.get("tmdb_id"):
+            self._browse(self.detail, "cast" if control == 704 else "related")
+        elif control == 707 and self.detail and self.detail.get("available") and self.detail["kind"] == "series":
+            self._browse(self.detail, "provider")
+        elif control == 701 and self.detail and self.detail.get("available") and self.detail["kind"] in ("movie", "series", "episode"):
+            if context(xbmcaddon.Addon, xbmcvfs, xbmc) != self.scope:
+                self.setProperty("search.detail.subtitle", "El perfil ha cambiado. Vuelve a buscar antes de reproducir.")
+                return
+            self.in_info = True
+            try:
+                xbmcgui.Dialog().info(listitem(self.detail))
+            finally:
+                self.in_info = False
         elif control == 701 and self.detail and self.detail.get("live"):
             row = self.detail
             self._shutdown()
             rpc(xbmc, "Player.Open", {"item": {"channelid": row["channel_id"]}})
 
-    def _show_detail(self, row):
-        self.detail_origin = self.getFocusId()
+    def _show_detail(self, row, remember=True):
+        if remember:
+            self.detail_origin = self.getFocusId()
         self.detail = row
         self.setProperty("search.detail.title", row["title"])
-        self.setProperty("search.detail.plot", row.get("plot", ""))
+        original = row.get("originaltitle", "")
+        genre = row.get("genre") or []
+        if isinstance(genre, str):
+            genre = [genre]
+        directors = row.get("director") or []
+        if isinstance(directors, str):
+            directors = [directors]
+        text = ("Título original: " + original + "\n\n" if original and original != row["title"] else "")
+        text += (" · ".join(str(g) for g in genre) + "\n\n" if genre else "")
+        text += ("Dirección: " + ", ".join(directors) + "\n\n" if directors else "") + row.get("plot", "")
+        self.setProperty("search.detail.plot", text)
         self.setProperty("search.detail.art", row.get("poster", ""))
         subtitle = "TMDb · Biografía" if row["kind"] == "person" else "TMDb · Disponibilidad sin confirmar en tu proveedor"
         self.setProperty("search.detail.subtitle", row.get("subtitle") or subtitle)
+        if row.get("available") and row["kind"] in ("movie", "series", "episode"):
+            self.setProperty("search.detail.subtitle", "EN TU CATÁLOGO · " + str(row.get("year") or ""))
+        self.setProperty("search.detail.content", "true" if row["kind"] in ("movie", "series") else "false")
+        self.setProperty("search.detail.related", "true" if row.get("tmdb_id") and row["kind"] in ("movie", "series") else "false")
+        self.setProperty("search.detail.play", "true" if row.get("available") and row["kind"] in ("movie", "series", "episode") else "false")
+        self.setProperty("search.detail.seasons", "true" if row.get("available") and row["kind"] == "series" else "false")
+        self.setProperty("search.detail.action", "Ver canal en directo" if row.get("live") else
+                         "Ficha y reproducción" if row["kind"] in ("movie", "episode") else "Ficha y temporadas")
         self.setProperty("search.detail.live", "true" if row.get("live") else "false")
         self.setProperty("search.detail", "true")
-        self.setFocusId(702)
+        if remember:
+            self.setFocusId(702)
+
+    def _browse(self, row, section=None):
+        self.history.append((self.person, self.facet, {k: list(v) for k, v in self.rows.items()},
+                             {k: self.getControl(k).getSelectedPosition() for k in ROWS},
+                             self.detail_origin if self.detail else self.getFocusId()))
+        # shortcut: retain eight exploration levels; extend only if real navigation needs more.
+        self.history = self.history[-8:]
+        self.detail = None
+        self.setProperty("search.detail", "false")
+        self.person, self.facet = dict(row, _section=section), "all"
+        self.serial += 1
+        self.jobs.invalidate()
+        self.epg_jobs.invalidate()
+        self._clear_rows()
+        self.setProperty("search.facet", "all")
+        self.setProperty("search.person", row["title"])
+        self.setProperty("search.subject.label", "Biografía" if row["kind"] == "person" else "Ficha")
+        self.setProperty("search.series.heading", "Temporadas" if section == "provider" and row["kind"] == "series" else
+                         "Episodios" if section == "provider" else "Series · en tu catálogo")
+        self.setProperty("search.hero.title", row["title"])
+        self.setProperty("search.hero.plot", "Reparto y equipo" if section == "cast" else
+                         "Temporadas y episodios del proveedor" if section == "provider" else
+                         "Títulos relacionados" if section else row.get("plot", "Filmografía"))
+        self.setProperty("search.status", "Explorando · " + row["title"])
+        self.setProperty("search.hero.art", row.get("fanart") or row.get("poster", ""))
+        self.setProperty("search.remote", "Cargando…")
+        self.remote.submit((self.serial, self.query, self.scope, self.person))
+        self.setFocusId(104)
 
     def _back(self):
         if self.detail:
@@ -354,12 +481,28 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
         elif self.getProperty("search.keyboard") == "true":
             self.setProperty("search.keyboard", "false")
             self.setFocusId(100)
+        elif self.person and self.history:
+            self.serial += 1
+            self.remote.invalidate()
+            self.person, self.facet, rows, positions, focus = self.history.pop()
+            self.setProperty("search.facet", self.facet)
+            self.setProperty("search.person", self.person["title"] if self.person else "")
+            self.setProperty("search.subject.label", "Biografía" if self.person and self.person["kind"] == "person" else "Ficha")
+            self.setProperty("search.series.heading", "Temporadas" if self.person and self.person.get("_section") == "provider" and self.person["kind"] == "series" else
+                             "Episodios" if self.person and self.person.get("_section") == "provider" else "Series · en tu catálogo")
+            for control, values in rows.items():
+                self._fill(control, values)
+                if values:
+                    self.getControl(control).selectItem(positions[control])
+            self.setProperty("search.hero.title", "")
+            self.setProperty("search.hero.plot", "")
+            self.setProperty("search.hero.art", "")
+            self.setProperty("search.remote", "Resultados restaurados · sin repetir consultas")
+            self.setFocusId(focus)
         elif self.person:
             self.person = None
-            self.facet = self.person_facet
-            self.setProperty("search.facet", self.facet)
+            self.query = ""
             self.setProperty("search.person", "")
-            self.query = ""  # Re-run the previous query, retaining the edit text.
             self.setFocusId(100)
         else:
             self._shutdown()
@@ -371,6 +514,7 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
     def _shutdown(self):
         self.stop.set()
         self.jobs.close()
+        self.epg_jobs.close()
         self.remote.close()
         self.close()
 
@@ -388,6 +532,7 @@ def run():
     finally:
         window.stop.set()
         window.jobs.close()
+        window.epg_jobs.close()
         window.remote.close()
         home.clearProperty("AcTweeteR.SearchOpen")
         del window
