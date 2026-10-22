@@ -153,3 +153,44 @@ rama. El merge está todavía local y sin publicar.
   `PARTIAL`; el commit no implica aprobación de publicación.
 
 Resultado actual: **PARTIAL — no apto para publicación ni instalación**.
+
+### Reanudación de trabajo (22-10-2026)
+
+- Rama comprobada: `codex/trakt-unified-beta-2026-10-22`, HEAD `93aca2e`;
+  árbol limpio al iniciar esta reanudación. No se usó ADB ni se accedió a
+  Lenovo, Apple TV o Stable.
+- Versiones fuente de la rama: service `0.4.55`, skin `1.2.32~beta1`, XStream
+  candidato `1.1.2.23~beta1`. Kodi Master instalado, leído sin modificar:
+  service `0.4.54`, skin `1.2.32~beta1`, XStream `1.1.2.22~beta1`.
+- La API JSON-RPC de Kodi en `127.0.0.1:8080` rechazó la conexión. El log
+  `/Users/alberto/Library/Logs/kodi.log` existe, pero no contiene eventos
+  `trakt_snapshot`, `trakt_sync` ni `trakt_restore`; su última escritura fue
+  22-10-2026 23:28 CEST. Por tanto no hay evidencia de exportación GET ni de
+  aplicación de restauración en runtime durante esta sesión.
+- XStream `.23` se inspeccionó desde el ZIP candidato. `history.py` carga los
+  almacenes JSON en memoria y cada `_save()` hace `os.replace()` atómico, pero
+  no implementa exclusión mutua compartida con otras instancias ni recarga y
+  mezcla los datos actuales antes de guardar. Una escritura directa del
+  servicio puede ser sobrescrita por un objeto XStream con snapshot antiguo;
+  además no hay confirmación de que las cachés de “Continuar viendo” hayan
+  observado el cambio. No se añadió un escritor en vivo especulativo ni se
+  escribió en el perfil activo.
+- Verificación de licencia: el artefacto retiene `LICENCE.txt` y atribuciones.
+  CC BY-NC 4.0 permite compartir/adaptar solo con fines no comerciales,
+  atribución, enlace a la licencia e indicación de modificaciones; que un ZIP
+  sea gratuito o esté en un repositorio público no resuelve por sí solo el
+  carácter comercial del uso. La distribución del candidato continúa bloqueada
+  hasta aclarar ese contexto o contar con permiso adicional del titular.
+  Referencias: [texto legal CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/legalcode.en),
+  [resumen de licencia](https://creativecommons.org/licenses/by-nc/4.0/deed.en),
+  [repositorio upstream XStream Pro](https://github.com/Pesicp/XStreamPro).
+- Suite repetida en esta reanudación: **453 pruebas PASS** (`unittest`, 16.711 s).
+- El ZIP candidato XStream existente conserva SHA-256
+  `5eebc025b64bac1553c5c170bff075a9024134d010ad3e137e265bc91559fdd3`.
+  No se reconstruyó ni instaló durante esta reanudación.
+
+Resultado tras reanudar: **PARTIAL**. La restauración offline y la preparación
+en staging siguen siendo reproducibles; la escritura live, la sincronización
+incremental conectada al servicio, el checkpoint/consentimiento persistente y
+la validación Trakt runtime en Master no están demostrados. No publicar ni
+instalar el candidato todavía.
