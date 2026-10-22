@@ -148,7 +148,8 @@ rama. El merge está todavía local y sin publicar.
 - Esta continuación no hizo llamadas a Trakt, no leyó ni copió credenciales y
   no aplicó cambios al perfil activo. No se logró validar runtime en Kodi Mac
   ni Lenovo; ADB quedó bloqueado por la política del sandbox.
-- No se creó commit: el merge permanece local, para evitar presentar como
-  completa una integración sin writer seguro, runtime ni resolución de licencia.
+- Commit local de consolidación: `82e4d3b` (`Merge Trakt sync and profile-safe
+  restore into Beta base`). No se hizo push. La rama mantiene el estado
+  `PARTIAL`; el commit no implica aprobación de publicación.
 
 Resultado actual: **PARTIAL — no apto para publicación ni instalación**.
