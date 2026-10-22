@@ -9,6 +9,38 @@ import shutil
 import uuid
 
 
+def _sync_directory(directory):
+    fd = os.open(str(directory), os.O_RDONLY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+
+def recover_interrupted_restore(*, backup_directory, active_movie, active_episode, kodi_stopped):
+    """Recover a durable pending transaction after a process or power failure."""
+    if kodi_stopped is not True:
+        raise PermissionError("Kodi must be stopped for recovery")
+    backup = Path(backup_directory)
+    marker = backup / "transaction.pending"
+    if not marker.exists():
+        return False
+    targets = (Path(active_movie), Path(active_episode))
+    originals = (backup / "original_0.json", backup / "original_1.json")
+    if any(p.is_symlink() or not p.is_file() for p in originals) or any(p.is_symlink() for p in targets):
+        raise ValueError("unsafe recovery files")
+    for original, target in zip(originals, targets):
+        temp = target.with_name(target.name + ".trakt-recover-" + uuid.uuid4().hex)
+        with original.open("rb") as src, temp.open("xb") as out:
+            shutil.copyfileobj(src, out)
+            out.flush(); os.fsync(out.fileno())
+        os.replace(temp, target)
+        _sync_directory(target.parent)
+    marker.unlink()
+    _sync_directory(backup)
+    return True
+
+
 def commit_staged_restore(*, staged_movie, staged_episode, active_movie, active_episode,
                           backup_directory, kodi_stopped):
     if kodi_stopped is not True:
@@ -33,6 +65,12 @@ def commit_staged_restore(*, staged_movie, staged_episode, active_movie, active_
         shutil.copy2(original, dest)
         with dest.open('rb') as f:
             os.fsync(f.fileno())
+    _sync_directory(backup)
+    marker = backup / "transaction.pending"
+    marker.write_text("rollback-required", encoding="utf-8")
+    with marker.open("rb") as f:
+        os.fsync(f.fileno())
+    _sync_directory(backup)
     pending = []
     replaced = []
     try:
@@ -47,11 +85,18 @@ def commit_staged_restore(*, staged_movie, staged_episode, active_movie, active_
         for tmp, target in zip(pending, targets):
             os.replace(tmp, target)
             replaced.append(target)
+            _sync_directory(target.parent)
     except BaseException:
         for target, original in zip(targets, backups):
             if target in replaced:
                 shutil.copy2(original, target)
+        if replaced:
+            recover_interrupted_restore(backup_directory=backup, active_movie=targets[0],
+                                        active_episode=targets[1], kodi_stopped=True)
         raise
+    else:
+        marker.unlink()
+        _sync_directory(backup)
     finally:
         for tmp in pending:
             if tmp.exists():
