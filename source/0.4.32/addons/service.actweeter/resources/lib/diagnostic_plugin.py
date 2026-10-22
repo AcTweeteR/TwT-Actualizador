@@ -224,7 +224,7 @@ def main(argv=None):
         return
     query = argv[2] if len(argv) > 2 else ""
     params = urllib.parse.parse_qs(query.lstrip("?"), keep_blank_values=True)
-    if params.get("action", [""])[0] in ("collections", "collection_create", "collection_open"):
+    if params.get("action", [""])[0] in ("collections", "collection_create", "collection_open", "collection_add"):
         from collections_ui import render
         render(handle, addon=xbmcaddon.Addon(), vfs=xbmcvfs, gui=xbmcgui,
                plugin=xbmcplugin, params=params, dialog=xbmcgui.Dialog())

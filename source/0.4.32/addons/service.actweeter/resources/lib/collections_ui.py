@@ -19,7 +19,7 @@ def _catalog(addon, vfs):
 def render(handle, *, addon, vfs, gui, plugin, params, dialog):
     """Handle only scoped actions; reject forged remote-write requests."""
     action = params.get('action', ['collections'])[0]
-    if action not in ('collections', 'collection_create', 'collection_open'):
+    if action not in ('collections', 'collection_create', 'collection_open', 'collection_add'):
         raise ValueError('unsupported collections action')
     store = _catalog(addon, vfs)
     if action == 'collection_create':
@@ -29,6 +29,13 @@ def render(handle, *, addon, vfs, gui, plugin, params, dialog):
                 store.create_local(name, origin='mis_colecciones')
             except ValueError:
                 dialog.ok('Mis Colecciones', 'Nombre no válido (máximo 120 caracteres).')
+    elif action == 'collection_add':
+        # A typed numeric ID alone is not a verified movie/TV identity.
+        # Keep this action fail-closed until TMDb lookup and readback exist.
+        dialog.ok('Mis Colecciones',
+                  'La selección de contenido estará disponible tras verificar el catálogo TMDb.')
+        plugin.endOfDirectory(handle, succeeded=True, cacheToDisc=False)
+        return
     elif action == 'collection_open':
         identifier = params.get('id', [''])[0]
         try:
@@ -37,6 +44,12 @@ def render(handle, *, addon, vfs, gui, plugin, params, dialog):
             plugin.endOfDirectory(handle, succeeded=False, cacheToDisc=False)
             return
         plugin.setPluginCategory(handle, entry['name'])
+        for member in store.members(identifier):
+            item = gui.ListItem(label=member['title'])
+            item.setProperty('AcTweeteR.TMDbId', str(member['tmdb_id']))
+            item.setProperty('AcTweeteR.MediaType', member['kind'])
+            item.setProperty('IsPlayable', 'false')
+            plugin.addDirectoryItem(handle, ROOT + '?' + urlencode({'action': 'collection_open', 'id': identifier}), item, False)
         plugin.endOfDirectory(handle, succeeded=True, cacheToDisc=False)
         return
     plugin.setPluginCategory(handle, 'Mis Colecciones')

@@ -27,6 +27,17 @@ class CatalogTests(unittest.TestCase):
    db=m.Catalog(os.path.join(folder,'lists.db'))
    with self.assertRaises(PermissionError):db.create_local('External',origin='xstream_favorites')
    with self.assertRaises(PermissionError):db.create_local('Unscoped')
+ def test_members_are_local_persistent_and_deduplicated(self):
+  with tempfile.TemporaryDirectory() as folder:
+   path=os.path.join(folder,'lists.db');db=m.Catalog(path)
+   i=db.create_local('Movies',kind='movie',origin='mis_colecciones')
+   db.add_member(i,kind='movie',tmdb_id=603,title='The Matrix')
+   db.add_member(i,kind='movie',tmdb_id=603,title='The Matrix')
+   self.assertEqual(len(m.Catalog(path).members(i)),1)
+   with self.assertRaises(ValueError):db.add_member(i,kind='show',tmdb_id=42,title='Wrong')
+   with self.assertRaises(ValueError):db.add_member(i,kind='movie',tmdb_id=0,title='Wrong')
+   db.remove_member(i,kind='movie',tmdb_id=603)
+   self.assertEqual(db.members(i),[])
  def test_same_title_distinct_ids(self):
   with tempfile.TemporaryDirectory() as folder:
    db=m.Catalog(os.path.join(folder,'lists.db'))

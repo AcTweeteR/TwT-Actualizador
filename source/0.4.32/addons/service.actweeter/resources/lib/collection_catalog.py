@@ -29,6 +29,10 @@ class Catalog:
         with self._db() as db:
             db.execute('CREATE TABLE IF NOT EXISTS lists (local_id TEXT PRIMARY KEY, '
                        'name TEXT NOT NULL, kind TEXT NOT NULL, mappings TEXT NOT NULL)')
+            db.execute('CREATE TABLE IF NOT EXISTS members (local_id TEXT NOT NULL, '
+                       'kind TEXT NOT NULL, tmdb_id INTEGER NOT NULL, title TEXT NOT NULL, '
+                       'PRIMARY KEY(local_id,kind,tmdb_id), '
+                       'FOREIGN KEY(local_id) REFERENCES lists(local_id))')
 
     @contextmanager
     def _db(self):
@@ -96,3 +100,31 @@ class Catalog:
             cursor = db.execute('UPDATE lists SET name=? WHERE local_id=?', (title, identifier))
             if cursor.rowcount != 1:
                 raise ValueError('unknown local list')
+
+    def add_member(self, identifier, *, kind, tmdb_id, title):
+        """Add verified portable identity; local only, no remote side effects."""
+        if kind not in ('movie', 'show') or type(tmdb_id) is not int or tmdb_id < 1:
+            raise ValueError('verified movie or show TMDb ID required')
+        name = _name(title)
+        entry = self.get(identifier)
+        if entry['kind'] not in ('mixed', kind):
+            raise ValueError('media type incompatible with list')
+        with self._db() as db:
+            db.execute('INSERT OR IGNORE INTO members VALUES (?,?,?,?)',
+                       (identifier, kind, tmdb_id, name))
+
+    def members(self, identifier):
+        self.get(identifier)
+        with self._db() as db:
+            rows = db.execute('SELECT kind,tmdb_id,title FROM members WHERE local_id=? '
+                              'ORDER BY title COLLATE NOCASE,kind,tmdb_id', (identifier,)).fetchall()
+        return [{'kind': kind, 'tmdb_id': tmdb_id, 'title': title}
+                for kind, tmdb_id, title in rows]
+
+    def remove_member(self, identifier, *, kind, tmdb_id):
+        self.get(identifier)
+        if kind not in ('movie', 'show') or type(tmdb_id) is not int or tmdb_id < 1:
+            raise ValueError('invalid member identity')
+        with self._db() as db:
+            db.execute('DELETE FROM members WHERE local_id=? AND kind=? AND tmdb_id=?',
+                       (identifier, kind, tmdb_id))

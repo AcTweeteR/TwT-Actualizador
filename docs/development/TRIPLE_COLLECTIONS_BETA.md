@@ -48,3 +48,11 @@
 - Entrada provisional: `plugin://service.actweeter/?action=collections`. No está enlazada todavía al árbol visual `Mis Colecciones` de XStream; la acción `collection_open` es un contenedor vacío.
 - Falta gestionar miembros, renombrar/borrar desde UI, conectar la navegación XStream y validar en Kodi real antes de anunciar funcionalidad completa.
 - Suite: 398 pruebas correctas.
+
+## Auditoría previa a despliegue: miembros locales
+
+- Se ha añadido almacenamiento local de miembros de colecciones con clave compuesta (lista, tipo, ID TMDb), sin duplicados, y comprobación de compatibilidad película/serie.
+- Se ha detectado que pedir un ID numérico manual no verifica la identidad del título. El control de añadir contenido desde UI queda deshabilitado hasta una comprobación real contra TMDb o el detalle del proveedor.
+- No hay reproducción funcional desde las filas de colección: se marcan no reproducibles para no simular una ruta de vídeo válida.
+- La navegación de Mis Colecciones aún no está integrada en el menú principal de XStream; el acceso de servicio es provisional.
+- Suite completa: 399 tests correctos. Sin pruebas E2E Kodi ni API autenticada. DESPLIEGUE BLOQUEADO.
