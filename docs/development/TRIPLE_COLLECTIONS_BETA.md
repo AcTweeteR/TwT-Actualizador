@@ -18,3 +18,10 @@
 - Pruebas específicas de aislamiento entre cuentas, rechazo de snapshots incompletos, symlinks de base de datos y confirmación explícita.
 - Suite completa: 388 pruebas superadas. No hay pruebas de extremo a extremo con APIs autenticadas ni prueba dentro de Kodi; no activar sincronización todavía.
 - Pendiente crítico: confirmar contratos oficiales TMDb de watchlist/listas v3/v4, flujo OAuth de usuario, permisos y paginación; implementar conectores de transporte independientes, almacenamiento seguro de credenciales y UI Kodi; detectar cambios concurrentes, conflictos, reintentos e idempotencia; respaldar antes de activar escritura; probar Mac y Lenovo antes de publicación.
+
+## Conector TMDb v3 aislado
+
+- `tmdb_account_transport.py`: solicitud de token temporal, URL de autorización, canje por sesión, lectura de identidad de cuenta, lectura paginada de watchlists de películas/TV y operación de watchlist protegida por aprobación explícita.
+- El conector es inerte sin un requester HTTPS inyectado y credenciales del usuario. Las pruebas usan respuestas simuladas; no hay cuenta TMDb real vinculada ni escrituras remotas.
+- La sesión de TMDb no se copia a XStream ni a script.trakt. Aún faltan almacenamiento de sesión local seguro, interfaz de autorización en Kodi y confirmación por relectura tras escrituras.
+- Auditoría: 392 tests correctos. Detectado y corregido durante pruebas el paso de paginación como parámetro URL en lugar de cuerpo GET.
