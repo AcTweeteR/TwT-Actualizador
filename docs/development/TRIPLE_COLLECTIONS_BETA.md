@@ -61,3 +61,11 @@
 
 - `Mis Colecciones` incorpora acción contextual «Renombrar colección» que preserva el UUID y los mapeos. No renombra listas remotas hasta existir adaptadores autenticados y lectura posterior verificada.
 - Suite completa: 400 pruebas correctas; sin despliegue.
+
+## Enlace a navegación XStream (sin instalación)
+
+- El parche de `premium_routes.py` añade la carpeta `Mis listas` en `Mis Colecciones` para películas y series; abre `plugin://service.actweeter/?action=collections`, manteniendo las rutas existentes de Favoritos y Pendientes.
+- Se actualiza exclusivamente el hash fijado de `collections_patch`; no se sustituye el ZIP publicado `1.1.2.19`. Las pruebas comparan dicho ZIP histórico con sus módulos inalterados, y la ruta candidata por separado.
+- La suite completa suma 400 tests, todos correctos, incluido el nuevo enlace del menú; no hay ejecución real en Kodi ni despliegue.
+- La compilación de un nuevo ZIP queda BLOQUEADA: el ZIP local etiquetado `1.1.2.zip` tiene SHA-256 diferente al `upstream_release_zip_sha256` fijado en el manifiesto. No se relaja el hash ni se atribuye autenticidad a otro artefacto.
+- El hash `local_runtime_sha256` de `premium_routes.py` continúa reflejando el ZIP publicado, no el candidato; debe regenerarse solo junto a un build auténtico completo.
