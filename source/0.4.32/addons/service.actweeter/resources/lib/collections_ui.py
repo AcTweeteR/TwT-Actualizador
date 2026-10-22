@@ -68,6 +68,8 @@ def render(handle, *, addon, vfs, gui, plugin, params, dialog):
     plugin.setPluginCategory(handle, 'Mis Colecciones')
     plugin.setContent(handle, 'videos')
     create = gui.ListItem(label='+ Crear colección')
+    create.addContextMenuItems([('Trakt · Operaciones explícitas',
+        'ActivateWindow(Videos,' + ROOT + '?' + urlencode({'action': 'trakt_actions'}) + ',return)')])
     plugin.addDirectoryItem(handle, ROOT + '?' + urlencode({'action': 'collection_create'}), create, True)
     with store._db() as db:
         rows = db.execute('SELECT local_id,name FROM lists ORDER BY name COLLATE NOCASE,local_id').fetchall()

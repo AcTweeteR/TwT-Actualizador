@@ -224,6 +224,11 @@ def main(argv=None):
         return
     query = argv[2] if len(argv) > 2 else ""
     params = urllib.parse.parse_qs(query.lstrip("?"), keep_blank_values=True)
+    if params.get('action') == ['trakt_actions']:
+        from trakt_actions_ui import render as render_trakt_actions
+        render_trakt_actions(handle, addon=xbmcaddon.Addon(), vfs=xbmcvfs,
+                             gui=xbmcgui, plugin=xbmcplugin, params=params)
+        return
     if params.get("action", [""])[0] in ("collections", "collection_create", "collection_open", "collection_add", "collection_rename"):
         from collections_ui import render
         render(handle, addon=xbmcaddon.Addon(), vfs=xbmcvfs, gui=xbmcgui,
