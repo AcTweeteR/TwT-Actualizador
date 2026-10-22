@@ -25,3 +25,11 @@
 - El conector es inerte sin un requester HTTPS inyectado y credenciales del usuario. Las pruebas usan respuestas simuladas; no hay cuenta TMDb real vinculada ni escrituras remotas.
 - La sesión de TMDb no se copia a XStream ni a script.trakt. Aún faltan almacenamiento de sesión local seguro, interfaz de autorización en Kodi y confirmación por relectura tras escrituras.
 - Auditoría: 392 tests correctos. Detectado y corregido durante pruebas el paso de paginación como parámetro URL en lugar de cuerpo GET.
+
+## Creación automática de listas futuras
+
+- `collection_catalog.py` mantiene un UUID local estable, nombre, tipo y mapeos por servicio y cuenta en SQLite.
+- `plan_creation` prepara la creación de listas únicamente cuando hay consentimiento global de creación automática y conexión verificada; no ejecuta operaciones remotas.
+- `confirm_remote` exige comprobación posterior de identidad remota y cuenta, y bloquea el rebinding silencioso. Renombrar no pierde el UUID.
+- **Falta implementar** adaptadores de creación de listas de Trakt/TMDb, compatibilidad real de tipos, captura de carpetas nuevas en XStream, detección de nombres duplicados remotos y sincronización de membresías. No anunciar esta funcionalidad como activa.
+- Suite completa: 395 tests correctos, sin pruebas autenticadas contra servicios externos.
