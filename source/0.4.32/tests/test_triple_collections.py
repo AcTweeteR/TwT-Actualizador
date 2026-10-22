@@ -29,6 +29,15 @@ class TripleCollectionsTests(unittest.TestCase):
  def test_no_unverified_titles_or_channels(self):
   for row in ({'kind':'movie','title':'Similar'}, {'kind':'live','tmdb_id':'9'}, {'kind':'movie','tmdb_id':'-1'}):
    with self.assertRaises(ValueError):self.snap('kodi','pending',[row])
+ def test_delta_rejects_forged_snapshot_identity(self):
+  previous=self.snap('kodi','pending',[{'kind':'movie','tmdb_id':12}])
+  current=self.snap('kodi','pending',[])
+  forged=dict(previous,items={'movie:tmdb:12':{'kind':'movie','tmdb_id':13}})
+  with self.assertRaises(ValueError):module.delta(forged,current,source='kodi')
+  forged=dict(current,items={'movie:tmdb:13':{'kind':'movie','tmdb_id':12}})
+  with self.assertRaises(ValueError):module.delta(previous,forged,source='kodi')
+  forged=dict(current,items=[])
+  with self.assertRaises(ValueError):module.delta(previous,forged,source='kodi')
  def test_favorites_does_not_mutate_pending(self):
   items=[{'kind':'movie','tmdb_id':12}]
   states=[self.snap(s,'favorites',items if s=='trakt' else []) for s in module.SOURCES]

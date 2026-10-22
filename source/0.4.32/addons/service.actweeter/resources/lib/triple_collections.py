@@ -65,5 +65,11 @@ def delta(previous, current, *, source):
             previous.get('complete') is not True or current.get('complete') is not True):
         raise ValueError('cannot derive changes from incomplete or cross-account data')
     before, after = previous['items'], current['items']
+    for items in (before, after):
+        if not isinstance(items, dict):
+            raise ValueError('invalid collection snapshot items')
+        for identifier, item in items.items():
+            if not isinstance(item, dict) or key(item) != identifier:
+                raise ValueError('tampered collection snapshot identity')
     return {'added': [after[k] for k in sorted(after.keys() - before.keys())],
             'removed': [before[k] for k in sorted(before.keys() - after.keys())]}
