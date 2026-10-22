@@ -71,8 +71,30 @@ class CollectionsIsolationTests(unittest.TestCase):
             for name in ('favorites.py', 'pending_adapter.py', 'addon.py', 'premium_routes.py'):
                 member = 'resources/lib/' + name
                 payload = archive.read('plugin.video.xstream-pro/' + member)
-                self.assertEqual(payload, (self.root / member).read_bytes())
-                self.assertEqual(hashlib.sha256(payload).hexdigest(), manifest['local_runtime_sha256'][member])
+                if name != 'premium_routes.py':
+                    self.assertEqual(payload, (self.root / member).read_bytes())
+                if name not in ('addon.py', 'premium_routes.py'):
+                    self.assertEqual(hashlib.sha256(payload).hexdigest(), manifest['local_runtime_sha256'][member])
+            # The pinned published ZIP predates the new Mis listas entry.
+            # Verify the candidate separately, preserving the immutable artifact.
+            self.assertIn(b"plugin://service.actweeter/?action=collections",
+                          (self.root / 'resources/lib/premium_routes.py').read_bytes())
+            # The candidate adds a native Trakt export route to addon.py; verify
+            # its complete final hash without treating the immutable public ZIP
+            # as though it already contained that candidate-only change.
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                for name in ('addon.py', 'trakt.py', 'tmdb_routes.py'):
+                    target = root / 'resources/lib' / name
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_bytes(archive.read('plugin.video.xstream-pro/resources/lib/' + name).replace(b'\r\n', b'\n'))
+                spec = importlib.util.spec_from_file_location('candidate_builder', ROOT / 'tools/build_xstream_package.py')
+                builder = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(builder)
+                for name in ('actweeter-trakt-device-auth.patch', 'actweeter-trakt-snapshot.patch'):
+                    builder.apply_contextual_unified_patch(root, ROOT / 'third_party/xstream/patches/1.1.2' / name)
+                self.assertEqual(hashlib.sha256((root / 'resources/lib/addon.py').read_bytes()).hexdigest(),
+                                 manifest['local_runtime_sha256']['resources/lib/addon.py'])
 
     def test_removing_favorite_keeps_pending_and_custom_folder(self):
         item = self.item()
@@ -176,8 +198,9 @@ class CollectionsIsolationTests(unittest.TestCase):
                    'xbmcplugin': plugin, '_new_listitem': Item,
                    'build_url': lambda params: 'plugin://synthetic/?' + urlencode(params)}
             namespace['dispatch'](env, {'view': ['collections_root'], 'stype': [kind]})
-            self.assertEqual([item.label for _, item, _ in rows], ['Favoritos', 'Pendientes'])
-            for route, item, folder in rows:
+            self.assertEqual([item.label for _, item, _ in rows], ['Favoritos', 'Pendientes', 'Mis listas'])
+            self.assertEqual(rows[-1][0], 'plugin://service.actweeter/?action=collections')
+            for route, item, folder in rows[:-1]:
                 self.assertTrue(folder)
                 self.assertEqual(parse_qs(urlsplit(route).query)['stype'], [kind])
                 self.assertEqual(parse_qs(urlsplit(route).query)['profile_num'], ['2'])

@@ -1,0 +1,5 @@
+0.4.54 (development candidate for Testing, not published)
+- Adds a read-only, typed Trakt import planner with complete-page validation.
+- Preserves unknown/newer local progress and defers ambiguous provider matches.
+- Does not activate synchronization, write remote history or replace scrobbling.
+- Mac OAuth and real bidirectional synchronization remain acceptance gates.

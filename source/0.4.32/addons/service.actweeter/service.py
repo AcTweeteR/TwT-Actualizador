@@ -22,6 +22,26 @@ LIB_PATH = os.path.join(ADDON_PATH, "resources", "lib")
 if LIB_PATH not in sys.path:
     sys.path.insert(0, LIB_PATH)
 
+# Read-only boot gate. An interrupted two-store restore must be recovered
+# outside the running Kodi process before any subsequent restore is allowed.
+def _check_trakt_restore_on_boot():
+    try:
+        from pathlib import Path
+        resources_parent = os.path.join(ADDON_PATH, "resources")
+        if resources_parent not in sys.path:
+            sys.path.insert(0, resources_parent)
+        from lib.trakt_restore_bootcheck import inspect_all_profiles
+        profile = xbmcvfs.translatePath('special://profile/addon_data/plugin.video.xstream-pro')
+        status = inspect_all_profiles(profile,
+            lambda message: xbmc.log('[AcTweeteR] ' + message, xbmc.LOGWARNING))
+        return status
+    except Exception as exc:
+        xbmc.log('[AcTweeteR] Trakt boot check unavailable: ' + type(exc).__name__, xbmc.LOGWARNING)
+        return {'safe': False, 'reason': 'boot_check_failed'}
+
+
+_check_trakt_restore_on_boot()
+
 from search_background import (last_successful_sync, plugin_refresh_url,
                                RefreshGate, xstream_profile_number)  # noqa: E402
 from slyguy_trailer_return import (  # noqa: E402

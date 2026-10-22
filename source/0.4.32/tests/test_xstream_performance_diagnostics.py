@@ -102,7 +102,7 @@ class PerformanceDiagnosticsTests(unittest.TestCase):
 
     def test_diagnostic_setting_is_off_by_default_and_source_hashes_are_locked(self):
         data = json.loads(MANIFEST.read_text(encoding="utf-8"))
-        self.assertEqual(data["distribution_version"], "1.1.2.19")
+        self.assertEqual(data["distribution_version"], "1.1.2.23~beta1")
         self.assertEqual(hashlib.sha256(PATCH.read_bytes()).hexdigest(),
                          data["performance_patch_sha256"])
         self.assertEqual(hashlib.sha256(MODULE.read_bytes()).hexdigest(),

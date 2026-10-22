@@ -1,5 +1,6 @@
 import ast
 import hashlib
+import json
 import subprocess
 import sys
 import tempfile
@@ -14,9 +15,20 @@ REPOSITORY_ROOT = ROOT.parents[1]
 
 
 class CandidatePackageBuildTests(unittest.TestCase):
+    def test_xstream_snapshot_patch_and_sources_are_locked(self):
+        manifest = json.loads((ROOT / "third_party/xstream/upstream.json").read_text())
+        patch = ROOT / manifest["trakt_snapshot_patch"]
+        self.assertEqual(hashlib.sha256(patch.read_bytes()).hexdigest(),
+                         manifest["trakt_snapshot_patch_sha256"])
+        for name, source in (
+                ("trakt_sync.py", ROOT / "addons/service.actweeter/resources/lib/trakt_sync.py"),
+                ("trakt_snapshot.py", ROOT / "third_party/xstream/trakt_snapshot.py")):
+            self.assertEqual(hashlib.sha256(source.read_bytes()).hexdigest(),
+                             manifest["trakt_snapshot_sources_sha256"][name])
+
     def test_service_zip_is_reproducible_and_well_formed(self):
         with tempfile.TemporaryDirectory() as temp:
-            package = Path(temp) / "service.actweeter-0.4.53.zip"
+            package = Path(temp) / "service.actweeter-0.4.55.zip"
             subprocess.run([sys.executable, str(ROOT / "tools/build_service_package.py"),
                             "--output", str(package)], check=True,
                            cwd=ROOT, capture_output=True, text=True)
@@ -29,10 +41,14 @@ class CandidatePackageBuildTests(unittest.TestCase):
             with zipfile.ZipFile(package) as archive:
                 self.assertIsNone(archive.testzip())
                 addon = ET.fromstring(archive.read("service.actweeter/addon.xml"))
-                self.assertEqual(addon.get("version"), "0.4.53")
-                self.assertIn("service.actweeter/changelog-0.4.53.txt",
+                self.assertEqual(addon.get("version"), "0.4.55")
+                self.assertIn("service.actweeter/changelog-0.4.55.txt",
                               archive.namelist())
                 for relative in ("resources/lib/addon_update_policy.py",
+                                 "resources/lib/trakt_sync.py",
+                                 "resources/lib/trakt_projection.py",
+                                 "resources/lib/trakt_provider_index.py",
+                                 "resources/lib/trakt_restore_ui.py",
                                  "resources/lib/smart_search_engine.py",
                                  "resources/lib/smart_search_sources.py",
                                  "resources/lib/smart_search_ui.py",
@@ -46,6 +62,13 @@ class CandidatePackageBuildTests(unittest.TestCase):
                 self.assertEqual(archive.read(
                     "service.actweeter/resources/lib/addon_update_policy.py"),
                     (ROOT / "addons/service.actweeter/resources/lib/addon_update_policy.py").read_bytes())
+                self.assertEqual(archive.read(
+                    "service.actweeter/resources/lib/trakt_sync.py"),
+                    (ROOT / "addons/service.actweeter/resources/lib/trakt_sync.py").read_bytes())
+                for relative in ("trakt_projection.py", "trakt_provider_index.py",
+                                 "trakt_restore_ui.py", "diagnostic_plugin.py"):
+                    self.assertEqual(archive.read("service.actweeter/resources/lib/" + relative),
+                                     (ROOT / "addons/service.actweeter/resources/lib" / relative).read_bytes())
                 layout_tree = ast.parse(archive.read(
                     'service.actweeter/resources/lib/interface_layout.py'))
                 retries = next(node.value.args[0] for node in layout_tree.body
@@ -71,7 +94,7 @@ class CandidatePackageBuildTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp:
             output = Path(temp)
-            service = output / "service.actweeter-0.4.53.zip"
+            service = output / "service.actweeter-0.4.55.zip"
             subprocess.run([sys.executable, str(ROOT / "tools/build_service_package.py"),
                             "--output", str(service)], check=True,
                            cwd=ROOT, capture_output=True, text=True)
@@ -85,8 +108,8 @@ class CandidatePackageBuildTests(unittest.TestCase):
                 for filename in ("Includes.xml", "IncludesBingie.xml", "IncludesBackgroundBuilding.xml"):
                     self.assertEqual(archive.read("skin.actweeter/1080i/" + filename),
                                      (ROOT / "addons/skin.actweeter/1080i" / filename).read_bytes())
-            xstream = output / "plugin.video.xstream-pro-1.1.2.19.zip"
-            self._write_addon_fixture(xstream, "plugin.video.xstream-pro", "1.1.2.19")
+            xstream = output / "plugin.video.xstream-pro-1.1.2.23~beta1.zip"
+            self._write_addon_fixture(xstream, "plugin.video.xstream-pro", "1.1.2.23~beta1")
             index_path, md5_path = build_distribution_index.build(
                 REPOSITORY_ROOT / "docs/testing/repo/repository.actweeter.testing/repository.actweeter.testing-1.0.2.zip",
                 skin,
@@ -98,9 +121,9 @@ class CandidatePackageBuildTests(unittest.TestCase):
                         for node in ET.fromstring(payload).findall("addon")}
             self.assertEqual(versions, {
                 "repository.actweeter.testing": "1.0.2",
-                "service.actweeter": "0.4.53",
+                "service.actweeter": "0.4.55",
                 "skin.actweeter": "1.2.32~beta1",
-                "plugin.video.xstream-pro": "1.1.2.19",
+                "plugin.video.xstream-pro": "1.1.2.23~beta1",
             })
             self.assertEqual(hashlib.md5(payload).hexdigest(),
                              md5_path.read_text(encoding="ascii").strip())

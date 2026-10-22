@@ -1804,7 +1804,7 @@ new file mode 100644
 index 0000000000000000000000000000000000000000..c40ae712cee58327c5022756a1b074ca274ebae6
 --- /dev/null
 +++ b/resources/lib/series_changes.py
-@@ -0,0 +1,142 @@
+@@ -0,0 +1,146 @@
 +"""Small provider-only snapshot for XStream series and episode changes."""
 +import json
 +import os
@@ -1896,9 +1896,13 @@ index 0000000000000000000000000000000000000000..c40ae712cee58327c5022756a1b074ca
 +        data["episode_inventory"] = stored_inventories
 +    info = response.get("info")
 +    info = info if isinstance(info, dict) else {}
++    diagnostics = series_state.inventory_diagnostics(episodes) if not inventory_complete else {}
++    conflicting_coordinates = diagnostics.pop("conflicting_coordinates", [])
 +    stored_inventories[str(series_id)] = {
 +        "checked_at": now,
 +        "complete": bool(inventory_complete),
++        "diagnostics": diagnostics,
++        "conflicting_coordinates": conflicting_coordinates,
 +        "tmdb_id": str(info.get("tmdb_id") or info.get("tmdb") or ""),
 +        "episodes": inventory,
 +    }
@@ -1952,7 +1956,7 @@ new file mode 100644
 index 0000000000000000000000000000000000000000..6031feb5a7fb33cba429c00b746fb5302adbf987
 --- /dev/null
 +++ b/resources/lib/series_state.py
-@@ -0,0 +1,174 @@
+@@ -0,0 +1,215 @@
 +"""Fail-closed, read-only series progress derived from XStream state."""
 +
 +import time
@@ -2127,6 +2131,47 @@ index 0000000000000000000000000000000000000000..6031feb5a7fb33cba429c00b746fb530
 +    if state.get("complete") is True:
 +        listitem.setProperty("XStream.SeriesComplete", "true")
 +    return True
++
++
++def inventory_diagnostics(episodes_by_season):
++    """Describe rejected provider rows without retaining titles or private data."""
++    counts = {"invalid_season": 0, "invalid_episode_list": 0,
++              "invalid_episode_row": 0, "missing_episode_number": 0,
++              "missing_provider_id": 0, "conflicting_episode_id": 0}
++    if not isinstance(episodes_by_season, dict):
++        return {"invalid_response": 1}
++    seen = {}
++    conflicting_coordinates = set()
++    for season_raw, episodes in episodes_by_season.items():
++        season = _positive_int(season_raw, allow_zero=True)
++        if season is None:
++            counts["invalid_season"] += 1
++        if not isinstance(episodes, list):
++            counts["invalid_episode_list"] += 1
++            continue
++        for row in episodes:
++            if not isinstance(row, dict):
++                counts["invalid_episode_row"] += 1
++                continue
++            episode = _positive_int(row.get("episode_num", row.get("num")))
++            provider = str(row.get("id") or row.get("episode_id") or "").strip()
++            if episode is None:
++                counts["missing_episode_number"] += 1
++            if not provider:
++                counts["missing_provider_id"] += 1
++            if season is None or episode is None or not provider:
++                continue
++            key = (season, episode)
++            if key in seen and seen[key] != provider:
++                counts["conflicting_episode_id"] += 1
++                conflicting_coordinates.add(key)
++            seen[key] = provider
++    report = {key: value for key, value in counts.items() if value}
++    if conflicting_coordinates:
++        report["conflicting_coordinates"] = [list(key) for key in sorted(conflicting_coordinates)]
++    return report
++
++
 diff --git a/resources/lib/pending_adapter.py b/resources/lib/pending_adapter.py
 new file mode 100644
 index 0000000000000000000000000000000000000000..0000000000000000000000000000000000000000

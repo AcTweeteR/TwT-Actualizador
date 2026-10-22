@@ -1,0 +1,6 @@
+0.4.55 (private Testing candidate; not published)
+- Consolidates Trakt snapshot validation and profile-bound restore preview.
+- Rejects empty pages inside any non-empty multi-page Trakt response.
+- Keeps watched and resume changes in temporary staging; no automatic apply.
+- Requires an explicit stopped-Kodi transaction for local store replacement.
+- No remote Trakt writes, scheduler, or automatic synchronization enabled.
