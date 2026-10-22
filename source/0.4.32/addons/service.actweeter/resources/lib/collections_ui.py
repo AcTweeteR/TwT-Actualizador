@@ -19,7 +19,7 @@ def _catalog(addon, vfs):
 def render(handle, *, addon, vfs, gui, plugin, params, dialog):
     """Handle only scoped actions; reject forged remote-write requests."""
     action = params.get('action', ['collections'])[0]
-    if action not in ('collections', 'collection_create', 'collection_open', 'collection_add'):
+    if action not in ('collections', 'collection_create', 'collection_open', 'collection_add', 'collection_rename'):
         raise ValueError('unsupported collections action')
     store = _catalog(addon, vfs)
     if action == 'collection_create':
@@ -36,6 +36,19 @@ def render(handle, *, addon, vfs, gui, plugin, params, dialog):
                   'La selección de contenido estará disponible tras verificar el catálogo TMDb.')
         plugin.endOfDirectory(handle, succeeded=True, cacheToDisc=False)
         return
+    elif action == 'collection_rename':
+        identifier = params.get('id', [''])[0]
+        try:
+            current = store.get(identifier)
+        except ValueError:
+            plugin.endOfDirectory(handle, succeeded=False, cacheToDisc=False)
+            return
+        title = dialog.input('Nuevo nombre de colección', defaultt=current['name'])
+        if title and title.strip() and title.strip() != current['name']:
+            try:
+                store.rename_local(identifier, title)
+            except ValueError:
+                dialog.ok('Mis Colecciones', 'Nombre no válido.')
     elif action == 'collection_open':
         identifier = params.get('id', [''])[0]
         try:
@@ -61,5 +74,7 @@ def render(handle, *, addon, vfs, gui, plugin, params, dialog):
     for identifier, name in rows:
         item = gui.ListItem(label=name)
         item.setArt({'icon': 'DefaultFolder.png', 'thumb': 'DefaultFolder.png'})
+        item.addContextMenuItems([('Renombrar colección',
+            'RunPlugin(' + ROOT + '?' + urlencode({'action': 'collection_rename', 'id': identifier}) + ')')])
         plugin.addDirectoryItem(handle, ROOT + '?' + urlencode({'action': 'collection_open', 'id': identifier}), item, True)
     plugin.endOfDirectory(handle, succeeded=True, cacheToDisc=False)

@@ -56,3 +56,8 @@
 - No hay reproducción funcional desde las filas de colección: se marcan no reproducibles para no simular una ruta de vídeo válida.
 - La navegación de Mis Colecciones aún no está integrada en el menú principal de XStream; el acceso de servicio es provisional.
 - Suite completa: 399 tests correctos. Sin pruebas E2E Kodi ni API autenticada. DESPLIEGUE BLOQUEADO.
+
+## Renombrado local desde menú contextual
+
+- `Mis Colecciones` incorpora acción contextual «Renombrar colección» que preserva el UUID y los mapeos. No renombra listas remotas hasta existir adaptadores autenticados y lectura posterior verificada.
+- Suite completa: 400 pruebas correctas; sin despliegue.
