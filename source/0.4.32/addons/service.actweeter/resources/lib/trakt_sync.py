@@ -205,6 +205,8 @@ def fetch_snapshot(get, *, cancelled=lambda: False, max_pages=1000):
     final_account, _ = get('/users/settings', {})
     if not isinstance(final_account, dict) or final_account.get('user', {}).get('ids', {}).get('slug') != account_id:
         raise IncompleteSnapshot('account changed during import')
+    # Completeness is asserted only after every page and both account/activity fences.
+    snapshot['complete'] = True
     return snapshot
 
 
