@@ -22,7 +22,11 @@ def recover_interrupted_restore(*, backup_directory, active_movie, active_episod
     if kodi_stopped is not True:
         raise PermissionError("Kodi must be stopped for recovery")
     backup = Path(backup_directory)
+    if backup.is_symlink():
+        raise ValueError("unsafe backup directory")
     marker = backup / "transaction.pending"
+    if marker.is_symlink():
+        raise ValueError("unsafe transaction marker")
     if not marker.exists():
         return False
     targets = (Path(active_movie), Path(active_episode))
@@ -50,7 +54,7 @@ def commit_staged_restore(*, staged_movie, staged_episode, active_movie, active_
     backup = Path(backup_directory)
     if backup.exists() or backup.is_symlink():
         raise FileExistsError('backup directory must not exist')
-    if targets[0] == targets[1] or sources[0] == sources[1]:
+    if targets[0].resolve() == targets[1].resolve() or sources[0].resolve() == sources[1].resolve():
         raise ValueError('distinct watched stores required')
     if any(p.is_symlink() or not p.is_file() for p in sources + targets):
         raise ValueError('watched stores must be regular files')
@@ -59,12 +63,18 @@ def commit_staged_restore(*, staged_movie, staged_episode, active_movie, active_
     for path in sources + targets:
         if not isinstance(json.loads(path.read_text('utf-8')), dict):
             raise ValueError('watched store must contain an object')
+    if any(backup == p or backup in p.parents for p in sources + targets):
+        raise ValueError("backup cannot contain watched stores")
     backup.mkdir(mode=0o700, parents=False)
     backups = [backup / ('original_%d.json' % i) for i in range(2)]
-    for original, dest in zip(targets, backups):
-        shutil.copy2(original, dest)
-        with dest.open('rb') as f:
-            os.fsync(f.fileno())
+    try:
+        for original, dest in zip(targets, backups):
+            shutil.copy2(original, dest)
+            with dest.open('rb') as f:
+                os.fsync(f.fileno())
+    except BaseException:
+        shutil.rmtree(backup)
+        raise
     _sync_directory(backup)
     marker = backup / "transaction.pending"
     marker.write_text("rollback-required", encoding="utf-8")
@@ -87,9 +97,6 @@ def commit_staged_restore(*, staged_movie, staged_episode, active_movie, active_
             replaced.append(target)
             _sync_directory(target.parent)
     except BaseException:
-        for target, original in zip(targets, backups):
-            if target in replaced:
-                shutil.copy2(original, target)
         if replaced:
             recover_interrupted_restore(backup_directory=backup, active_movie=targets[0],
                                         active_episode=targets[1], kodi_stopped=True)

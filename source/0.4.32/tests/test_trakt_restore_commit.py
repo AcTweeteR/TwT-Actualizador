@@ -34,3 +34,29 @@ class CommitTests(unittest.TestCase):
    self.assertEqual(json.loads(a.read_text()),{'original':1})
    self.assertEqual(json.loads(b.read_text()),{'original':2})
    self.assertFalse((backup/'transaction.pending').exists())
+
+ def test_second_replace_failure_rolls_back_first(self):
+  from unittest.mock import patch
+  import os
+  with tempfile.TemporaryDirectory() as directory:
+   root=Path(directory);files=[root/x for x in ('new_m','new_e','old_m','old_e')]
+   for i,p in enumerate(files):p.write_text(json.dumps({'value':i}))
+   real_replace=os.replace
+   def fail_second(src,dst):
+    if str(dst)==str(files[3]) and str(src).endswith('.tmp'):
+     raise OSError('simulated failure after first replacement')
+    return real_replace(src,dst)
+   with patch('lib.trakt_restore_commit.os.replace',side_effect=fail_second):
+    with self.assertRaises(OSError):
+     commit_staged_restore(staged_movie=files[0],staged_episode=files[1],active_movie=files[2],active_episode=files[3],backup_directory=root/'backup',kodi_stopped=True)
+   self.assertEqual(json.loads(files[2].read_text()),{'value':2})
+   self.assertEqual(json.loads(files[3].read_text()),{'value':3})
+   self.assertFalse((root/'backup/transaction.pending').exists())
+
+ def test_symlink_backup_refused(self):
+  with tempfile.TemporaryDirectory() as directory:
+   root=Path(directory);files=[root/x for x in ('new_m','new_e','old_m','old_e')]
+   for p in files:p.write_text('{}')
+   (root/'backup').symlink_to(root, target_is_directory=True)
+   with self.assertRaises(FileExistsError):
+    commit_staged_restore(staged_movie=files[0],staged_episode=files[1],active_movie=files[2],active_episode=files[3],backup_directory=root/'backup',kodi_stopped=True)
