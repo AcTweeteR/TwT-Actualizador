@@ -69,3 +69,12 @@
 - La suite completa suma 400 tests, todos correctos, incluido el nuevo enlace del menú; no hay ejecución real en Kodi ni despliegue.
 - La compilación de un nuevo ZIP queda BLOQUEADA: el ZIP local etiquetado `1.1.2.zip` tiene SHA-256 diferente al `upstream_release_zip_sha256` fijado en el manifiesto. No se relaja el hash ni se atribuye autenticidad a otro artefacto.
 - El hash `local_runtime_sha256` de `premium_routes.py` continúa reflejando el ZIP publicado, no el candidato; debe regenerarse solo junto a un build auténtico completo.
+
+## Despliegue Mac real 2026-10-22
+
+- Kodi habitual del Mac cerrado antes del backup; perfil íntegro copiado a `~/Documents/Codex/kodi-master-backups/KODI_BEFORE_COLLECTIONS_BETA_20261022` (~2,2 GB). Comprobados SHA-256 de guisettings, profiles, addon.xml de XStream y servicio y favorites_1.json.
+- ZIP original autenticado en `~/Documents/Codex/kodi-staging/xstream-1.1.2.9-audit/upstream-1.1.2.zip`, SHA-256 `915f45708670d07e789bb73b7390a7b5cf30175f818ef5da8ea18c9f13f537fe`.
+- Paquete generado en `/tmp/actweeter-collections-candidate.zip`, SHA-256 `b0e97f005514bd1bd8d8486bdb742c84b9dbd90490fd301d807cdb367ce745c2`, versión `1.1.2.20~beta1`.
+- Instalado en Kodi Mac habitual junto al servicio fuente 0.4.54; Kodi arranca y reconoce ambas versiones. Coincidencia exacta del addon.xml, addon.py y premium_routes.py instalados contra el ZIP y de collections_ui.py, collection_catalog.py, diagnostic_plugin.py instalados contra fuente.
+- 400 pruebas automatizadas PASS. Prueba visual manual de navegación y creación de listas pendiente. No se han autorizado escrituras Trakt/TMDb; no se ha instalado en Lenovo ni alterado Stable.
+- La edición del manifiesto `upstream.json` contiene también trabajo preexistente ajeno; no incluirlo en un commit sin revisión de ese trabajo.
