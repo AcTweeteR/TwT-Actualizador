@@ -40,3 +40,11 @@
 - La ruta de `Mis Colecciones` actual en el parche XStream muestra solo las dos carpetas tipadas Favoritos/Pendientes. No existe aún interfaz de creación de listas arbitrarias. No simular que existe.
 - Pendientes/Favoritos continúan como colecciones tipadas con sus reglas propias, sin promover carpetas generales de XStream a listas remotas.
 - La prueba de exclusión y la suite completa (396 pruebas) pasan. Sin despliegue, sin escrituras en Trakt/TMDb.
+
+## Primera pantalla Kodi para listas personalizadas
+
+- `collections_ui.py` permite crear y enumerar listas locales con UUID estable, sin escrituras remotas.
+- `diagnostic_plugin.py` enruta `action=collections`, `action=collection_create` y `action=collection_open` al controlador nuevo.
+- Entrada provisional: `plugin://service.actweeter/?action=collections`. No está enlazada todavía al árbol visual `Mis Colecciones` de XStream; la acción `collection_open` es un contenedor vacío.
+- Falta gestionar miembros, renombrar/borrar desde UI, conectar la navegación XStream y validar en Kodi real antes de anunciar funcionalidad completa.
+- Suite: 398 pruebas correctas.

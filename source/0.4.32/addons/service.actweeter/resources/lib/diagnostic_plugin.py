@@ -224,6 +224,11 @@ def main(argv=None):
         return
     query = argv[2] if len(argv) > 2 else ""
     params = urllib.parse.parse_qs(query.lstrip("?"), keep_blank_values=True)
+    if params.get("action", [""])[0] in ("collections", "collection_create", "collection_open"):
+        from collections_ui import render
+        render(handle, addon=xbmcaddon.Addon(), vfs=xbmcvfs, gui=xbmcgui,
+               plugin=xbmcplugin, params=params, dialog=xbmcgui.Dialog())
+        return
     if params.get('action') == ['rollback_preview_bridge']:
         status=rollback_preview_bridge(xbmc,xbmcaddon.Addon,xbmcvfs)
         report=interface_report(xbmc,xbmcaddon.Addon,xbmcvfs)
