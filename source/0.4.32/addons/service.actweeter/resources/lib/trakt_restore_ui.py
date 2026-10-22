@@ -6,6 +6,7 @@ from .trakt_restore_transaction import stage_restore
 from pathlib import Path
 from .trakt_restore_importer import prepare_restore
 from .trakt_restore_guard import pending_restores
+from .trakt_restore_startup import startup_restore_status
 
 ROOT = 'plugin://service.actweeter/?action=trakt_restore'
 
@@ -38,11 +39,12 @@ def render(handle, *, gui, plugin, vfs, xstream_addon, params=None):
     profile_path = vfs.translatePath(xstream_addon.getAddonInfo('profile'))
     plugin.setPluginCategory(handle, 'Sincronizar biblioteca con Trakt')
     plugin.setContent(handle, 'files')
-    pending = pending_restores(profile_path)
+    status = startup_restore_status(profile_path)
+    pending = status["pending"]
     exports = summarize_exports(profile_path, profile='1')
     action = (params or {}).get('operation', [''])[0]
     staged_message = None
-    if action == 'prepare' and exports and not pending:
+    if action == 'prepare' and exports and status['safe']:
         newest = exports[-1]
         plan = prepare_restore(Path(profile_path) / 'trakt_exports' / newest['name'],
                                profile_path, profile='1', account=newest['account'])
@@ -52,8 +54,8 @@ def render(handle, *, gui, plugin, vfs, xstream_addon, params=None):
                 episode_source=Path(profile_path) / 'watched_episodes_p1.json',
                 staging_directory=folder)
             staged_message = 'Preparación comprobada: %d películas, %d episodios (sin modificar Kodi)' % (result['movies'], result['episodes'])
-    if pending:
-        labels = ['Restauración interrumpida detectada: %d' % len(pending),
+    if not status['safe']:
+        labels = ['Restauración bloqueada: transacciones pendientes (%d)' % pending,
                   'Recupera los originales con Kodi detenido antes de continuar']
     elif not exports:
         labels = ['Sin exportación verificada de Trakt para este perfil',
@@ -71,7 +73,7 @@ def render(handle, *, gui, plugin, vfs, xstream_addon, params=None):
         item = gui.ListItem(label=label)
         item.setProperty('IsPlayable', 'false')
         plugin.addDirectoryItem(handle, '', item, False)
-    if exports and not pending:
+    if exports and status['safe']:
         item = gui.ListItem(label='Comprobar preparación segura de la restauración')
         item.setProperty('IsPlayable', 'false')
         plugin.addDirectoryItem(handle, ROOT + '&operation=prepare', item, True)
