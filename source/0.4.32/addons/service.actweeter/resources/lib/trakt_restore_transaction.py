@@ -17,10 +17,10 @@ def stage_restore(plan, *, profile, account, movie_source, episode_source, stagi
         raise FileExistsError('staging output already exists')
     sources = (Path(movie_source), Path(episode_source))
     for source in sources:
-        if source.is_symlink() or not source.is_file():
-            raise ValueError('source must be an existing regular file')
+        if source.is_symlink() or (source.exists() and not source.is_file()):
+            raise ValueError('source must be a regular file when present')
     for source, target in zip(sources, (movie, episode)):
-        data = json.loads(source.read_text('utf-8'))
+        data = json.loads(source.read_text('utf-8')) if source.exists() else {}
         if not isinstance(data, dict):
             raise ValueError('invalid watched store')
         with target.open('x', encoding='utf-8') as output:

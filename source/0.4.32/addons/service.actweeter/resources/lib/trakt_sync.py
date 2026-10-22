@@ -108,9 +108,15 @@ def _pages(get, path, cancelled, max_pages):
     while True:
         if cancelled():
             raise IncompleteSnapshot('cancelled')
-        rows, count = get(path, {'page': page, 'limit': 100, 'extended': 'full'})
+        # Trakt's 2026 watched API requires progress to include explicit episodes.
+        extended = 'progress' if path == '/sync/watched/shows' else 'full'
+        rows, count = get(path, {'page': page, 'limit': 100, 'extended': extended})
+        if page == 1 and rows == [] and type(count) is int and count == 0:
+            return
         if not isinstance(rows, list) or type(count) is not int or not 1 <= count <= max_pages:
-            raise IncompleteSnapshot('invalid pagination or payload')
+            detail = str(count) if type(count) is int else type(count).__name__
+            raise IncompleteSnapshot('invalid pagination or payload: %s (%s, %s)' %
+                                     (path, type(rows).__name__, detail))
         if expected is not None and expected != count:
             raise IncompleteSnapshot('pagination changed')
         expected = count

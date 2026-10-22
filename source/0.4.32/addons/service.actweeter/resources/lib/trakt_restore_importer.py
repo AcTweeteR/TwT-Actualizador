@@ -23,6 +23,10 @@ def prepare_restore(export_directory, xstream_directory, *, profile, account):
         raise ValueError('unverified export')
     payload = json.loads(raw)
     snapshot = payload['snapshot']
+    if (payload.get('schema_version') != 1 or snapshot.get('complete') is not True
+            or not isinstance(snapshot.get('records'), dict)
+            or not isinstance(snapshot.get('history'), list)):
+        raise ValueError('complete supported snapshot required')
     if str(payload.get('profile')) != str(profile) or snapshot.get('account') != account:
         raise PermissionError('Trakt account or XStream profile mismatch')
     movies = verified_vod_records(xstream_directory, profile=profile)

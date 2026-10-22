@@ -1,14 +1,22 @@
 """Read-only Kodi Trakt restoration entrypoint; never commits on click."""
 import json
+import re
 import tempfile
-from urllib.parse import quote
 from .trakt_restore_transaction import stage_restore
 from pathlib import Path
 from .trakt_restore_importer import prepare_restore
-from .trakt_restore_guard import pending_restores
 from .trakt_restore_startup import startup_restore_status
+from .first_run import addon_version_satisfies
 
 ROOT = 'plugin://service.actweeter/?action=trakt_restore'
+XSTREAM_SNAPSHOT = 'plugin://plugin.video.xstream-pro/?mode=xstream_trakt_snapshot'
+
+
+def active_xstream_profile(addon):
+    # Match XStream ProfileManager's public add-on setting and fallback.
+    raw = addon.getSetting('active_pvr_profile') or 'Profile 1'
+    match = re.search(r'(\d+)$', str(raw))
+    return match.group(1) if match else '1'
 
 
 def summarize_exports(xstream_profile, *, profile):
@@ -37,21 +45,24 @@ def summarize_exports(xstream_profile, *, profile):
 
 def render(handle, *, gui, plugin, vfs, xstream_addon, params=None):
     profile_path = vfs.translatePath(xstream_addon.getAddonInfo('profile'))
+    profile = active_xstream_profile(xstream_addon)
+    snapshot_supported = addon_version_satisfies(
+        xstream_addon.getAddonInfo('version'), '1.1.2.20')
     plugin.setPluginCategory(handle, 'Sincronizar biblioteca con Trakt')
     plugin.setContent(handle, 'files')
     status = startup_restore_status(profile_path)
     pending = status["pending"]
-    exports = summarize_exports(profile_path, profile='1')
+    exports = summarize_exports(profile_path, profile=profile)
     action = (params or {}).get('operation', [''])[0]
     staged_message = None
     if action == 'prepare' and exports and status['safe']:
         newest = exports[-1]
         plan = prepare_restore(Path(profile_path) / 'trakt_exports' / newest['name'],
-                               profile_path, profile='1', account=newest['account'])
+                               profile_path, profile=profile, account=newest['account'])
         with tempfile.TemporaryDirectory(prefix='actweeter-trakt-preview-') as folder:
-            result = stage_restore(plan, profile='1', account=newest['account'],
-                movie_source=Path(profile_path) / 'watched_movies_p1.json',
-                episode_source=Path(profile_path) / 'watched_episodes_p1.json',
+            result = stage_restore(plan, profile=profile, account=newest['account'],
+                movie_source=Path(profile_path) / ('watched_movies_p%s.json' % profile),
+                episode_source=Path(profile_path) / ('watched_episodes_p%s.json' % profile),
                 staging_directory=folder)
             staged_message = 'Preparación comprobada: %d películas, %d episodios (sin modificar Kodi)' % (result['movies'], result['episodes'])
     if not status['safe']:
@@ -73,6 +84,17 @@ def render(handle, *, gui, plugin, vfs, xstream_addon, params=None):
         item = gui.ListItem(label=label)
         item.setProperty('IsPlayable', 'false')
         plugin.addDirectoryItem(handle, '', item, False)
+    if snapshot_supported:
+        item = gui.ListItem(label='Obtener snapshot Trakt (solo lectura)')
+        item.setProperty('IsPlayable', 'false')
+        plugin.addDirectoryItem(handle, XSTREAM_SNAPSHOT, item, True)
+    else:
+        item = gui.ListItem(label='Actualiza XStream para habilitar la exportación segura')
+        item.setProperty('IsPlayable', 'false')
+        plugin.addDirectoryItem(handle, '', item, False)
+    item = gui.ListItem(label='Actualizar estado de exportaciones')
+    item.setProperty('IsPlayable', 'false')
+    plugin.addDirectoryItem(handle, ROOT + '&operation=refresh', item, True)
     if exports and status['safe']:
         item = gui.ListItem(label='Comprobar preparación segura de la restauración')
         item.setProperty('IsPlayable', 'false')

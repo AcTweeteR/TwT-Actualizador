@@ -82,6 +82,11 @@ class TraktSyncTests(unittest.TestCase):
         self.assertEqual(episode['watched_at'], EARLY)
         self.assertNotIn('show:tmdb:42', snapshot['records'])
 
+    def test_watched_series_requests_progress_inventory(self):
+        sync.fetch_snapshot(self.api.get)
+        query = next(params for path, params in self.api.calls if path == '/sync/watched/shows')
+        self.assertEqual(query, {'page': 1, 'limit': 100, 'extended': 'progress'})
+
     def test_native_transport_get_only_and_no_url_or_token_export(self):
         snapshot = sync.fetch_snapshot(self.api.get)
         self.assertEqual(len(self.api.calls), 10)
@@ -105,9 +110,15 @@ class TraktSyncTests(unittest.TestCase):
         with self.assertRaises(sync.IncompleteSnapshot): sync.fetch_snapshot(self.api.get)
 
     def test_invalid_page_count_and_limit_fail_closed(self):
-        for count in (0, '2', 1001):
+        for count in ('2', 1001):
             self.api.responses['/sync/history/movies'] = ([], count)
             with self.assertRaises(sync.IncompleteSnapshot): sync.fetch_snapshot(self.api.get)
+
+    def test_empty_collection_with_zero_pages_is_a_valid_empty_result(self):
+        self.api.responses['/sync/history/movies'] = ([], 0)
+        snapshot = sync.fetch_snapshot(self.api.get)
+        self.assertTrue(snapshot['complete'])
+        self.assertEqual(snapshot['history'], [])
 
     def test_pages_changed_during_import(self):
         self.api.responses['/sync/history/movies'] = lambda params: ([{

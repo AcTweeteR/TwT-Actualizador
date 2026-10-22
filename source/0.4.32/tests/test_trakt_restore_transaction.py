@@ -20,3 +20,14 @@ class TransactionTests(unittest.TestCase):
    self.assertEqual(json.loads(e.read_text()),{})
    self.assertTrue(json.loads((stage/'watched_movies.json').read_text())['12'])
    self.assertEqual(json.loads((stage/'watched_episodes.json').read_text())['77']['2'],['55'])
+
+ def test_missing_profile_stores_are_staged_as_empty_without_creating_sources(self):
+  with tempfile.TemporaryDirectory() as directory:
+   root=Path(directory);src=root/'active';src.mkdir();stage=root/'stage';stage.mkdir()
+   movie=src/'watched_movies_p2.json';episode=src/'watched_episodes_p2.json'
+   plan={'profile':'2','account':'a','items':[]}
+   result=stage_restore(plan,profile='2',account='a',movie_source=movie,
+      episode_source=episode,staging_directory=stage)
+   self.assertEqual(json.loads(Path(result['movie_path']).read_text()),{})
+   self.assertEqual(json.loads(Path(result['episode_path']).read_text()),{})
+   self.assertFalse(movie.exists());self.assertFalse(episode.exists())

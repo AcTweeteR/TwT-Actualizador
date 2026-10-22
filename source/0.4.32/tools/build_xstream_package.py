@@ -35,6 +35,7 @@ PATCHES = (
     ("collections_empty_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-collections-empty.patch"),
     ("collections_dedup_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-collections-dedup.patch"),
     ("trakt_device_auth_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-trakt-device-auth.patch"),
+    ("trakt_snapshot_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-trakt-snapshot.patch"),
 )
 DIAGNOSTICS_SOURCE = ROOT / "third_party/xstream/performance_diagnostics.py"
 CATALOG_INDEX_SOURCE = ROOT / "third_party/xstream/provider_catalog_index.py"
@@ -188,6 +189,12 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             raise ValueError("XStream upstream license missing or unexpected")
 
         for manifest_key, patch_path in PATCHES:
+            if manifest_key == "trakt_snapshot_patch":
+                if sha256(patch_path) != data[manifest_key + "_sha256"]:
+                    raise ValueError("Trakt snapshot patch hash mismatch")
+                normalize_recommendation_patch_targets(root)
+                apply_contextual_unified_patch(root, patch_path)
+                continue
             if manifest_key == "trakt_device_auth_patch":
                 if sha256(patch_path) != data[manifest_key + "_sha256"]:
                     raise ValueError("Trakt OAuth patch hash mismatch")
@@ -223,6 +230,13 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             raise ValueError("catalog index source SHA-256 mismatch")
         (root / "resources/lib/provider_catalog_index.py").write_bytes(
             CATALOG_INDEX_SOURCE.read_bytes())
+        for name, source in (
+            ("trakt_sync.py", ROOT / "addons/service.actweeter/resources/lib/trakt_sync.py"),
+            ("trakt_snapshot.py", ROOT / "third_party/xstream/trakt_snapshot.py"),
+        ):
+            if sha256(source) != data["trakt_snapshot_sources_sha256"][name]:
+                raise ValueError("Trakt snapshot source hash mismatch: " + name)
+            (root / "resources/lib" / name).write_bytes(source.read_bytes())
 
         validate_python_sources(root)
 

@@ -1,0 +1,58 @@
+diff --git a/resources/lib/addon.py b/resources/lib/addon.py
+--- a/resources/lib/addon.py
++++ b/resources/lib/addon.py
+@@ -16581,3 +16581,6 @@
+ elif mode == "xstream_tmdb_trakt_menu":
+     if _setup_tmdb_routes():
+         _tmdb_routes.trakt_menu()
++elif mode == "xstream_trakt_snapshot":
++    if _setup_tmdb_routes():
++        _tmdb_routes.trakt_snapshot_route(args)
+diff --git a/resources/lib/tmdb_routes.py b/resources/lib/tmdb_routes.py
+--- a/resources/lib/tmdb_routes.py
++++ b/resources/lib/tmdb_routes.py
+@@ -2524,2 +2524,32 @@
+-def trakt_list_route(params):
++def trakt_snapshot_route(params):
++    if not _trakt_guard(auth=True) or not trakt.authorized():
++        return
++    import trakt_snapshot
++    profile = str(c("pm").active)
++    monitor = xbmc.Monitor()
++    def cancelled():
++        return monitor.abortRequested() or str(c("pm").active) != profile
++    try:
++        directory = os.path.join(xbmcvfs.translatePath(c("addon").getAddonInfo("profile")),
++                                 "trakt_exports")
++        summary = trakt_snapshot.export_snapshot(
++            lambda path, query: trakt.request(path, query, auth=True),
++            directory, profile, cancelled=cancelled)
++        li = c("_new_listitem")("Exportación Trakt verificada (solo lectura)")
++        li.setProperty("actweeter.trakt.snapshot", json.dumps(summary, sort_keys=True))
++        xbmcplugin.addDirectoryItem(c("addon_handle"), "", li, isFolder=False)
++        xbmcplugin.endOfDirectory(c("addon_handle"), cacheToDisc=False)
++    except Exception as exc:
++        # Do not log exception messages: upstream HTTP errors may include URLs.
++        reason = type(exc).__name__
++        if isinstance(exc, trakt_snapshot.IncompleteSnapshot):
++            reason = str(exc)
++        li = c("_new_listitem")("Exportación incompleta: " + reason)
++        li.setProperty("actweeter.trakt.snapshot", json.dumps(
++            {"status": "FAILED", "error_type": type(exc).__name__}))
++        xbmcplugin.addDirectoryItem(c("addon_handle"), "", li, isFolder=False)
++        xbmcplugin.endOfDirectory(c("addon_handle"), cacheToDisc=False)
++
++
++def trakt_list_route(params):
+     if not _trakt_guard(auth=True):
+diff --git a/resources/lib/trakt.py b/resources/lib/trakt.py
+--- a/resources/lib/trakt.py
++++ b/resources/lib/trakt.py
+@@ -300,6 +300,6 @@
+     try:
+         payload = resp.json()
+     except Exception:
+-        payload = []
++        raise ValueError("Invalid Trakt JSON response") from None
+ 
+     return payload, total_pages

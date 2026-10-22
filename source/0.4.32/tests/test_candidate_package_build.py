@@ -1,5 +1,6 @@
 import ast
 import hashlib
+import json
 import subprocess
 import sys
 import tempfile
@@ -14,6 +15,17 @@ REPOSITORY_ROOT = ROOT.parents[1]
 
 
 class CandidatePackageBuildTests(unittest.TestCase):
+    def test_xstream_snapshot_patch_and_sources_are_locked(self):
+        manifest = json.loads((ROOT / "third_party/xstream/upstream.json").read_text())
+        patch = ROOT / manifest["trakt_snapshot_patch"]
+        self.assertEqual(hashlib.sha256(patch.read_bytes()).hexdigest(),
+                         manifest["trakt_snapshot_patch_sha256"])
+        for name, source in (
+                ("trakt_sync.py", ROOT / "addons/service.actweeter/resources/lib/trakt_sync.py"),
+                ("trakt_snapshot.py", ROOT / "third_party/xstream/trakt_snapshot.py")):
+            self.assertEqual(hashlib.sha256(source.read_bytes()).hexdigest(),
+                             manifest["trakt_snapshot_sources_sha256"][name])
+
     def test_service_zip_is_reproducible_and_well_formed(self):
         with tempfile.TemporaryDirectory() as temp:
             package = Path(temp) / "service.actweeter-0.4.54.zip"
@@ -34,6 +46,9 @@ class CandidatePackageBuildTests(unittest.TestCase):
                               archive.namelist())
                 for relative in ("resources/lib/addon_update_policy.py",
                                  "resources/lib/trakt_sync.py",
+                                 "resources/lib/trakt_projection.py",
+                                 "resources/lib/trakt_provider_index.py",
+                                 "resources/lib/trakt_restore_ui.py",
                                  "resources/lib/smart_search_engine.py",
                                  "resources/lib/smart_search_sources.py",
                                  "resources/lib/smart_search_ui.py",
@@ -50,6 +65,10 @@ class CandidatePackageBuildTests(unittest.TestCase):
                 self.assertEqual(archive.read(
                     "service.actweeter/resources/lib/trakt_sync.py"),
                     (ROOT / "addons/service.actweeter/resources/lib/trakt_sync.py").read_bytes())
+                for relative in ("trakt_projection.py", "trakt_provider_index.py",
+                                 "trakt_restore_ui.py", "diagnostic_plugin.py"):
+                    self.assertEqual(archive.read("service.actweeter/resources/lib/" + relative),
+                                     (ROOT / "addons/service.actweeter/resources/lib" / relative).read_bytes())
                 layout_tree = ast.parse(archive.read(
                     'service.actweeter/resources/lib/interface_layout.py'))
                 retries = next(node.value.args[0] for node in layout_tree.body

@@ -229,6 +229,16 @@ def main(argv=None):
         render_trakt_actions(handle, addon=xbmcaddon.Addon(), vfs=xbmcvfs,
                              gui=xbmcgui, plugin=xbmcplugin, params=params)
         return
+    if params.get('action') == ['trakt_restore']:
+        resources_path = os.path.join(
+            xbmcvfs.translatePath(xbmcaddon.Addon().getAddonInfo('path')), 'resources')
+        if resources_path not in sys.path:
+            sys.path.insert(0, resources_path)
+        from lib.trakt_restore_ui import render as render_trakt_restore
+        render_trakt_restore(handle, gui=xbmcgui, plugin=xbmcplugin, vfs=xbmcvfs,
+                             xstream_addon=xbmcaddon.Addon('plugin.video.xstream-pro'),
+                             params=params)
+        return
     if params.get("action", [""])[0] in ("collections", "collection_create", "collection_open", "collection_add", "collection_rename"):
         from collections_ui import render
         render(handle, addon=xbmcaddon.Addon(), vfs=xbmcvfs, gui=xbmcgui,
