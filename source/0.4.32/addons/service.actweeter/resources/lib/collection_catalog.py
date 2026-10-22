@@ -39,7 +39,9 @@ class Catalog:
         finally:
             db.close()
 
-    def create_local(self, name, *, kind='mixed'):
+    def create_local(self, name, *, kind='mixed', origin=None):
+        if origin != 'mis_colecciones':
+            raise PermissionError('only Mis Colecciones may create synced lists')
         title = _name(name)
         if kind not in ('movie', 'show', 'mixed'):
             raise ValueError('unsupported list kind')

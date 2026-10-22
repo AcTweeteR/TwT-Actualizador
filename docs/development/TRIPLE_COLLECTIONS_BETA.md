@@ -33,3 +33,10 @@
 - `confirm_remote` exige comprobación posterior de identidad remota y cuenta, y bloquea el rebinding silencioso. Renombrar no pierde el UUID.
 - **Falta implementar** adaptadores de creación de listas de Trakt/TMDb, compatibilidad real de tipos, captura de carpetas nuevas en XStream, detección de nombres duplicados remotos y sincronización de membresías. No anunciar esta funcionalidad como activa.
 - Suite completa: 395 tests correctos, sin pruebas autenticadas contra servicios externos.
+
+## Restricción solicitada: Mis Colecciones exclusivamente
+
+- La creación de listas sincronizables exige `origin='mis_colecciones'`; se rechaza cualquier otra procedencia, incluso si la sincronización global está habilitada.
+- La ruta de `Mis Colecciones` actual en el parche XStream muestra solo las dos carpetas tipadas Favoritos/Pendientes. No existe aún interfaz de creación de listas arbitrarias. No simular que existe.
+- Pendientes/Favoritos continúan como colecciones tipadas con sus reglas propias, sin promover carpetas generales de XStream a listas remotas.
+- La prueba de exclusión y la suite completa (396 pruebas) pasan. Sin despliegue, sin escrituras en Trakt/TMDb.
