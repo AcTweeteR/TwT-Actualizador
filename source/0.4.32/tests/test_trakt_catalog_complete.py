@@ -85,11 +85,40 @@ class CompleteCatalogTests(unittest.TestCase):
 
     def test_title_candidates_cannot_authorize_watched_state(self):
         sys.path.insert(0,str(ROOT.parents[1]/'tools'))
-        from prepare_trakt_catalog_mac import candidate_ids
+        from prepare_trakt_catalog_mac import candidate_ids, provider_candidates, safe_catalog_evidence
         self.movies([{'stream_id':9,'title':'Exact candidate','year':'2020'}])
         candidates=candidate_ids(catalog_members(self.root,'1','movie'), {'movie:42':[['Exact candidate','2020']]})
         self.assertEqual(candidates,['9'])
         self.assertEqual(verified_vod_records(self.root,profile='1'),[])
+
+    def test_private_catalog_evidence_redacts_provider_source_and_urls(self):
+        sys.path.insert(0,str(ROOT.parents[1]/'tools'))
+        from prepare_trakt_catalog_mac import safe_catalog_evidence
+        source={'_src':'https://private.invalid|secret-user|secret-password', '_data':[
+            {'stream_id':9,'name':'Film','year':'2020','tmdb_id':42,
+             'url':'https://private.invalid/secret-stream','password':'secret-password'}]}
+        evidence=safe_catalog_evidence(source,'movie')
+        encoded=json.dumps(evidence)
+        self.assertNotIn('secret',encoded)
+        self.assertNotIn('private.invalid',encoded)
+        self.assertEqual(evidence,{'_src':'redacted','_data':[
+            {'stream_id':9,'name':'Film','year':'2020','tmdb_id':42}]})
+        self.assertEqual(source['_src'],'https://private.invalid|secret-user|secret-password')
+        with tempfile.TemporaryDirectory() as destination:
+            path=Path(destination)/'data_cache_p1_xtream_streams_movie.json'
+            path.write_text(json.dumps(evidence))
+            self.assertEqual(catalog_members(destination,'1','movie')['9']['tmdb_id'],42)
+
+    def test_provider_lookup_skips_already_verified_movie_ids(self):
+        sys.path.insert(0,str(ROOT.parents[1]/'tools'))
+        from prepare_trakt_catalog_mac import provider_candidates
+        self.movies([{'stream_id':9,'name':'Film','year':'2020','tmdb_id':42},
+                     {'stream_id':10,'name':'Other','year':'2021'}])
+        self.write('data_cache_p1_vod_info_9.json',{
+            'movie_data':{'stream_id':9,'name':'Film','year':'2020'},
+            'info':{'tmdb_id':42}})
+        self.assertEqual(provider_candidates('movie',['9','10'],self.root,'1'),['10'])
+        self.assertEqual(provider_candidates('series',['9','10'],self.root,'1'),['9','10'])
 
     def test_preview_is_delta_and_preserves_more_recent_and_unknown_local_progress(self):
         self.write('watched_movies_p1.json',{'9':True, '12':False})

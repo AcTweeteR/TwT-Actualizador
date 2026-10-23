@@ -125,3 +125,52 @@ final debe señalar los dos ZIP reproducibles. Los feeds públicos y Stable no c
 - Evidencias privadas fuera del repositorio. El informe operativo distingue
   cobertura confirmada de candidatos que aún requieren metadatos del proveedor.
 - Sin push ni CI remoto: solo verificaciones locales reproducibles.
+
+## Continuación: lectura autorizada y vista previa — 2026-10-23
+
+- Se obtuvo un snapshot nuevo mediante el exportador nativo en modo GET: contrato
+  v2, completo, 3.235 eventos, 1.830 registros y cero sin identificar. SHA-256 del
+  snapshot: `89852713f8d0f2fe0f5cc1f52931e85e5a9d35a80d2c01c2dbf7e941585de231`.
+  Se mantuvo en `/private/tmp`; no se hizo POST ni se renovó OAuth.
+- Las exportaciones v1 históricas se volvieron a contrastar sin editarlas: dos
+  coinciden exactamente con una referencia v2 fresca de la misma cuenta/perfil;
+  una difiere y se rechaza fail-closed. No se añadió un indicador `complete` a
+  ninguna exportación histórica.
+- La previsualización de diez muestras leyó los almacenes activos en solo lectura
+  y verificó que sus hashes no cambiaron. Propuso 2 películas vistas nuevas y 2
+  actualizaciones de avance; 38 películas ya estaban vistas, 8 avances locales se
+  conservarían y 1 avance queda diferido. No propuso episodios vistos ni avances
+  nuevos. Cero escrituras locales o remotas.
+- Cobertura observada: catálogos actuales con 13.003 IDs de películas y 5.117 de
+  series; identidad externa verificada para 172 películas y 121 series, y 35
+  episodios exactos. De 1.830 registros Trakt, 1.787 siguen sin identidad exacta
+  suficiente; se clasifican como pendientes/availability unknown, nunca como
+  ausentes. Los listados completos no equivalen a metadatos de identidad completos.
+- Con autorización del usuario se inició el descubrimiento dirigido, limitado a
+  285 GET Xtream como máximo y concurrencia 3 (274 candidatos de película y 11
+  de serie). El único probe intentado no obtuvo respuesta HTTP: DNS resolvió,
+  pero la conexión TCP al endpoint configurado agotó el tiempo. El guard detuvo
+  la operación antes de lanzar el lote; no se registraron credenciales ni URL y
+  no se consultó TMDb. Resultado: 0 respuestas de proveedor, 0 IDs adicionales
+  verificados. La cobertura no puede ampliarse hasta que el endpoint vuelva a ser
+  accesible desde el Mac.
+- Por seguridad, el extractor ahora copia los catálogos como proyecciones de
+  campos de identidad, con `_src` redactado, excluyendo URL y credenciales. Además
+  omite GET de películas cuya identidad externa ya está verificada y tiene un
+  límite codificado de 285. Dos pruebas nuevas cubren redacción/lectura y el
+  límite de candidatos ya verificados. La cápsula resultante es modo 0700 y todos
+  sus archivos modo 0600; el escaneo encontró cero credenciales o URL del
+  proveedor.
+- Suite completa posterior a la corrección: 495 pruebas PASS, cero fallos y cero
+  omisiones, con integración al ZIP XStream candidato 1.1.2.28~beta1 y al ZIP
+  upstream fijado. No se reconstruyeron ni instalaron paquetes: los únicos cambios
+  son a la herramienta de descubrimiento y sus pruebas, no al código de addons.
+- Medición de preview (10 muestras, Mac): wall p50/p90 418,889/426,799 ms; CPU
+  p50/p90 418,564/426,550 ms; memoria máxima Python 77.841.511 bytes; comprobación
+  de generación p50 1,298 ms. Es una medición de la etapa de preparación local, no
+  de latencia visual ni una comparación antes/después.
+- El primer intento de inspección DNS falló por un error de sintaxis en el comando
+  de diagnóstico; no accedió al proveedor. La comprobación corregida posterior
+  resolvió DNS. La prueba TCP fue solo de conectividad y no envió credenciales.
+- No se activó consentimiento, no se consumió la cola, no se aplicaron estados,
+  no se escribió en Trakt, no se instalaron candidatos y no se publicó nada.

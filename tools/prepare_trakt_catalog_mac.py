@@ -26,7 +26,7 @@ from export_trakt_readonly_mac import NoRedirect
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'source/0.4.32/addons/service.actweeter/resources'))
-from lib.trakt_provider_index import catalog_members
+from lib.trakt_provider_index import catalog_members, verified_vod_records
 from lib.trakt_sync import validate_export
 
 
@@ -38,6 +38,26 @@ def private_json(path, value):
         os.replace(temporary, path)
     finally:
         if os.path.exists(temporary): os.unlink(temporary)
+
+
+def safe_catalog_evidence(value, kind):
+    """Keep only catalog identity fields; never copy provider credentials/URLs."""
+    field = 'stream_id' if kind == 'movie' else 'series_id'
+    if not isinstance(value, dict) or not isinstance(value.get('_data'), list):
+        raise ValueError('invalid provider catalog')
+    fields = (field, 'name', 'title', 'year', 'tmdb_id', 'imdb_id', 'tvdb_id')
+    return {'_src': 'redacted', '_data': [
+        {key: row[key] for key in fields if key in row}
+        for row in value['_data'] if isinstance(row, dict)
+    ]}
+
+
+def provider_candidates(kind, selected, directory, profile):
+    if kind != 'movie':
+        return selected
+    already_verified = {row['provider_id'] for row in
+                        verified_vod_records(directory, profile=profile)}
+    return [ident for ident in selected if ident not in already_verified]
 
 
 def title_key(title):
@@ -127,9 +147,13 @@ def main():
             target = output / path.name
             if target.is_symlink():
                 raise ValueError('unsafe existing evidence')
-            if target.exists() and path.name.startswith('data_cache_p' + args.profile + '_xtream_streams_') and target.read_bytes() != path.read_bytes():
-                raise ValueError('catalog generation changed; use a new evidence directory')
-            if not target.exists():
+            if '_xtream_streams_' in path.name:
+                kind = 'movie' if path.name.endswith('_movie.json') else 'series'
+                evidence = safe_catalog_evidence(json.loads(path.read_text()), kind)
+                if target.exists() and json.loads(target.read_text()) != evidence:
+                    raise ValueError('catalog generation changed; use a new evidence directory')
+                if not target.exists(): private_json(target, evidence)
+            elif not target.exists():
                 shutil.copyfile(path, target); target.chmod(0o600)
     aliases = remote_aliases(payload)
     metrics = {'tmdb_get': 0, 'provider_get': 0, 'errors': {}, 'kodi_writes': 0, 'remote_writes': 0}
@@ -168,11 +192,12 @@ def main():
     for kind in ('movie', 'series'):
         members = catalog_members(output, args.profile, kind)
         selected = candidate_ids(members, {key:value for key,value in aliases.items() if key.startswith(kind + ':')})
+        selected = provider_candidates(kind, selected, output, args.profile)
         metrics[kind + '_catalog_members'] = len(members)
         metrics[kind + '_lookup_candidates'] = len(selected)
         requests.extend((kind, ident) for ident in selected)
-    if len(requests) > 5000:
-        raise ValueError('discovery exceeds bounded one-shot request limit')
+    if len(requests) > 285:
+        raise ValueError('discovery exceeds the user-authorized one-shot GET limit')
     fresh = output / 'provider-verified'; fresh.mkdir(mode=0o700, exist_ok=True)
     def provider_get(item):
         kind, ident = item; cache_name = 'data_cache_p%s_%s_info_%s.json' % (args.profile, 'vod' if kind == 'movie' else 'series', ident)
