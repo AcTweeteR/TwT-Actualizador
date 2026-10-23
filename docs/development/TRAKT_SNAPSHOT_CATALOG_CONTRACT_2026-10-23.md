@@ -110,3 +110,18 @@ final debe señalar los dos ZIP reproducibles. Los feeds públicos y Stable no c
   export nuevo íntegro, preview contra stores actuales, backups verificados y
   autorización explícita. Mantener sync automático desactivado durante instalación
   y QA. No aplicar el lote solo por haber pasado las pruebas.
+
+## Comprobación local final
+
+- Commit funcional: `6ec526b`.
+- 493 pruebas y 45 subtests correctos, sin fallos, errores ni omisiones.
+- Suite repetida con Python 3.11: 493 correctas, cero omisiones.
+- 78 fuentes Python parseadas; `git diff --check` correcto.
+- Service 0.4.59 SHA-256: `872ce8e1f353348d3f3831219f1dc17fc375c18a3347095db74a7d7c119eef36`.
+- XStream 1.1.2.28~beta1 SHA-256: `aaa471919b104ffa2d8a635a6c4e90ff1eb0e572cc4d4df09be6b7d995032657`.
+- Dos builds idénticos por paquete, CRC correcto y cinco módulos de contrato
+  compartidos byte a byte. No se cambió la skin ni se instalaron paquetes.
+- 133 archivos Stable y los feeds Testing permanecen iguales a la base.
+- Evidencias privadas fuera del repositorio. El informe operativo distingue
+  cobertura confirmada de candidatos que aún requieren metadatos del proveedor.
+- Sin push ni CI remoto: solo verificaciones locales reproducibles.
