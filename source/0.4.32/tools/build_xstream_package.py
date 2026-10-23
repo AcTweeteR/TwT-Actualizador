@@ -36,9 +36,11 @@ PATCHES = (
     ("collections_dedup_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-collections-dedup.patch"),
     ("trakt_device_auth_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-trakt-device-auth.patch"),
     ("trakt_snapshot_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-trakt-snapshot.patch"),
+    ("history_store_coordinator_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-history-store-coordinator.patch"),
 )
 DIAGNOSTICS_SOURCE = ROOT / "third_party/xstream/performance_diagnostics.py"
 CATALOG_INDEX_SOURCE = ROOT / "third_party/xstream/provider_catalog_index.py"
+HISTORY_STORE_COORDINATOR_SOURCE = ROOT / "third_party/xstream/history_store_coordinator.py"
 FIXED_TIME = (2026, 10, 11, 0, 0, 0)
 UPSTREAM_ROOT = "plugin.video.xstream-pro"
 EXCLUDED_SUFFIXES = {".orig", ".pyc", ".pyo"}
@@ -233,6 +235,7 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
         for name, source in (
             ("trakt_sync.py", ROOT / "addons/service.actweeter/resources/lib/trakt_sync.py"),
             ("trakt_snapshot.py", ROOT / "third_party/xstream/trakt_snapshot.py"),
+            ("history_store_coordinator.py", HISTORY_STORE_COORDINATOR_SOURCE),
         ):
             if sha256(source) != data["trakt_snapshot_sources_sha256"][name]:
                 raise ValueError("Trakt snapshot source hash mismatch: " + name)
@@ -286,6 +289,9 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             "The privacy-safe performance trace is opt-in and disabled by default.\n"
             "The index change leaves provider, artwork, playback and menu behavior\n"
             "unchanged.\n"
+            "XStream resume stores are now coordinated across addon instances with\n"
+            "OS file locks and merge-on-write; playback progress is persisted at\n"
+            "minute cadence plus playback end.\n"
         )
         (root / "ACTWEETER_MODIFICATIONS.txt").write_text(notice, encoding="utf-8")
         # A changed payload must not replace the same published Kodi version.
@@ -359,6 +365,9 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
         if not any(isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
                    and node.name == "recent" for node in series_tree.body):
             raise ValueError("series_changes.recent route provider is missing")
+        coordinator_member = f"{UPSTREAM_ROOT}/resources/lib/history_store_coordinator.py"
+        if coordinator_member not in archive.namelist():
+            raise ValueError("XStream history store coordinator missing from package")
     return {"upstream_sha256": actual, "candidate_sha256": sha256(output),
             "version": str(data["distribution_version"]), "file": output.name}
 

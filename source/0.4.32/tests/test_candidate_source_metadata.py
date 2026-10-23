@@ -19,7 +19,7 @@ class CandidateSourceMetadataTests(unittest.TestCase):
                          ("skin.actweeter", "1.2.32~beta1"))
         self.assertEqual((repository.get("id"), repository.get("version")),
                          ("repository.actweeter", "1.0.3"))
-        self.assertEqual(xstream["distribution_version"], "1.1.2.23~beta1")
+        self.assertEqual(xstream["distribution_version"], "1.1.2.24~beta1")
 
     def test_migration_is_versioned_after_official_0_4_31_layout(self):
         sys_path = ROOT / "addons/service.actweeter/resources/lib"

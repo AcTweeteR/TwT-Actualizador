@@ -194,3 +194,72 @@ en staging siguen siendo reproducibles; la escritura live, la sincronización
 incremental conectada al servicio, el checkpoint/consentimiento persistente y
 la validación Trakt runtime en Master no están demostrados. No publicar ni
 instalar el candidato todavía.
+
+## Experimento de concurrencia XStream (23-10-2026)
+
+### Alternativas evaluadas
+
+| Opción | Evidencia en esta continuación | Decisión |
+|---|---|---|
+| Escritura mediante los stores de XStream | La pérdida upstream se reproduce con dos instancias reales de `history.py`; el candidato coordina `_save()` y hace merge bajo bloqueo de proceso y de sistema operativo. | Base seleccionada para proteger los JSON existentes. |
+| Cola persistente consumida por XStream | No implementada ni probada; falta definir el contrato de identidad/cuenta y el acuse durable. | Pendiente antes de que el servicio entregue deltas live. |
+| API local directa | No implementada ni probada; añade un transporte y un punto de exposición sin resolver por sí solo el ciclo de vida de cachés. | No seleccionada por ahora. |
+| Coordinación común de persistencia | Probada en los stores JSON reales de XStream dentro de directorios temporales; locks por ruta, reload/merge/write y reemplazo atómico existente. | Implementación actual. |
+| Aplicación diferida/offline | La restauración en staging sigue disponible y segura con Kodi detenido; no demuestra aplicación live ni refresco de UI. | Fallback, no solución live. |
+
+### Implementación y evidencia
+
+- Se añadieron `history_store_coordinator.py` y su parche versionado al
+  constructor. Coordina `WatchedMovies`, `WatchedEpisodes` y `ResumePoints`;
+  los cambios externos no escriben directamente en los almacenes. ResumePoints
+  conserva la entrada con timestamp más nuevo y omite muestras cuya diferencia
+  sea menor de 60 s, salvo el guardado terminal explícito.
+- El monitor de reproducción de XStream conserva el muestreo existente, pero
+  persiste el avance como máximo cada 60 s y fuerza la última muestra al salir.
+  No se añade polling de Trakt ni un scrobbler nuevo.
+- Prueba upstream, sobre la `history.py` del ZIP fijado: dos instancias cargan
+  el mismo JSON, escriben IDs distintos y la segunda escritura reemplaza la
+  primera. Resultado: pérdida reproducida.
+- Prueba candidato, usando sus clases XStream reales en subprocess y perfil
+  temporal: escrituras stale de películas y episodios se fusionan; dos avances
+  con timestamps distintos conservan el más reciente; también se cubre el caso
+  donde la instancia obsoleta cargó el valor nuevo como baseline. 24 procesos
+  concurrentes conservan todos sus IDs. Una muestra subminuto no toca el mtime;
+  el guardado forzado final sí persiste.
+- Los JSON corruptos fallan cerrados. Un fallo simulado de `os.replace` no
+  altera el archivo comprometido; un guardado posterior conserva los datos
+  confirmados y no trata la operación interrumpida como aplicada.
+- Suite completa: **455/455 PASS**, incluida la comparación con upstream y la
+  integración del ZIP candidato. `git diff --check`: PASS.
+- ZIP de XStream `1.1.2.24~beta1`, construido dos veces desde el upstream
+  bloqueado `1.1.2` y el mismo conjunto de fuentes/parches: SHA-256 idéntico
+  `7d81c9fe22dbdaaeee5b00e4e53bd587b3d9ba08fe8f27bc8c8f69d0aaddf502`; CRC,
+  versión, sintaxis Python y presencia del coordinador pasan en el constructor.
+- Tests y manipulación de datos se ejecutaron en directorios temporales. No se
+  tocó el perfil activo, no hubo llamadas a Trakt, ni operaciones remotas de
+  escritura, ni acceso a Lenovo/ADB, Apple TV o Stable.
+
+### Límites y siguiente trabajo
+
+- Esto resuelve la pérdida entre escrituras de los stores, pero **no** es aún
+  un escritor live de Trakt: `service.actweeter` no envía una cola de deltas al
+  proceso de XStream, no hay recibo durable ni binding comprobado cuenta/perfil/
+  proveedor, y la vista «Continuar viendo» no se ha observado actualizarse en
+  Kodi abierto.
+- No se ha implementado sincronización inicial/incremental, scheduler de cinco
+  minutos, consulta de actividad, checkpoint, autorización persistente ni
+  backoff conectado al servicio. No se hicieron GET reales desde Kodi.
+- La prueba usa clases XStream reales con shims de Kodi sobre un perfil temporal;
+  no equivale a runtime Kodi. La instancia activa de Kodi Master no se instaló
+  ni modificó.
+- Código candidato todavía privado y sin publicación. La revisión de licencia
+  CC BY-NC 4.0 sigue bloqueando una distribución pública hasta aclarar el uso
+  no comercial o contar con permiso del titular.
+- La integración con lectores que retienen objetos en memoria aún requiere un
+  mecanismo de invalidación/refresco; el merge-on-write protege persistencia,
+  pero no demuestra que cada objeto ya cargado refleje una escritura ajena.
+
+Resultado actualizado: **PARTIAL**. La concurrencia de persistencia JSON entre
+instancias XStream queda reproducida y corregida en las pruebas aisladas; la
+sincronización automática completa y su comportamiento en Kodi Master siguen
+pendientes y no se declara resuelta.
