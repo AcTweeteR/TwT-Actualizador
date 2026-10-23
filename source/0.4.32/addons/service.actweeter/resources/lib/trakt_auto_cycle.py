@@ -64,15 +64,15 @@ def _checkpoint(path, *, account, profile, provider_scope):
 
 def _run_cycle(service_root, xstream_root, *, account, profile, provider_scope,
               activity_get, export_snapshot, apply_batch, addon, history, playing_file='',
-              consent_path=None):
+              consent_path=None, one_shot=False):
     """Process one bounded batch, retaining queue data until durable confirmation."""
     profile, account = str(profile), str(account)
     root = Path(service_root)
     state_root = root / 'trakt_live'
     state_root.mkdir(mode=0o700, parents=True, exist_ok=True)
     consent_file = Path(consent_path or state_root / 'consent.json')
-    if not authorized(consent_file, account=account, profile=profile,
-                      provider_scope=provider_scope):
+    if not one_shot and not authorized(consent_file, account=account, profile=profile,
+                                       provider_scope=provider_scope):
         return {'status': 'suspended', 'reason': 'consent_scope_changed'}
     if playing_file:
         return {'status': 'deferred', 'reason': 'playback_active'}

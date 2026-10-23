@@ -43,12 +43,18 @@ def consent_route(context, guard, trakt, xbmcaddon, xbmcgui, xbmcplugin, xbmcvfs
     xbmcplugin.endOfDirectory(context('addon_handle'), cacheToDisc=False)
 
 
-def cycle_route(context, guard, trakt, xbmcaddon, xbmc, xbmcplugin, xbmcvfs):
+def cycle_route(context, guard, trakt, xbmcaddon, xbmc, xbmcplugin, xbmcvfs,
+                *, one_shot=False):
     if not guard(auth=True) or not trakt.authorized():
         return
     player = xbmc.Player()
     playing = player.getPlayingFile() if player.isPlaying() else ''
     if playing:
+        return
+    if one_shot and not __import__('xbmcgui').Dialog().yesno(
+            'AcTweeteR Trakt',
+            'Aplicar una sola vez los estados vistos y avances de Trakt al perfil XStream activo? '
+            'No se activará la sincronización automática ni se enviarán cambios a Trakt.'):
         return
     account, profile, scope, service_root = _binding(
         context, trakt, xbmcaddon, xbmcvfs)
@@ -59,8 +65,8 @@ def cycle_route(context, guard, trakt, xbmcaddon, xbmc, xbmcplugin, xbmcvfs):
     from lib.trakt_sync_consent import authorized, suspend
     from lib.trakt_sync_scheduler import record_result
     consent_path = service_root / 'trakt_live' / 'consent.json'
-    if not authorized(consent_path, account=account, profile=profile,
-                      provider_scope=scope):
+    if not one_shot and not authorized(consent_path, account=account, profile=profile,
+                                       provider_scope=scope):
         suspend(consent_path)
         return
 
@@ -94,7 +100,8 @@ def cycle_route(context, guard, trakt, xbmcaddon, xbmc, xbmcplugin, xbmcvfs):
         result = run_cycle(service_root, xstream_root, account=account, profile=profile,
             provider_scope=scope, activity_get=activity_get,
             export_snapshot=export_snapshot, apply_batch=trakt_live_consumer.apply_batch,
-            addon=addon, history=history, playing_file=playing, consent_path=consent_path)
+            addon=addon, history=history, playing_file=playing, consent_path=consent_path,
+            one_shot=one_shot)
         for _ in range(3):
             if result.get('status') not in ('queued', 'pending'):
                 break
@@ -102,16 +109,19 @@ def cycle_route(context, guard, trakt, xbmcaddon, xbmc, xbmcplugin, xbmcvfs):
                 provider_scope=scope, activity_get=activity_get,
                 export_snapshot=export_snapshot,
                 apply_batch=trakt_live_consumer.apply_batch, addon=addon,
-                history=history, playing_file=playing, consent_path=consent_path)
-        record_result(service_root / 'trakt_live' / 'scheduler.json',
-                      success=result.get('status') in ('applied', 'unchanged', 'deferred', 'busy', 'pending'),
-                      now=__import__('time').time())
+                history=history, playing_file=playing, consent_path=consent_path,
+                one_shot=one_shot)
+        if not one_shot:
+            record_result(service_root / 'trakt_live' / 'scheduler.json',
+                          success=result.get('status') in ('applied', 'unchanged', 'deferred', 'busy', 'pending'),
+                          now=__import__('time').time())
         if result.get('status') == 'applied' and result.get('operations', 0):
             xbmc.executebuiltin(
                 'RunPlugin(plugin://service.actweeter/?action=trakt_continue_refresh)', False)
     except Exception as exc:
-        record_result(service_root / 'trakt_live' / 'scheduler.json',
-                      success=False, now=__import__('time').time())
+        if not one_shot:
+            record_result(service_root / 'trakt_live' / 'scheduler.json',
+                          success=False, now=__import__('time').time())
         xbmc = __import__('xbmc')
         xbmc.log('[AcTweeteR] TRAKT_SYNC_CYCLE failed error_type=%s' %
                  type(exc).__name__, xbmc.LOGWARNING)
@@ -120,3 +130,8 @@ def cycle_route(context, guard, trakt, xbmcaddon, xbmc, xbmcplugin, xbmcvfs):
     item.setProperty('actweeter.trakt.sync', json.dumps(result, sort_keys=True))
     xbmcplugin.addDirectoryItem(context('addon_handle'), '', item, isFolder=False)
     xbmcplugin.endOfDirectory(context('addon_handle'), cacheToDisc=False)
+
+
+def sync_once_route(context, guard, trakt, xbmcaddon, xbmc, xbmcplugin, xbmcvfs):
+    return cycle_route(context, guard, trakt, xbmcaddon, xbmc, xbmcplugin,
+                       xbmcvfs, one_shot=True)

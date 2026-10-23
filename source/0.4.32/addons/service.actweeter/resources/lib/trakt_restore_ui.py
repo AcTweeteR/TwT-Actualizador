@@ -11,6 +11,7 @@ from .trakt_sync_consent import enabled as sync_enabled
 
 ROOT = 'plugin://service.actweeter/?action=trakt_restore'
 XSTREAM_SNAPSHOT = 'plugin://plugin.video.xstream-pro/?mode=xstream_trakt_snapshot'
+XSTREAM_SYNC_ONCE = 'plugin://plugin.video.xstream-pro/?mode=xstream_trakt_sync_once'
 XSTREAM_SYNC_CONSENT = 'plugin://plugin.video.xstream-pro/?mode=xstream_trakt_sync_consent'
 SYNC_CONSENT = 'plugin://service.actweeter/?action=trakt_sync_consent&operation=revoke'
 
@@ -102,6 +103,9 @@ def render(handle, *, gui, plugin, vfs, xstream_addon, service_addon=None, param
         item = gui.ListItem(label='Actualiza XStream para habilitar la exportación segura')
         item.setProperty('IsPlayable', 'false')
         plugin.addDirectoryItem(handle, '', item, False)
+    item = gui.ListItem(label='Sincronizar una vez desde Trakt…')
+    item.setProperty('IsPlayable', 'false')
+    plugin.addDirectoryItem(handle, XSTREAM_SYNC_ONCE, item, True)
     if service_addon is not None:
         consent_path = (Path(vfs.translatePath(service_addon.getAddonInfo('profile'))) /
                         'trakt_live' / 'consent.json')

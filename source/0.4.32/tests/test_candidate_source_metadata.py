@@ -14,12 +14,15 @@ class CandidateSourceMetadataTests(unittest.TestCase):
         repository = ET.parse(ROOT / "addons/repository.actweeter/addon.xml").getroot()
         xstream = json.loads((ROOT / "third_party/xstream/upstream.json").read_text())
         self.assertEqual((service.get("id"), service.get("version")),
-                         ("service.actweeter", "0.4.57"))
+                         ("service.actweeter", "0.4.58"))
         self.assertEqual((skin.get("id"), skin.get("version")),
                          ("skin.actweeter", "1.2.32~beta1"))
         self.assertEqual((repository.get("id"), repository.get("version")),
                          ("repository.actweeter", "1.0.3"))
-        self.assertEqual(xstream["distribution_version"], "1.1.2.26~beta2")
+        self.assertEqual(xstream["distribution_version"], "1.1.2.27~beta1")
+        required = service.find("requires/import[@addon='plugin.video.xstream-pro']")
+        self.assertIsNotNone(required)
+        self.assertEqual(required.get("version"), xstream["distribution_version"])
 
     def test_migration_is_versioned_after_official_0_4_31_layout(self):
         sys_path = ROOT / "addons/service.actweeter/resources/lib"

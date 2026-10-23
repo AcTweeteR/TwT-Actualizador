@@ -192,6 +192,18 @@ dead_process.wait(timeout=5)
 dead_args=dict(cycle_args,consent_path=lock_consent)
 dead_result=run_cycle(dead_service,root,**dead_args)
 assert dead_result['status']=='queued', dead_result
+# One confirmed sync uses the same consumer but never enables recurring sync.
+once_service=root/'once-service'
+once_args=dict(cycle_args,activity_get=lambda: ('test-account',
+    {'all':'2026-10-24T12:00:00Z'}),one_shot=True)
+once_queued=run_cycle(once_service,root,**once_args)
+assert once_queued['status']=='queued', once_queued
+once_applied=run_cycle(once_service,root,**once_args)
+assert once_applied['status']=='applied', once_applied
+once_state=once_service/'trakt_live'
+assert not (once_state/'consent.json').exists()
+assert not (once_state/'scheduler.json').exists()
+assert json.loads((once_state/'remote'/'profile_2.json').read_text())['activity_fingerprint']
 print('XStream live queue integration: PASS')
 '''
 
@@ -208,6 +220,10 @@ class TraktLiveQueueRuntimeTests(unittest.TestCase):
                 'plugin.video.xstream-pro/resources/lib/addon.py'))
             self.assertIn(b'trakt_sync_cycle_route', archive.read(
                 'plugin.video.xstream-pro/resources/lib/tmdb_routes.py'))
+            self.assertIn(b'xstream_trakt_sync_once', archive.read(
+                'plugin.video.xstream-pro/resources/lib/addon.py'))
+            self.assertIn(b'trakt_sync_once_route', archive.read(
+                'plugin.video.xstream-pro/resources/lib/tmdb_routes.py'))
         result = subprocess.run([sys.executable, '-c', SCRIPT,
             os.environ['ACTWEETER_XSTREAM_LIVE_ZIP'],
             str(ROOT / 'addons/service.actweeter/resources/lib')],
@@ -221,6 +237,8 @@ class TraktLiveQueueRuntimeTests(unittest.TestCase):
         self.assertIn("params.get('action') == ['trakt_continue_refresh']", service_source)
         self.assertIn("invalidate_continue_widgets(xbmc, 'trakt_sync')", service_source)
         self.assertIn("action=trakt_continue_refresh", route_source)
+        self.assertIn("XSTREAM_SYNC_ONCE", (ROOT /
+            "addons/service.actweeter/resources/lib/trakt_restore_ui.py").read_text())
 
 
 if __name__ == '__main__':

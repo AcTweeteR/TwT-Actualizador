@@ -1,0 +1,3 @@
+0.4.58
+- Add an explicitly confirmed, one-time Trakt-to-XStream sync route.
+- Keep automatic-sync consent and scheduler state untouched by one-time sync.

@@ -93,6 +93,49 @@ def validate_python_archive(archive: zipfile.ZipFile) -> int:
     return len(members)
 
 
+def validate_trakt_sync_contract(archive, service_queue: bytes) -> None:
+    """Fail closed if a ZIP lacks a complete, generation-matched Trakt path."""
+    root = UPSTREAM_ROOT + "/resources/lib/"
+    required = {
+        "addon.py": (
+            b'elif mode == "xstream_trakt_sync_consent":',
+            b"_tmdb_routes.trakt_sync_consent_route(args)",
+            b'elif mode == "xstream_trakt_sync_cycle":',
+            b"_tmdb_routes.trakt_sync_cycle_route(args)",
+            b'elif mode == "xstream_trakt_sync_once":',
+            b"_tmdb_routes.trakt_sync_once_route(args)",
+        ),
+        "tmdb_routes.py": (
+            b"def trakt_sync_consent_route(params):",
+            b"return consent_route(",
+            b"def trakt_sync_cycle_route(params):",
+            b"return cycle_route(",
+            b"def trakt_sync_once_route(params):",
+            b"return sync_once_route(",
+        ),
+        "trakt_auto_routes.py": (
+            b"def consent_route(", b"def cycle_route(", b"run_cycle(",
+            b"def sync_once_route(", b"one_shot=True",
+        ),
+        "trakt_live_consumer.py": (
+            b"def apply_batch(", b"verify_batch(", b"write_ack(",
+        ),
+        "trakt_live_queue.py": (b"def verify_batch(", b"def write_ack(",),
+        "history_store_coordinator.py": (b"def install(history):",),
+        "history.py": (b"_install_history_store_coordinator(__import__(__name__))",),
+    }
+    names = set(archive.namelist())
+    for relative, markers in required.items():
+        member = root + relative
+        if member not in names:
+            raise ValueError("Trakt sync module missing from ZIP: " + relative)
+        source = archive.read(member)
+        if any(marker not in source for marker in markers):
+            raise ValueError("Trakt sync route/dependency incomplete in ZIP: " + relative)
+    if archive.read(root + "trakt_live_queue.py") != service_queue:
+        raise ValueError("Service/XStream Trakt queue protocol differs")
+
+
 def normalize_recommendation_patch_targets(root: Path) -> None:
     """Normalize CRLF upstream files so context-anchored patches match."""
     for relative in ("resources/lib/addon.py", "resources/lib/tmdb_routes.py"):
@@ -354,6 +397,10 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
         if (b"_filter_provider_trakt_recommendations" not in routes
                 or b"filter_provider=False" not in routes):
             raise ValueError("strict provider-filtered Trakt recommendation route missing")
+        validate_trakt_sync_contract(
+            archive,
+            (ROOT / "addons/service.actweeter/resources/lib/trakt_live_queue.py").read_bytes(),
+        )
         premium_routes = archive.read(f"{UPSTREAM_ROOT}/resources/lib/premium_routes.py")
         if (b"g['series_changes'].record_catalog" not in premium_routes
                 or b"if stype == 'series' and items and host and user and password:" not in premium_routes):
