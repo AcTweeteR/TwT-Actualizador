@@ -4,7 +4,7 @@ import re
 import tempfile
 from .trakt_restore_transaction import stage_complete_restore
 from pathlib import Path
-from .trakt_restore_importer import prepare_restore
+from .trakt_restore_importer import prepare_restore, preview_changes
 from .trakt_restore_startup import startup_restore_status
 from .first_run import addon_version_satisfies
 from .trakt_sync_consent import enabled as sync_enabled
@@ -29,7 +29,8 @@ def summarize_exports(xstream_profile, *, profile):
     if exports.is_symlink() or not exports.is_dir():
         return []
     results = []
-    for folder in sorted(exports.glob('snapshot-*')):
+    for folder in sorted(exports.glob('snapshot-*'),
+                         key=lambda path: (path.stat().st_mtime_ns, path.name)):
         if folder.is_symlink() or not folder.is_dir():
             continue
         try:
@@ -38,6 +39,7 @@ def summarize_exports(xstream_profile, *, profile):
             if str(raw['profile']) != str(profile):
                 continue
             plan = prepare_restore(folder, root, profile=profile, account=account)
+            plan = preview_changes(plan, root, profile=profile)['plan']
             results.append({'name': folder.name, 'account': account,
                             'watched_movies': sum(x.get('watched') is True and x['identity']['kind']=='movie' for x in plan['items']),
                             'watched_episodes': sum(x.get('watched') is True and x['identity']['kind']=='episode' for x in plan['items']),
@@ -63,6 +65,7 @@ def render(handle, *, gui, plugin, vfs, xstream_addon, service_addon=None, param
         newest = exports[-1]
         plan = prepare_restore(Path(profile_path) / 'trakt_exports' / newest['name'],
                                profile_path, profile=profile, account=newest['account'])
+        plan = preview_changes(plan, profile_path, profile=profile)['plan']
         with tempfile.TemporaryDirectory(prefix='actweeter-trakt-preview-') as folder:
             result = stage_complete_restore(plan, profile=profile, account=newest['account'],
                 xstream_profile=profile_path,

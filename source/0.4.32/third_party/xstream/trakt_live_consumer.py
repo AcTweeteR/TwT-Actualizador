@@ -36,78 +36,45 @@ def _provider_ref(operation, records):
     return next(iter(unique.values())) if len(unique) == 1 else None
 
 
-def _cache(root, name):
-    path = Path(root) / name
-    if path.is_symlink() or not path.is_file() or path.stat().st_size > 32_000_000:
-        return None
+def _catalog_scope_verified(operations, root, profile, scope, addon):
+    from trakt_provider_index import catalog_source
+    from trakt_live_queue import provider_fingerprint
     try:
-        return json.loads(path.read_text('utf-8'))
-    except (OSError, ValueError, UnicodeError):
-        return None
+        source_type = addon.getSetting('profile_%s_source_type' % profile)
+        for kind in {op['kind'] for op in operations}:
+            stype = 'movie' if kind == 'movie' else 'series'
+            path = Path(root) / ('data_cache_p%s_xtream_streams_%s.json' % (profile, stype))
+            if path.is_symlink() or Path(root).is_symlink():
+                return False
+            source, user, _password = catalog_source(path).split('|', 2)
+            if provider_fingerprint(profile, source_type, source, user) != scope:
+                return False
+        return True
+    except (AttributeError, OSError, ValueError, UnicodeError):
+        return False
 
 
-def _catalog_identity_exact(operation, catalog_root, profile):
-    """Recheck the provider ID against this profile's current typed catalog."""
-    identity = operation['identity']
-    ids = identity['ids']
-    root = Path(catalog_root)
-    if root.is_symlink() or not root.is_dir():
-        return False
-    if operation['kind'] == 'movie':
-        provider_id = str(operation['provider_id'])
-        streams = _cache(root, 'data_cache_p%s_xtream_streams_movie.json' % profile)
-        details = _cache(root, 'data_cache_p%s_vod_info_%s.json' % (profile, provider_id))
-        rows = streams.get('_data') if isinstance(streams, dict) else None
-        if not isinstance(rows, list) or not isinstance(details, dict):
-            return False
-        if sum(str(row.get('stream_id', '')) == provider_id for row in rows
-               if isinstance(row, dict)) != 1:
-            return False
-        info = details.get('info')
-        movie = details.get('movie_data')
-        if (not isinstance(info, dict) or not isinstance(movie, dict)
-                or str(movie.get('stream_id', '')) != provider_id
-                or not ids.get('tmdb') or str(info.get('tmdb_id', '')) != str(ids['tmdb'])):
-            return False
-        imdb = info.get('imdb_id')
-        return not (ids.get('imdb') and imdb and str(imdb).casefold() != str(ids['imdb']).casefold())
+def _verified_catalog_index(operations, catalog_root, profile):
+    from trakt_sync import ProviderIndex
+    from trakt_provider_index import verified_vod_records
+    from trakt_episode_index import verified_episode_records
+    snapshot = {'records': {str(i): {'identity': op['identity']}
+                            for i, op in enumerate(operations)}}
+    movie_ids = {op['provider_id'] for op in operations if op['kind'] == 'movie'}
+    movies = verified_vod_records(catalog_root, profile=profile, provider_ids=movie_ids) if movie_ids else []
+    episodes = (verified_episode_records(catalog_root, profile=profile, snapshot=snapshot)
+                if any(op['kind'] == 'episode' for op in operations) else {'records': []})
+    return ProviderIndex(movies + episodes['records'], profile=profile)
 
-    series_id = str(operation['series_id'])
-    streams = _cache(root, 'data_cache_p%s_xtream_streams_series.json' % profile)
-    inventory = _cache(root, 'series_changes_p%s.json' % profile)
-    rows = streams.get('_data') if isinstance(streams, dict) else None
-    if (not isinstance(rows, list) or not any(
-            isinstance(row, dict) and str(row.get('series_id', '')) == series_id
-            for row in rows) or not isinstance(inventory, dict)):
+
+def _catalog_identity_exact(operation, index):
+    status, matches = index.match(operation['identity'])
+    if status != 'exact' or str(matches[0]['provider_id']) != str(operation['provider_id']):
         return False
-    series_files = list(root.glob('data_cache_p%s_premium_meta_series_%s_*.json' %
-                                  (profile, series_id)))
-    show_matches = []
-    for path in series_files:
-        if path.is_symlink() or not path.is_file() or path.stat().st_size > 4_000_000:
-            continue
-        try:
-            payload = json.loads(path.read_text('utf-8'))
-            data = payload.get('data', {})
-        except (OSError, ValueError, UnicodeError, AttributeError):
-            continue
-        if not isinstance(data, dict):
-            continue
-        if (ids.get('tmdb') and str(data.get('tmdb_id', '')) == str(ids['tmdb'])
-                and (not ids.get('imdb') or not data.get('imdb_id')
-                     or str(data['imdb_id']).casefold() == str(ids['imdb']).casefold())):
-            show_matches.append(data)
-    if not show_matches:
-        return False
-    catalog = inventory.get('episode_inventory', {}).get(series_id, {})
-    episodes = catalog.get('episodes') if isinstance(catalog, dict) else None
-    if (not isinstance(catalog, dict) or catalog.get('complete') is not True
-            or not isinstance(episodes, list)):
-        return False
-    return sum(1 for row in episodes if isinstance(row, dict)
-               and str(row.get('season')) == str(operation['season'])
-               and str(row.get('episode')) == str(operation['episode'])
-               and str(row.get('provider_id')) == str(operation['episode_id'])) == 1
+    if operation['kind'] == 'episode':
+        return (str(matches[0]['provider_series_id']) == str(operation['series_id'])
+                and str(matches[0]['provider_episode_id']) == str(operation['episode_id']))
+    return True
 
 
 def apply_batch(batch_path, ack_directory, *, profile, account, provider_scope,
@@ -125,6 +92,11 @@ def apply_batch(batch_path, ack_directory, *, profile, account, provider_scope,
                     'reason': 'playback_active'} for operation in batch['operations']]
         return write_ack(Path(ack_directory) / (batch['batch_id'] + '.json'),
                          batch, results)
+    if batch['operations'] and not _catalog_scope_verified(batch['operations'], catalog_root, profile, provider_scope, addon):
+        return write_ack(Path(ack_directory) / (batch['batch_id'] + '.json'), batch,
+            [{'id': op['id'], 'status': 'deferred', 'reason': 'provider_catalog_scope_changed'}
+             for op in batch['operations']])
+    catalog_index = _verified_catalog_index(batch['operations'], catalog_root, profile)
     watched_movies = history.WatchedMovies(addon, profile_num=int(profile))
     watched_episodes = history.WatchedEpisodes(addon, profile_num=int(profile))
     resume = history.ResumePoints(addon, profile_num=int(profile))
@@ -152,7 +124,7 @@ def apply_batch(batch_path, ack_directory, *, profile, account, provider_scope,
                 or identity.get('season') != operation['season']
                 or identity.get('episode') != operation['episode']):
             raise ValueError('episode identity mismatch')
-        if not _catalog_identity_exact(operation, catalog_root, profile):
+        if not _catalog_identity_exact(operation, catalog_index):
             results.append({'id': op_id, 'status': 'deferred',
                             'reason': 'provider_identity_not_verified_in_catalog'})
             continue
@@ -169,7 +141,9 @@ def apply_batch(batch_path, ack_directory, *, profile, account, provider_scope,
                 continue
             if kind == 'movie':
                 key = str(operation['provider_id'])
-                if key in watched_movies._data:
+                if key in watched_movies._data and watched_movies._data[key] is not True:
+                    results.append({'id': op_id, 'status': 'deferred', 'reason': 'local_unwatched_conflict'})
+                elif watched_movies._data.get(key) is True:
                     results.append({'id': op_id, 'status': 'already_applied'})
                 else:
                     watched_movies._data[key] = True
@@ -235,7 +209,7 @@ def apply_batch(batch_path, ack_directory, *, profile, account, provider_scope,
         if result['status'] not in ('applied', 'already_applied', 'superseded'):
             continue
         if operation['action'] == 'watched' and operation['kind'] == 'movie':
-            if str(operation['provider_id']) not in verify_movies._data:
+            if verify_movies._data.get(str(operation['provider_id'])) is not True:
                 raise OSError('movie watched state was not persisted')
         elif operation['action'] == 'watched':
             if str(operation['episode_id']) not in verify_episodes._data.get(

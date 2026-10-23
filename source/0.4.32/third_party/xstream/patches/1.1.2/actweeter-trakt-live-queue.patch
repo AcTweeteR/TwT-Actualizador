@@ -34,7 +34,7 @@ diff --git a/resources/lib/tmdb_routes.py b/resources/lib/tmdb_routes.py
 +    service_root = Path(xbmcvfs.translatePath(service.getAddonInfo("profile")))
 +    queue = service_root / "trakt_live" / "queue" / (batch_id + ".json")
 +    ack_root = service_root / "trakt_live" / "acks"
-+    current, _ = trakt.request("/users/settings", {}, auth=True)
++    current, _ = trakt.snapshot_request("/users/settings", {})
 +    account = str(current.get("user", {}).get("ids", {}).get("slug", ""))
 +    creds = c("pm").get_credentials()
 +    scope = provider_fingerprint(profile, creds.get("source_type"),

@@ -25,7 +25,7 @@ diff --git a/resources/lib/tmdb_routes.py b/resources/lib/tmdb_routes.py
 +        directory = os.path.join(xbmcvfs.translatePath(c("addon").getAddonInfo("profile")),
 +                                 "trakt_exports")
 +        summary = trakt_snapshot.export_snapshot(
-+            lambda path, query: trakt.request(path, query, auth=True),
++            lambda path, query: trakt.snapshot_request(path, query),
 +            directory, profile, cancelled=cancelled)
 +        li = c("_new_listitem")("Exportación Trakt verificada (solo lectura)")
 +        li.setProperty("actweeter.trakt.snapshot", json.dumps(summary, sort_keys=True))
@@ -54,3 +54,28 @@ diff --git a/resources/lib/trakt.py b/resources/lib/trakt.py
      except Exception:
 -        payload = []
 +        raise ValueError("Invalid Trakt JSON response") from None
+@@ -1,2 +1,24 @@
++
++
++def snapshot_request(path, params=None):
++    """Snapshot GET only: never refresh OAuth or convert invalid JSON to empty."""
++    if path not in {'/users/settings', '/sync/last_activities',
++                    '/sync/watched/movies', '/sync/watched/shows',
++                    '/sync/history/movies', '/sync/history/episodes',
++                    '/sync/playback/movies', '/sync/playback/episodes'}:
++        raise ValueError("Unsupported snapshot endpoint")
++    resp = _http_request("GET", BASE_URL + path, params=params or {},
++                         headers=_headers(True), timeout=20)
++    if resp.status_code >= 400:
++        _raise_trakt_error(resp, "snapshot GET")
++    payload = resp.json()
++    if isinstance(payload, list):
++        metadata = {key: int(resp.headers["X-Pagination-" + name]) for key, name in (
++            ("page", "Page"), ("limit", "Limit"), ("page_count", "Page-Count"),
++            ("item_count", "Item-Count"))}
++        return payload, metadata
++    return payload, 1
++
++
+ def cached_request(path, params=None, auth=True, ttl=300):
+     cache_key = cache.make_key(path, sorted((params or {}).items()), bool(auth))

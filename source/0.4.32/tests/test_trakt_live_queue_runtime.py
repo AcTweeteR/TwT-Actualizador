@@ -23,8 +23,9 @@ vfs=types.ModuleType('xbmcvfs'); vfs.translatePath=lambda p: str(root); sys.modu
 sys.path.insert(0, sys.argv[1] + '/plugin.video.xstream-pro/resources/lib')
 import history
 from trakt_live_consumer import apply_batch
-addon=types.SimpleNamespace(getAddonInfo=lambda k: str(root))
+addon=types.SimpleNamespace(getAddonInfo=lambda k: str(root), getSetting=lambda key: 'Xtream Codes')
 def cache(name, value):
+    if 'xtream_streams_' in name: value=dict(value,_src='https://provider.invalid|user|secret')
     (root/name).write_text(json.dumps(value))
 cache('data_cache_p2_xtream_streams_movie.json', {'_data':[{'stream_id':101},{'stream_id':303}]})
 cache('data_cache_p2_vod_info_101.json', {'movie_data':{'stream_id':101},'info':{'tmdb_id':'500'}})
@@ -43,7 +44,8 @@ history.WatchHistory(addon, 2).add('Movie', url_movie, '', 'movie')
 history.WatchHistory(addon, 2).add('Episode', url_episode, '', 'series',
     {'series_id':'55','ep_id':'202','season_num':1,'episode_num':2})
 profile_root=root/'service'; queue_root=profile_root/'trakt_live'/'queue'
-scope='a'*64
+from trakt_live_queue import provider_fingerprint
+scope=provider_fingerprint('2','Xtream Codes','https://provider.invalid','user')
 movie={'identity':{'kind':'movie','ids':{'tmdb':'500'}},'provider_id':'101',
        'watched':True,'watched_at':1100,'position':300,'duration':1800,'paused_at':1200}
 episode={'identity':{'kind':'episode','ids':{'tmdb':'600'},'season':1,'episode':2},
@@ -141,17 +143,16 @@ from lib.trakt_auto_cycle import run_cycle
 cycle_service=root/'cycle-service'
 consent_path=cycle_service/'trakt_live'/'consent.json'
 grant(consent_path, account='test-account', profile='2', provider_scope=scope)
-export=root/'synthetic-export'; export.mkdir()
-snapshot={'schema_version':1,'profile':'2','snapshot':{
-    'schema_version':1,'account':'test-account','records':{
-        'movie:tmdb:1000':{'identity':{'kind':'movie','ids':{'tmdb':'1000'}},
-                           'watched_at':'2026-10-22T12:00:00Z'}},
-    'history':[],'unidentified':0,'activity':'stamp','complete':True}}
-encoded=json.dumps(snapshot,sort_keys=True,separators=(',',':')).encode()
-(export/'snapshot.json').write_bytes(encoded)
-import hashlib
-(export/'manifest.json').write_text(json.dumps({'status':'READ_ONLY_EXPORT_VERIFIED',
-    'sha256':hashlib.sha256(encoded).hexdigest()}))
+from trakt_snapshot import export_snapshot as make_export
+exports=root/'synthetic-exports'
+def fixture_get(path, query):
+    if path == '/users/settings': return {'user':{'ids':{'slug':'test-account'}}}, 1
+    if path == '/sync/last_activities': return {'all':'2026-10-22T12:00:00Z'}, 1
+    rows = ([{'movie':{'ids':{'tmdb':1000}}, 'last_watched_at':'2026-10-22T12:00:00Z'}]
+            if path == '/sync/watched/movies' else [])
+    return rows, {'page':query['page'],'limit':100,'page_count':1,'item_count':len(rows)}
+make_export(fixture_get, exports, '2')
+export=next(exports.glob('snapshot-*'))
 activity={'all':'2026-10-22T12:00:00Z'}; activity_calls=[]; export_calls=[]
 def get_activity():
     activity_calls.append(1); return 'test-account', activity

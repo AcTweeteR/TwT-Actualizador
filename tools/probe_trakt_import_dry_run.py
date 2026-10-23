@@ -9,7 +9,7 @@ import tempfile
 LIB = Path(__file__).resolve().parents[1] / 'source/0.4.32/addons/service.actweeter/resources'
 sys.path.insert(0, str(LIB))
 from lib.trakt_provider_index import verified_vod_records
-from lib.trakt_sync import import_plan
+from lib.trakt_restore_importer import prepare_restore
 from lib.trakt_projection import project_watched
 
 
@@ -26,7 +26,8 @@ def audit(export, cache, profile):
     if not isinstance(snapshot.get('records'), dict) or not isinstance(snapshot.get('history'), list):
         raise ValueError('incomplete Trakt export')
     records = verified_vod_records(cache, profile=profile)
-    plan = import_plan(snapshot, records, profile=profile, account=snapshot['account'])
+    plan = prepare_restore(folder, cache, profile=profile, account=snapshot['account'])
+    plan['items'] = [row for row in plan['items'] if row['identity']['kind'] == 'movie']
     # Both destination stores are synthetic. No user profile or real playback path is written.
     with tempfile.TemporaryDirectory(prefix='actweeter-trakt-restore-') as directory:
         movies = Path(directory) / 'watched_movies.json'

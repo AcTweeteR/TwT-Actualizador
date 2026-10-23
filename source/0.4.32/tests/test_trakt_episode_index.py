@@ -10,6 +10,7 @@ class EpisodeIndexTests(unittest.TestCase):
  def test_exact_episode_requires_complete_inventory(self):
   with tempfile.TemporaryDirectory() as directory:
    root=Path(directory)
+   (root/'data_cache_p1_xtream_streams_series.json').write_text(json.dumps({'_data':[{'series_id':77}]}))
    (root/'data_cache_p1_premium_meta_series_77_es.json').write_text(json.dumps({'data':{'tmdb_id':250307}}))
    inventory={'episode_inventory':{'77':{'complete':True,'episodes':[{'season':2,'episode':15,'provider_id':'555'}]}}}
    (root/'series_changes_p1.json').write_text(json.dumps(inventory))

@@ -68,7 +68,7 @@ def _identity(item, kind):
 
 
 def build_batch(plan, *, provider_scope, consent=False, batch_id=None,
-                activity_fingerprint=None):
+                activity_fingerprint=None, catalog_generation=None, source_export=None):
     """Convert additions-only import plan to a bounded, credential-free batch."""
     if consent is not True:
         raise PermissionError('explicit synchronization consent required')
@@ -132,6 +132,16 @@ def build_batch(plan, *, provider_scope, consent=False, batch_id=None,
         if not re.fullmatch(r'[0-9a-f]{64}', str(activity_fingerprint)):
             raise ValueError('invalid remote activity checkpoint')
         envelope['activity_fingerprint'] = activity_fingerprint
+    if catalog_generation is not None:
+        if not re.fullmatch(r'[0-9a-f]{64}', str(catalog_generation)):
+            raise ValueError('invalid catalog generation')
+        envelope['catalog_generation'] = catalog_generation
+    if source_export is not None:
+        if (not isinstance(source_export, str) or len(source_export) > 512
+                or Path(source_export).is_absolute() or '..' in Path(source_export).parts
+                or not re.fullmatch(r'[A-Za-z0-9_./-]+', source_export)):
+            raise ValueError('unsafe export reference')
+        envelope['source_export'] = source_export
     envelope['sha256'] = hashlib.sha256(_json(envelope)).hexdigest()
     return envelope
 
@@ -190,6 +200,14 @@ def verify_batch(batch, *, profile, account, provider_scope):
     if ('activity_fingerprint' in batch and not re.fullmatch(
             r'[0-9a-f]{64}', str(batch['activity_fingerprint']))):
         raise ValueError('invalid remote activity checkpoint')
+    if ('catalog_generation' in batch and not re.fullmatch(
+            r'[0-9a-f]{64}', str(batch['catalog_generation']))):
+        raise ValueError('invalid catalog generation')
+    if ('source_export' in batch and (not isinstance(batch['source_export'], str)
+            or len(batch['source_export']) > 512 or Path(batch['source_export']).is_absolute()
+            or '..' in Path(batch['source_export']).parts
+            or not re.fullmatch(r'[A-Za-z0-9_./-]+', batch['source_export']))):
+        raise ValueError('unsafe export reference')
     for operation in batch['operations']:
         content = dict(operation)
         operation_id = content.pop('id', None)

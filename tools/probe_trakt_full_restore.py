@@ -9,7 +9,7 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'source/0.4.32/addons/
 from lib.trakt_episode_index import verified_episode_records
 from lib.trakt_provider_index import verified_vod_records
 from lib.trakt_projection import project_watched
-from lib.trakt_sync import import_plan
+from lib.trakt_restore_importer import prepare_restore
 
 
 def run(export, cache, profile='1'):
@@ -24,15 +24,7 @@ def run(export, cache, profile='1'):
     snapshot=payload['snapshot']
     if manifest.get('status') != 'READ_ONLY_EXPORT_VERIFIED' or not isinstance(payload.get('responses'), list):
         raise ValueError('unverified export provenance')
-    provider=verified_vod_records(cache,profile=profile)
-    episodes=verified_episode_records(cache,profile=profile,snapshot=snapshot)
-    plan=import_plan(snapshot,provider+episodes['records'],profile=profile,account=snapshot['account'])
-    episode_by_id={row['provider_id']:row for row in episodes['records']}
-    for item in plan['items']:
-        if item['identity']['kind']=='episode':
-            mapping=episode_by_id[item['provider_id']]
-            item['provider_series_id']=mapping['provider_series_id']
-            item['provider_episode_id']=mapping['provider_episode_id']
+    plan=prepare_restore(folder,cache,profile=profile,account=snapshot['account'])
     with tempfile.TemporaryDirectory(prefix='actweeter-trakt-full-') as directory:
         movie=Path(directory)/'watched_movies.json'
         episode=Path(directory)/'watched_episodes.json'

@@ -17,6 +17,7 @@ class SeriesIndexTests(unittest.TestCase):
  def test_only_verified_show_tmdb_from_correct_profile(self):
   with tempfile.TemporaryDirectory() as d:
    base=Path(d)
+   (base/'data_cache_p1_xtream_streams_series.json').write_text(json.dumps({'_data':[{'series_id':77},{'series_id':78}]}))
    (base/'data_cache_p1_premium_meta_series_77_es.json').write_text(json.dumps({'data':{'tmdb_id':250307,'title':'Example'}}))
    (base/'data_cache_p1_premium_meta_series_78_es.json').write_text(json.dumps({'data':{'title':'No ID'}}))
    (base/'data_cache_p2_premium_meta_series_79_es.json').write_text(json.dumps({'data':{'tmdb_id':250307}}))

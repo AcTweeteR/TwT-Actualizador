@@ -4,41 +4,29 @@ from pathlib import Path
 
 from .trakt_live_queue import (build_batch, checkpoint_from_ack, persist_checkpoint,
                                provider_fingerprint, verify_batch, write_batch)
-from .trakt_restore_importer import prepare_restore
-from .trakt_resume_bridge import existing_playback_references, stage_resume
+from .trakt_restore_importer import prepare_restore, preview_changes
 
 
 def prepare_batch(export_directory, xstream_profile, *, profile, account,
-                  provider_scope, consent=False, activity_fingerprint=None):
+                  provider_scope, consent=False, activity_fingerprint=None, catalog_generation=None, source_export=None):
     batches = prepare_batches(export_directory, xstream_profile, profile=profile,
         account=account, provider_scope=provider_scope, consent=consent,
-        activity_fingerprint=activity_fingerprint)
+        activity_fingerprint=activity_fingerprint, catalog_generation=catalog_generation, source_export=source_export)
     if len(batches) != 1:
         raise ValueError('plan exceeds a single bounded batch')
     return batches[0]
 
 
 def prepare_batches(export_directory, xstream_profile, *, profile, account,
-                    provider_scope, consent=False, activity_fingerprint=None):
+                    provider_scope, consent=False, activity_fingerprint=None, catalog_generation=None, source_export=None):
     plan = prepare_restore(export_directory, xstream_profile,
                            profile=profile, account=account)
-    references, existing = existing_playback_references(
-        xstream_profile, str(profile), plan['items'])
-    safe_items = []
-    for item in plan['items']:
-        candidate = dict(item)
-        if 'position' in candidate:
-            checked = stage_resume({'profile': str(profile), 'items': [candidate]},
-                                   references, existing)
-            if checked['added'] + checked['updated'] == 0:
-                candidate.pop('position', None)
-                candidate.pop('duration', None)
-                candidate.pop('paused_at', None)
-        safe_items.append(candidate)
-    plan['items'] = safe_items
+    preview = preview_changes(plan, xstream_profile, profile=profile)
+    safe_items = preview['plan']['items']
+    plan = preview['plan']
     chunks = [safe_items[index:index + 100] for index in range(0, len(safe_items), 100)] or [[]]
     return [build_batch(dict(plan, items=chunk), provider_scope=provider_scope,
-                        consent=consent, activity_fingerprint=activity_fingerprint)
+                        consent=consent, activity_fingerprint=activity_fingerprint, catalog_generation=catalog_generation, source_export=source_export)
             for chunk in chunks]
 
 

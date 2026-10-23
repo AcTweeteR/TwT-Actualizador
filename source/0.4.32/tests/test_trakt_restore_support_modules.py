@@ -15,6 +15,7 @@ class RestoreSupportModuleTests(unittest.TestCase):
     def test_vod_index_requires_cache_identity_to_match_filename(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
+            (root / 'data_cache_p1_xtream_streams_movie.json').write_text(json.dumps({'_data': [{'stream_id':45}, {'stream_id':46}]}))
             good = {'info': {'tmdb_id': 123, 'duration_secs': 3600},
                     'movie_data': {'stream_id': 45}}
             stale = {'info': {'tmdb_id': 999}, 'movie_data': {'stream_id': 99}}

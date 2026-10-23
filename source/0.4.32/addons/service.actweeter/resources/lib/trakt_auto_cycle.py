@@ -62,9 +62,27 @@ def _checkpoint(path, *, account, profile, provider_scope):
     return value
 
 
+def catalog_generation(root, profile):
+    """Stat only: a changed catalog/metadata cache must retry previously unmatched IDs."""
+    prefixes = ('data_cache_p%s_xtream_streams_' % profile,
+                'data_cache_p%s_vod_info_' % profile,
+                'data_cache_p%s_series_info_' % profile,
+                'data_cache_p%s_premium_meta_' % profile)
+    rows = []
+    with os.scandir(root) as entries:
+        for entry in entries:
+            if (entry.name.startswith(prefixes) and entry.name.endswith('.json')
+                    or entry.name == 'series_changes_p%s.json' % profile):
+                if entry.is_symlink():
+                    raise ValueError('unsafe provider evidence')
+                stat = entry.stat()
+                rows.append((entry.name, stat.st_size, stat.st_mtime_ns, stat.st_ino))
+    return _digest(sorted(rows))
+
+
 def _run_cycle(service_root, xstream_root, *, account, profile, provider_scope,
               activity_get, export_snapshot, apply_batch, addon, history, playing_file='',
-              consent_path=None, one_shot=False):
+              consent_path=None, one_shot=False, binding_valid=lambda: True):
     """Process one bounded batch, retaining queue data until durable confirmation."""
     profile, account = str(profile), str(account)
     root = Path(service_root)
@@ -82,6 +100,8 @@ def _run_cycle(service_root, xstream_root, *, account, profile, provider_scope,
     cursor_path = state_root / 'remote' / ('profile_%s.json' % profile)
     if state_root.is_symlink() or queue.is_symlink():
         return {'status': 'failed', 'reason': 'unsafe_sync_state_path'}
+    if not binding_valid():
+        return {'status': 'suspended', 'reason': 'live_binding_or_playback_changed'}
     pending = sorted(queue.glob('*.json')) if queue.is_dir() else []
     if pending:
         batch_path = pending[0]
@@ -104,7 +124,9 @@ def _run_cycle(service_root, xstream_root, *, account, profile, provider_scope,
             return {'status': 'pending', 'remaining_batches': len(remaining)}
         cursor = {'schema': 1, 'account': account, 'profile': profile,
                   'provider_scope': provider_scope,
-                  'activity_fingerprint': batch['activity_fingerprint']}
+                  'activity_fingerprint': batch['activity_fingerprint'],
+                  'catalog_generation': batch.get('catalog_generation'), 'planner_contract': 2,
+                  'source_export': batch.get('source_export')}
         _write(cursor_path, cursor)
         return {'status': 'applied', 'operations': len(batch['operations'])}
 
@@ -114,12 +136,40 @@ def _run_cycle(service_root, xstream_root, *, account, profile, provider_scope,
     fingerprint = _digest(activity)
     previous = _checkpoint(cursor_path, account=account, profile=profile,
                            provider_scope=provider_scope)
-    if previous and previous.get('activity_fingerprint') == fingerprint:
+    generation = catalog_generation(xstream_root, profile)
+    if (previous and previous.get('activity_fingerprint') == fingerprint
+            and previous.get('catalog_generation') == generation
+            and previous.get('planner_contract') == 2):
         return {'status': 'unchanged'}
-    export_directory = export_snapshot()
-    batches = prepare_batches(export_directory, xstream_root, profile=profile,
-        account=account, provider_scope=provider_scope, consent=True,
-        activity_fingerprint=fingerprint)
+    export_directory = None
+    if previous and previous.get('activity_fingerprint') == fingerprint:
+        relative = previous.get('source_export')
+        if isinstance(relative, str) and not Path(relative).is_absolute() and '..' not in Path(relative).parts:
+            candidate = Path(xstream_root) / relative
+            if (candidate.is_dir() and not candidate.is_symlink()
+                    and Path(xstream_root).resolve() in candidate.resolve().parents):
+                export_directory = candidate
+    if export_directory is None:
+        export_directory = export_snapshot()
+    if not binding_valid():
+        return {'status': 'suspended', 'reason': 'binding_changed_during_export'}
+    for attempt in range(2):
+        try:
+            try:
+                source_export = str(Path(export_directory).resolve().relative_to(Path(xstream_root).resolve()))
+            except ValueError:
+                source_export = None
+            batches = prepare_batches(export_directory, xstream_root, profile=profile,
+                account=account, provider_scope=provider_scope, consent=True,
+                activity_fingerprint=fingerprint, catalog_generation=generation, source_export=source_export)
+            break
+        except (OSError, ValueError):
+            if attempt or not (previous and previous.get('activity_fingerprint') == fingerprint):
+                raise
+            # A corrupt/legacy cached proof is not an empty plan: fetch anew once.
+            export_directory = export_snapshot()
+            if not binding_valid():
+                return {'status': 'suspended', 'reason': 'binding_changed_during_export'}
     queue.mkdir(mode=0o700, parents=True, exist_ok=True)
     targets = [write_batch(queue, batch) for batch in batches]
     return {'status': 'queued', 'batches': len(targets),

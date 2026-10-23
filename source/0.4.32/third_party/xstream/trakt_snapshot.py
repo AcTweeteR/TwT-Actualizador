@@ -21,14 +21,20 @@ def export_snapshot(get, directory, profile, *, cancelled=lambda: False):
         payload, count = get(path, params)
         # Preserve complete history/playback responses for a reviewed recovery.
         # Account settings can contain email/preferences and are not exported.
-        if path.startswith('/sync/'):
-            pages.append({'path': path, 'params': dict(params), 'pages': count, 'data': payload})
+        exported = payload
+        if path == '/users/settings':
+            exported = {'user': {'ids': {'slug': payload.get('user', {}).get('ids', {}).get('slug')}}}
+        row = {'path': path, 'params': dict(params), 'pages':
+               count.get('page_count', 1) if isinstance(count, dict) else count, 'data': exported}
+        if isinstance(count, dict):
+            row['pagination'] = count
+        pages.append(row)
         return payload, count
 
-    snapshot = fetch_snapshot(read, cancelled=cancelled)
+    snapshot = fetch_snapshot(read, cancelled=cancelled, require_page_metadata=True)
     if cancelled():
         raise ValueError('export cancelled or provider profile changed')
-    data = {'schema_version': 1, 'profile': str(profile), 'snapshot': snapshot, 'responses': pages}
+    data = {'schema_version': 2, 'profile': str(profile), 'snapshot': snapshot, 'responses': pages}
     encoded = json.dumps(data, ensure_ascii=False, sort_keys=True, allow_nan=False).encode('utf-8')
     base = Path(directory)
     base.mkdir(mode=0o700, parents=True, exist_ok=True)
@@ -44,7 +50,7 @@ def export_snapshot(get, directory, profile, *, cancelled=lambda: False):
     digest = hashlib.sha256(encoded).hexdigest()
     if hashlib.sha256(destination.read_bytes()).hexdigest() != digest:
         raise OSError('export integrity verification failed')
-    summary = {'status': 'READ_ONLY_EXPORT_VERIFIED', 'sha256': digest,
+    summary = {'status': 'READ_ONLY_EXPORT_VERIFIED', 'contract_version': 2, 'complete': True, 'sha256': digest,
                'records': len(snapshot['records']), 'history': len(snapshot['history']),
                'unidentified': snapshot['unidentified'], 'responses': len(pages)}
     with (target / 'manifest.json').open('x', encoding='utf-8') as stream:

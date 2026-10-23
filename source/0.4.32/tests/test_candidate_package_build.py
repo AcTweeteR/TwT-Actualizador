@@ -48,6 +48,11 @@ class CandidatePackageBuildTests(unittest.TestCase):
             prefix + "history_store_coordinator.py": b"def install(history):",
             prefix + "history.py": b"_install_history_store_coordinator(__import__(__name__))",
         }
+        members[prefix + 'tmdb_routes.py'] += b' trakt.snapshot_request("/users/settings", {})'
+        for module in ('trakt_sync.py', 'trakt_provider_index.py', 'trakt_series_index.py', 'trakt_episode_index.py'):
+            members[prefix + module] = (ROOT / 'addons/service.actweeter/resources/lib' / module).read_bytes()
+        members[prefix + 'trakt_snapshot.py'] = (ROOT / 'third_party/xstream/trakt_snapshot.py').read_bytes()
+        members[prefix + 'trakt.py'] = b'def snapshot_request( Unsupported snapshot endpoint'
         build_xstream_package.validate_trakt_sync_contract(Archive(members),
                                                             members[prefix + "trakt_live_queue.py"])
         members[prefix + "addon.py"] = members[prefix + "addon.py"].replace(
@@ -59,12 +64,12 @@ class CandidatePackageBuildTests(unittest.TestCase):
     def test_distribution_index_rejects_mixed_trakt_protocol_generation(self):
         sys.path.insert(0, str(ROOT / "tools"))
         import build_distribution_index
-        service = ET.Element("addon", id="service.actweeter", version="0.4.58")
+        service = ET.Element("addon", id="service.actweeter", version="0.4.59")
         requires = ET.SubElement(service, "requires")
         ET.SubElement(requires, "import", addon="plugin.video.xstream-pro",
                       version="1.1.2.16")
         xstream = ET.Element("addon", id="plugin.video.xstream-pro",
-                             version="1.1.2.27~beta1")
+                             version="1.1.2.28~beta1")
         with self.assertRaisesRegex(ValueError, "protocol generation mismatch"):
             build_distribution_index.validate_service_xstream_pair(service, xstream)
 
@@ -89,7 +94,7 @@ class CandidatePackageBuildTests(unittest.TestCase):
 
     def test_service_zip_is_reproducible_and_well_formed(self):
         with tempfile.TemporaryDirectory() as temp:
-            package = Path(temp) / "service.actweeter-0.4.58.zip"
+            package = Path(temp) / "service.actweeter-0.4.59.zip"
             subprocess.run([sys.executable, str(ROOT / "tools/build_service_package.py"),
                             "--output", str(package)], check=True,
                            cwd=ROOT, capture_output=True, text=True)
@@ -102,8 +107,8 @@ class CandidatePackageBuildTests(unittest.TestCase):
             with zipfile.ZipFile(package) as archive:
                 self.assertIsNone(archive.testzip())
                 addon = ET.fromstring(archive.read("service.actweeter/addon.xml"))
-                self.assertEqual(addon.get("version"), "0.4.58")
-                self.assertIn("service.actweeter/changelog-0.4.58.txt",
+                self.assertEqual(addon.get("version"), "0.4.59")
+                self.assertIn("service.actweeter/changelog-0.4.59.txt",
                               archive.namelist())
                 for relative in ("resources/lib/addon_update_policy.py",
                                  "resources/lib/trakt_sync.py",
@@ -160,7 +165,7 @@ class CandidatePackageBuildTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp:
             output = Path(temp)
-            service = output / "service.actweeter-0.4.58.zip"
+            service = output / "service.actweeter-0.4.59.zip"
             subprocess.run([sys.executable, str(ROOT / "tools/build_service_package.py"),
                             "--output", str(service)], check=True,
                            cwd=ROOT, capture_output=True, text=True)
@@ -174,8 +179,8 @@ class CandidatePackageBuildTests(unittest.TestCase):
                 for filename in ("Includes.xml", "IncludesBingie.xml", "IncludesBackgroundBuilding.xml"):
                     self.assertEqual(archive.read("skin.actweeter/1080i/" + filename),
                                      (ROOT / "addons/skin.actweeter/1080i" / filename).read_bytes())
-            xstream = output / "plugin.video.xstream-pro-1.1.2.27~beta1.zip"
-            self._write_addon_fixture(xstream, "plugin.video.xstream-pro", "1.1.2.27~beta1")
+            xstream = output / "plugin.video.xstream-pro-1.1.2.28~beta1.zip"
+            self._write_addon_fixture(xstream, "plugin.video.xstream-pro", "1.1.2.28~beta1")
             index_path, md5_path = build_distribution_index.build(
                 REPOSITORY_ROOT / "docs/testing/repo/repository.actweeter.testing/repository.actweeter.testing-1.0.2.zip",
                 skin,
@@ -187,9 +192,9 @@ class CandidatePackageBuildTests(unittest.TestCase):
                         for node in ET.fromstring(payload).findall("addon")}
             self.assertEqual(versions, {
                 "repository.actweeter.testing": "1.0.2",
-                "service.actweeter": "0.4.58",
+                "service.actweeter": "0.4.59",
                 "skin.actweeter": "1.2.32~beta1",
-                "plugin.video.xstream-pro": "1.1.2.27~beta1",
+                "plugin.video.xstream-pro": "1.1.2.28~beta1",
             })
             self.assertEqual(hashlib.md5(payload).hexdigest(),
                              md5_path.read_text(encoding="ascii").strip())

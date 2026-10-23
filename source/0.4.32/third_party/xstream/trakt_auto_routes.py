@@ -6,11 +6,13 @@ from pathlib import Path
 
 def _binding(context, trakt, xbmcaddon, xbmcvfs):
     from trakt_live_queue import provider_fingerprint
-    profile = str(context('pm').active)
-    creds = context('pm').get_credentials()
+    from profiles import ProfileManager
+    manager = ProfileManager(context('addon'))
+    profile = str(manager.active)
+    creds = manager.get_credentials()
     scope = provider_fingerprint(profile, creds.get('source_type'),
         creds.get('xtream_url'), creds.get('xtream_username'), creds.get('m3u_url'))
-    current, _ = trakt.request('/users/settings', {}, auth=True)
+    current, _ = trakt.snapshot_request('/users/settings', {})
     account = str(current.get('user', {}).get('ids', {}).get('slug', ''))
     service = xbmcaddon.Addon('service.actweeter')
     service_root = Path(xbmcvfs.translatePath(service.getAddonInfo('profile')))
@@ -78,8 +80,8 @@ def cycle_route(context, guard, trakt, xbmcaddon, xbmc, xbmcplugin, xbmcvfs,
     from lib.trakt_auto_cycle import run_cycle
 
     def activity_get():
-        user, _ = trakt.request('/users/settings', {}, auth=True)
-        activity, _ = trakt.request('/sync/last_activities', {}, auth=True)
+        user, _ = trakt.snapshot_request('/users/settings', {})
+        activity, _ = trakt.snapshot_request('/sync/last_activities', {})
         slug = str(user.get('user', {}).get('ids', {}).get('slug', ''))
         if not isinstance(activity, dict) or not isinstance(activity.get('all'), str):
             raise ValueError('invalid Trakt activity response')
@@ -89,19 +91,36 @@ def cycle_route(context, guard, trakt, xbmcaddon, xbmc, xbmcplugin, xbmcvfs,
         folder = xstream_root / 'trakt_exports'
         before = {path.name for path in folder.glob('snapshot-*')} if folder.exists() else set()
         trakt_snapshot.export_snapshot(
-            lambda path, query: trakt.request(path, query, auth=True), folder, profile)
+            lambda path, query: trakt.snapshot_request(path, query), folder, profile,
+            cancelled=lambda: not local_binding_valid())
         created = [path for path in folder.glob('snapshot-*')
                    if path.is_dir() and path.name not in before]
         if len(created) != 1:
             raise OSError('snapshot output is ambiguous')
         return created[0]
 
+    def local_binding_valid():
+        from profiles import ProfileManager
+        from trakt_live_queue import provider_fingerprint
+        manager = ProfileManager(addon)
+        credentials = manager.get_credentials()
+        current_scope = provider_fingerprint(str(manager.active), credentials.get('source_type'),
+            credentials.get('xtream_url'), credentials.get('xtream_username'), credentials.get('m3u_url'))
+        return str(manager.active) == profile and current_scope == scope and not player.isPlaying()
+
+    def binding_valid():
+        if not local_binding_valid():
+            return False
+        current_account, _ = trakt.snapshot_request('/users/settings', {})
+        return (current_account.get('user', {}).get('ids', {}).get('slug') == account
+                and local_binding_valid())
+
     try:
         result = run_cycle(service_root, xstream_root, account=account, profile=profile,
             provider_scope=scope, activity_get=activity_get,
             export_snapshot=export_snapshot, apply_batch=trakt_live_consumer.apply_batch,
             addon=addon, history=history, playing_file=playing, consent_path=consent_path,
-            one_shot=one_shot)
+            one_shot=one_shot, binding_valid=binding_valid)
         for _ in range(3):
             if result.get('status') not in ('queued', 'pending'):
                 break
@@ -110,7 +129,7 @@ def cycle_route(context, guard, trakt, xbmcaddon, xbmc, xbmcplugin, xbmcvfs,
                 export_snapshot=export_snapshot,
                 apply_batch=trakt_live_consumer.apply_batch, addon=addon,
                 history=history, playing_file=playing, consent_path=consent_path,
-                one_shot=one_shot)
+                one_shot=one_shot, binding_valid=binding_valid)
         if not one_shot:
             record_result(service_root / 'trakt_live' / 'scheduler.json',
                           success=result.get('status') in ('applied', 'unchanged', 'deferred', 'busy', 'pending'),

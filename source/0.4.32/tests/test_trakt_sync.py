@@ -34,7 +34,12 @@ class API:
     def get(self, path, params):
         self.calls.append((path, params))
         response = self.responses[path]
-        return copy.deepcopy(response(params) if callable(response) else response)
+        rows, count = copy.deepcopy(response(params) if callable(response) else response)
+        if params.get('page') and type(count) is int:
+            limit = len(rows) if count > 1 and isinstance(rows, list) and rows else 100
+            return rows, {'page': params['page'], 'limit': limit,
+                          'page_count': count, 'item_count': len(rows) * max(1, count)}
+        return rows, count
 
 
 def catalog(kind='movie', provider_id='7', **kwargs):

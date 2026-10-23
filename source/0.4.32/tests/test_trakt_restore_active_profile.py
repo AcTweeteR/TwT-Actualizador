@@ -44,6 +44,7 @@ class TraktRestoreProfileTests(unittest.TestCase):
                  'name': 'snapshot-a', 'account': 'acct', 'watched_movies': 1,
                  'watched_episodes': 2, 'resume_pending': 0}]) as summary, \
              patch.object(ui, 'prepare_restore', return_value={}) as prepare, \
+             patch.object(ui, 'preview_changes', return_value={'plan': {'items': []}}) as preview, \
              patch.object(ui, 'stage_complete_restore', return_value={
                  'movies': 1, 'episodes': 2, 'resumes_added': 0, 'resumes_updated': 0,
                  'resumes_deferred': 0, 'resume_error': False}) as stage:
@@ -53,6 +54,7 @@ class TraktRestoreProfileTests(unittest.TestCase):
 
         self.assertEqual(summary.call_args.kwargs['profile'], '4')
         self.assertEqual(prepare.call_args.kwargs['profile'], '4')
+        self.assertEqual(preview.call_args.kwargs['profile'], '4')
         self.assertEqual(stage.call_args.kwargs['profile'], '4')
         self.assertEqual(stage.call_args.kwargs['xstream_profile'], '/private/xstream-profile')
         self.assertEqual(stage.call_args.kwargs['movie_source'].name, 'watched_movies_p4.json')

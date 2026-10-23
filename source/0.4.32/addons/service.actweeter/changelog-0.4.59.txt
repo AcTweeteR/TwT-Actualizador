@@ -1,0 +1,2 @@
+0.4.59 — Candidato privado Trakt
+Contrato de snapshot con evidencia reproducible y compatibilidad histórica validada. Índice actual de proveedor, inventarios explícitos, deltas reales y preservación de avances más recientes. Sin activación automática ni instalación.

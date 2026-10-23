@@ -103,14 +103,34 @@ class ProviderIndex:
         return ('exact' if len(valid) == 1 else 'ambiguous'), list(valid.values())
 
 
-def _pages(get, path, cancelled, max_pages):
-    page, expected = 1, None
+def _pages(get, path, cancelled, max_pages, require_page_metadata=False):
+    page, expected, expected_meta = 1, None, None
+    seen_pages = set()
     while True:
         if cancelled():
             raise IncompleteSnapshot('cancelled')
         # Trakt's 2026 watched API requires progress to include explicit episodes.
         extended = 'progress' if path == '/sync/watched/shows' else 'full'
         rows, count = get(path, {'page': page, 'limit': 100, 'extended': extended})
+        if isinstance(count, dict):
+            meta = count
+            count = meta.get('page_count')
+            values = (meta.get('page'), meta.get('limit'), meta.get('item_count'), count)
+            if (not all(type(value) is int for value in values)
+                    or meta['page'] != page or meta['limit'] < 1
+                    or meta['item_count'] < 0 or count < 0
+                    or count != (math.ceil(meta['item_count'] / meta['limit']) or count)
+                    or (meta['item_count'] == 0 and count not in (0, 1))):
+                raise IncompleteSnapshot('invalid pagination headers')
+            signature = (meta['limit'], meta['item_count'], count)
+            if expected_meta is not None and signature != expected_meta:
+                raise IncompleteSnapshot('pagination totals changed')
+            expected_meta = signature
+            remaining = max(0, meta['item_count'] - (page - 1) * meta['limit'])
+            if not isinstance(rows, list) or len(rows) != min(meta['limit'], remaining):
+                raise IncompleteSnapshot('truncated page')
+        elif require_page_metadata:
+            raise IncompleteSnapshot('pagination headers required')
         if page == 1 and rows == [] and type(count) is int and count == 0:
             return
         if not isinstance(rows, list) or type(count) is not int or not 1 <= count <= max_pages:
@@ -120,6 +140,16 @@ def _pages(get, path, cancelled, max_pages):
         if expected is not None and expected != count:
             raise IncompleteSnapshot('pagination changed')
         expected = count
+        if count > 1:
+            import hashlib
+            import json
+            try:
+                digest = hashlib.sha256(json.dumps(rows, sort_keys=True, allow_nan=False).encode()).digest()
+            except (ValueError, TypeError):
+                raise IncompleteSnapshot('invalid paginated values') from None
+            if digest in seen_pages:
+                raise IncompleteSnapshot('repeated page body')
+            seen_pages.add(digest)
         # A single empty first page is a valid empty collection (Trakt may
         # report one page); an empty page in a multi-page result is truncated.
         if not rows and (page > 1 or count > 1):
@@ -133,7 +163,7 @@ def _pages(get, path, cancelled, max_pages):
         page += 1
 
 
-def fetch_snapshot(get, *, cancelled=lambda: False, max_pages=1000):
+def fetch_snapshot(get, *, cancelled=lambda: False, max_pages=1000, require_page_metadata=False):
     """Return only a complete account snapshot; an exception never means empty.
 
     Uses GET only. Caller must preserve the previous snapshot on any exception.
@@ -147,7 +177,7 @@ def fetch_snapshot(get, *, cancelled=lambda: False, max_pages=1000):
     if not re.fullmatch(r'[A-Za-z0-9_-]{1,128}', account_id):
         raise IncompleteSnapshot('invalid account identity')
     before, _ = get('/sync/last_activities', {})
-    if not isinstance(before, dict) or not isinstance(before.get('all'), str):
+    if not isinstance(before, dict) or _timestamp(before.get('all')) is None:
         raise IncompleteSnapshot('activity stamp unavailable')
     snapshot = {'schema_version': 1, 'account': account_id, 'records': {},
                 'history': [], 'unidentified': 0, 'activity': before['all']}
@@ -165,10 +195,10 @@ def fetch_snapshot(get, *, cancelled=lambda: False, max_pages=1000):
             item[field] = stamp
             item.update(extra)
 
-    for row in _pages(get, '/sync/watched/movies', cancelled, max_pages):
+    for row in _pages(get, '/sync/watched/movies', cancelled, max_pages, require_page_metadata):
         movie = row.get('movie') or {}
         add(identity('movie', movie.get('ids')), 'watched_at', row.get('last_watched_at'))
-    for row in _pages(get, '/sync/watched/shows', cancelled, max_pages):
+    for row in _pages(get, '/sync/watched/shows', cancelled, max_pages, require_page_metadata):
         show = row.get('show') or {}
         seasons = row.get('seasons')
         if not isinstance(seasons, list):
@@ -183,7 +213,7 @@ def fetch_snapshot(get, *, cancelled=lambda: False, max_pages=1000):
                                    season=season.get('number'), episode=episode.get('number'))
                 add(content, 'watched_at', episode.get('last_watched_at'))
     for kind in ('movies', 'episodes'):
-        for row in _pages(get, '/sync/history/' + kind, cancelled, max_pages):
+        for row in _pages(get, '/sync/history/' + kind, cancelled, max_pages, require_page_metadata):
             episode = row.get('episode') or {}
             content = (identity('movie', (row.get('movie') or {}).get('ids')) if kind == 'movies'
                        else identity('episode', show_ids=(row.get('show') or {}).get('ids'),
@@ -197,7 +227,7 @@ def fetch_snapshot(get, *, cancelled=lambda: False, max_pages=1000):
             if event['id'] not in history_ids:
                 snapshot['history'].append(event)
                 history_ids.add(event['id'])
-        for row in _pages(get, '/sync/playback/' + kind, cancelled, max_pages):
+        for row in _pages(get, '/sync/playback/' + kind, cancelled, max_pages, require_page_metadata):
             episode = row.get('episode') or {}
             content = (identity('movie', (row.get('movie') or {}).get('ids')) if kind == 'movies'
                        else identity('episode', show_ids=(row.get('show') or {}).get('ids'),
@@ -216,6 +246,90 @@ def fetch_snapshot(get, *, cancelled=lambda: False, max_pages=1000):
     # Completeness is asserted only after every page and both account/activity fences.
     snapshot['complete'] = True
     return snapshot
+
+
+def validate_export(payload, manifest, *, profile, account, legacy_reference=None):
+    """Replay a complete response transcript; a manifest flag alone proves nothing.
+
+    Legacy v1 omitted account settings and the complete flag. Accept it only
+    with both activity fences, every numbered response, identical rebuilt data,
+    and a fresh strict export attesting the same account state.
+    Account/profile are explicitly supplied by the authenticated caller.
+    """
+    if not isinstance(payload, dict) or payload.get('schema_version') not in (1, 2):
+        raise IncompleteSnapshot('complete supported snapshot required')
+    snapshot = payload.get('snapshot')
+    if not isinstance(snapshot, dict):
+        raise IncompleteSnapshot('complete supported snapshot required')
+    if str(payload.get('profile')) != str(profile) or snapshot.get('account') != account:
+        raise PermissionError('Trakt account or XStream profile mismatch')
+    if (not str(profile).isdigit() or int(profile) < 1 or not account
+            or snapshot.get('complete') is False):
+        raise IncompleteSnapshot('complete supported snapshot required')
+    responses = payload.get('responses')
+    if not isinstance(responses, list) or not responses:
+        raise IncompleteSnapshot('complete supported snapshot response evidence required')
+    legacy = payload['schema_version'] == 1
+    cursor = iter(responses)
+    consumed = []
+    def replay(path, params):
+        if legacy and path == '/users/settings':
+            return {'user': {'ids': {'slug': account}}}, 1
+        try:
+            row = next(cursor)
+        except StopIteration:
+            raise IncompleteSnapshot('missing response evidence') from None
+        if (not isinstance(row, dict) or row.get('path') != path
+                or row.get('params') != params or 'data' not in row or 'pages' not in row):
+            raise IncompleteSnapshot('response order or page mismatch')
+        if isinstance(row.get('pagination'), dict) and row['pages'] != row['pagination'].get('page_count'):
+            raise IncompleteSnapshot('conflicting pagination evidence')
+        consumed.append(row)
+        return row['data'], row.get('pagination', row['pages'])
+    rebuilt = fetch_snapshot(replay, require_page_metadata=not legacy)
+    if next(cursor, None) is not None:
+        raise IncompleteSnapshot('unexpected extra response evidence')
+    if legacy:
+        groups = {}
+        for row in consumed:
+            if row['params'].get('page'):
+                groups.setdefault(row['path'], []).append(row)
+        for rows in groups.values():
+            limit = len(rows[0]['data'])
+            if (any(len(row['data']) != limit for row in rows[:-1])
+                    or len(rows[-1]['data']) > limit):
+                raise IncompleteSnapshot('inconsistent legacy page lengths')
+    original = dict(snapshot)
+    original.pop('complete', None)
+    comparable = dict(rebuilt)
+    comparable.pop('complete', None)
+    if original != comparable:
+        raise IncompleteSnapshot('snapshot does not match complete response evidence')
+    expected = {'records': len(rebuilt['records']), 'history': len(rebuilt['history']),
+                'unidentified': rebuilt['unidentified'], 'responses': len(responses)}
+    if any(manifest.get(key) != value for key, value in expected.items()):
+        raise IncompleteSnapshot('manifest counts do not match response evidence')
+    if not legacy and (snapshot.get('complete') is not True
+                       or manifest.get('contract_version') != 2
+                       or manifest.get('complete') is not True):
+        raise IncompleteSnapshot('unsupported export contract')
+    if legacy:
+        # Page-count-only archives cannot prove the final page's item total.
+        # A fresh strict export may attest identical state, never a manufactured flag.
+        if legacy_reference is None:
+            raise IncompleteSnapshot('legacy export requires a fresh verified reference')
+        reference, proof = legacy_reference
+        if reference.get('schema_version') != 2:
+            raise IncompleteSnapshot('strict reference required')
+        import hashlib
+        import json
+        encoded = json.dumps(reference, ensure_ascii=False, sort_keys=True, allow_nan=False).encode('utf-8')
+        if hashlib.sha256(encoded).hexdigest() != proof.get('sha256'):
+            raise IncompleteSnapshot('reference checksum mismatch')
+        current = validate_export(reference, proof, profile=profile, account=account)
+        if rebuilt != current:
+            raise IncompleteSnapshot('legacy state differs from fresh complete reference')
+    return rebuilt
 
 
 def import_plan(snapshot, provider_records, *, profile, account, local=None):

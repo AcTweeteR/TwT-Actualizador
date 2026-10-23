@@ -112,6 +112,7 @@ def validate_trakt_sync_contract(archive, service_queue: bytes) -> None:
             b"return cycle_route(",
             b"def trakt_sync_once_route(params):",
             b"return sync_once_route(",
+            b'trakt.snapshot_request("/users/settings", {})',
         ),
         "trakt_auto_routes.py": (
             b"def consent_route(", b"def cycle_route(", b"run_cycle(",
@@ -121,6 +122,12 @@ def validate_trakt_sync_contract(archive, service_queue: bytes) -> None:
             b"def apply_batch(", b"verify_batch(", b"write_ack(",
         ),
         "trakt_live_queue.py": (b"def verify_batch(", b"def write_ack(",),
+        "trakt_sync.py": (b"def validate_export(", b"pagination headers required",),
+        "trakt_snapshot.py": (b"require_page_metadata=True", b"'contract_version': 2",),
+        "trakt.py": (b"def snapshot_request(", b'Unsupported snapshot endpoint',),
+        "trakt_provider_index.py": (b"def catalog_members(", b"def _indexed_members(",),
+        "trakt_series_index.py": (b"def verified_show_records(",),
+        "trakt_episode_index.py": (b"def verified_episode_records(",),
         "history_store_coordinator.py": (b"def install(history):",),
         "history.py": (b"_install_history_store_coordinator(__import__(__name__))",),
     }
@@ -280,6 +287,9 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             CATALOG_INDEX_SOURCE.read_bytes())
         for name, source in (
             ("trakt_sync.py", ROOT / "addons/service.actweeter/resources/lib/trakt_sync.py"),
+            ("trakt_provider_index.py", ROOT / "addons/service.actweeter/resources/lib/trakt_provider_index.py"),
+            ("trakt_series_index.py", ROOT / "addons/service.actweeter/resources/lib/trakt_series_index.py"),
+            ("trakt_episode_index.py", ROOT / "addons/service.actweeter/resources/lib/trakt_episode_index.py"),
             ("trakt_snapshot.py", ROOT / "third_party/xstream/trakt_snapshot.py"),
             ("history_store_coordinator.py", HISTORY_STORE_COORDINATOR_SOURCE),
             ("trakt_live_queue.py", ROOT / "addons/service.actweeter/resources/lib/trakt_live_queue.py"),
