@@ -1,0 +1,1 @@
+0.4.62 — Dependencia del candidato XStream Beta 3 reproducible con el flujo PKCE integrado en el constructor oficial.

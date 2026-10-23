@@ -218,6 +218,7 @@ class TraktLiveQueueRuntimeTests(unittest.TestCase):
             self.assertIsNone(archive.testzip())
             members = set(archive.namelist())
             self.assertIn('plugin.video.xstream-pro/resources/lib/trakt_auto_routes.py', members)
+            self.assertIn('plugin.video.xstream-pro/resources/lib/trakt_pkce.py', members)
             self.assertIn(b'xstream_trakt_sync_cycle', archive.read(
                 'plugin.video.xstream-pro/resources/lib/addon.py'))
             self.assertIn(b'trakt_sync_cycle_route', archive.read(
@@ -225,6 +226,8 @@ class TraktLiveQueueRuntimeTests(unittest.TestCase):
             self.assertIn(b'xstream_trakt_sync_once', archive.read(
                 'plugin.video.xstream-pro/resources/lib/addon.py'))
             self.assertIn(b'trakt_sync_once_route', archive.read(
+                'plugin.video.xstream-pro/resources/lib/tmdb_routes.py'))
+            self.assertIn(b'trakt_pkce.begin(', archive.read(
                 'plugin.video.xstream-pro/resources/lib/tmdb_routes.py'))
         result = subprocess.run([sys.executable, '-c', SCRIPT,
             os.environ['ACTWEETER_XSTREAM_LIVE_ZIP'],

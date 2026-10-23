@@ -15,6 +15,7 @@ import json
 import re
 import stat
 import subprocess
+import sys
 import tempfile
 import zipfile
 from pathlib import Path
@@ -44,6 +45,8 @@ DIAGNOSTICS_SOURCE = ROOT / "third_party/xstream/performance_diagnostics.py"
 CATALOG_INDEX_SOURCE = ROOT / "third_party/xstream/provider_catalog_index.py"
 HISTORY_STORE_COORDINATOR_SOURCE = ROOT / "third_party/xstream/history_store_coordinator.py"
 TRAKT_AUTO_ROUTES_SOURCE = ROOT / "third_party/xstream/trakt_auto_routes.py"
+TRAKT_PKCE_APPLIER_SOURCE = ROOT / "third_party/xstream/apply_trakt_pkce.py"
+TRAKT_PKCE_SOURCE = ROOT / "third_party/xstream/trakt_pkce.py"
 FIXED_TIME = (2026, 10, 11, 0, 0, 0)
 UPSTREAM_ROOT = "plugin.video.xstream-pro"
 EXCLUDED_SUFFIXES = {".orig", ".pyc", ".pyo"}
@@ -141,6 +144,24 @@ def validate_trakt_sync_contract(archive, service_queue: bytes) -> None:
             raise ValueError("Trakt sync route/dependency incomplete in ZIP: " + relative)
     if archive.read(root + "trakt_live_queue.py") != service_queue:
         raise ValueError("Service/XStream Trakt queue protocol differs")
+
+
+def validate_trakt_pkce_contract(archive) -> None:
+    """Ensure the reproducible package includes the staged PKCE auth flow."""
+    root = UPSTREAM_ROOT + "/resources/lib/"
+    required = {
+        "trakt_pkce.py": (b"def begin(", b"def exchange_payload(", b"def exchange("),
+        "trakt.py": (b"def pkce_exchange_callback(", b"trakt_pkce.exchange("),
+        "tmdb_routes.py": (b"def trakt_authorize_route(params):",
+                           b"trakt_pkce.begin(",
+                           b"FULL redirected URL from your browser"),
+    }
+    names = set(archive.namelist())
+    for relative, markers in required.items():
+        member = root + relative
+        if member not in names or any(marker not in archive.read(member)
+                                      for marker in markers):
+            raise ValueError("Trakt PKCE integration incomplete in ZIP: " + relative)
 
 
 def normalize_recommendation_patch_targets(root: Path) -> None:
@@ -303,6 +324,20 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
                 raise ValueError("Trakt snapshot source hash mismatch: " + name)
             (root / "resources/lib" / name).write_bytes(source.read_bytes())
 
+        for source, key in ((TRAKT_PKCE_APPLIER_SOURCE, "trakt_pkce_applier_sha256"),
+                            (TRAKT_PKCE_SOURCE, "trakt_pkce_source_sha256")):
+            if sha256(source) != data[key]:
+                raise ValueError("Trakt PKCE source hash mismatch: " + source.name)
+        for relative in ("resources/lib/trakt.py", "resources/lib/tmdb_routes.py"):
+            if sha256(root / relative) != data["local_runtime_sha256"][relative]:
+                raise ValueError("XStream Trakt baseline hash mismatch: " + relative)
+        sys.path.insert(0, str(TRAKT_PKCE_APPLIER_SOURCE.parent))
+        try:
+            from apply_trakt_pkce import apply as apply_pkce
+            apply_pkce(root)
+        finally:
+            sys.path.remove(str(TRAKT_PKCE_APPLIER_SOURCE.parent))
+
         validate_python_sources(root)
 
         distribution_version = data["distribution_version"]
@@ -379,7 +414,10 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
     with zipfile.ZipFile(output) as archive:
         if archive.testzip() is not None:
             raise ValueError("built XStream ZIP CRC failed")
+        validate_trakt_pkce_contract(archive)
         for relative, expected_hash in data.get("local_runtime_sha256", {}).items():
+            if relative in ("resources/lib/trakt.py", "resources/lib/tmdb_routes.py"):
+                continue  # PKCE is a separately hash-locked transformation above.
             member = f"{UPSTREAM_ROOT}/{relative}"
             if member not in archive.namelist():
                 raise ValueError(f"patched runtime file missing from ZIP: {relative}")

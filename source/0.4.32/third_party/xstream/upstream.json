@@ -2,7 +2,7 @@
   "addon_id": "plugin.video.xstream-pro",
   "upstream_project": "https://github.com/Pesicp/XStreamPro",
   "upstream_version": "1.1.2",
-  "distribution_version": "1.1.2.28~beta2",
+  "distribution_version": "1.1.2.28~beta3",
   "upstream_ref": "1.1.2",
   "upstream_commit": "1aa3e67da7c03c6acc3ec7e1ca579a7f645220f4",
   "upstream_release_url": "https://github.com/Pesicp/XStreamPro/releases/download/1.1.2/plugin.video.xstream-pro-1.1.2.zip",
@@ -11,7 +11,7 @@
   "upstream_release_zip_sha256": "915f45708670d07e789bb73b7390a7b5cf30175f818ef5da8ea18c9f13f537fe",
   "upstream_license_observed": "CC BY-NC 4.0",
   "local_runtime_sha256": {
-    "addon.xml": "bf9372f765ce7fcf5b9bab048426c29f7f72bcb632f5f9a2d6b87062029d20ff",
+    "addon.xml": "a713f446145e894355cc3c4eeff74014fde48dcfaeded8bfe9f2b0ae81567703",
     "resources/lib/trakt.py": "94c1d5e9fab007aa8eefe7317df753c420a3b854f473ba50a1b6bfd0a6b3e5ba",
     "resources/lib/tmdb_routes.py": "d30e8723629a05414e689875d98a5843e0b59c3961abca626c9821be4dd53e4b",
     "service.py": "55b6a8b835442fa29b38a2a08890c2cdf8822edd7bb216d223586ec066818de6",
@@ -109,5 +109,7 @@
     "trakt_series_index.py": "5faf171deddd134155f035df0a0106dbd4e73a7f7a3539b558746410a16c85fa",
     "trakt_episode_index.py": "7eedd8071d359f233f45bad027c351c92fd4e1bbeb51d2a9b5617ed0ee8daeee"
   },
-  "trakt_auto_routes_sha256": "209e2027cdca3990a869944e0c35b3220dff809abb18e114b2624e38ccc51196"
+  "trakt_auto_routes_sha256": "209e2027cdca3990a869944e0c35b3220dff809abb18e114b2624e38ccc51196",
+  "trakt_pkce_applier_sha256": "7db539a15cc1a1c8e0bca06462230aac1f0b74262d2645d781c8a002a8e2c7cb",
+  "trakt_pkce_source_sha256": "9475d2a5fa2438c337718212f908257f0ddb7ed2bf697ef30431b74e5e38ec77"
 }
