@@ -20,12 +20,13 @@ def verified_show_records(directory, *, profile):
         details = read_object(root / ('data_cache_p%s_series_info_%s.json' % (profile, provider_id)))
         if details:
             sources.append(external_ids(details.get('info')))
-        for path in sorted(enriched.get(provider_id, [])):
-            value = read_object(path)
-            if value:
-                sources.append(external_ids(value.get('data')))
         inventory = inventories.get(provider_id, {}) if isinstance(inventories, dict) else {}
         sources.append(external_ids(inventory))
+        if any(sources):
+            for path in sorted(enriched.get(provider_id, [])):
+                value = read_object(path)
+                if value:
+                    sources.append(external_ids(value.get('data')))
         ids, conflict = {}, False
         for source in sources:
             if any(ids[key] != value for key, value in source.items() if key in ids):

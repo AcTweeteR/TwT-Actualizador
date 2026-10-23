@@ -11,7 +11,7 @@ class SeriesInventoryTests(unittest.TestCase):
  def test_series_membership_does_not_invent_episode_identity(self):
   with tempfile.TemporaryDirectory() as directory:
    root=Path(directory)
-   (root/'data_cache_p1_xtream_streams_series.json').write_text(json.dumps({'_data':[{'series_id':77}]}))
+   (root/'data_cache_p1_xtream_streams_series.json').write_text(json.dumps({'_data':[{'series_id':77,'tmdb_id':250307}]}))
    (root/'data_cache_p1_premium_meta_series_77_es.json').write_text(json.dumps({'data':{'tmdb_id':250307}}))
    snapshot={'records':{'one':{'identity':{'kind':'episode','ids':{'tmdb':'250307'},'season':2,'episode':15}}}}
    result=series_inventory(root,profile=1,snapshot=snapshot)

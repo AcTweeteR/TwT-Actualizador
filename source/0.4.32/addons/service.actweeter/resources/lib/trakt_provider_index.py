@@ -143,8 +143,8 @@ def verified_vod_records(directory, *, profile, provider_ids=None):
                     continue
                 ids.update(extra)
                 seconds = duration_seconds(info) or seconds
-        # Cached enrichment is reusable only for a member of the current catalog.
-        for path in sorted(enriched.get(provider_id, [])):
+        # Title/year enrichment can decorate a card, but cannot establish provider identity.
+        for path in sorted(enriched.get(provider_id, [])) if ids else []:
             value = read_object(path)
             extra = external_ids(value.get('data')) if value else {}
             if any(ids[key] != value for key, value in extra.items() if key in ids):

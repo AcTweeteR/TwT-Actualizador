@@ -50,6 +50,12 @@ class CompleteCatalogTests(unittest.TestCase):
         self.write('data_cache_p2_vod_info_9.json', {'movie_data':{'stream_id':9},'info':{'tmdb_id':42}})
         self.assertEqual(verified_vod_records(self.root, profile='1'), [])
 
+    def test_title_enrichment_alone_does_not_prove_movie_identity(self):
+        self.movies([{'stream_id':9,'name':'Ambiguous title','year':'2020'}])
+        self.write('data_cache_p1_premium_meta_movie_9_es.json',
+                   {'data':{'tmdb_id':42,'title':'Ambiguous title'}})
+        self.assertEqual(verified_vod_records(self.root,profile='1'),[])
+
     def test_conflicting_duplicate_ids_or_external_metadata_fail_closed(self):
         for rows in ([{'stream_id':9, 'name':'One'}, {'stream_id':9,'name':'Different'}],
                      [{'stream_id':9,'tmdb_id':42}]):
