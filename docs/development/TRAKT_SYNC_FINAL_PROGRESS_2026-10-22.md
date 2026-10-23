@@ -197,6 +197,8 @@ instalar el candidato todavía.
 
 ## Experimento de concurrencia XStream (23-10-2026)
 
+Commit: `da9b32d` (`Coordinate XStream history store writes`). No se hizo push.
+
 ### Alternativas evaluadas
 
 | Opción | Evidencia en esta continuación | Decisión |
