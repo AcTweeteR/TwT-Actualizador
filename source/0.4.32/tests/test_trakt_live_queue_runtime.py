@@ -22,6 +22,17 @@ sys.path.insert(0, sys.argv[1] + '/plugin.video.xstream-pro/resources/lib')
 import history
 from trakt_live_consumer import apply_batch
 addon=types.SimpleNamespace(getAddonInfo=lambda k: str(root))
+def cache(name, value):
+    (root/name).write_text(json.dumps(value))
+cache('data_cache_p2_xtream_streams_movie.json', {'_data':[{'stream_id':101},{'stream_id':303}]})
+cache('data_cache_p2_vod_info_101.json', {'movie_data':{'stream_id':101},'info':{'tmdb_id':'500'}})
+cache('data_cache_p2_vod_info_303.json', {'movie_data':{'stream_id':303},'info':{'tmdb_id':'900'}})
+cache('data_cache_p2_xtream_streams_series.json', {'_data':[{'series_id':55},{'series_id':56}]})
+cache('data_cache_p2_premium_meta_series_55_en.json', {'data':{'tmdb_id':'600'}})
+cache('data_cache_p2_premium_meta_series_56_en.json', {'data':{'tmdb_id':'901'}})
+cache('series_changes_p2.json', {'episode_inventory':{
+    '55':{'complete':True,'episodes':[{'season':1,'episode':2,'provider_id':'202'}]},
+    '56':{'complete':True,'episodes':[{'season':1,'episode':9,'provider_id':'304'}]}}})
 url_movie='https://provider.invalid/movie/101.mp4'
 url_episode='https://provider.invalid/series/202.mkv'
 history.ResumePoints(addon, 2).save_position('Movie', url_movie, 90, 1800,
@@ -39,8 +50,23 @@ episode={'identity':{'kind':'episode','ids':{'tmdb':'600'},'season':1,'episode':
 batch=build_batch({'profile':'2','account':'test-account','items':[movie,episode]},
                   provider_scope=scope, consent=True, batch_id='1'*32)
 path=write_batch(queue_root,batch)
+collision=build_batch({'profile':'2','account':'test-account','items':[
+    {'identity':{'kind':'movie','ids':{'tmdb':'999'}},'provider_id':'101',
+     'watched':True,'watched_at':1090},
+    {'identity':{'kind':'episode','ids':{'tmdb':'600'},'season':1,'episode':99},
+     'provider_id':'202','provider_series_id':'55','provider_episode_id':'202',
+     'watched':True,'watched_at':1091}]}, provider_scope=scope, consent=True,
+    batch_id='3'*32)
+collision_path=write_batch(queue_root,collision)
+collision_ack=apply_batch(collision_path, profile_root/'trakt_live'/'acks', profile='2',
+    account='test-account',provider_scope=scope,addon=addon,history=history,catalog_root=root)
+assert all(row['status']=='deferred' for row in collision_ack['results'])
+assert '101' not in history.WatchedMovies(addon,2)._data
+try: checkpoint_from_ack(collision_ack,collision)
+except RuntimeError: pass
+else: raise AssertionError('provider ID collision was checkpointed')
 ack=apply_batch(path, profile_root/'trakt_live'/'acks', profile='2',
-    account='test-account',provider_scope=scope,addon=addon,history=history)
+    account='test-account',provider_scope=scope,addon=addon,history=history,catalog_root=root)
 assert len(ack['results']) == 4
 assert all(row['status']=='applied' for row in ack['results'])
 checkpoint=checkpoint_from_ack(ack,batch)
@@ -51,7 +77,7 @@ assert history.ResumePoints(addon,2)._data['Movie||'+url_movie]['position']==300
 assert history.ResumePoints(addon,2)._data['Episode||'+url_episode]['position']==600
 # Replay the durable request: no extra writes, no duplicate episodes, stable ack.
 replay=apply_batch(path, profile_root/'trakt_live'/'acks', profile='2',
-    account='test-account',provider_scope=scope,addon=addon,history=history)
+    account='test-account',provider_scope=scope,addon=addon,history=history,catalog_root=root)
 assert all(row['status'] in ('already_applied','superseded') for row in replay['results'])
 assert len(history.WatchedEpisodes(addon,2)._data['55']['1'])==1
 # A crash after the movie store commits but before episode persistence leaves
@@ -68,14 +94,14 @@ original_save=history.WatchedEpisodes._save
 history.WatchedEpisodes._save=lambda self: (_ for _ in ()).throw(OSError('simulated interruption'))
 try:
     try: apply_batch(partial_path, profile_root/'trakt_live'/'acks', profile='2',
-        account='test-account',provider_scope=scope,addon=addon,history=history)
+        account='test-account',provider_scope=scope,addon=addon,history=history,catalog_root=root)
     except OSError: pass
     else: raise AssertionError('simulated store interruption was ignored')
 finally:
     history.WatchedEpisodes._save=original_save
 assert '2'*32+'.json' not in [p.name for p in (profile_root/'trakt_live'/'acks').glob('*.json')]
 recovered=apply_batch(partial_path, profile_root/'trakt_live'/'acks', profile='2',
-    account='test-account',provider_scope=scope,addon=addon,history=history)
+    account='test-account',provider_scope=scope,addon=addon,history=history,catalog_root=root)
 assert all(row['status'] in ('applied','already_applied') for row in recovered['results'])
 assert '303' in history.WatchedMovies(addon,2)._data
 assert '304' in history.WatchedEpisodes(addon,2)._data['56']['1']
@@ -83,18 +109,19 @@ assert '304' in history.WatchedEpisodes(addon,2)._data['56']['1']
 for kwargs in ({'profile':'1','account':'test-account','provider_scope':scope},
                {'profile':'2','account':'other','provider_scope':scope},
                {'profile':'2','account':'test-account','provider_scope':'b'*64}):
-    try: apply_batch(path, profile_root/'trakt_live'/'acks', **kwargs, addon=addon,history=history)
+    try: apply_batch(path, profile_root/'trakt_live'/'acks', **kwargs, addon=addon,
+                     history=history,catalog_root=root)
     except (PermissionError, ValueError): pass
     else: raise AssertionError('scope mismatch was accepted')
 bad=dict(batch); bad['operations']=[]
 badpath=queue_root/('2'*32+'.json'); badpath.write_text(json.dumps(bad))
 try: apply_batch(badpath, profile_root/'trakt_live'/'acks', profile='2',
-    account='test-account',provider_scope=scope,addon=addon,history=history)
+    account='test-account',provider_scope=scope,addon=addon,history=history,catalog_root=root)
 except ValueError: pass
 else: raise AssertionError('bad checksum accepted')
 # Playback-active defers all operations and cannot advance a checkpoint.
 active=apply_batch(path, profile_root/'trakt_live'/'acks', profile='2',
-    account='test-account',provider_scope=scope,addon=addon,history=history,
+    account='test-account',provider_scope=scope,addon=addon,history=history,catalog_root=root,
     playing_file=url_movie)
 assert all(row['status']=='deferred' for row in active['results'])
 try: checkpoint_from_ack(active,batch)

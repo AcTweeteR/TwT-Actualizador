@@ -318,3 +318,34 @@ los previos): Service `0.4.56-r2` SHA-256
 `1212542f11d105618cc1ded9eb15798c63c0ae1268b048c4461a1c62d4c280ad`;
 integridad CRC PASS. Siguen siendo artefactos locales privados, no publicados
 ni instalados.
+
+### Verificación de las tres pruebas condicionales e identidad del catálogo
+
+Se ejecutaron explícitamente las tres pruebas que antes podían quedar
+omitidas: `test_upstream_lost_update_is_reproducible`,
+`test_real_xstream_classes_serialize_and_merge` y
+`test_queue_to_real_xstream_stores_and_durable_ack`. Las tres pasan usando el
+upstream fijado, el ZIP candidato y sus clases XStream reales en datos
+temporales.
+
+Se endureció el consumidor: antes de aplicar cualquier estado visto o avance,
+vuelve a comprobar el ID de película contra la lista actual de streams y sus
+metadatos exactos del perfil; para episodios exige serie disponible, identidad
+TMDb compatible e inventario de episodios completo con temporada, episodio e
+ID coincidentes. Colisiones/reutilización de IDs y cambios de proveedor
+quedan `deferred`; no se aplica ni se confirma el lote. Se añadieron casos de
+colisión de película y episodio. Suite completa final: **462/462 PASS** con
+las variables de ZIP configuradas.
+
+Artefactos reconstruidos dos veces con SHA idéntico y CRC válido: Service
+`0.4.56`, `c1ae6dac5fd1afd8d1fcafb5c3da12125bfcaaab09429e7cf784a7450a590d80`;
+XStream `1.1.2.25~beta1`,
+`1c77161c405e8a84f00b8af3f546fe9904332c3e669c3bb67fe9efaa688582cc`.
+Siguen privados y sin instalar.
+
+Esto todavía no conecta el productor al ciclo ordinario del servicio: no hay
+consentimiento persistente ni revocable, scheduler, poll de actividad,
+checkpoint remoto separado o GET ejecutado dentro de Kodi. Tampoco se ha
+verificado el refresco de la UI «Continuar viendo». La integración actual
+demuestra aplicación y persistencia en stores XStream aislados, no runtime
+Kodi ni sincronización automática.

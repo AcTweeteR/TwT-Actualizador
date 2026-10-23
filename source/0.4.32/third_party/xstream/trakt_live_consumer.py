@@ -36,8 +36,82 @@ def _provider_ref(operation, records):
     return next(iter(unique.values())) if len(unique) == 1 else None
 
 
+def _cache(root, name):
+    path = Path(root) / name
+    if path.is_symlink() or not path.is_file() or path.stat().st_size > 32_000_000:
+        return None
+    try:
+        return json.loads(path.read_text('utf-8'))
+    except (OSError, ValueError, UnicodeError):
+        return None
+
+
+def _catalog_identity_exact(operation, catalog_root, profile):
+    """Recheck the provider ID against this profile's current typed catalog."""
+    identity = operation['identity']
+    ids = identity['ids']
+    root = Path(catalog_root)
+    if root.is_symlink() or not root.is_dir():
+        return False
+    if operation['kind'] == 'movie':
+        provider_id = str(operation['provider_id'])
+        streams = _cache(root, 'data_cache_p%s_xtream_streams_movie.json' % profile)
+        details = _cache(root, 'data_cache_p%s_vod_info_%s.json' % (profile, provider_id))
+        rows = streams.get('_data') if isinstance(streams, dict) else None
+        if not isinstance(rows, list) or not isinstance(details, dict):
+            return False
+        if sum(str(row.get('stream_id', '')) == provider_id for row in rows
+               if isinstance(row, dict)) != 1:
+            return False
+        info = details.get('info')
+        movie = details.get('movie_data')
+        if (not isinstance(info, dict) or not isinstance(movie, dict)
+                or str(movie.get('stream_id', '')) != provider_id
+                or not ids.get('tmdb') or str(info.get('tmdb_id', '')) != str(ids['tmdb'])):
+            return False
+        imdb = info.get('imdb_id')
+        return not (ids.get('imdb') and imdb and str(imdb).casefold() != str(ids['imdb']).casefold())
+
+    series_id = str(operation['series_id'])
+    streams = _cache(root, 'data_cache_p%s_xtream_streams_series.json' % profile)
+    inventory = _cache(root, 'series_changes_p%s.json' % profile)
+    rows = streams.get('_data') if isinstance(streams, dict) else None
+    if (not isinstance(rows, list) or not any(
+            isinstance(row, dict) and str(row.get('series_id', '')) == series_id
+            for row in rows) or not isinstance(inventory, dict)):
+        return False
+    series_files = list(root.glob('data_cache_p%s_premium_meta_series_%s_*.json' %
+                                  (profile, series_id)))
+    show_matches = []
+    for path in series_files:
+        if path.is_symlink() or not path.is_file() or path.stat().st_size > 4_000_000:
+            continue
+        try:
+            payload = json.loads(path.read_text('utf-8'))
+            data = payload.get('data', {})
+        except (OSError, ValueError, UnicodeError, AttributeError):
+            continue
+        if not isinstance(data, dict):
+            continue
+        if (ids.get('tmdb') and str(data.get('tmdb_id', '')) == str(ids['tmdb'])
+                and (not ids.get('imdb') or not data.get('imdb_id')
+                     or str(data['imdb_id']).casefold() == str(ids['imdb']).casefold())):
+            show_matches.append(data)
+    if not show_matches:
+        return False
+    catalog = inventory.get('episode_inventory', {}).get(series_id, {})
+    episodes = catalog.get('episodes') if isinstance(catalog, dict) else None
+    if (not isinstance(catalog, dict) or catalog.get('complete') is not True
+            or not isinstance(episodes, list)):
+        return False
+    return sum(1 for row in episodes if isinstance(row, dict)
+               and str(row.get('season')) == str(operation['season'])
+               and str(row.get('episode')) == str(operation['episode'])
+               and str(row.get('provider_id')) == str(operation['episode_id'])) == 1
+
+
 def apply_batch(batch_path, ack_directory, *, profile, account, provider_scope,
-                addon, history, playing_file='', max_operations=200):
+                addon, history, catalog_root, playing_file='', max_operations=200):
     """Idempotently apply additions; ack only after fresh-reader verification."""
     path = Path(batch_path)
     if path.is_symlink() or not path.is_file() or path.stat().st_size > 2_000_000:
@@ -78,6 +152,10 @@ def apply_batch(batch_path, ack_directory, *, profile, account, provider_scope,
                 or identity.get('season') != operation['season']
                 or identity.get('episode') != operation['episode']):
             raise ValueError('episode identity mismatch')
+        if not _catalog_identity_exact(operation, catalog_root, profile):
+            results.append({'id': op_id, 'status': 'deferred',
+                            'reason': 'provider_identity_not_verified_in_catalog'})
+            continue
         if action == 'resume':
             position, duration = operation.get('position'), operation.get('duration')
             if (type(position) not in (int, float) or type(duration) not in (int, float)

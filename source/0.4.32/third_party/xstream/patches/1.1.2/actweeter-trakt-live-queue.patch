@@ -14,7 +14,7 @@ diff --git a/resources/lib/addon.py b/resources/lib/addon.py
 diff --git a/resources/lib/tmdb_routes.py b/resources/lib/tmdb_routes.py
 --- a/resources/lib/tmdb_routes.py
 +++ b/resources/lib/tmdb_routes.py
-@@ -1,1 +1,39 @@
+@@ -1,1 +1,41 @@
 +def trakt_apply_route(params):
 +    """Consume one local batch; network use is read-only and writes stay in XStream."""
 +    import re
@@ -43,9 +43,11 @@ diff --git a/resources/lib/tmdb_routes.py b/resources/lib/tmdb_routes.py
 +        raise PermissionError("Trakt account or provider binding unavailable")
 +    player = xbmc.Player()
 +    playing = player.getPlayingFile() if player.isPlaying() else ""
++    catalog_root = Path(xbmcvfs.translatePath(c("addon").getAddonInfo("profile")))
 +    result = trakt_live_consumer.apply_batch(str(queue), str(ack_root),
 +        profile=profile, account=account, provider_scope=scope,
-+        addon=c("addon"), history=history, playing_file=playing)
++        addon=c("addon"), history=history, catalog_root=catalog_root,
++        playing_file=playing)
 +    item = c("_new_listitem")("AcTweeteR: lote Trakt procesado de forma local")
 +    item.setProperty("actweeter.trakt.batch", batch_id)
 +    item.setProperty("actweeter.trakt.ack", result["sha256"])

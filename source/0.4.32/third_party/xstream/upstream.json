@@ -13,7 +13,7 @@
   "local_runtime_sha256": {
     "addon.xml": "541359853c10e1851a0d0524cceaef7ad515eb999d00397628a51937c68d98f6",
     "resources/lib/trakt.py": "dcd94601c1c8b2929baa26c2207bce2d4a42c458d398f6cb2974dccc9d83a321",
-    "resources/lib/tmdb_routes.py": "f0b9e664ccbed2d138b583917800bdbc6398a43f1b30ca1f588d377d590ef9c4",
+    "resources/lib/tmdb_routes.py": "a3f9a76671372e4f305444af15f5ec50a66bc48b93b12bb61a0e1e6b3aa14d40",
     "service.py": "55b6a8b835442fa29b38a2a08890c2cdf8822edd7bb216d223586ec066818de6",
     "resources/lib/addon.py": "76376a12d9ad79ef7c8f0af23c230ece9047f45de633ee0d45756982a8734a38",
     "resources/lib/premium_routes.py": "6b1437b1b2229705ba2323171b22082d16dd83ee50f6420869756de3ee7ea513",
@@ -96,12 +96,12 @@
   "history_store_coordinator_patch": "third_party/xstream/patches/1.1.2/actweeter-history-store-coordinator.patch",
   "history_store_coordinator_patch_sha256": "8c5063817c5d8afea5185401c8a9c3cd462027341aceaef01aede29262c49485",
   "trakt_live_queue_patch": "third_party/xstream/patches/1.1.2/actweeter-trakt-live-queue.patch",
-  "trakt_live_queue_patch_sha256": "21c34e6bf740f6ef934864e81292066ed74bd401bd5e437cbdc186639c7c38eb",
+  "trakt_live_queue_patch_sha256": "824c8dad464ad609f64dd0dceabcdf5b8870df2c83350b27d5c42e49319da088",
   "trakt_snapshot_sources_sha256": {
     "trakt_sync.py": "aa9e14bab1b59340a62a1ed3d8201fe249493a136e7665d0452f42a791da1a1d",
     "trakt_snapshot.py": "427e8ec5ca2e20b50e23c806190d97303bf6160fae63f09209a993bd0a537f0b",
     "history_store_coordinator.py": "377a6443f1d6312a9f9fa86c10292857889129a90e04fbaeb0925197b8713869",
     "trakt_live_queue.py": "880ce608f204c38c1d42fc1a2a339d26b8392a968a45621979c7fd7046747583",
-    "trakt_live_consumer.py": "a4f0db5fd52a28cdcda970f52f807852c2f407f3b535f941f28cc284c470a97d"
+    "trakt_live_consumer.py": "0c9968822620045af648dd55d416a3818173d974f0d38be24cd7d78754be73da"
   }
 }
