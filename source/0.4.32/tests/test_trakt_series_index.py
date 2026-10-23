@@ -32,3 +32,13 @@ class SeriesIndexTests(unittest.TestCase):
    (base/'data_cache_p1_xtream_streams_series.json').write_text(json.dumps({'_data':[{'series_id':77}]}))
    (base/'data_cache_p1_premium_meta_series_77_es.json').write_text(json.dumps({'data':{'tmdb_id':250307}}))
    self.assertEqual(index.verified_show_records(base,profile=1),[])
+
+ def test_premium_lookup_does_not_add_external_identity_to_provider_show(self):
+  with tempfile.TemporaryDirectory() as d:
+   base=Path(d)
+   (base/'data_cache_p1_xtream_streams_series.json').write_text(json.dumps({'_data':[
+    {'series_id':77,'imdb_id':'tt1234567'}]}))
+   (base/'data_cache_p1_premium_meta_series_77_es.json').write_text(json.dumps(
+    {'data':{'tmdb_id':250307,'title':'Example'}}))
+   found=index.verified_show_records(base,profile=1)
+   self.assertEqual(found[0]['ids'],{'imdb':'tt1234567'})

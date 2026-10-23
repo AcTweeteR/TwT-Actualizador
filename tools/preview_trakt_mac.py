@@ -14,9 +14,9 @@ import tracemalloc
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT / 'source/0.4.32/addons/service.actweeter/resources'))
 from lib.trakt_restore_importer import prepare_restore, preview_changes
-from lib.trakt_provider_index import verified_vod_records, catalog_members
-from lib.trakt_series_index import verified_show_records
+from lib.trakt_provider_index import catalog_members
 from lib.trakt_episode_index import verified_episode_records
+from lib.trakt_identity_resolver import resolve_identities
 from lib.trakt_auto_cycle import catalog_generation
 from lib.trakt_sync import ProviderIndex, identity
 
@@ -57,9 +57,15 @@ def main():
         plan=prepare_restore(args.export,catalog,profile=args.profile,account=snapshot['account'])
         preview=preview_changes(plan,args.local,profile=args.profile)
         samples.append({'wall_ms':(time.perf_counter()-start)*1000,'cpu_ms':(time.process_time()-cpu)*1000})
-    movies=verified_vod_records(catalog,profile=args.profile)
-    shows=verified_show_records(catalog,profile=args.profile)
-    episodes=verified_episode_records(catalog,profile=args.profile,snapshot=snapshot)
+    resolution=resolve_identities(catalog,profile=args.profile,export_payload=payload,
+                                  include_candidates=True)
+    movies=[row for row in resolution['verified'] if row['kind']=='movie']
+    shows=[row for row in resolution['verified'] if row['kind']=='show']
+    episodes=(verified_episode_records(catalog,profile=args.profile,snapshot=snapshot,
+                                       show_records=shows)
+              if resolution['summary'].get('provider_scope_available') else
+              {'records':[], 'deferred':sum(r.get('identity',{}).get('kind')=='episode'
+                                            for r in snapshot.get('records',{}).values())})
     show_index=ProviderIndex(shows,profile=args.profile)
     unresolved={'movie_identity_pending':0,'show_identity_pending':0,'episode_inventory_pending':0}
     for key in plan['unavailable']:
@@ -89,12 +95,16 @@ def main():
         remote_playback=sum('paused_at' in r for r in snapshot['records'].values()),
         matched_movies=sum(i['identity']['kind']=='movie' for i in plan['items']),
         matched_episodes=sum(i['identity']['kind']=='episode' for i in plan['items']),
-        ambiguous=len(plan['ambiguous']),identity_conflicts=len(plan['conflicts']),
+        ambiguous=len(plan['ambiguous']),
         metadata_pending=len(plan['unavailable']),confirmed_not_available=0,
         available_movie_provider_ids=len(catalog_members(catalog,args.profile,'movie')),
         available_series_provider_ids=len(catalog_members(catalog,args.profile,'series')),
         verified_movie_provider_ids=len(movies),verified_show_provider_ids=len(shows),
         exact_episode_records=len(episodes['records']),availability_unknown=len(plan['unavailable']),
+        candidate_trakt_items=resolution['summary']['candidate_trakt_items'],
+        candidate_links=resolution['summary']['candidate_links'],
+        candidate_ambiguous_items=sum(len(row['provider_ids']) > 1 for row in resolution['candidates']),
+        identity_conflicts=len(resolution['conflicts']),
         pending_reasons=unresolved,unavailable_is_not_inferred_from_unmatched=True,
         samples=args.samples,performance=metrics,python_peak_bytes=peak,
         generation_check_p50_ms=round(statistics.median(stamps),3),

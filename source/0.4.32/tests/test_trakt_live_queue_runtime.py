@@ -30,7 +30,8 @@ def cache(name, value):
 cache('data_cache_p2_xtream_streams_movie.json', {'_data':[{'stream_id':101},{'stream_id':303}]})
 cache('data_cache_p2_vod_info_101.json', {'movie_data':{'stream_id':101},'info':{'tmdb_id':'500'}})
 cache('data_cache_p2_vod_info_303.json', {'movie_data':{'stream_id':303},'info':{'tmdb_id':'900'}})
-cache('data_cache_p2_xtream_streams_series.json', {'_data':[{'series_id':55},{'series_id':56}]})
+cache('data_cache_p2_xtream_streams_series.json', {'_data':[
+    {'series_id':55,'tmdb_id':'600'},{'series_id':56,'tmdb_id':'901'}]})
 cache('data_cache_p2_premium_meta_series_55_en.json', {'data':{'tmdb_id':'600'}})
 cache('data_cache_p2_premium_meta_series_56_en.json', {'data':{'tmdb_id':'901'}})
 cache('series_changes_p2.json', {'episode_inventory':{

@@ -123,10 +123,6 @@ def duration_seconds(info):
 def verified_vod_records(directory, *, profile, provider_ids=None):
     root = Path(directory)
     members = catalog_members(root, profile, 'movie', provider_ids)
-    enriched = {}
-    for path in root.glob('data_cache_p%s_premium_meta_movie_*.json' % profile):
-        ident = path.stem.rsplit('_', 2)[-2]
-        enriched.setdefault(ident, []).append(path)
     result = []
     for provider_id, row in members.items():
         ids = external_ids(row)
@@ -143,13 +139,6 @@ def verified_vod_records(directory, *, profile, provider_ids=None):
                     continue
                 ids.update(extra)
                 seconds = duration_seconds(info) or seconds
-        # Title/year enrichment can decorate a card, but cannot establish provider identity.
-        for path in sorted(enriched.get(provider_id, [])) if ids else []:
-            value = read_object(path)
-            extra = external_ids(value.get('data')) if value else {}
-            if any(ids[key] != value for key, value in extra.items() if key in ids):
-                ids = {}; break
-            ids.update(extra)
         ids.pop('tvdb', None)
         if ids:
             result.append({'profile': str(profile), 'kind': 'movie', 'provider_id': provider_id,

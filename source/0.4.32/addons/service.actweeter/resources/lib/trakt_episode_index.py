@@ -6,10 +6,6 @@ fabricated episode IDs. Incomplete inventories never authorize import.
 import json
 from pathlib import Path
 try:
-    from .trakt_series_index import verified_show_records
-except ImportError:
-    from trakt_series_index import verified_show_records
-try:
     from .trakt_provider_index import read_object, duration_seconds
 except ImportError:
     from trakt_provider_index import read_object, duration_seconds
@@ -19,7 +15,7 @@ except ImportError:
     from trakt_sync import ProviderIndex, identity
 
 
-def verified_episode_records(directory, *, profile, snapshot):
+def verified_episode_records(directory, *, profile, snapshot, show_records):
     root = Path(directory)
     path = root / ('series_changes_p%s.json' % profile)
     if path.is_symlink():
@@ -30,7 +26,15 @@ def verified_episode_records(directory, *, profile, snapshot):
         inventories = {}
     if not isinstance(inventories, dict):
         raise ValueError('missing episode inventory')
-    shows = verified_show_records(root, profile=profile)
+    if not isinstance(show_records, list) or any(
+            not isinstance(show, dict) or show.get('kind') != 'show'
+            or str(show.get('profile')) != str(profile)
+            or (show.get('status') != 'VERIFIED' and show.get('confidence') != 'verified')
+            or not str(show.get('provider_id', '')).isdigit()
+            or not isinstance(show.get('ids'), dict) or not show['ids']
+            for show in show_records):
+        raise ValueError('invalid verified show identities')
+    shows = show_records
     show_by_id = {x['provider_id']: x for x in shows}
     index = ProviderIndex(shows, profile=profile)
     exact = []

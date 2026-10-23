@@ -7,11 +7,12 @@ import hashlib
 import json
 from pathlib import Path
 from .trakt_episode_index import verified_episode_records
-from .trakt_provider_index import verified_vod_records
+from .trakt_identity_resolver import resolve_identities
 from .trakt_sync import import_plan, validate_export
 
 
-def prepare_restore(export_directory, xstream_directory, *, profile, account, reference_directory=None):
+def prepare_restore(export_directory, xstream_directory, *, profile, account,
+                    reference_directory=None, include_candidates=False):
     folder = Path(export_directory)
     if folder.is_symlink() or any((folder / name).is_symlink() for name in ('snapshot.json', 'manifest.json')):
         raise ValueError('unsafe export path')
@@ -35,8 +36,18 @@ def prepare_restore(export_directory, xstream_directory, *, profile, account, re
         reference = (json.loads(raw2), manifest2)
     snapshot = validate_export(payload, manifest, profile=profile, account=account,
                                legacy_reference=reference)
-    movies = verified_vod_records(xstream_directory, profile=profile)
-    episodes = verified_episode_records(xstream_directory, profile=profile, snapshot=snapshot)
+    resolution = resolve_identities(xstream_directory, profile=profile,
+                                    export_payload=payload,
+                                    include_candidates=include_candidates)
+    movies = [item for item in resolution['verified'] if item['kind'] == 'movie']
+    strict_shows = [item for item in resolution['verified'] if item['kind'] == 'show']
+    if resolution['summary'].get('provider_scope_available'):
+        episodes = verified_episode_records(xstream_directory, profile=profile, snapshot=snapshot,
+                                            show_records=strict_shows)
+    else:
+        episodes = {'records': [], 'deferred': sum(
+            record.get('identity', {}).get('kind') == 'episode'
+            for record in snapshot.get('records', {}).values())}
     plan = import_plan(snapshot, movies + episodes['records'], profile=profile, account=account)
     episode_by_id = {record['provider_id']: record for record in episodes['records']}
     for item in plan['items']:
@@ -44,6 +55,8 @@ def prepare_restore(export_directory, xstream_directory, *, profile, account, re
             provider = episode_by_id[item['provider_id']]
             item['provider_series_id'] = provider['provider_series_id']
             item['provider_episode_id'] = provider['provider_episode_id']
+    plan['identity_resolution'] = dict(resolution['summary'],
+        verified_episodes=len(episodes['records']), deferred_episodes=episodes['deferred'])
     return plan
 
 

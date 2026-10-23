@@ -57,13 +57,18 @@ def _catalog_scope_verified(operations, root, profile, scope, addon):
 def _verified_catalog_index(operations, catalog_root, profile):
     from trakt_sync import ProviderIndex
     from trakt_provider_index import verified_vod_records
+    from trakt_series_index import verified_show_records
     from trakt_episode_index import verified_episode_records
     snapshot = {'records': {str(i): {'identity': op['identity']}
                             for i, op in enumerate(operations)}}
     movie_ids = {op['provider_id'] for op in operations if op['kind'] == 'movie'}
     movies = verified_vod_records(catalog_root, profile=profile, provider_ids=movie_ids) if movie_ids else []
-    episodes = (verified_episode_records(catalog_root, profile=profile, snapshot=snapshot)
-                if any(op['kind'] == 'episode' for op in operations) else {'records': []})
+    series_ids = {op['series_id'] for op in operations if op['kind'] == 'episode'}
+    shows = ([row for row in verified_show_records(catalog_root, profile=profile)
+              if row['provider_id'] in series_ids] if series_ids else [])
+    episodes = (verified_episode_records(catalog_root, profile=profile, snapshot=snapshot,
+                                         show_records=shows)
+                if series_ids else {'records': []})
     return ProviderIndex(movies + episodes['records'], profile=profile)
 
 

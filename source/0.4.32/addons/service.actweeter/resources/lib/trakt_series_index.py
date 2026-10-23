@@ -11,9 +11,6 @@ def verified_show_records(directory, *, profile):
     members = catalog_members(root, profile, 'series')
     state = read_object(root / ('series_changes_p%s.json' % profile)) or {}
     inventories = state.get('episode_inventory', {})
-    enriched = {}
-    for path in root.glob('data_cache_p%s_premium_meta_series_*.json' % profile):
-        enriched.setdefault(path.stem.rsplit('_', 2)[-2], []).append(path)
     result = []
     for provider_id, row in members.items():
         sources = [external_ids(row)]
@@ -22,11 +19,6 @@ def verified_show_records(directory, *, profile):
             sources.append(external_ids(details.get('info')))
         inventory = inventories.get(provider_id, {}) if isinstance(inventories, dict) else {}
         sources.append(external_ids(inventory))
-        if any(sources):
-            for path in sorted(enriched.get(provider_id, [])):
-                value = read_object(path)
-                if value:
-                    sources.append(external_ids(value.get('data')))
         ids, conflict = {}, False
         for source in sources:
             if any(ids[key] != value for key, value in source.items() if key in ids):

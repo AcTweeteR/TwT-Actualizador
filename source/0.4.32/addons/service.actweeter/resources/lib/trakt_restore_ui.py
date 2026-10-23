@@ -64,8 +64,10 @@ def render(handle, *, gui, plugin, vfs, xstream_addon, service_addon=None, param
     if action == 'prepare' and exports and status['safe']:
         newest = exports[-1]
         plan = prepare_restore(Path(profile_path) / 'trakt_exports' / newest['name'],
-                               profile_path, profile=profile, account=newest['account'])
+                               profile_path, profile=profile, account=newest['account'],
+                               include_candidates=True)
         plan = preview_changes(plan, profile_path, profile=profile)['plan']
+        identity_summary = plan.get('identity_resolution', {})
         with tempfile.TemporaryDirectory(prefix='actweeter-trakt-preview-') as folder:
             result = stage_complete_restore(plan, profile=profile, account=newest['account'],
                 xstream_profile=profile_path,
@@ -79,6 +81,11 @@ def render(handle, *, gui, plugin, vfs, xstream_addon, service_addon=None, param
                     '%d avances nuevos, %d actualizados y %d omitidos (sin modificar Kodi)') % (
                         result['movies'], result['episodes'], result['resumes_added'],
                         result['resumes_updated'], result['resumes_deferred'])
+                if identity_summary.get('candidate_trakt_items') is not None:
+                    staged_message += ('; %d coincidencias textuales siguen sin verificar, '
+                                       '%d conflictos requieren revisión' % (
+                                           identity_summary['candidate_trakt_items'],
+                                           identity_summary['conflicts']))
     if not status['safe']:
         labels = ['Restauración bloqueada: transacciones pendientes (%d)' % pending,
                   'Recupera los originales con Kodi detenido antes de continuar']

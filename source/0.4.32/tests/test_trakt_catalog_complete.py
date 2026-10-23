@@ -34,7 +34,7 @@ class CompleteCatalogTests(unittest.TestCase):
         return self.write('data_cache_p1_xtream_streams_movie.json', {'_src': 'synthetic|user|secret', '_data': rows})
 
     def series(self, rows):
-        return self.write('data_cache_p1_xtream_streams_series.json', {'_data': rows})
+        return self.write('data_cache_p1_xtream_streams_series.json', {'_src': 'synthetic|user|secret', '_data': rows})
 
     def test_full_catalog_ids_and_category_duplicates_are_not_materialized_history(self):
         self.movies([{'stream_id': 9, 'tmdb_id': 42, 'category_id': 1},
@@ -56,6 +56,13 @@ class CompleteCatalogTests(unittest.TestCase):
                    {'data':{'tmdb_id':42,'title':'Ambiguous title'}})
         self.assertEqual(verified_vod_records(self.root,profile='1'),[])
 
+    def test_premium_lookup_does_not_add_external_identity_to_provider_movie(self):
+        self.movies([{'stream_id':9,'name':'Film','year':'2020','imdb_id':'tt0012345'}])
+        self.write('data_cache_p1_premium_meta_movie_9_es.json',
+                   {'data':{'tmdb_id':42,'title':'Film'}})
+        rows=verified_vod_records(self.root,profile='1')
+        self.assertEqual(rows[0]['ids'],{'imdb':'tt0012345'})
+
     def test_conflicting_duplicate_ids_or_external_metadata_fail_closed(self):
         for rows in ([{'stream_id':9, 'name':'One'}, {'stream_id':9,'name':'Different'}],
                      [{'stream_id':9,'tmdb_id':42}]):
@@ -69,12 +76,13 @@ class CompleteCatalogTests(unittest.TestCase):
         path = self.write('data_cache_p1_series_info_7.json', {'info':{'tmdb':42},
             'episodes':{'2':[{'id':'99','season':2,'episode_num':3,'info':{'duration_secs':'1200'}}]}})
         snapshot = {'records':{'ep':{'identity':sync.identity('episode',show_ids={'tmdb':42},season=2,episode=3)}}}
-        result = verified_episode_records(self.root,profile='1',snapshot=snapshot)
+        shows = verified_show_records(self.root,profile='1')
+        result = verified_episode_records(self.root,profile='1',snapshot=snapshot,show_records=shows)
         self.assertEqual(result['records'][0]['provider_episode_id'],'99')
         self.assertEqual(result['records'][0]['duration_seconds'],1200)
         value=json.loads(path.read_text()); value['episodes']['2'][0]['season']=3
         path.write_text(json.dumps(value))
-        self.assertEqual(verified_episode_records(self.root,profile='1',snapshot=snapshot)['records'],[])
+        self.assertEqual(verified_episode_records(self.root,profile='1',snapshot=snapshot,show_records=shows)['records'],[])
 
     def test_offset_index_is_reused_readonly_and_stale_index_falls_back(self):
         spec=importlib.util.spec_from_file_location('offset_test', ROOT/'third_party/xstream/provider_catalog_index.py')

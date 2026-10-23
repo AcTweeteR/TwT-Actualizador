@@ -1,0 +1,2 @@
+0.4.60 — Resolución segura de identidades Trakt/XStream
+Clasifica identidades verificadas, candidatas y en conflicto por perfil y proveedor. Usa catálogo y detalles persistentes de XStream; las coincidencias textuales nunca autorizan una restauración. Previsualización Trakt informa cobertura y conserva el fail-closed. Sin escrituras en Trakt ni aplicación automática.

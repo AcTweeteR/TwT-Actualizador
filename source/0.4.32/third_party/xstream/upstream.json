@@ -2,7 +2,7 @@
   "addon_id": "plugin.video.xstream-pro",
   "upstream_project": "https://github.com/Pesicp/XStreamPro",
   "upstream_version": "1.1.2",
-  "distribution_version": "1.1.2.28~beta1",
+  "distribution_version": "1.1.2.28~beta2",
   "upstream_ref": "1.1.2",
   "upstream_commit": "1aa3e67da7c03c6acc3ec7e1ca579a7f645220f4",
   "upstream_release_url": "https://github.com/Pesicp/XStreamPro/releases/download/1.1.2/plugin.video.xstream-pro-1.1.2.zip",
@@ -11,7 +11,7 @@
   "upstream_release_zip_sha256": "915f45708670d07e789bb73b7390a7b5cf30175f818ef5da8ea18c9f13f537fe",
   "upstream_license_observed": "CC BY-NC 4.0",
   "local_runtime_sha256": {
-    "addon.xml": "599abfc004aad74cfaf7de4c9650ede70b6ec05c90208448179f8c69b78b9bf1",
+    "addon.xml": "bf9372f765ce7fcf5b9bab048426c29f7f72bcb632f5f9a2d6b87062029d20ff",
     "resources/lib/trakt.py": "94c1d5e9fab007aa8eefe7317df753c420a3b854f473ba50a1b6bfd0a6b3e5ba",
     "resources/lib/tmdb_routes.py": "d30e8723629a05414e689875d98a5843e0b59c3961abca626c9821be4dd53e4b",
     "service.py": "55b6a8b835442fa29b38a2a08890c2cdf8822edd7bb216d223586ec066818de6",
@@ -104,10 +104,10 @@
     "trakt_snapshot.py": "14157a25e194efec8f64d6b2f71142aabb97aa0d44fa8d15839c8103a4fbee0f",
     "history_store_coordinator.py": "377a6443f1d6312a9f9fa86c10292857889129a90e04fbaeb0925197b8713869",
     "trakt_live_queue.py": "f78b6b2d98d2a03f515d35027f222106add04eef94d6c0b308c5c498ec9069b2",
-    "trakt_live_consumer.py": "707118baf2e24a01b3dbbaa500fc4ad727d951cc7c2c6d261d0e672963a5a523",
-    "trakt_provider_index.py": "b7ff1ec83c8b6015a1815aac2a1da9182147f130c51e7e93a4f04c8b4dc5719c",
-    "trakt_series_index.py": "6d5173d6d51883a637a723acc9f0249e103732f90557961aced47f85591ef79e",
-    "trakt_episode_index.py": "80aa6d342add5c6530390add91cb7ec4798678569cce8a67aa3d201eca6bf5b3"
+    "trakt_live_consumer.py": "64fb023e525f897f2b359bb416f400d4428f4414b088adf14e5281d48cdbcc3d",
+    "trakt_provider_index.py": "5917d5f742a700841d13703066b6f970eb512cc08849019a8c578125dad39ba0",
+    "trakt_series_index.py": "5faf171deddd134155f035df0a0106dbd4e73a7f7a3539b558746410a16c85fa",
+    "trakt_episode_index.py": "7eedd8071d359f233f45bad027c351c92fd4e1bbeb51d2a9b5617ed0ee8daeee"
   },
   "trakt_auto_routes_sha256": "209e2027cdca3990a869944e0c35b3220dff809abb18e114b2624e38ccc51196"
 }
