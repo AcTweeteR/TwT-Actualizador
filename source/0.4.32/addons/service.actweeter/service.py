@@ -60,6 +60,8 @@ from interaction_trace import player_terminal as trace_player_terminal  # noqa: 
 from search_background import (COORDINATOR_PENDING_CHECK_SECONDS,
                                COORDINATOR_REFRESH_CHECK_SECONDS,
                                refresh_state_check_due)  # noqa: E402
+from trakt_sync_consent import enabled as trakt_sync_enabled  # noqa: E402
+from trakt_sync_scheduler import Scheduler as TraktSyncScheduler  # noqa: E402
 
 
 _MONITOR_BASE = getattr(xbmc, "Monitor", object)
@@ -642,9 +644,29 @@ def _run_coordinator(kodi, addon_factory, vfs, clock=time.time, monitor=None,
     next_refresh_check = service_started_at
     cached_profile_path = ""
     cached_profile_number = 1
+    service_profile = vfs.translatePath(ADDON.getAddonInfo("profile"))
+    trakt_scheduler = TraktSyncScheduler(
+        os.path.join(service_profile, "trakt_live", "scheduler.json"))
     while not monitor.abortRequested():
         now = clock()
         spotlight_rotation.tick(kodi, now, active_window=_window_id(kodi))
+        # The XStream plugin owns OAuth and network access. This loop only
+        # schedules an opt-in cycle and never reads or stores Trakt tokens.
+        try:
+            consent_path = os.path.join(service_profile, "trakt_live", "consent.json")
+            player = getattr(kodi, "Player", lambda: None)()
+            playing = bool(player and player.isPlaying())
+            if trakt_sync_enabled(consent_path):
+                trakt_scheduler.dispatch_if_due(
+                    lambda: kodi.executebuiltin(
+                        "RunPlugin(plugin://plugin.video.xstream-pro/?mode=xstream_trakt_sync_cycle)",
+                        False),
+                    authorized=True, playing=playing)
+        except Exception as exc:
+            if now - last_missing_addon_log >= 3600:
+                kodi.log("[AcTweeteR] TRAKT_SYNC_SCHEDULER unavailable error_type=%s" %
+                         type(exc).__name__, kodi.LOGINFO)
+                last_missing_addon_log = now
         pending = pending_refresh is not None
         if not refresh_state_check_due(now, next_refresh_check, pending=pending):
             if performance is not None:

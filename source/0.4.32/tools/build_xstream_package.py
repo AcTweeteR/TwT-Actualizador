@@ -38,10 +38,12 @@ PATCHES = (
     ("trakt_snapshot_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-trakt-snapshot.patch"),
     ("history_store_coordinator_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-history-store-coordinator.patch"),
     ("trakt_live_queue_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-trakt-live-queue.patch"),
+    ("trakt_auto_cycle_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-trakt-auto-cycle.patch"),
 )
 DIAGNOSTICS_SOURCE = ROOT / "third_party/xstream/performance_diagnostics.py"
 CATALOG_INDEX_SOURCE = ROOT / "third_party/xstream/provider_catalog_index.py"
 HISTORY_STORE_COORDINATOR_SOURCE = ROOT / "third_party/xstream/history_store_coordinator.py"
+TRAKT_AUTO_ROUTES_SOURCE = ROOT / "third_party/xstream/trakt_auto_routes.py"
 FIXED_TIME = (2026, 10, 11, 0, 0, 0)
 UPSTREAM_ROOT = "plugin.video.xstream-pro"
 EXCLUDED_SUFFIXES = {".orig", ".pyc", ".pyo"}
@@ -205,7 +207,7 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
                 target.write_bytes(target.read_bytes().replace(b"\r\n", b"\n"))
                 apply_contextual_unified_patch(root, patch_path)
                 continue
-            if manifest_key in ("recommendations_patch", "search_index_patch", "prefetch_patch", "catalog_index_patch", "collections_patch", "collections_empty_patch", "collections_dedup_patch", "trakt_live_queue_patch"):
+            if manifest_key in ("recommendations_patch", "search_index_patch", "prefetch_patch", "catalog_index_patch", "collections_patch", "collections_empty_patch", "collections_dedup_patch", "trakt_live_queue_patch", "trakt_auto_cycle_patch"):
                 # The pinned upstream archive uses CRLF in these files while
                 # earlier tracked patches add LF. Normalize only these two
                 # already-patched files before applying semantic context.
@@ -213,7 +215,7 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             expected_patch_hash = data[manifest_key + "_sha256"]
             if sha256(patch_path) != expected_patch_hash:
                 raise ValueError(f"patch hash mismatch: {patch_path.name}")
-            if manifest_key in ("recommendations_patch", "search_index_patch", "prefetch_patch", "catalog_index_patch", "collections_patch", "collections_empty_patch", "collections_dedup_patch", "trakt_live_queue_patch"):
+            if manifest_key in ("recommendations_patch", "search_index_patch", "prefetch_patch", "catalog_index_patch", "collections_patch", "collections_empty_patch", "collections_dedup_patch", "trakt_live_queue_patch", "trakt_auto_cycle_patch"):
                 apply_contextual_unified_patch(root, patch_path)
                 continue
             result = subprocess.run(
@@ -239,8 +241,12 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             ("history_store_coordinator.py", HISTORY_STORE_COORDINATOR_SOURCE),
             ("trakt_live_queue.py", ROOT / "addons/service.actweeter/resources/lib/trakt_live_queue.py"),
             ("trakt_live_consumer.py", ROOT / "third_party/xstream/trakt_live_consumer.py"),
+            ("trakt_auto_routes.py", TRAKT_AUTO_ROUTES_SOURCE),
         ):
-            if sha256(source) != data["trakt_snapshot_sources_sha256"][name]:
+            expected_hash = (data.get("trakt_auto_routes_sha256") if name ==
+                             "trakt_auto_routes.py" else
+                             data["trakt_snapshot_sources_sha256"][name])
+            if sha256(source) != expected_hash:
                 raise ValueError("Trakt snapshot source hash mismatch: " + name)
             (root / "resources/lib" / name).write_bytes(source.read_bytes())
 
@@ -326,7 +332,8 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
                 raise ValueError(f"patched runtime file missing from ZIP: {relative}")
             actual_hash = hashlib.sha256(archive.read(member)).hexdigest()
             if actual_hash != expected_hash:
-                raise ValueError(f"patched runtime hash mismatch: {relative}")
+                raise ValueError(f"patched runtime hash mismatch: {relative} "
+                                 f"(expected {expected_hash}, got {actual_hash})")
         validate_python_archive(archive)
         if f"{UPSTREAM_ROOT}/ACTWEETER_MODIFICATIONS.txt" not in archive.namelist():
             raise ValueError("modification attribution missing")

@@ -67,7 +67,8 @@ def _identity(item, kind):
     return identity
 
 
-def build_batch(plan, *, provider_scope, consent=False, batch_id=None):
+def build_batch(plan, *, provider_scope, consent=False, batch_id=None,
+                activity_fingerprint=None):
     """Convert additions-only import plan to a bounded, credential-free batch."""
     if consent is not True:
         raise PermissionError('explicit synchronization consent required')
@@ -127,6 +128,10 @@ def build_batch(plan, *, provider_scope, consent=False, batch_id=None):
                 'profile': profile, 'provider_scope': provider_scope,
                 'operations': [{'id': key, **operations[key]}
                                for key in sorted(operations)]}
+    if activity_fingerprint is not None:
+        if not re.fullmatch(r'[0-9a-f]{64}', str(activity_fingerprint)):
+            raise ValueError('invalid remote activity checkpoint')
+        envelope['activity_fingerprint'] = activity_fingerprint
     envelope['sha256'] = hashlib.sha256(_json(envelope)).hexdigest()
     return envelope
 
@@ -182,6 +187,9 @@ def verify_batch(batch, *, profile, account, provider_scope):
             or not re.fullmatch(r'[0-9a-f]{32}', str(batch.get('batch_id', '')))
             or not isinstance(batch.get('operations'), list)):
         raise PermissionError('batch scope mismatch')
+    if ('activity_fingerprint' in batch and not re.fullmatch(
+            r'[0-9a-f]{64}', str(batch['activity_fingerprint']))):
+        raise ValueError('invalid remote activity checkpoint')
     for operation in batch['operations']:
         content = dict(operation)
         operation_id = content.pop('id', None)

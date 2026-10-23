@@ -349,3 +349,83 @@ checkpoint remoto separado o GET ejecutado dentro de Kodi. Tampoco se ha
 verificado el refresco de la UI «Continuar viendo». La integración actual
 demuestra aplicación y persistencia en stores XStream aislados, no runtime
 Kodi ni sincronización automática.
+
+## 2026-10-23 — scheduler opt-in, ciclo automático y QA Mac de solo lectura
+
+Estado comprobado: rama `codex/trakt-unified-beta-2026-10-22`, base local
+`53bbba1`. Kodi Master respondió a JSON-RPC local en `127.0.0.1:9090`: Kodi
+`21.3`, sin reproductores activos; Service instalado `0.4.54`, XStream
+`1.1.2.22~beta1`, Skin `1.2.32~beta1`. No se instalaron candidatos ni se
+cambió configuración.
+
+### Integración candidata
+
+- El Service inicia un ciclo XStream solo con consentimiento duradero ligado a
+  cuenta Trakt, perfil XStream, proveedor y política. Está desactivado por
+  defecto, es revocable y se suspende si cambia cualquiera de esos vínculos.
+- Scheduler persistente: intervalo mínimo de cinco minutos, sin ciclos
+  simultáneos en el proceso, sin trabajo mientras Kodi reproduce y backoff
+  exponencial acotado. Service solo despacha la ruta nativa; XStream conserva
+  OAuth y transporte de red.
+- XStream consulta `/users/settings` y `/sync/last_activities`; solo exporta un
+  snapshot si cambia la actividad. Cola durable y lotes acotados; no avanza
+  recibos cuando faltan acuses completos.
+- XStream revalida cuenta, perfil, proveedor, identidad exacta del catálogo y
+  reproducción. El acuse se escribe tras persistir y releer stores. La
+  aplicación invalida selectivamente el widget «Continuar viendo» con el
+  mecanismo existente, sin recargar toda la skin.
+- El lock evita ciclos simultáneos y recupera un lock cuyo PID ya no existe.
+  No hay segundo scrobbler ni operaciones de escritura a Trakt.
+
+### Evidencia
+
+- Suite completa, con los tres ZIP de entrada/candidato presentes: **468 tests,
+  0 fallos, 0 omitidos**.
+- La prueba de integración extrae las clases reales de almacén XStream del ZIP
+  candidato y las ejecuta con stores/cache en un directorio temporal: ciclo
+  sintético cola → persistencia → relectura → acuse → checkpoint, repetición
+  sin nueva exportación si no cambia actividad, concurrencia `busy` y
+  recuperación tras proceso muerto. Es integración aislada, no Kodi runtime.
+- `tools/probe_trakt_mac.py --query all` ejecutó rutas del XStream instalado
+  mediante JSON-RPC de solo lectura: menú 36 elementos, 20 películas vistas,
+  17 series vistas, 6 progresos de películas, una entrada de directorio de
+  episodios (0 medios reproducibles en esa vista) y 0 recomendaciones de ambos
+  tipos. Esto demuestra GET de las rutas instaladas, no snapshot candidato ni
+  aplicación de datos.
+- AST: 74 fuentes Python parseadas. `git diff --check`: PASS.
+- Paquetes generados dos veces con hashes coincidentes y CRC válido: Service
+  `0.4.57`, SHA-256
+  `eb5259dbcd29af7bd7fa89b4a31afb03bdc11b38b3a608b2d5d6f923dd0fca76`;
+  Skin `1.2.32~beta1`, SHA-256
+  `3e7cf74ad59cd7d9b3ee8be9b399f4974816890a2f2dd31ed9cfea3e9121d08b`;
+  XStream `1.1.2.26~beta2`, SHA-256
+  `02f9339c0829e3bd393b4223239135a651173f70f4b44a65c623fb417944c929`.
+- Feed Testing privado/local en
+  `/private/tmp/actweeter-trakt-final-20261023/testing` anuncia solo repo
+  Testing `1.0.2`, Service `0.4.57`, Skin `1.2.32~beta1` y XStream
+  `1.1.2.26~beta2`; MD5 de `addons.xml` validado. No se publicó.
+- El escaneo general encontró patrones de nombres de variables (`password`,
+  plantillas URL) y una clave TMDb ya presente byte-a-byte en el upstream
+  XStream fijado (`915f4570…`), no introducida aquí. Sigue pendiente clasificar
+  esa clave y revisar licencia antes de cualquier distribución pública; los
+  paquetes permanecen privados.
+
+### Pendiente que impide COMPLETE
+
+- Los candidatos no están instalados en Master. Por ello, el nuevo ciclo, el
+  snapshot completo, acuses/checkpoints dentro de Kodi y el refresco visual de
+  «Continuar viendo» no tienen `PASS_RUNTIME`.
+- No se creó consentimiento real ni se modificó el perfil. La prueba GET
+  consultó rutas nativas instaladas y mostró cantidades; no exportó snapshots
+  al perfil ni aplicó vistos/avances.
+- Rendimiento medido solo en pruebas aisladas; falta medir latencia/CPU durante
+  ejecución Kodi. Snapshot en cuentas grandes necesita medición antes de
+  activar sincronización.
+- Stable, Lenovo, Apple TV y Trakt remoto no se modificaron. Licencia CC BY-NC
+  4.0 y clave heredada upstream siguen bloqueando publicación.
+
+Resultado: **PARTIAL**. Código, tests y paquetes privados preparados; GET real
+de rutas existentes comprobado; no se declara sincronización aplicada ni
+runtime del candidato. La siguiente comprobación requiere autorización para
+instalar Service `0.4.57` y XStream `1.1.2.26~beta2` en el Kodi Master activo,
+con backup verificado y sin tocar Stable, Lenovo o Apple TV.

@@ -7,9 +7,12 @@ from pathlib import Path
 from .trakt_restore_importer import prepare_restore
 from .trakt_restore_startup import startup_restore_status
 from .first_run import addon_version_satisfies
+from .trakt_sync_consent import enabled as sync_enabled
 
 ROOT = 'plugin://service.actweeter/?action=trakt_restore'
 XSTREAM_SNAPSHOT = 'plugin://plugin.video.xstream-pro/?mode=xstream_trakt_snapshot'
+XSTREAM_SYNC_CONSENT = 'plugin://plugin.video.xstream-pro/?mode=xstream_trakt_sync_consent'
+SYNC_CONSENT = 'plugin://service.actweeter/?action=trakt_sync_consent&operation=revoke'
 
 
 def active_xstream_profile(addon):
@@ -43,7 +46,7 @@ def summarize_exports(xstream_profile, *, profile):
     return results
 
 
-def render(handle, *, gui, plugin, vfs, xstream_addon, params=None):
+def render(handle, *, gui, plugin, vfs, xstream_addon, service_addon=None, params=None):
     profile_path = vfs.translatePath(xstream_addon.getAddonInfo('profile'))
     profile = active_xstream_profile(xstream_addon)
     snapshot_supported = addon_version_satisfies(
@@ -99,6 +102,16 @@ def render(handle, *, gui, plugin, vfs, xstream_addon, params=None):
         item = gui.ListItem(label='Actualiza XStream para habilitar la exportación segura')
         item.setProperty('IsPlayable', 'false')
         plugin.addDirectoryItem(handle, '', item, False)
+    if service_addon is not None:
+        consent_path = (Path(vfs.translatePath(service_addon.getAddonInfo('profile'))) /
+                        'trakt_live' / 'consent.json')
+        item = gui.ListItem(label=('Revocar sincronización automática Trakt' if
+                                   sync_enabled(consent_path) else
+                                   'Autorizar sincronización automática Trakt…'))
+        item.setProperty('IsPlayable', 'false')
+        plugin.addDirectoryItem(handle,
+            SYNC_CONSENT if sync_enabled(consent_path) else XSTREAM_SYNC_CONSENT,
+            item, True)
     item = gui.ListItem(label='Actualizar estado de exportaciones')
     item.setProperty('IsPlayable', 'false')
     plugin.addDirectoryItem(handle, ROOT + '&operation=refresh', item, True)

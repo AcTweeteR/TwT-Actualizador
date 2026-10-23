@@ -3,15 +3,17 @@ import os
 import subprocess
 import sys
 import unittest
+import zipfile
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = r'''
-import importlib.util, json, sys, tempfile, types
+import importlib.util, json, subprocess, sys, tempfile, types
 from pathlib import Path
 service_lib = sys.argv[2]
 sys.path.insert(0, service_lib)
+sys.path.insert(0, str(Path(service_lib).parent))
 from trakt_live_queue import build_batch, write_batch, checkpoint_from_ack
 root = Path(tempfile.mkdtemp())
 xbmc = types.ModuleType('xbmc'); xbmc.LOGWARNING=2; xbmc.log=lambda *a: None
@@ -127,6 +129,69 @@ assert all(row['status']=='deferred' for row in active['results'])
 try: checkpoint_from_ack(active,batch)
 except RuntimeError: pass
 else: raise AssertionError('deferred batch checkpointed')
+
+# The actual XStream stores and consumer are exercised through the service's
+# opt-in cycle: no remote network and no active Kodi profile are touched.
+cache('data_cache_p2_xtream_streams_movie.json', {'_data':[{'stream_id':101},
+    {'stream_id':303},{'stream_id':404}]})
+cache('data_cache_p2_vod_info_404.json', {'movie_data':{'stream_id':404},
+    'info':{'tmdb_id':'1000'}})
+from trakt_sync_consent import grant
+from lib.trakt_auto_cycle import run_cycle
+cycle_service=root/'cycle-service'
+consent_path=cycle_service/'trakt_live'/'consent.json'
+grant(consent_path, account='test-account', profile='2', provider_scope=scope)
+export=root/'synthetic-export'; export.mkdir()
+snapshot={'schema_version':1,'profile':'2','snapshot':{
+    'schema_version':1,'account':'test-account','records':{
+        'movie:tmdb:1000':{'identity':{'kind':'movie','ids':{'tmdb':'1000'}},
+                           'watched_at':'2026-10-22T12:00:00Z'}},
+    'history':[],'unidentified':0,'activity':'stamp','complete':True}}
+encoded=json.dumps(snapshot,sort_keys=True,separators=(',',':')).encode()
+(export/'snapshot.json').write_bytes(encoded)
+import hashlib
+(export/'manifest.json').write_text(json.dumps({'status':'READ_ONLY_EXPORT_VERIFIED',
+    'sha256':hashlib.sha256(encoded).hexdigest()}))
+activity={'all':'2026-10-22T12:00:00Z'}; activity_calls=[]; export_calls=[]
+def get_activity():
+    activity_calls.append(1); return 'test-account', activity
+def get_export():
+    export_calls.append(1); return export
+cycle_args=dict(account='test-account',profile='2',provider_scope=scope,
+    activity_get=get_activity,export_snapshot=get_export,apply_batch=apply_batch,
+    addon=addon,history=history,consent_path=consent_path)
+queued=run_cycle(cycle_service,root,**cycle_args)
+assert queued['status']=='queued' and queued['operations']==1
+applied=run_cycle(cycle_service,root,**cycle_args)
+assert applied['status']=='applied' and '404' in history.WatchedMovies(addon,2)._data
+unchanged=run_cycle(cycle_service,root,**cycle_args)
+assert unchanged['status']=='unchanged' and len(export_calls)==1
+assert len(activity_calls)==2
+assert not list((cycle_service/'trakt_live'/'queue').glob('*.json'))
+import threading
+lock_service=root/'locked-cycle-service'
+lock_consent=lock_service/'trakt_live'/'consent.json'
+grant(lock_consent, account='test-account', profile='2', provider_scope=scope)
+entered=threading.Event(); release=threading.Event(); threaded_result=[]
+def slow_activity():
+    entered.set(); release.wait(2)
+    return 'test-account', {'all':'2026-10-23T12:00:00Z'}
+lock_args=dict(cycle_args,activity_get=slow_activity,consent_path=lock_consent)
+thread=threading.Thread(target=lambda: threaded_result.append(
+    run_cycle(lock_service,root,**lock_args)))
+thread.start(); assert entered.wait(1)
+assert run_cycle(lock_service,root,**lock_args)['status']=='busy'
+release.set(); thread.join(3)
+assert threaded_result and threaded_result[0]['status']=='queued'
+# A lock owned by this process is live; a lock owned by a dead process is recoverable.
+dead_service=root/'dead-lock-service'
+dead_root=dead_service/'trakt_live'; dead_root.mkdir(mode=0o700,parents=True)
+dead_process=subprocess.Popen([sys.executable,'-c','pass'])
+dead_process.wait(timeout=5)
+(dead_root/'cycle.lock').write_text(str(dead_process.pid))
+dead_args=dict(cycle_args,consent_path=lock_consent)
+dead_result=run_cycle(dead_service,root,**dead_args)
+assert dead_result['status']=='queued', dead_result
 print('XStream live queue integration: PASS')
 '''
 
@@ -135,12 +200,27 @@ class TraktLiveQueueRuntimeTests(unittest.TestCase):
     @unittest.skipUnless(os.environ.get('ACTWEETER_XSTREAM_LIVE_ZIP'),
                          'set ACTWEETER_XSTREAM_LIVE_ZIP to the reproducible patched XStream ZIP')
     def test_queue_to_real_xstream_stores_and_durable_ack(self):
+        with zipfile.ZipFile(os.environ['ACTWEETER_XSTREAM_LIVE_ZIP']) as archive:
+            self.assertIsNone(archive.testzip())
+            members = set(archive.namelist())
+            self.assertIn('plugin.video.xstream-pro/resources/lib/trakt_auto_routes.py', members)
+            self.assertIn(b'xstream_trakt_sync_cycle', archive.read(
+                'plugin.video.xstream-pro/resources/lib/addon.py'))
+            self.assertIn(b'trakt_sync_cycle_route', archive.read(
+                'plugin.video.xstream-pro/resources/lib/tmdb_routes.py'))
         result = subprocess.run([sys.executable, '-c', SCRIPT,
             os.environ['ACTWEETER_XSTREAM_LIVE_ZIP'],
             str(ROOT / 'addons/service.actweeter/resources/lib')],
             text=True, capture_output=True, timeout=45)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn('PASS', result.stdout)
+
+    def test_applied_live_sync_invalidates_continue_widgets_selectively(self):
+        service_source = (ROOT / 'addons/service.actweeter/resources/lib/diagnostic_plugin.py').read_text()
+        route_source = (ROOT / 'third_party/xstream/trakt_auto_routes.py').read_text()
+        self.assertIn("params.get('action') == ['trakt_continue_refresh']", service_source)
+        self.assertIn("invalidate_continue_widgets(xbmc, 'trakt_sync')", service_source)
+        self.assertIn("action=trakt_continue_refresh", route_source)
 
 
 if __name__ == '__main__':

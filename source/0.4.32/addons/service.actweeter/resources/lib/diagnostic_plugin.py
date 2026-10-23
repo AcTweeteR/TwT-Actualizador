@@ -237,7 +237,32 @@ def main(argv=None):
         from lib.trakt_restore_ui import render as render_trakt_restore
         render_trakt_restore(handle, gui=xbmcgui, plugin=xbmcplugin, vfs=xbmcvfs,
                              xstream_addon=xbmcaddon.Addon('plugin.video.xstream-pro'),
+                             service_addon=xbmcaddon.Addon('service.actweeter'),
                              params=params)
+        return
+    if params.get('action') == ['trakt_sync_consent']:
+        from trakt_sync_consent import revoke
+        profile = xbmcvfs.translatePath(
+            xbmcaddon.Addon('service.actweeter').getAddonInfo('profile'))
+        consent_path = os.path.join(profile, 'trakt_live', 'consent.json')
+        confirmed = xbmcgui.Dialog().yesno(
+            'Trakt', '¿Revocar la sincronización automática hacia este perfil XStream?')
+        if confirmed:
+            revoke(consent_path)
+        item = xbmcgui.ListItem(label=('Sincronización automática revocada' if confirmed else
+                                      'No se modificó la autorización'))
+        item.setProperty('IsPlayable', 'false')
+        xbmcplugin.addDirectoryItem(handle, '', item, False)
+        xbmcplugin.endOfDirectory(handle, succeeded=True, cacheToDisc=False)
+        return
+    if params.get('action') == ['trakt_continue_refresh']:
+        resources_path = os.path.join(
+            xbmcvfs.translatePath(xbmcaddon.Addon().getAddonInfo('path')), 'resources')
+        if resources_path not in sys.path:
+            sys.path.insert(0, resources_path)
+        from lib.continue_widgets import invalidate_continue_widgets
+        invalidate_continue_widgets(xbmc, 'trakt_sync')
+        xbmcplugin.endOfDirectory(handle, succeeded=True, cacheToDisc=False)
         return
     if params.get("action", [""])[0] in ("collections", "collection_create", "collection_open", "collection_add", "collection_rename"):
         from collections_ui import render

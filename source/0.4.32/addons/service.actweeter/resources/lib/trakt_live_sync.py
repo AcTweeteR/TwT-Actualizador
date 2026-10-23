@@ -9,7 +9,17 @@ from .trakt_resume_bridge import existing_playback_references, stage_resume
 
 
 def prepare_batch(export_directory, xstream_profile, *, profile, account,
-                  provider_scope, consent=False):
+                  provider_scope, consent=False, activity_fingerprint=None):
+    batches = prepare_batches(export_directory, xstream_profile, profile=profile,
+        account=account, provider_scope=provider_scope, consent=consent,
+        activity_fingerprint=activity_fingerprint)
+    if len(batches) != 1:
+        raise ValueError('plan exceeds a single bounded batch')
+    return batches[0]
+
+
+def prepare_batches(export_directory, xstream_profile, *, profile, account,
+                    provider_scope, consent=False, activity_fingerprint=None):
     plan = prepare_restore(export_directory, xstream_profile,
                            profile=profile, account=account)
     references, existing = existing_playback_references(
@@ -26,7 +36,10 @@ def prepare_batch(export_directory, xstream_profile, *, profile, account,
                 candidate.pop('paused_at', None)
         safe_items.append(candidate)
     plan['items'] = safe_items
-    return build_batch(plan, provider_scope=provider_scope, consent=consent)
+    chunks = [safe_items[index:index + 100] for index in range(0, len(safe_items), 100)] or [[]]
+    return [build_batch(dict(plan, items=chunk), provider_scope=provider_scope,
+                        consent=consent, activity_fingerprint=activity_fingerprint)
+            for chunk in chunks]
 
 
 def provider_scope_from_addon(addon, profile):
