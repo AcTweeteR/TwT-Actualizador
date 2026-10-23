@@ -11,7 +11,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from .trakt_identity_resolver import _title_key, _year
-from .trakt_provider_index import catalog_members
+from .trakt_provider_index import catalog_members, external_ids, read_object
 
 
 def candidate_index(directory, profile):
@@ -70,3 +70,34 @@ def tmdb_fetch(api_key, timeout=8, pause=0.12):
         time.sleep(pause)
         return data
     return fetch
+
+
+def corroborate_cached_candidates(candidates, directory, profile):
+    """Require provider-authored IDs to agree with TMDb candidates; no writes.
+
+    This intentionally does not promote title/year-only candidates. A verified
+    candidate can be handed to the existing provider-backed resolver separately.
+    """
+    root = Path(directory)
+    output = []
+    for item in candidates:
+        row = dict(item)
+        if row.get('status') != 'candidate':
+            output.append(row)
+            continue
+        kind, provider_id = row['kind'], str(row['provider_id'])
+        filename = 'data_cache_p%s_%s_info_%s.json' % (
+            profile, 'vod' if kind == 'movie' else 'series', provider_id)
+        details = read_object(root / filename) or {}
+        info = details.get('info')
+        if kind == 'movie' and str((details.get('movie_data') or {}).get('stream_id')) != provider_id:
+            info = None
+        ids = external_ids(info)
+        expected = str(row['tmdb_id'])
+        if ids.get('tmdb') is not None:
+            row['status'] = 'corroborated' if str(ids['tmdb']) == expected else 'conflict'
+            row['evidence'] = 'xtream_details_tmdb'
+        else:
+            row['status'] = 'needs_provider_evidence'
+        output.append(row)
+    return output
