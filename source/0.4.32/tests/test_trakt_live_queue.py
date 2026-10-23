@@ -68,6 +68,24 @@ class TraktLiveQueueTests(unittest.TestCase):
             with self.assertRaises(PermissionError):
                 persist_checkpoint(path, dict(checkpoint, account='other'))
 
+    def test_malformed_acknowledgements_fail_closed(self):
+        batch = build_batch(self.plan, provider_scope=self.scope, consent=True,
+                            batch_id='d' * 32)
+        op_id = batch['operations'][0]['id']
+        with tempfile.TemporaryDirectory() as directory:
+            for rows in ([None], [{'id': op_id, 'status': 'applied'},
+                                  {'id': op_id, 'status': 'applied'}]):
+                with self.assertRaises(ValueError):
+                    write_ack(Path(directory) / 'acks', batch, rows)
+            malformed = {'schema': 1, 'batch_id': batch['batch_id'],
+                         'account': batch['account'], 'profile': batch['profile'],
+                         'provider_scope': batch['provider_scope'], 'results': [None]}
+            unsigned = json.dumps(malformed, sort_keys=True, separators=(',', ':'))
+            import hashlib
+            malformed['sha256'] = hashlib.sha256(unsigned.encode()).hexdigest()
+            with self.assertRaises(RuntimeError):
+                checkpoint_from_ack(malformed, batch)
+
     def test_native_dispatch_is_suppressed_during_playback_and_confirmation_persists(self):
         class Addon:
             def __init__(self, root): self.root = root

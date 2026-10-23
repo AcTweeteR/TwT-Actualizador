@@ -287,7 +287,7 @@ Archivos principales añadidos:
 - `third_party/xstream/patches/1.1.2/actweeter-trakt-live-queue.patch`
 - pruebas de cola y de integración aislada con los stores reales del ZIP.
 
-Verificación local: **461/461 pruebas PASS** (incluye la integración con las
+Verificación local inicial: **461/461 pruebas PASS** (incluye la integración con las
 clases reales de XStream en un directorio temporal, no Kodi runtime),
 `git diff --check` PASS, ZIP CRC PASS y reconstrucción reproducible PASS.
 Service `0.4.56` SHA-256
@@ -306,3 +306,15 @@ en el perfil activo; tampoco se accedió a Lenovo o Apple TV. El runtime actual
 de Mac continúa en versiones anteriores al candidato y JSON-RPC localhost no
 está disponible. Resultado de esta iteración: **PARTIAL**, no listo para
 instalar o habilitar sincronización live.
+
+### Endurecimiento del recibo y reconstrucción final
+
+Se añadió una regresión para recibos malformados/duplicados: el servicio ahora
+los rechaza sin avanzar el estado. Suite final: **462/462 PASS**. Se
+reconstruyeron los ZIP con nombres nuevos (el empaquetador rechazó sobrescribir
+los previos): Service `0.4.56-r2` SHA-256
+`c1ae6dac5fd1afd8d1fcafb5c3da12125bfcaaab09429e7cf784a7450a590d80` y XStream
+`1.1.2.25~beta1-r2` SHA-256
+`1212542f11d105618cc1ded9eb15798c63c0ae1268b048c4461a1c62d4c280ad`;
+integridad CRC PASS. Siguen siendo artefactos locales privados, no publicados
+ni instalados.

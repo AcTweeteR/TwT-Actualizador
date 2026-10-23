@@ -194,8 +194,9 @@ def verify_batch(batch, *, profile, account, provider_scope):
 def write_ack(path, batch, results):
     """Durably acknowledge only the outcomes XStream reports after store save."""
     expected = {operation['id'] for operation in batch['operations']}
-    if (not isinstance(results, list)
-            or {row.get('id') for row in results if isinstance(row, dict)} != expected
+    if (not isinstance(results, list) or len(results) != len(expected)
+            or any(not isinstance(row, dict) for row in results)
+            or {row.get('id') for row in results} != expected
             or any(row.get('status') not in ('applied', 'already_applied', 'superseded', 'deferred')
                    for row in results)):
         raise ValueError('incomplete or invalid operation results')
@@ -228,7 +229,7 @@ def write_ack(path, batch, results):
 
 
 def checkpoint_from_ack(ack, batch):
-    if not isinstance(ack, dict):
+    if not isinstance(ack, dict) or ack.get('schema') != 1:
         raise ValueError('invalid acknowledgement')
     supplied = ack.get('sha256')
     unsigned = dict(ack); unsigned.pop('sha256', None)
@@ -239,8 +240,11 @@ def checkpoint_from_ack(ack, batch):
         raise PermissionError('ack scope mismatch')
     expected = {operation['id'] for operation in batch['operations']}
     rows = ack.get('results', [])
-    if ({row.get('id') for row in rows if isinstance(row, dict)} != expected
-            or any(row.get('status') == 'deferred' for row in rows)):
+    if (not isinstance(rows, list) or len(rows) != len(expected)
+            or any(not isinstance(row, dict) for row in rows)
+            or {row.get('id') for row in rows} != expected
+            or any(row.get('status') not in
+                   ('applied', 'already_applied', 'superseded') for row in rows)):
         raise RuntimeError('batch has unconfirmed operations')
     return {'account': batch['account'], 'profile': batch['profile'],
             'provider_scope': batch['provider_scope'],
