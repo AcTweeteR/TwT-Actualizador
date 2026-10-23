@@ -66,12 +66,12 @@ class CandidatePackageBuildTests(unittest.TestCase):
     def test_distribution_index_rejects_mixed_trakt_protocol_generation(self):
         sys.path.insert(0, str(ROOT / "tools"))
         import build_distribution_index
-        service = ET.Element("addon", id="service.actweeter", version="0.4.68")
+        service = ET.Element("addon", id="service.actweeter", version="0.4.69")
         requires = ET.SubElement(service, "requires")
         ET.SubElement(requires, "import", addon="plugin.video.xstream-pro",
                       version="1.1.2.16")
         xstream = ET.Element("addon", id="plugin.video.xstream-pro",
-                             version="1.1.2.28~beta8")
+                             version="1.1.2.28~beta9")
         with self.assertRaisesRegex(ValueError, "protocol generation mismatch"):
             build_distribution_index.validate_service_xstream_pair(service, xstream)
 
@@ -153,6 +153,36 @@ class CandidatePackageBuildTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Trakt PKCE integration incomplete"):
             build_xstream_package.validate_trakt_pkce_contract(Archive(members))
 
+    def test_series_change_package_contract_rejects_stale_or_unscoped_source(self):
+        sys.path.insert(0, str(ROOT / "tools"))
+        import build_xstream_package
+
+        class Archive:
+            def __init__(self, members):
+                self.members = members
+
+            def namelist(self):
+                return list(self.members)
+
+            def read(self, name):
+                return self.members[name]
+
+        prefix = "plugin.video.xstream-pro/resources/lib/"
+        members = {
+            prefix + "series_changes.py": (
+                b"STATE_VERSION=2\n"
+                b"def record_catalog(addon, profile_num, items, *, provider=None, complete=True): pass\n"
+                b"def record_series_info(addon, profile_num, sid, title, response): pass\n"
+                b"def status(addon, profile_num, sid): pass\n"
+                b"def recent(addon, profile_num, limit=24): pass\n"),
+            prefix + "addon.py": b"provider=(url, user)\nrecord_series_info\n",
+            prefix + "premium_routes.py": b"provider=(host, user)\n",
+        }
+        build_xstream_package.validate_series_changes_contract(Archive(members))
+        members[prefix + "series_changes.py"] += b"MAX_EVENTS=50\n"
+        with self.assertRaisesRegex(ValueError, "arbitrarily capped"):
+            build_xstream_package.validate_series_changes_contract(Archive(members))
+
     @unittest.skipUnless(os.environ.get("ACTWEETER_XSTREAM_UPSTREAM_ZIP"),
                          "set the pinned upstream ZIP to verify reproducible PKCE build")
     def test_xstream_rebuild_keeps_pkce_in_exact_candidate_zip(self):
@@ -172,7 +202,7 @@ class CandidatePackageBuildTests(unittest.TestCase):
 
     def test_service_zip_is_reproducible_and_well_formed(self):
         with tempfile.TemporaryDirectory() as temp:
-            package = Path(temp) / "service.actweeter-0.4.68.zip"
+            package = Path(temp) / "service.actweeter-0.4.69.zip"
             subprocess.run([sys.executable, str(ROOT / "tools/build_service_package.py"),
                             "--output", str(package)], check=True,
                            cwd=ROOT, capture_output=True, text=True)
@@ -185,8 +215,8 @@ class CandidatePackageBuildTests(unittest.TestCase):
             with zipfile.ZipFile(package) as archive:
                 self.assertIsNone(archive.testzip())
                 addon = ET.fromstring(archive.read("service.actweeter/addon.xml"))
-                self.assertEqual(addon.get("version"), "0.4.68")
-                self.assertIn("service.actweeter/changelog-0.4.68.txt",
+                self.assertEqual(addon.get("version"), "0.4.69")
+                self.assertIn("service.actweeter/changelog-0.4.69.txt",
                               archive.namelist())
                 for relative in ("resources/lib/addon_update_policy.py",
                                  "resources/lib/trakt_sync.py",
@@ -246,7 +276,7 @@ class CandidatePackageBuildTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp:
             output = Path(temp)
-            service = output / "service.actweeter-0.4.68.zip"
+            service = output / "service.actweeter-0.4.69.zip"
             subprocess.run([sys.executable, str(ROOT / "tools/build_service_package.py"),
                             "--output", str(service)], check=True,
                            cwd=ROOT, capture_output=True, text=True)
@@ -260,8 +290,8 @@ class CandidatePackageBuildTests(unittest.TestCase):
                 for filename in ("Includes.xml", "IncludesBingie.xml", "IncludesBackgroundBuilding.xml"):
                     self.assertEqual(archive.read("skin.actweeter/1080i/" + filename),
                                      (ROOT / "addons/skin.actweeter/1080i" / filename).read_bytes())
-            xstream = output / "plugin.video.xstream-pro-1.1.2.28~beta8.zip"
-            self._write_addon_fixture(xstream, "plugin.video.xstream-pro", "1.1.2.28~beta8")
+            xstream = output / "plugin.video.xstream-pro-1.1.2.28~beta9.zip"
+            self._write_addon_fixture(xstream, "plugin.video.xstream-pro", "1.1.2.28~beta9")
             index_path, md5_path = build_distribution_index.build(
                 REPOSITORY_ROOT / "docs/testing/repo/repository.actweeter.testing/repository.actweeter.testing-1.0.2.zip",
                 skin,
@@ -273,9 +303,9 @@ class CandidatePackageBuildTests(unittest.TestCase):
                         for node in ET.fromstring(payload).findall("addon")}
             self.assertEqual(versions, {
                 "repository.actweeter.testing": "1.0.2",
-                "service.actweeter": "0.4.68",
+                "service.actweeter": "0.4.69",
                 "skin.actweeter": "1.2.32~beta1",
-                "plugin.video.xstream-pro": "1.1.2.28~beta8",
+                "plugin.video.xstream-pro": "1.1.2.28~beta9",
             })
             self.assertEqual(hashlib.md5(payload).hexdigest(),
                              md5_path.read_text(encoding="ascii").strip())

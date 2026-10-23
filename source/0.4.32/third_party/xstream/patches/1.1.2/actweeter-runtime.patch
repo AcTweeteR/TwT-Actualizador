@@ -150,7 +150,7 @@ index 880518dd074153f6ea3bee426318512d309a0896..3c4c4ad961a0a486c2d5c35ec6636f90
      if adult == "1" and _is_adult_locked(stype):
          if not _check_pin("Adult Content"):
              xbmcplugin.endOfDirectory(addon_handle, succeeded=False)
-@@ -11021,7 +11049,14 @@ def xtream_streams(stype, cat_id, page=1, adult="0", profile_num=None):
+@@ -11021,7 +11049,15 @@ def xtream_streams(stype, cat_id, page=1, adult="0", profile_num=None):
      url = creds.get("xtream_url", "")
      user = creds.get("xtream_username", "")
      pwd = creds.get("xtream_password", "")
@@ -159,7 +159,8 @@ index 880518dd074153f6ea3bee426318512d309a0896..3c4c4ad961a0a486c2d5c35ec6636f90
 +    if stype == "series" and url and user and pwd:
 +        try:
 +            series_changes.record_catalog(
-+                addon, pnum, _get_cached_xtream_streams(url, user, pwd, "series")
++                addon, pnum, _get_cached_xtream_streams(url, user, pwd, "series"),
++                provider=(url, user)
 +            )
 +        except Exception as exc:
 +            _log("Series change catalogue snapshot unavailable: {0}".format(exc))
@@ -265,7 +266,7 @@ index 880518dd074153f6ea3bee426318512d309a0896..3c4c4ad961a0a486c2d5c35ec6636f90
                  sid, name, "series", s.get("stream_icon", ""), series_url,
                  profile_num=pnum
              )
-@@ -11301,15 +11391,23 @@ def xtream_streams(stype, cat_id, page=1, adult="0", profile_num=None):
+@@ -11301,15 +11391,24 @@ def xtream_streams(stype, cat_id, page=1, adult="0", profile_num=None):
      xbmcplugin.endOfDirectory(addon_handle, succeeded=True, updateListing=False, cacheToDisc=False)
  
  
@@ -281,7 +282,8 @@ index 880518dd074153f6ea3bee426318512d309a0896..3c4c4ad961a0a486c2d5c35ec6636f90
 +    try:
 +        series_changes.record_series_info(
 +            addon, pnum, series_id,
-+            str((info.get("info") or {}).get("name") or series_id), info
++            str((info.get("info") or {}).get("name") or series_id), info,
++            provider=(url, user)
 +        )
 +    except Exception as exc:
 +        _log("Series episode snapshot unavailable: {0}".format(exc))
@@ -511,7 +513,7 @@ new file mode 100644
 index 0000000000000000000000000000000000000000..f43603caf622701aa4f1bcf8d513e49677651621
 --- /dev/null
 +++ b/resources/lib/premium_routes.py
-@@ -0,0 +1,1010 @@
+@@ -0,0 +1,1011 @@
 +"""Provider-first, bounded widget endpoints. Never returns a discovery item.
 +
 +Called with the existing addon's environment; playback/profile/history remain
@@ -705,7 +707,8 @@ index 0000000000000000000000000000000000000000..f43603caf622701aa4f1bcf8d513e496
 +    # Record the unfiltered provider catalogue before UI visibility filters.
 +    if stype == 'series' and items and host and user and password:
 +        try:
-+            g['series_changes'].record_catalog(g['addon'], pnum, items)
++            g['series_changes'].record_catalog(g['addon'], pnum, items,
++                                               provider=(host, user))
 +        except Exception as exc:
 +            g['_log']('Series baseline refresh failed: %s' % exc)
 +    categories = g['_get_cached_xtream_categories'](

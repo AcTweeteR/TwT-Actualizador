@@ -48,6 +48,7 @@ HISTORY_STORE_COORDINATOR_SOURCE = ROOT / "third_party/xstream/history_store_coo
 TRAKT_AUTO_ROUTES_SOURCE = ROOT / "third_party/xstream/trakt_auto_routes.py"
 TRAKT_PKCE_APPLIER_SOURCE = ROOT / "third_party/xstream/apply_trakt_pkce.py"
 TRAKT_PKCE_SOURCE = ROOT / "third_party/xstream/trakt_pkce.py"
+SERIES_CHANGES_SOURCE = ROOT / "third_party/xstream/series_changes.py"
 FIXED_TIME = (2026, 10, 11, 0, 0, 0)
 UPSTREAM_ROOT = "plugin.video.xstream-pro"
 EXCLUDED_SUFFIXES = {".orig", ".pyc", ".pyo"}
@@ -168,6 +169,41 @@ def validate_trakt_pkce_contract(archive) -> None:
         if member not in names or any(marker not in archive.read(member)
                                       for marker in markers):
             raise ValueError("Trakt PKCE integration incomplete in ZIP: " + relative)
+
+
+def validate_series_changes_contract(archive) -> None:
+    """Validate the exact new-series source and its packaged producer hooks."""
+    root = UPSTREAM_ROOT + "/resources/lib/"
+    source_name = root + "series_changes.py"
+    names = set(archive.namelist())
+    if source_name not in names:
+        raise ValueError("series-change runtime missing from ZIP")
+    source = archive.read(source_name)
+    tree = ast.parse(source, filename=source_name)
+    functions = {node.name: node for node in tree.body
+                 if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))}
+    required = {"record_catalog", "record_series_info", "status", "recent"}
+    if not required <= set(functions):
+        raise ValueError("series-change runtime capability missing from ZIP")
+    constants = {node.targets[0].id: node.value.value for node in tree.body
+                 if isinstance(node, ast.Assign) and len(node.targets) == 1
+                 and isinstance(node.targets[0], ast.Name)
+                 and isinstance(node.value, ast.Constant)}
+    if constants.get("STATE_VERSION", 0) < 2 or "MAX_EVENTS" in constants:
+        raise ValueError("series-change state is stale or arbitrarily capped")
+    if not {"provider", "complete"} <= {
+            arg.arg for arg in functions["record_catalog"].args.kwonlyargs}:
+        raise ValueError("series-change source/profile scope contract missing")
+    addon_name = root + "addon.py"
+    premium_name = root + "premium_routes.py"
+    if addon_name not in names or premium_name not in names:
+        raise ValueError("series-change producer route missing from ZIP")
+    addon = archive.read(addon_name)
+    premium = archive.read(premium_name)
+    if (b"provider=(url, user)" not in addon
+            or b"provider=(host, user)" not in premium
+            or b"record_series_info" not in addon):
+        raise ValueError("series-change hooks are not profile/provider scoped")
 
 
 def normalize_recommendation_patch_targets(root: Path) -> None:
@@ -350,6 +386,13 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
         finally:
             sys.path.remove(str(TRAKT_PKCE_APPLIER_SOURCE.parent))
 
+        series_changes_hash = data["local_runtime_sha256"].get(
+            "resources/lib/series_changes.py")
+        if not series_changes_hash or sha256(SERIES_CHANGES_SOURCE) != series_changes_hash:
+            raise ValueError("XStream series-change source hash mismatch")
+        (root / "resources/lib/series_changes.py").write_bytes(
+            SERIES_CHANGES_SOURCE.read_bytes())
+
         validate_python_sources(root)
 
         distribution_version = data["distribution_version"]
@@ -482,6 +525,7 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
         if not any(isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
                    and node.name == "recent" for node in series_tree.body):
             raise ValueError("series_changes.recent route provider is missing")
+        validate_series_changes_contract(archive)
         coordinator_member = f"{UPSTREAM_ROOT}/resources/lib/history_store_coordinator.py"
         if coordinator_member not in archive.namelist():
             raise ValueError("XStream history store coordinator missing from package")
