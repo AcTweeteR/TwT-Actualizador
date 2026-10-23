@@ -122,7 +122,8 @@ def apply_batch(batch_path, ack_directory, *, profile, account, provider_scope,
                 or identity.get('kind') != kind or not isinstance(identity.get('ids'), dict)
                 or not identity['ids']
                 or type(operation.get('timestamp')) not in (float, int)
-                or not math.isfinite(operation['timestamp']) or operation['timestamp'] <= 0):
+                or not math.isfinite(operation['timestamp'])
+                or (operation['timestamp'] <= 0 and not (action == 'watched' and operation.get('target', target) == 'tmdb' and operation['timestamp'] == 0))):
             raise ValueError('unsupported or unverified operation')
         if target == 'provider' and not re.fullmatch(
                 r'[0-9]+', str(operation.get('provider_id', ''))):

@@ -17,7 +17,7 @@ SUPPORTED_XSTREAM_VERSION = "1.1.2"
 SUPPORTED_XSTREAM_VERSIONS = frozenset((
     SUPPORTED_XSTREAM_VERSION, "1.1.2.1", "1.1.2.2", "1.1.2.3", "1.1.2.4",
     "1.1.2.5", "1.1.2.6", "1.1.2.7", "1.1.2.8", "1.1.2.9", "1.1.2.10",
-    "1.1.2.28~beta2", "1.1.2.28~beta3", "1.1.2.28~beta4", "1.1.2.28~beta5", "1.1.2.28~beta6", "1.1.2.28~beta7",
+    "1.1.2.28~beta2", "1.1.2.28~beta3", "1.1.2.28~beta4", "1.1.2.28~beta5", "1.1.2.28~beta6", "1.1.2.28~beta7", "1.1.2.28~beta8",
 ))
 DEFAULT_XSTREAM_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
 PROFILE_SETTINGS = {

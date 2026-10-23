@@ -25,6 +25,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "third_party" / "xstream" / "upstream.json"
 PATCHES = (
     ("patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-runtime.patch"),
+    ("provider_series_lookup_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-provider-series-lookup.patch"),
     ("integration_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-setup-refresh.patch"),
     ("recommendations_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-trakt-recommendations.patch"),
     ("playback_metadata_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-script-trakt.patch"),

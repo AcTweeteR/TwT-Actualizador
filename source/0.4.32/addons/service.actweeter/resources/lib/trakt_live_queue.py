@@ -116,7 +116,9 @@ def build_batch(plan, *, provider_scope, consent=False, batch_id=None, target='p
         if item.get('watched') is True:
             watched_at = _stamp(item.get('watched_at'))
             if watched_at is None:
-                raise ValueError('reliable watched timestamp required')
+                if target != 'tmdb':
+                    raise ValueError('reliable watched timestamp required')
+                watched_at = 0.0  # Unknown Trakt date: preserve watched state without inventing a date.
             op = dict(common, action='watched', timestamp=watched_at)
             operations[hashlib.sha256(_json(op)).hexdigest()] = op
         if 'position' in item:

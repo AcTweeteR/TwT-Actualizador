@@ -66,12 +66,12 @@ class CandidatePackageBuildTests(unittest.TestCase):
     def test_distribution_index_rejects_mixed_trakt_protocol_generation(self):
         sys.path.insert(0, str(ROOT / "tools"))
         import build_distribution_index
-        service = ET.Element("addon", id="service.actweeter", version="0.4.66")
+        service = ET.Element("addon", id="service.actweeter", version="0.4.68")
         requires = ET.SubElement(service, "requires")
         ET.SubElement(requires, "import", addon="plugin.video.xstream-pro",
                       version="1.1.2.16")
         xstream = ET.Element("addon", id="plugin.video.xstream-pro",
-                             version="1.1.2.28~beta7")
+                             version="1.1.2.28~beta8")
         with self.assertRaisesRegex(ValueError, "protocol generation mismatch"):
             build_distribution_index.validate_service_xstream_pair(service, xstream)
 
@@ -93,10 +93,40 @@ class CandidatePackageBuildTests(unittest.TestCase):
         auto_routes = ROOT / "third_party/xstream/trakt_auto_routes.py"
         self.assertEqual(hashlib.sha256(auto_routes.read_bytes()).hexdigest(),
                          manifest["trakt_auto_routes_sha256"])
+        series_lookup = ROOT / manifest["provider_series_lookup_patch"]
+        self.assertEqual(hashlib.sha256(series_lookup.read_bytes()).hexdigest(),
+                         manifest["provider_series_lookup_patch_sha256"])
         for filename, key in (("apply_trakt_pkce.py", "trakt_pkce_applier_sha256"),
                                ("trakt_pkce.py", "trakt_pkce_source_sha256")):
             source = ROOT / "third_party/xstream" / filename
             self.assertEqual(hashlib.sha256(source.read_bytes()).hexdigest(), manifest[key])
+
+    @unittest.skipUnless(os.environ.get("ACTWEETER_XSTREAM_LIVE_ZIP"),
+                         "set the exact candidate ZIP to verify provider series navigation")
+    def test_packaged_series_lookup_scans_all_items_and_rejects_ambiguous_titles(self):
+        package = os.environ["ACTWEETER_XSTREAM_LIVE_ZIP"]
+        with zipfile.ZipFile(package) as archive:
+            source = archive.read("plugin.video.xstream-pro/resources/lib/addon.py")
+        tree = ast.parse(source)
+        function = next(node for node in tree.body if isinstance(node, ast.FunctionDef)
+                        and node.name == "_find_provider_series_id_for_show")
+        rows = [{"name": "Other", "series_id": "1"},
+                {"name": "The Example", "series_id": "2"},
+                {"name": "Last", "series_id": "3"}]
+        namespace = {
+            "_enabled_profiles_with_credentials": lambda: [(1, "profile")],
+            "_get_credentials_for_profile": lambda _: {
+                "xtream_url": "https://example.invalid", "xtream_username": "user",
+                "xtream_password": "synthetic"},
+            "_get_cached_xtream_streams": lambda *_args: rows,
+            "_provider_title_key": lambda value: str(value or "").casefold().strip(),
+        }
+        exec(compile(ast.Module(body=[function], type_ignores=[]), "candidate-addon.py", "exec"),
+             namespace)
+        result = namespace[function.name]("900", "The Example")
+        self.assertEqual(result[3], "2")
+        rows.append({"name": "The Example", "series_id": "4"})
+        self.assertIsNone(namespace[function.name]("900", "The Example")[0])
 
     def test_pkce_contract_rejects_missing_packaged_auth_route(self):
         sys.path.insert(0, str(ROOT / "tools"))
@@ -142,7 +172,7 @@ class CandidatePackageBuildTests(unittest.TestCase):
 
     def test_service_zip_is_reproducible_and_well_formed(self):
         with tempfile.TemporaryDirectory() as temp:
-            package = Path(temp) / "service.actweeter-0.4.66.zip"
+            package = Path(temp) / "service.actweeter-0.4.68.zip"
             subprocess.run([sys.executable, str(ROOT / "tools/build_service_package.py"),
                             "--output", str(package)], check=True,
                            cwd=ROOT, capture_output=True, text=True)
@@ -155,8 +185,8 @@ class CandidatePackageBuildTests(unittest.TestCase):
             with zipfile.ZipFile(package) as archive:
                 self.assertIsNone(archive.testzip())
                 addon = ET.fromstring(archive.read("service.actweeter/addon.xml"))
-                self.assertEqual(addon.get("version"), "0.4.66")
-                self.assertIn("service.actweeter/changelog-0.4.66.txt",
+                self.assertEqual(addon.get("version"), "0.4.68")
+                self.assertIn("service.actweeter/changelog-0.4.68.txt",
                               archive.namelist())
                 for relative in ("resources/lib/addon_update_policy.py",
                                  "resources/lib/trakt_sync.py",
@@ -216,7 +246,7 @@ class CandidatePackageBuildTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp:
             output = Path(temp)
-            service = output / "service.actweeter-0.4.66.zip"
+            service = output / "service.actweeter-0.4.68.zip"
             subprocess.run([sys.executable, str(ROOT / "tools/build_service_package.py"),
                             "--output", str(service)], check=True,
                            cwd=ROOT, capture_output=True, text=True)
@@ -230,8 +260,8 @@ class CandidatePackageBuildTests(unittest.TestCase):
                 for filename in ("Includes.xml", "IncludesBingie.xml", "IncludesBackgroundBuilding.xml"):
                     self.assertEqual(archive.read("skin.actweeter/1080i/" + filename),
                                      (ROOT / "addons/skin.actweeter/1080i" / filename).read_bytes())
-            xstream = output / "plugin.video.xstream-pro-1.1.2.28~beta7.zip"
-            self._write_addon_fixture(xstream, "plugin.video.xstream-pro", "1.1.2.28~beta7")
+            xstream = output / "plugin.video.xstream-pro-1.1.2.28~beta8.zip"
+            self._write_addon_fixture(xstream, "plugin.video.xstream-pro", "1.1.2.28~beta8")
             index_path, md5_path = build_distribution_index.build(
                 REPOSITORY_ROOT / "docs/testing/repo/repository.actweeter.testing/repository.actweeter.testing-1.0.2.zip",
                 skin,
@@ -243,9 +273,9 @@ class CandidatePackageBuildTests(unittest.TestCase):
                         for node in ET.fromstring(payload).findall("addon")}
             self.assertEqual(versions, {
                 "repository.actweeter.testing": "1.0.2",
-                "service.actweeter": "0.4.66",
+                "service.actweeter": "0.4.68",
                 "skin.actweeter": "1.2.32~beta1",
-                "plugin.video.xstream-pro": "1.1.2.28~beta7",
+                "plugin.video.xstream-pro": "1.1.2.28~beta8",
             })
             self.assertEqual(hashlib.md5(payload).hexdigest(),
                              md5_path.read_text(encoding="ascii").strip())

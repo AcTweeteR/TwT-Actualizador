@@ -1,0 +1,29 @@
+--- a/resources/lib/addon.py
++++ b/resources/lib/addon.py
+@@ -2343,19 +2343,21 @@
+ def _find_provider_series_id_for_show(tmdb_id, title):
+     """Search enabled profiles for a series matching tmdb_id or title.
+     Returns (url, user, pwd, series_id) or (None, None, None, None).
+     """
+     for pnum, pname in _enabled_profiles_with_credentials():
+         creds = _get_credentials_for_profile(pnum)
+         xt_url = creds.get("xtream_url", "")
+         xt_user = creds.get("xtream_username", "")
+         xt_pwd = creds.get("xtream_password", "")
+         if not (xt_url and xt_user and xt_pwd):
+             continue
+-        for item in _get_cached_xtream_streams(xt_url, xt_user, xt_pwd, "series"):
++        key = _provider_title_key(title)
++        title_matches = []
++        for item in _get_cached_xtream_streams(xt_url, xt_user, xt_pwd, "series"):
+             if str(item.get("tmdb_id") or "").strip() == str(tmdb_id):
+                 return xt_url, xt_user, xt_pwd, item.get("series_id")
+-        # Fallback: title match
+-        key = _provider_title_key(title)
+-        if key and _provider_title_key(item.get("name", "")) == key:
+-            return xt_url, xt_user, xt_pwd, item.get("series_id")
++            if key and _provider_title_key(item.get("name", "")) == key:
++                title_matches.append(item)
++        if len(title_matches) == 1:
++            return xt_url, xt_user, xt_pwd, title_matches[0].get("series_id")
+     return None, None, None, None

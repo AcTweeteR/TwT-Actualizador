@@ -1,0 +1,1 @@
+0.4.67 — Smart Search muestra estados vistos exactos del perfil TMDb/XStream; navegación a temporadas comprueba toda la lista de series y rechaza títulos ambiguos.

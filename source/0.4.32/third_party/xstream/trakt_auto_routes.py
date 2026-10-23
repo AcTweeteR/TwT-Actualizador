@@ -121,8 +121,14 @@ def cycle_route(context, guard, trakt, xbmcaddon, xbmc, xbmcplugin, xbmcvfs,
             export_snapshot=export_snapshot, apply_batch=trakt_live_consumer.apply_batch,
             addon=addon, history=history, playing_file=playing, consent_path=consent_path,
             one_shot=one_shot, binding_valid=binding_valid)
-        for _ in range(3):
+        # One-shot restoration must drain its bounded, durable queue; the
+        # scheduler keeps the original three-cycle limit per invocation.
+        max_cycles = 100 if one_shot else 3
+        for _ in range(max_cycles):
             if result.get('status') not in ('queued', 'pending'):
+                break
+            if one_shot and player.isPlaying():
+                result = {'status': 'deferred', 'reason': 'playback_started'}
                 break
             result = run_cycle(service_root, xstream_root, account=account, profile=profile,
                 provider_scope=scope, activity_get=activity_get,
