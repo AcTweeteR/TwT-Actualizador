@@ -40,3 +40,20 @@ def exchange_payload(client_id, session, callback_url):
     return {'grant_type': 'authorization_code', 'client_id': client_id,
             'redirect_uri': session['redirect_uri'], 'code': params['code'][0],
             'code_verifier': session['verifier']}
+
+
+def exchange(client_id, session, callback_url, post, save_tokens):
+    """Exchange an already validated callback; persist only successful tokens.
+
+    `post` is injected for tests and must accept (url, json=..., timeout=...).
+    `save_tokens` is the existing XStream atomic token writer.
+    """
+    payload = exchange_payload(client_id, session, callback_url)
+    response = post(TOKEN_URL, json=payload, timeout=15)
+    if response.status_code >= 400:
+        raise RuntimeError('Trakt PKCE exchange failed (HTTP %d)' % response.status_code)
+    tokens = response.json()
+    if not isinstance(tokens, dict) or not tokens.get('access_token') or not tokens.get('refresh_token'):
+        raise ValueError('Incomplete Trakt token response')
+    save_tokens(tokens)
+    return True
