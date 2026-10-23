@@ -204,6 +204,24 @@ def _premium_cache_entries(root, profile, kind):
     return entries
 
 
+def unique_xstream_title_year_matches(rows, tmdb_metadata):
+    """XStream-equivalent exact title/year lookup, without trusting stream IDs as TMDb IDs.
+
+    Returns all editions belonging to one provider identity; ambiguous IDs remain pending.
+    This is a pure helper: network requests and personal state changes are forbidden here.
+    """
+    title = tmdb_metadata.get("title") or tmdb_metadata.get("name") or ""
+    year = _year(tmdb_metadata.get("year") or tmdb_metadata.get("release_date") or
+                 tmdb_metadata.get("first_air_date"))
+    key = _title_key(title)
+    if not key or not year:
+        return []
+    found = [row for row in rows if _title_key(row.get("title") or row.get("name")) == key
+             and _year(row.get("year")) == year]
+    return found if len({str(row.get("stream_id") or row.get("series_id"))
+                         for row in found}) == 1 else []
+
+
 def _trakt_cache_match(kind, provider_row, cached, aliases):
     year = _year(provider_row.get("year"))
     title = provider_row.get("title") or provider_row.get("name")

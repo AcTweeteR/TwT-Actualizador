@@ -7,7 +7,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'addons/service.actweeter/resources'))
-from lib.trakt_identity_resolver import resolve_identities
+from lib.trakt_identity_resolver import resolve_identities, unique_xstream_title_year_matches
 from lib.trakt_sync import ProviderIndex
 
 
@@ -31,6 +31,18 @@ class IdentityResolverTests(unittest.TestCase):
                  'year': year, 'ids': {'tmdb': tmdb}}
         row = {'movie' if media_kind == 'movie' else 'show': media}
         return {'responses': [{'path': '/sync/history/' + kind, 'data': [row]}]}
+
+    def test_xstream_exact_title_year_match_with_duplicate_category_row(self):
+        rows = [{'stream_id': 7, 'title': 'A.I. Inteligencia Artificial', 'year': '2001'},
+                {'stream_id': 7, 'title': 'A.I. Inteligencia Artificial', 'year': '2001'}]
+        found = unique_xstream_title_year_matches(rows, {'title': 'A.I. Inteligencia Artificial',
+                                                         'release_date': '2001-06-29'})
+        self.assertEqual(len(found), 2)
+        self.assertEqual(unique_xstream_title_year_matches(rows,
+                         {'title': 'A.I. Inteligencia Artificial', 'year': '2002'}), [])
+        rows.append({'stream_id': 9, 'title': 'A.I. Inteligencia Artificial', 'year': '2001'})
+        self.assertEqual(unique_xstream_title_year_matches(rows,
+                         {'title': 'A.I. Inteligencia Artificial', 'year': '2001'}), [])
 
     def test_provider_backed_id_is_scoped_and_recomputable(self):
         self.write('data_cache_p1_xtream_streams_movie.json', {'_src': 'https://host.invalid|user|secret',
