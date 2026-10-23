@@ -1,0 +1,2 @@
+0.4.61 — Reutilización de identidades verificadas por XStream
+Trakt aprovecha las identidades de TMDb/IMDb de las cachés premium vigentes de XStream únicamente cuando el ID externo coincide exactamente con el snapshot Trakt, el año coincide con el catálogo actual y no existen contradicciones ni colisiones. Las series identificadas vuelven a habilitar el cruce exacto por inventario de temporada/episodio. Las coincidencias textuales aisladas siguen siendo candidatas. Sincronización en solo previsualización; no se aplican estados.

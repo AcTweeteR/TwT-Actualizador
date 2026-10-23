@@ -1,11 +1,13 @@
-"""Resolve Trakt catalog identities from XStream evidence without guessing.
+"""Resolve Trakt catalog identities from provider and XStream evidence.
 
-Verified identities are rebuilt from the persistent provider catalog/details;
-title/year joins remain candidates and can never enter the restore importer.
+XStream's live premium metadata cache is reusable only when its external ID and
+provider year match Trakt; title/year joins alone remain non-actionable.
 """
 import hashlib
 import json
+import math
 import re
+import time
 import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
@@ -171,6 +173,64 @@ def _provider_evidence(root, profile, kind, provider_id, row):
     return ids, id_evidence, [name for name, values in sources if values]
 
 
+def _premium_cache_entries(root, profile, kind):
+    label = "movie" if kind == "movie" else "series"
+    entries = {}
+    pattern = re.compile(r"data_cache_p%s_premium_meta_%s_([0-9]+)_[^/]+\.json" %
+                         (re.escape(str(profile)), label))
+    for path in root.glob("data_cache_p%s_premium_meta_%s_*.json" % (profile, label)):
+        match = pattern.fullmatch(path.name)
+        cached = read_object(path)
+        expires = cached.get("expires") if cached else None
+        if (not match or not cached or type(expires) not in (int, float)
+                or not math.isfinite(expires)):
+            continue
+        data = cached.get("data")
+        if (expires <= time.time() or not isinstance(data, dict)
+                or not isinstance(data.get("title"), str) or not data["title"].strip()):
+            continue
+        ids = external_ids(data)
+        if kind == "movie":
+            ids.pop("tvdb", None)
+        if not ids:
+            continue
+        entry = entries.setdefault(match.group(1), {"ids": {}, "paths": [], "titles": set()})
+        if any(key in entry["ids"] and entry["ids"][key] != value
+               for key, value in ids.items()):
+            entry["conflict"] = True
+        entry["ids"].update(ids)
+        entry["paths"].append(path)
+        entry["titles"].add(str(data["title"]))
+    return entries
+
+
+def _trakt_cache_match(kind, provider_row, cached, aliases):
+    year = _year(provider_row.get("year"))
+    title = provider_row.get("title") or provider_row.get("name")
+    if not title or not re.fullmatch(r"\d{4}", year):
+        return "pending"
+    matched = False
+    for alias in aliases:
+        if alias["kind"] != kind:
+            continue
+        shared = {key for key, value in cached.items() if alias["ids"].get(key) == value}
+        if not shared:
+            continue
+        matched = True
+        if any(key in alias["ids"] and alias["ids"][key] != value
+               for key, value in cached.items()):
+            return "conflict"
+        if alias["years"] != {year}:
+            return "conflict"
+    return "matched" if matched else "pending"
+
+
+def _cache_has_trakt_id(kind, cached, aliases):
+    return any(alias["kind"] == kind and any(
+        alias["ids"].get(key) == value for key, value in cached.items())
+        for alias in aliases)
+
+
 def resolve_identities(directory, *, profile, export_payload=None, include_candidates=False):
     """Return safe verified records plus non-actionable candidates/conflicts.
 
@@ -189,26 +249,28 @@ def resolve_identities(directory, *, profile, export_payload=None, include_candi
 
     verified = (verified_vod_records(root, profile=profile) +
                 verified_show_records(root, profile=profile))
+    aliases = _trakt_aliases(export_payload)
+    premium = {"movie": _premium_cache_entries(root, profile, "movie"),
+               "show": _premium_cache_entries(root, profile, "show")}
     if include_candidates:
         catalogs = {"movie": catalog_members(root, profile, "movie"),
                     "show": catalog_members(root, profile, "series")}
     else:
         verified_movies = {row['provider_id'] for row in verified if row['kind'] == 'movie'}
         verified_shows = {row['provider_id'] for row in verified if row['kind'] == 'show'}
+        cached_movies = {provider_id for provider_id, value in premium["movie"].items()
+                         if _cache_has_trakt_id("movie", value["ids"], aliases)}
+        cached_shows = {provider_id for provider_id, value in premium["show"].items()
+                        if _cache_has_trakt_id("show", value["ids"], aliases)}
         catalogs = {
-            "movie": catalog_members(root, profile, "movie", verified_movies) if verified_movies else {},
-            "show": catalog_members(root, profile, "series", verified_shows) if verified_shows else {},
+            "movie": catalog_members(root, profile, "movie", verified_movies | cached_movies)
+                     if verified_movies | cached_movies else {},
+            "show": catalog_members(root, profile, "series", verified_shows | cached_shows)
+                    if verified_shows | cached_shows else {},
         }
     members = {kind: values for kind, values in catalogs.items()}
     enriched = []
     checked_at = datetime.now(timezone.utc).isoformat()
-    premium = {"movie": {}, "show": {}}
-    if include_candidates:
-        for kind, label in (("movie", "movie"), ("show", "series")):
-            for path in root.glob("data_cache_p%s_premium_meta_%s_*.json" % (profile, label)):
-                match = re.fullmatch(r"data_cache_p[0-9]+_premium_meta_(?:movie|series)_([0-9]+)_[^/]+\.json", path.name)
-                if match:
-                    premium[kind].setdefault(match.group(1), []).append(path)
     conflicted = []
     verified_keys = {(item["kind"], item["provider_id"]) for item in verified}
     if include_candidates:
@@ -219,7 +281,7 @@ def resolve_identities(directory, *, profile, export_payload=None, include_candi
             for provider_id in (detail_ids | set(premium[kind])) & set(items):
                 if ((kind, provider_id) not in verified_keys and
                         _source_conflict(root, profile, kind, provider_id, items[provider_id],
-                                         premium[kind].get(provider_id, ()))):
+                                         premium[kind].get(provider_id, {}).get("paths", ()))):
                     conflicted.append({"kind": kind, "provider_id": provider_id,
                                        "status": "CONFLICT", "reason": "external_sources_disagree"})
     for record in verified:
@@ -229,12 +291,73 @@ def resolve_identities(directory, *, profile, export_payload=None, include_candi
         if not ids:
             continue
         enriched.append(dict(record, ids=ids, status="VERIFIED", provenance=source_labels,
+                             verification_method="PROVIDER_VERIFIED",
                              id_evidence=id_evidence,
                              provider_scope=scope,
                              verified_at=checked_at,
                              evidence_updated_at=_provider_time(root, profile, kind, provider_id, row),
                              catalog_fingerprint=_fingerprint(root, profile, kind, provider_id,
                                                               row, ids, scope)))
+
+    direct = {(record["kind"], record["provider_id"]): record for record in enriched}
+    cache_pending = 0
+    conflict_keys_seen = {(item["kind"], item.get("provider_id")) for item in conflicted}
+    for kind, entries in premium.items():
+        for provider_id, cached in entries.items():
+            row = members[kind].get(provider_id)
+            if not row:
+                continue
+            if (kind, provider_id) in conflict_keys_seen:
+                continue
+            if cached.get("conflict") or _source_conflict(
+                    root, profile, kind, provider_id, row, cached["paths"]):
+                conflicted.append({"kind": kind, "provider_id": provider_id,
+                                   "status": "CONFLICT", "reason": "external_sources_disagree"})
+                conflict_keys_seen.add((kind, provider_id))
+                existing = direct.pop((kind, provider_id), None)
+                if existing:
+                    enriched.remove(existing)
+                continue
+            match = _trakt_cache_match(kind, row, cached["ids"], aliases)
+            if match == "conflict":
+                conflicted.append({"kind": kind, "provider_id": provider_id,
+                                   "status": "CONFLICT", "reason": "trakt_identity_year_or_id_disagrees"})
+                conflict_keys_seen.add((kind, provider_id))
+                existing = direct.pop((kind, provider_id), None)
+                if existing:
+                    enriched.remove(existing)
+                continue
+            if match != "matched":
+                cache_pending += 1
+                continue
+            key = (kind, provider_id)
+            existing = direct.get(key)
+            ids, id_evidence, provenance = _provider_evidence(root, profile, kind, provider_id, row)
+            if any(name in ids and ids[name] != value for name, value in cached["ids"].items()):
+                conflicted.append({"kind": kind, "provider_id": provider_id,
+                                   "status": "CONFLICT", "reason": "provider_and_xstream_ids_disagree"})
+                conflict_keys_seen.add((kind, provider_id))
+                if existing:
+                    enriched.remove(existing)
+                    direct.pop(key, None)
+                continue
+            ids.update(cached["ids"])
+            for name in cached["ids"]:
+                id_evidence.setdefault(name, []).append("xstream_premium_cache")
+            source_labels = list(dict.fromkeys(provenance + ["xstream_premium_cache"]))
+            if existing:
+                existing.update(ids=ids, id_evidence=id_evidence, provenance=source_labels,
+                                verification_method="PROVIDER_VERIFIED")
+                continue
+            enriched.append({"profile": str(profile), "kind": kind, "provider_id": provider_id,
+                             "ids": ids, "confidence": "verified", "status": "VERIFIED",
+                             "verification_method": "XSTREAM_MATCHED",
+                             "provenance": source_labels, "id_evidence": id_evidence,
+                             "provider_scope": scope, "verified_at": checked_at,
+                             "evidence_updated_at": _provider_time(root, profile, kind,
+                                                                    provider_id, row),
+                             "catalog_fingerprint": _fingerprint(root, profile, kind,
+                                                                  provider_id, row, ids, scope)})
 
     # An external ID linked to multiple provider IDs is not safe to restore.
     owners = {}
@@ -250,7 +373,6 @@ def resolve_identities(directory, *, profile, export_payload=None, include_candi
     safe = [record for record in enriched
             if (record["kind"], record["provider_id"]) not in collided]
 
-    aliases = _trakt_aliases(export_payload) if include_candidates else []
     conflict_keys = {(item["kind"], item["provider_id"]) for item in conflicts}
     verified_ids = {(record["kind"], key, value) for record in safe
                     for key, value in record["ids"].items()}
@@ -259,7 +381,7 @@ def resolve_identities(directory, *, profile, export_payload=None, include_candi
         for provider_id, row in items.items():
             year = _year(row.get("year"))
             titles = [row.get(field) for field in ("title", "name", "original_title", "original_name")]
-            for path in premium[kind].get(provider_id, ()):
+            for path in premium[kind].get(provider_id, {}).get("paths", ()):
                 cached = read_object(path)
                 data = (cached or {}).get("data", {})
                 if isinstance(data, dict):
@@ -292,7 +414,7 @@ def resolve_identities(directory, *, profile, export_payload=None, include_candi
                 continue
             if key not in verified_keys and key not in conflict_keys and _source_conflict(
                     root, profile, alias["kind"], provider_id, row,
-                    premium[alias["kind"]].get(provider_id, ())):
+                    premium[alias["kind"]].get(provider_id, {}).get("paths", ())):
                 conflict_keys.add(key)
                 conflicted.append({"kind": alias["kind"], "provider_id": provider_id,
                                    "status": "CONFLICT", "reason": "external_sources_disagree"})
@@ -306,6 +428,17 @@ def resolve_identities(directory, *, profile, export_payload=None, include_candi
     return {"verified": safe, "candidates": candidates, "conflicts": conflicts,
             "summary": {"provider_scope_available": True, "verified_movies": sum(x["kind"] == "movie" for x in safe),
                         "verified_shows": sum(x["kind"] == "show" for x in safe),
+                        "provider_verified": sum(x.get("verification_method") == "PROVIDER_VERIFIED" for x in safe),
+                        "xstream_matched": sum(x.get("verification_method") == "XSTREAM_MATCHED" for x in safe),
+                        "provider_verified_movies": sum(x["kind"] == "movie" and x.get("verification_method") == "PROVIDER_VERIFIED" for x in safe),
+                        "provider_verified_shows": sum(x["kind"] == "show" and x.get("verification_method") == "PROVIDER_VERIFIED" for x in safe),
+                        "xstream_matched_movies": sum(x["kind"] == "movie" and x.get("verification_method") == "XSTREAM_MATCHED" for x in safe),
+                        "xstream_matched_shows": sum(x["kind"] == "show" and x.get("verification_method") == "XSTREAM_MATCHED" for x in safe),
+                        "xstream_cache_pending": cache_pending,
+                        "xstream_cache_entries": sum(len(entries) for entries in premium.values()),
+                        "xstream_cache_missing_provider_item": sum(
+                            provider_id not in catalogs[kind]
+                            for kind, entries in premium.items() for provider_id in entries),
                         "candidate_links": sum(len(x["provider_ids"]) for x in candidates) if include_candidates else None,
                         "candidate_trakt_items": len(candidates) if include_candidates else None,
                         "candidate_scan": "complete" if include_candidates else "not_requested",

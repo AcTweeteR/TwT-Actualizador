@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 import sys
 import tempfile
+import time
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -81,20 +82,79 @@ class IdentityResolverTests(unittest.TestCase):
         self.assertEqual(result['candidates'][0]['provider_ids'], ['7', '8'])
         self.assertEqual(result['verified'], [])
 
-    def test_cached_original_title_and_trakt_only_alias_remain_candidates(self):
+    def test_xstream_cache_identity_matches_trakt_without_title_only_join(self):
         self.write('data_cache_p1_xtream_streams_movie.json', {'_src': 'host|user|pass',
             '_data': [{'stream_id': 7, 'name': 'Título español', 'year': 2020}]})
         self.write('data_cache_p1_premium_meta_movie_7_es.json',
-                   {'data': {'title': 'Título español', 'original_title': 'Café Azul', 'tmdb_id': 42}})
+                   {'expires': time.time() + 3600,
+                    'data': {'title': 'Café Azul', 'tmdb_id': 42, 'imdb_id': 'tt0000042'}})
         result = resolve_identities(self.root, profile='1', export_payload=self.export(), include_candidates=True)
-        self.assertEqual(result['verified'], [])
-        self.assertEqual(result['candidates'][0]['provider_ids'], ['7'])
+        self.assertEqual(len(result['verified']), 1)
+        self.assertEqual(result['verified'][0]['provider_id'], '7')
+        self.assertEqual(result['verified'][0]['verification_method'], 'XSTREAM_MATCHED')
+        self.assertIn('xstream_premium_cache', result['verified'][0]['provenance'])
+        self.assertEqual(result['verified'][0]['ids']['tmdb'], '42')
         trakt_only = {'responses': [{'path': '/sync/history/movies', 'data': [
             {'movie': {'title': 'Café Azul', 'year': 2020, 'ids': {'trakt': 456}}}]}]}
         candidate = resolve_identities(self.root, profile='1', export_payload=trakt_only,
                                        include_candidates=True)
         self.assertEqual(candidate['verified'], [])
+        self.assertEqual(candidate['candidates'][0]['provider_ids'], ['7'])
         self.assertEqual(candidate['candidates'][0]['ids'], {'trakt': '456'})
+
+    def test_xstream_cache_year_conflict_is_never_verified(self):
+        self.write('data_cache_p1_xtream_streams_movie.json', {'_src': 'host|user|pass',
+            '_data': [{'stream_id': 7, 'name': 'Café Azul', 'year': 2020}]})
+        self.write('data_cache_p1_premium_meta_movie_7_es.json',
+                   {'expires': time.time() + 3600,
+                    'data': {'title': 'Café Azul', 'tmdb_id': 42}})
+        export = self.export(year=2021)
+        result = resolve_identities(self.root, profile='1', export_payload=export)
+        self.assertEqual(result['verified'], [])
+        self.assertIn('trakt_identity_year_or_id_disagrees',
+                      {row['reason'] for row in result['conflicts']})
+
+    def test_expired_xstream_cache_cannot_authorize_restore(self):
+        self.write('data_cache_p1_xtream_streams_movie.json', {'_src': 'host|user|pass',
+            '_data': [{'stream_id': 7, 'name': 'Café Azul', 'year': 2020}]})
+        self.write('data_cache_p1_premium_meta_movie_7_es.json',
+                   {'expires': time.time() - 1,
+                    'data': {'title': 'Café Azul', 'tmdb_id': 42}})
+        result = resolve_identities(self.root, profile='1', export_payload=self.export())
+        self.assertEqual(result['verified'], [])
+
+    def test_nonfinite_xstream_cache_expiry_is_rejected(self):
+        self.write('data_cache_p1_xtream_streams_movie.json', {'_src': 'host|user|pass',
+            '_data': [{'stream_id': 7, 'name': 'Café Azul', 'year': 2020}]})
+        self.write('data_cache_p1_premium_meta_movie_7_es.json',
+                   {'expires': float('nan'),
+                    'data': {'title': 'Café Azul', 'tmdb_id': 42}})
+        result = resolve_identities(self.root, profile='1', export_payload=self.export())
+        self.assertEqual(result['verified'], [])
+
+    def test_cached_external_id_collision_excludes_every_provider_item(self):
+        self.write('data_cache_p1_xtream_streams_movie.json', {'_src': 'host|user|pass',
+            '_data': [{'stream_id': 7, 'name': 'Café Azul', 'year': 2020},
+                      {'stream_id': 8, 'name': 'Café Azul', 'year': 2020}]})
+        for provider_id in ('7', '8'):
+            self.write('data_cache_p1_premium_meta_movie_%s_es.json' % provider_id,
+                       {'expires': time.time() + 3600,
+                        'data': {'title': 'Café Azul', 'tmdb_id': 42}})
+        result = resolve_identities(self.root, profile='1', export_payload=self.export())
+        self.assertEqual(result['verified'], [])
+        self.assertEqual({row['reason'] for row in result['conflicts']},
+                         {'external_id_multiple_provider_items'})
+
+    def test_cached_identity_conflicting_with_provider_id_is_rejected(self):
+        self.write('data_cache_p1_xtream_streams_movie.json', {'_src': 'host|user|pass',
+            '_data': [{'stream_id': 7, 'name': 'Café Azul', 'year': 2020, 'tmdb_id': 99}]})
+        self.write('data_cache_p1_premium_meta_movie_7_es.json',
+                   {'expires': time.time() + 3600,
+                    'data': {'title': 'Café Azul', 'tmdb_id': 42}})
+        result = resolve_identities(self.root, profile='1', export_payload=self.export())
+        self.assertEqual(result['verified'], [])
+        self.assertIn('external_sources_disagree',
+                      {row['reason'] for row in result['conflicts']})
 
     def test_external_id_collision_is_conflict_and_excluded(self):
         self.write('data_cache_p1_xtream_streams_movie.json', {'_src': 'host|user|pass',

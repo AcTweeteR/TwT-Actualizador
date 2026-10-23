@@ -2,6 +2,10 @@
 
 Estado: PARTIAL. Inspección local de solo lectura; sin instalación ni aplicación de estados.
 
+> Actualización más reciente: la sección final de integración de cachés XStream
+> sustituye las cifras y el criterio de uso de Premium descritos en las secciones
+> históricas anteriores.
+
 ## Recorrido demostrado
 
 | Fuente | Identidad y persistencia | Uso seguro por Trakt |
@@ -163,3 +167,99 @@ credenciales y estados activos permanecieron intactos. No hubo POST Trakt ni se
 activó consentimiento.
 La distribución pública permanece bloqueada por revisión separada de las
 condiciones CC BY-NC 4.0 de XStream; estos artefactos son exclusivamente privados.
+
+## Integración final de las identidades Premium de XStream — 2026-10-23
+
+### Implementación y criterio
+
+La inspección de `premium_routes.py` instalado en Mac (XStream
+`1.1.2.27~beta1`) confirma el mismo flujo del código fuente empaquetado:
+`enrich()` consulta TMDb, exige título normalizado y año, solo acepta una única
+coincidencia y guarda el resultado en `premium_meta_{tipo}_{provider_id}_es`.
+La integración no replica esa búsqueda ni crea una base nueva: Service reutiliza
+las cachés Premium vigentes de cada perfil y las identidades del catálogo,
+`vod_info`, `series_info` e inventarios de XStream.
+
+Un ID Premium solo se clasifica `XSTREAM_MATCHED` si: el caché vigente está
+asociado al ID interno del elemento que aún existe en el catálogo actual; su
+TMDb/IMDb coincide exactamente con el snapshot Trakt del mismo tipo; el año del
+catálogo coincide con el año Trakt; y no hay IDs contradictorios, proveedor/
+perfil incompatibles ni colisión de ID externo. Los cambios de proveedor o
+catálogo generan otro fingerprint. La diferencia textual por idioma no invalida
+un ID externo exacto; una coincidencia de título/año sin ID compartido sigue
+siendo `CANDIDATE` y no llega al importador. Los cachés vencidos, malformados o
+con expiración no finita se ignoran.
+
+El índice se reconstruye desde las cachés existentes, por lo que no hay tabla
+paralela ni solicitudes de red al resolver. Las series identificadas alimentan
+el inventario XStream y los cruces exactos temporada/episodio; cada episodio aún
+debe existir una sola vez en el inventario completo del proveedor.
+
+### Cobertura y previsualización
+
+| Métrica | Previa conservadora | Candidata integrada |
+| --- | ---: | ---: |
+| Películas verificadas | 171 | 170 (`PROVIDER_VERIFIED`) |
+| Series verificadas | 0 | 2 (`XSTREAM_MATCHED`) |
+| Episodios exactos verificables | 0 | 35 |
+| Coincidencias exactas Trakt | 8 | 43 (8 películas + 35 episodios) |
+| Candidatos pendientes | 314 registros / 321 enlaces | 313 registros / 320 enlaces |
+
+La reducción de una película (171→170) se debe a una contradicción entre fuentes
+externas, que queda en `CONFLICT` y se excluye. No es una pérdida silenciosa.
+Las cachés vigentes examinadas contienen 237 entradas con ID externo; 2 series
+se validaron contra Trakt, 227 no generaron una identidad nueva para este
+snapshot y los demás casos son identidades ya aportadas por el proveedor o
+conflictos. Hay 6 candidatos ambiguos y 1 conflicto externo. No se afirmó que
+ninguno de los 1.787 elementos pendientes estuviera ausente del catálogo.
+
+Las 35 correspondencias de episodios anteriores se compararon individualmente
+con el mismo snapshot y los mismos almacenes: se ejecutó en memoria el indexador
+del commit `6ec526b` y se compararon las tuplas (ID de serie Xtream, temporada,
+episodio, ID de episodio Xtream). Resultado: 35 antiguas, 35 nuevas, 35 idénticas,
+0 antiguas sin recuperar y 0 nuevas distintas. La ruta antigua consideraba 121
+series del caché como verificadas; la nueva solo verifica las 2 cuya identidad
+externa y año concuerdan con Trakt.
+
+Previsualización de solo lectura contra el snapshot completo (1.830 registros,
+3.235 eventos): 2 películas vistas se añadirían; 38 estados vistos ya constan
+localmente; 0 episodios se añadirían como vistos; 2 avances de películas se
+actualizarían, 8 avances locales se conservarían y 1 avance se aplazaría. Las 35
+coincidencias de episodio no generan una nueva marca vista. No se aplicó ningún
+cambio; hashes de los almacenes activos iguales antes/después; 0 escrituras en
+Kodi y 0 escrituras remotas a Trakt.
+
+### Verificación, rendimiento y artefactos
+
+Suite completa: **517 pruebas y 45 subtests PASS, 0 fallos, 0 omitidos**. Incluye
+la integración del ZIP exacto XStream `1.1.2.28~beta2`, conflictos y colisiones
+de IDs, caducidad de caché, años contradictorios, perfiles y contenido de paquete.
+`compileall`, CRC, versiones, dependencias, archivos requeridos, MD5 del índice
+privado y reproducibilidad del ZIP de Service verificados.
+
+Tres muestras de preparación/preview sobre la copia de lectura del perfil Mac:
+wall p50 945 ms / p90 1.035 ms; CPU p50 944 ms / p90 985 ms; pico Python
+158.664.660 bytes; verificación de generación p50 2,411 ms. Es una medida del
+preflight local en Python, no de latencia visual ni del proceso Kodi. La
+conectividad Xtream continúa con DNS resuelto y timeout TCP; no se ejecutaron
+consultas masivas ni nuevos GET de proveedor/TMDb. Tampoco se ejecutó dentro del
+proceso Kodi.
+
+Artefactos privados, no instalados ni publicados:
+
+* Service `0.4.61`: SHA-256 `1c10aec35678338099261572b9df7b97034d22310a61435b055aca74e123948c`.
+  Dos builds dieron el mismo hash.
+* XStream `1.1.2.28~beta2` (sin cambios): SHA-256
+  `2e816be4a87621ac87d130043342af7351395d21daa1967494295c5eb5538795`.
+* Skin `1.2.32~beta1` (sin cambios): SHA-256
+  `3e7cf74ad59cd7d9b3ee8be9b399f4974816890a2f2dd31ed9cfea3e9121d08b`.
+* Repositorio Testing `1.0.2`: SHA-256
+  `ce0f53ea95ece57f4ced0dd1085457084ad2a333b67bdee4e121ef340376b6e1`.
+* Índice Testing privado: SHA-256 `b1ec6945ba7acb22a9b441e5d25b7d0d38476b7cc1a175479d341dd1728fc313`;
+  MD5 declarado `77aaafc532c344bb7b3adaf8fbf5b11d`.
+
+El service candidato requiere el XStream candidato indicado. Mac Master continúa
+con Service `0.4.58` y XStream `1.1.2.27~beta1`; no se instaló, publicó ni hizo
+push. Stable, Lenovo, Apple TV, credenciales y estados activos permanecen
+intactos. La distribución pública sigue separadamente bloqueada por la revisión
+de CC BY-NC 4.0; el candidato es privado.
