@@ -2,7 +2,7 @@
   "addon_id": "plugin.video.xstream-pro",
   "upstream_project": "https://github.com/Pesicp/XStreamPro",
   "upstream_version": "1.1.2",
-  "distribution_version": "1.1.2.24~beta1",
+  "distribution_version": "1.1.2.25~beta1",
   "upstream_ref": "1.1.2",
   "upstream_commit": "1aa3e67da7c03c6acc3ec7e1ca579a7f645220f4",
   "upstream_release_url": "https://github.com/Pesicp/XStreamPro/releases/download/1.1.2/plugin.video.xstream-pro-1.1.2.zip",
@@ -11,11 +11,11 @@
   "upstream_release_zip_sha256": "915f45708670d07e789bb73b7390a7b5cf30175f818ef5da8ea18c9f13f537fe",
   "upstream_license_observed": "CC BY-NC 4.0",
   "local_runtime_sha256": {
-    "addon.xml": "4864b97856bdc78b438abdb814ca6021f52f06820dd5f3bc537dae54af650234",
+    "addon.xml": "541359853c10e1851a0d0524cceaef7ad515eb999d00397628a51937c68d98f6",
     "resources/lib/trakt.py": "dcd94601c1c8b2929baa26c2207bce2d4a42c458d398f6cb2974dccc9d83a321",
-    "resources/lib/tmdb_routes.py": "366b1560c09d7a1e6a82c08ae05ddad2606d407d9f9bfb6dcfef93b9c78a2528",
+    "resources/lib/tmdb_routes.py": "f0b9e664ccbed2d138b583917800bdbc6398a43f1b30ca1f588d377d590ef9c4",
     "service.py": "55b6a8b835442fa29b38a2a08890c2cdf8822edd7bb216d223586ec066818de6",
-    "resources/lib/addon.py": "1967a031c79abc3acfe68ce17e34bc30b5a591e40d57d30d79d006a9861ea5d1",
+    "resources/lib/addon.py": "76376a12d9ad79ef7c8f0af23c230ece9047f45de633ee0d45756982a8734a38",
     "resources/lib/premium_routes.py": "6b1437b1b2229705ba2323171b22082d16dd83ee50f6420869756de3ee7ea513",
     "resources/lib/pending_adapter.py": "757bec5807fd0410025e1a9a7cf1cc31f5371056b027464eeb2ad213c4dfcff4",
     "resources/lib/content_state.py": "f47fe49a4acaa54621c8f6e2b8f80b293afa82d9570a1125ed02dae4bc3f97a2",
@@ -95,9 +95,13 @@
   "trakt_snapshot_patch_sha256": "71c33a8cef50cc1daa94951b180f5af8f7f2be111447a0fb28b36ba89e3fb171",
   "history_store_coordinator_patch": "third_party/xstream/patches/1.1.2/actweeter-history-store-coordinator.patch",
   "history_store_coordinator_patch_sha256": "8c5063817c5d8afea5185401c8a9c3cd462027341aceaef01aede29262c49485",
+  "trakt_live_queue_patch": "third_party/xstream/patches/1.1.2/actweeter-trakt-live-queue.patch",
+  "trakt_live_queue_patch_sha256": "21c34e6bf740f6ef934864e81292066ed74bd401bd5e437cbdc186639c7c38eb",
   "trakt_snapshot_sources_sha256": {
     "trakt_sync.py": "aa9e14bab1b59340a62a1ed3d8201fe249493a136e7665d0452f42a791da1a1d",
     "trakt_snapshot.py": "427e8ec5ca2e20b50e23c806190d97303bf6160fae63f09209a993bd0a537f0b",
-    "history_store_coordinator.py": "377a6443f1d6312a9f9fa86c10292857889129a90e04fbaeb0925197b8713869"
+    "history_store_coordinator.py": "377a6443f1d6312a9f9fa86c10292857889129a90e04fbaeb0925197b8713869",
+    "trakt_live_queue.py": "8c871856d471031fb55d88e8349b191d9739617dfacced200eaf9b9f349da1a5",
+    "trakt_live_consumer.py": "a4f0db5fd52a28cdcda970f52f807852c2f407f3b535f941f28cc284c470a97d"
   }
 }

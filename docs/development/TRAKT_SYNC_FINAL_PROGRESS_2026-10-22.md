@@ -265,3 +265,44 @@ Resultado actualizado: **PARTIAL**. La concurrencia de persistencia JSON entre
 instancias XStream queda reproducida y corregida en las pruebas aisladas; la
 sincronización automática completa y su comportamiento en Kodi Master siguen
 pendientes y no se declara resuelta.
+
+## 2026-10-23 — puente durable de operaciones (sin activar sincronización)
+
+Se añadió una primera conexión local de solo entrada Service → XStream. El
+servicio puede convertir un plan de importación ya verificado en un lote
+consentido, limitado y ligado a cuenta, perfil y huella del proveedor; lo
+escribe atómicamente en su directorio privado y solicita su consumo mediante
+`RunPlugin`. XStream vuelve a comprobar su cuenta Trakt nativa, perfil activo,
+proveedor y estado de reproducción, aplica solo adiciones mediante sus clases
+`WatchedMovies`, `WatchedEpisodes` y `ResumePoints` y confirma después de releer
+los stores con instancias nuevas. Referencias de reproducción solo se aceptan
+si existen exactamente en el perfil XStream; nunca se fabrican URLs. Repetir
+el lote es idempotente y un lote con reproducción activa se aplaza.
+
+Archivos principales añadidos:
+
+- `addons/service.actweeter/resources/lib/trakt_live_queue.py`
+- `addons/service.actweeter/resources/lib/trakt_live_sync.py`
+- `third_party/xstream/trakt_live_consumer.py`
+- `third_party/xstream/patches/1.1.2/actweeter-trakt-live-queue.patch`
+- pruebas de cola y de integración aislada con los stores reales del ZIP.
+
+Verificación local: **461/461 pruebas PASS** (incluye la integración con las
+clases reales de XStream en un directorio temporal, no Kodi runtime),
+`git diff --check` PASS, ZIP CRC PASS y reconstrucción reproducible PASS.
+Service `0.4.56` SHA-256
+`1f7df6aba491fc7389754ce15fabd8505df3c66a3f834b88afd4e7dd5983c830`;
+XStream `1.1.2.25~beta1` SHA-256
+`c45fcc5b7509142b86e3688f080670629178a5bf6d107dfde987cc31ed65dc51`.
+Son artefactos privados en `/private/tmp`; no publicados ni instalados.
+
+**No es todavía sincronización automática ni un checkpoint de actividad
+remota.** El archivo llamado checkpoint solo conserva recibos de lotes
+aplicados. No hay scheduler, GET Trakt ejecutado, comparación de actividad,
+preparación automática de lotes, consentimiento persistente de sincronización
+ni refresco de los objetos XStream ya residentes en memoria. El puente tampoco
+ha sido ejecutado dentro de Kodi. No se escribió en stores reales, en Trakt ni
+en el perfil activo; tampoco se accedió a Lenovo o Apple TV. El runtime actual
+de Mac continúa en versiones anteriores al candidato y JSON-RPC localhost no
+está disponible. Resultado de esta iteración: **PARTIAL**, no listo para
+instalar o habilitar sincronización live.

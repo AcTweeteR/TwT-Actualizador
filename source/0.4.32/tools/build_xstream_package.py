@@ -37,6 +37,7 @@ PATCHES = (
     ("trakt_device_auth_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-trakt-device-auth.patch"),
     ("trakt_snapshot_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-trakt-snapshot.patch"),
     ("history_store_coordinator_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-history-store-coordinator.patch"),
+    ("trakt_live_queue_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-trakt-live-queue.patch"),
 )
 DIAGNOSTICS_SOURCE = ROOT / "third_party/xstream/performance_diagnostics.py"
 CATALOG_INDEX_SOURCE = ROOT / "third_party/xstream/provider_catalog_index.py"
@@ -204,7 +205,7 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
                 target.write_bytes(target.read_bytes().replace(b"\r\n", b"\n"))
                 apply_contextual_unified_patch(root, patch_path)
                 continue
-            if manifest_key in ("recommendations_patch", "search_index_patch", "prefetch_patch", "catalog_index_patch", "collections_patch", "collections_empty_patch", "collections_dedup_patch"):
+            if manifest_key in ("recommendations_patch", "search_index_patch", "prefetch_patch", "catalog_index_patch", "collections_patch", "collections_empty_patch", "collections_dedup_patch", "trakt_live_queue_patch"):
                 # The pinned upstream archive uses CRLF in these files while
                 # earlier tracked patches add LF. Normalize only these two
                 # already-patched files before applying semantic context.
@@ -212,7 +213,7 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             expected_patch_hash = data[manifest_key + "_sha256"]
             if sha256(patch_path) != expected_patch_hash:
                 raise ValueError(f"patch hash mismatch: {patch_path.name}")
-            if manifest_key in ("recommendations_patch", "search_index_patch", "prefetch_patch", "catalog_index_patch", "collections_patch", "collections_empty_patch", "collections_dedup_patch"):
+            if manifest_key in ("recommendations_patch", "search_index_patch", "prefetch_patch", "catalog_index_patch", "collections_patch", "collections_empty_patch", "collections_dedup_patch", "trakt_live_queue_patch"):
                 apply_contextual_unified_patch(root, patch_path)
                 continue
             result = subprocess.run(
@@ -236,6 +237,8 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             ("trakt_sync.py", ROOT / "addons/service.actweeter/resources/lib/trakt_sync.py"),
             ("trakt_snapshot.py", ROOT / "third_party/xstream/trakt_snapshot.py"),
             ("history_store_coordinator.py", HISTORY_STORE_COORDINATOR_SOURCE),
+            ("trakt_live_queue.py", ROOT / "addons/service.actweeter/resources/lib/trakt_live_queue.py"),
+            ("trakt_live_consumer.py", ROOT / "third_party/xstream/trakt_live_consumer.py"),
         ):
             if sha256(source) != data["trakt_snapshot_sources_sha256"][name]:
                 raise ValueError("Trakt snapshot source hash mismatch: " + name)

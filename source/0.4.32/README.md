@@ -2,7 +2,9 @@
 
 ## Unpublished Trakt Mac-first candidate
 
-Service `0.4.55` contains a read-only universal identity/import planner; it is
+Service `0.4.56` contains a read-only universal identity/import planner plus a
+durable, consent-gated local hand-off to XStream; live sync remains disabled
+until explicit authorization and runtime validation. It is
 not scheduled and does not apply states to the user profile. XStream candidate
 `1.1.2.23~beta1` consolidates the Beta Trakt snapshot and provider-inventory
 sources on top of the published `1.1.2.22~beta1` baseline. It also rejects
