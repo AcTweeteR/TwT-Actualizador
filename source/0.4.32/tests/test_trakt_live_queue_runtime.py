@@ -9,7 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = r'''
-import importlib.util, json, subprocess, sys, tempfile, types
+import importlib.util, json, subprocess, sys, tempfile, types, zipfile
 from pathlib import Path
 service_lib = sys.argv[2]
 sys.path.insert(0, service_lib)
@@ -85,6 +85,53 @@ replay=apply_batch(path, profile_root/'trakt_live'/'acks', profile='2',
     account='test-account',provider_scope=scope,addon=addon,history=history,catalog_root=root)
 assert all(row['status'] in ('already_applied','superseded') for row in replay['results'])
 assert len(history.WatchedEpisodes(addon,2)._data['55']['1'])==1
+# TMDb projection is independent from provider IDs and catalog availability.
+from watched_actions import tmdb_watch_key
+tmdb_plan={'profile':'2','account':'test-account','items':[
+    {'identity':{'kind':'movie','ids':{'tmdb':'101'}},'watched':True,'watched_at':1400},
+    {'identity':{'kind':'episode','ids':{'tmdb':'55'},'season':1,'episode':2},
+     'watched':True,'watched_at':1401}]}
+tmdb_batch=build_batch(tmdb_plan,provider_scope=scope,consent=True,
+    batch_id='4'*32,target='tmdb')
+assert all('provider_id' not in op for op in tmdb_batch['operations'])
+tmdb_path=write_batch(queue_root,tmdb_batch)
+offline_root=root/'xtream-offline-unavailable'
+tmdb_ack=apply_batch(tmdb_path,profile_root/'trakt_live'/'acks',profile='2',
+    account='test-account',provider_scope=scope,addon=addon,history=history,
+    catalog_root=offline_root)
+assert all(row['status']=='applied' for row in tmdb_ack['results']),tmdb_ack
+watched=history.WatchedMovies(addon,2)._data
+assert watched[tmdb_watch_key('movie','101')] is True
+assert watched['101'] is True  # provider state is untouched by the equal TMDb ID
+assert watched[tmdb_watch_key('episode','55',1,2)] is True
+assert history.WatchedEpisodes(addon,2)._data['55']['1']==['202']
+# Exercise the actual TMDb UI predicate from the ZIP: namespaced state wins
+# and equal numeric provider IDs never become TMDb states.
+import ast
+with zipfile.ZipFile(sys.argv[1]) as built:
+    route_source=built.read('plugin.video.xstream-pro/resources/lib/tmdb_routes.py')
+tree=ast.parse(route_source)
+predicate=next(node for node in tree.body if isinstance(node,ast.FunctionDef)
+               and node.name=='_is_watched')
+namespace={}
+exec(compile(ast.Module(body=[predicate],type_ignores=[]),'<tmdb-ui-predicate>','exec'),namespace)
+wm=history.WatchedMovies(addon,2); we=history.WatchedEpisodes(addon,2)
+assert namespace['_is_watched']({'tmdb_type':'movie','tmdb_id':'101'},wm,we) is True
+wm._data[tmdb_watch_key('movie','101')]=False
+assert namespace['_is_watched']({'tmdb_type':'movie','tmdb_id':'101'},wm,we) is False
+wm._data[tmdb_watch_key('episode','55',1,2)]=False
+assert namespace['_is_watched']({'tmdb_type':'tv','tmdb_id':'55','season':1,'episode':2},wm,we) is False
+wm._data['777']=True
+we._data.setdefault('66',{}).setdefault('1',[]).append('2')
+assert namespace['_is_watched']({'tmdb_type':'movie','tmdb_id':'777'},wm,we) is False
+assert namespace['_is_watched']({'tmdb_type':'tv','tmdb_id':'66','season':1,'episode':2},wm,we) is False
+wm._data[tmdb_watch_key('episode','77',0,1)]=True
+assert namespace['_is_watched']({'tmdb_type':'tv','tmdb_id':'77','season':0,'episode':1},wm,we) is True
+again=apply_batch(tmdb_path,profile_root/'trakt_live'/'acks',profile='2',
+    account='test-account',provider_scope=scope,addon=addon,history=history,
+    catalog_root=offline_root)
+assert all(row['status']=='already_applied' for row in again['results'])
+assert len(history.WatchedEpisodes(addon,2)._data['55']['1'])==1
 # A crash after the movie store commits but before episode persistence leaves
 # no ack; retry merges the existing movie and finishes the remaining store.
 partial=build_batch({'profile':'2','account':'test-account','items':[
@@ -154,6 +201,16 @@ def fixture_get(path, query):
     return rows, {'page':query['page'],'limit':100,'page_count':1,'item_count':len(rows)}
 make_export(fixture_get, exports, '2')
 export=next(exports.glob('snapshot-*'))
+from lib.trakt_restore_importer import prepare_tmdb_restore
+direct=prepare_tmdb_restore(export,profile='2',account='test-account')
+assert direct['summary']['watched_tmdb_records']==1
+assert direct['items'][0]['identity']['ids']['tmdb']=='1000'
+from lib.trakt_live_sync import prepare_batches
+independent=prepare_batches(export,root/'xtream-offline-no-catalog',profile='2',
+    account='test-account',provider_scope=scope,consent=True,
+    activity_fingerprint='a'*64,catalog_generation='b'*64)
+assert independent and all(batch['target']=='tmdb' for batch in independent)
+assert independent[0]['operations'][0]['identity']['ids']['tmdb']=='1000'
 activity={'all':'2026-10-22T12:00:00Z'}; activity_calls=[]; export_calls=[]
 def get_activity():
     activity_calls.append(1); return 'test-account', activity
@@ -163,9 +220,13 @@ cycle_args=dict(account='test-account',profile='2',provider_scope=scope,
     activity_get=get_activity,export_snapshot=get_export,apply_batch=apply_batch,
     addon=addon,history=history,consent_path=consent_path)
 queued=run_cycle(cycle_service,root,**cycle_args)
-assert queued['status']=='queued' and queued['operations']==1
-applied=run_cycle(cycle_service,root,**cycle_args)
+assert queued['status']=='queued' and queued['operations']>=1
+applied=queued
+for _ in range(4):
+    applied=run_cycle(cycle_service,root,**cycle_args)
+    if applied['status']=='applied': break
 assert applied['status']=='applied' and '404' in history.WatchedMovies(addon,2)._data
+assert history.WatchedMovies(addon,2)._data[tmdb_watch_key('movie','1000')] is True
 unchanged=run_cycle(cycle_service,root,**cycle_args)
 assert unchanged['status']=='unchanged' and len(export_calls)==1
 assert len(activity_calls)==2
@@ -229,6 +290,10 @@ class TraktLiveQueueRuntimeTests(unittest.TestCase):
                 'plugin.video.xstream-pro/resources/lib/tmdb_routes.py'))
             self.assertIn(b'trakt_pkce.begin(', archive.read(
                 'plugin.video.xstream-pro/resources/lib/tmdb_routes.py'))
+            self.assertIn(b'tmdb_watch_key', archive.read(
+                'plugin.video.xstream-pro/resources/lib/tmdb_routes.py'))
+            self.assertIn(b'tmdb:movie:', archive.read(
+                'plugin.video.xstream-pro/resources/lib/watched_actions.py'))
         result = subprocess.run([sys.executable, '-c', SCRIPT,
             os.environ['ACTWEETER_XSTREAM_LIVE_ZIP'],
             str(ROOT / 'addons/service.actweeter/resources/lib')],

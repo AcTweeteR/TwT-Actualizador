@@ -11,6 +11,117 @@ from .trakt_identity_resolver import resolve_identities
 from .trakt_sync import import_plan, validate_export
 
 
+def prepare_tmdb_restore(export_directory, *, profile, account,
+                         reference_directory=None):
+    """Project verified Trakt watched states directly onto XStream TMDb IDs.
+
+    This projection deliberately does not inspect or require the Xtream catalog.
+    Resume points remain provider-bound and are handled only by the strict path.
+    """
+    folder = Path(export_directory)
+    if folder.is_symlink() or any((folder / name).is_symlink()
+                                  for name in ('snapshot.json', 'manifest.json')):
+        raise ValueError('unsafe export path')
+    raw = (folder / 'snapshot.json').read_bytes()
+    manifest = json.loads((folder / 'manifest.json').read_text('utf-8'))
+    if manifest.get('sha256') != hashlib.sha256(raw).hexdigest():
+        raise ValueError('snapshot checksum mismatch')
+    if manifest.get('status') != 'READ_ONLY_EXPORT_VERIFIED':
+        raise ValueError('unverified export')
+    payload = json.loads(raw)
+    reference = None
+    if reference_directory is not None:
+        folder2 = Path(reference_directory)
+        if folder2.is_symlink() or any((folder2 / name).is_symlink()
+                                       for name in ('snapshot.json', 'manifest.json')):
+            raise ValueError('unsafe reference export')
+        raw2 = (folder2 / 'snapshot.json').read_bytes()
+        manifest2 = json.loads((folder2 / 'manifest.json').read_text('utf-8'))
+        if (manifest2.get('status') != 'READ_ONLY_EXPORT_VERIFIED'
+                or hashlib.sha256(raw2).hexdigest() != manifest2.get('sha256')):
+            raise ValueError('reference checksum mismatch')
+        reference = (json.loads(raw2), manifest2)
+    snapshot = validate_export(payload, manifest, profile=profile, account=account,
+                               legacy_reference=reference)
+    items, missing_tmdb = [], 0
+    for record in snapshot['records'].values():
+        identity = record['identity']
+        kind = identity.get('kind')
+        if kind not in ('movie', 'episode') or not record.get('watched_at'):
+            continue
+        ids = identity.get('ids') or {}
+        tmdb_id = ids.get('tmdb')
+        if not isinstance(tmdb_id, str) or not tmdb_id.isdigit() or int(tmdb_id) < 1:
+            missing_tmdb += 1
+            continue
+        item = {'identity': identity, 'watched': True,
+                'watched_at': record['watched_at']}
+        if kind == 'episode':
+            season, episode = identity.get('season'), identity.get('episode')
+            if type(season) is not int or season < 0 or type(episode) is not int or episode < 1:
+                missing_tmdb += 1
+                continue
+        items.append(item)
+    playback_deferred = sum(bool(row.get('paused_at')) for row in snapshot['records'].values())
+    return {'schema': 1, 'account': account, 'profile': str(profile),
+            'items': items, 'summary': {'watched_tmdb_records': len(items),
+                                        'missing_tmdb_identity': missing_tmdb,
+                                        'playback_deferred_without_provider_url': playback_deferred}}
+
+
+def preview_tmdb_changes(plan, xstream_directory, *, profile):
+    """Read-only TMDb projection preview against the profile's native stores."""
+    root = Path(xstream_directory)
+    if root.is_symlink() or not str(profile).isdigit() or int(profile) < 1:
+        raise ValueError('unsafe XStream profile')
+
+    def read(name):
+        path = root / ('%s_p%s.json' % (name, profile))
+        if path.is_symlink():
+            raise ValueError('unsafe XStream history store')
+        if not path.exists():
+            return {}
+        value = json.loads(path.read_text('utf-8'))
+        if not isinstance(value, dict):
+            raise ValueError('invalid XStream history store')
+        return value
+
+    watched = read('watched_movies')
+    result = {'movies_new': 0, 'episodes_new': 0, 'already_local': 0,
+              'conflicts': 0, 'items': []}
+    for item in plan.get('items', []):
+        identity = item.get('identity') or {}
+        ids = identity.get('ids') or {}
+        tmdb_id = str(ids.get('tmdb') or '')
+        if not tmdb_id.isdigit() or int(tmdb_id) < 1:
+            result['conflicts'] += 1
+            continue
+        if identity.get('kind') == 'movie':
+            key = 'tmdb:movie:' + tmdb_id
+            target = 'movies_new'
+        elif identity.get('kind') == 'episode':
+            season, episode = identity.get('season'), identity.get('episode')
+            if type(season) is not int or season < 0 or type(episode) is not int or episode < 1:
+                result['conflicts'] += 1
+                continue
+            key = 'tmdb:episode:%s:s%d:e%d' % (tmdb_id, season, episode)
+            target = 'episodes_new'
+        else:
+            result['conflicts'] += 1
+            continue
+        current = watched.get(key)
+        if current is True:
+            result['already_local'] += 1
+        elif current is False:
+            result['conflicts'] += 1
+        elif current is not None:
+            result['conflicts'] += 1
+        else:
+            result[target] += 1
+            result['items'].append(item)
+    return result
+
+
 def prepare_restore(export_directory, xstream_directory, *, profile, account,
                     reference_directory=None, include_candidates=False):
     folder = Path(export_directory)

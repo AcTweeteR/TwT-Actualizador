@@ -123,8 +123,13 @@ def validate_trakt_sync_contract(archive, service_queue: bytes) -> None:
         ),
         "trakt_live_consumer.py": (
             b"def apply_batch(", b"verify_batch(", b"write_ack(",
+            b"target == 'tmdb'", b"tmdb_watch_key",
         ),
-        "trakt_live_queue.py": (b"def verify_batch(", b"def write_ack(",),
+        "trakt_live_queue.py": (b"def verify_batch(", b"def write_ack(",
+                                b"target='provider'", b"target not in ('provider', 'tmdb')"),
+        "watched_actions.py": (b"def tmdb_watch_key(", b"tmdb:movie:",
+                               b"tmdb:episode:"),
+        "tmdb_routes.py": (b"def _is_watched(", b"tmdb_watch_key"),
         "trakt_sync.py": (b"def validate_export(", b"pagination headers required",),
         "trakt_snapshot.py": (b"require_page_metadata=True", b"'contract_version': 2",),
         "trakt.py": (b"def snapshot_request(", b'Unsupported snapshot endpoint',),
@@ -324,13 +329,19 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
                 raise ValueError("Trakt snapshot source hash mismatch: " + name)
             (root / "resources/lib" / name).write_bytes(source.read_bytes())
 
+        for relative in ("resources/lib/trakt.py", "resources/lib/tmdb_routes.py"):
+            if sha256(root / relative) != data["local_runtime_sha256"][relative]:
+                raise ValueError("XStream Trakt baseline hash mismatch: " + relative)
+        tmdb_state_patch = ROOT / "third_party/xstream/patches/1.1.2/actweeter-trakt-tmdb-state.patch"
+        if sha256(tmdb_state_patch) != data["tmdb_state_patch_sha256"]:
+            raise ValueError("TMDb watched-state patch hash mismatch")
+        normalize_recommendation_patch_targets(root)
+        apply_contextual_unified_patch(root, tmdb_state_patch)
+
         for source, key in ((TRAKT_PKCE_APPLIER_SOURCE, "trakt_pkce_applier_sha256"),
                             (TRAKT_PKCE_SOURCE, "trakt_pkce_source_sha256")):
             if sha256(source) != data[key]:
                 raise ValueError("Trakt PKCE source hash mismatch: " + source.name)
-        for relative in ("resources/lib/trakt.py", "resources/lib/tmdb_routes.py"):
-            if sha256(root / relative) != data["local_runtime_sha256"][relative]:
-                raise ValueError("XStream Trakt baseline hash mismatch: " + relative)
         sys.path.insert(0, str(TRAKT_PKCE_APPLIER_SOURCE.parent))
         try:
             from apply_trakt_pkce import apply as apply_pkce
@@ -416,8 +427,8 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             raise ValueError("built XStream ZIP CRC failed")
         validate_trakt_pkce_contract(archive)
         for relative, expected_hash in data.get("local_runtime_sha256", {}).items():
-            if relative in ("resources/lib/trakt.py", "resources/lib/tmdb_routes.py"):
-                continue  # PKCE is a separately hash-locked transformation above.
+            if relative in ("addon.xml", "resources/lib/trakt.py", "resources/lib/tmdb_routes.py"):
+                continue  # Versioning and the hash-locked Trakt patches intentionally transform these.
             member = f"{UPSTREAM_ROOT}/{relative}"
             if member not in archive.namelist():
                 raise ValueError(f"patched runtime file missing from ZIP: {relative}")

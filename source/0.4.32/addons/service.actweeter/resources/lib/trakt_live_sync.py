@@ -4,7 +4,8 @@ from pathlib import Path
 
 from .trakt_live_queue import (build_batch, checkpoint_from_ack, persist_checkpoint,
                                provider_fingerprint, verify_batch, write_batch)
-from .trakt_restore_importer import prepare_restore, preview_changes
+from .trakt_restore_importer import (prepare_restore, prepare_tmdb_restore,
+                                     preview_changes)
 
 
 def prepare_batch(export_directory, xstream_profile, *, profile, account,
@@ -19,15 +20,27 @@ def prepare_batch(export_directory, xstream_profile, *, profile, account,
 
 def prepare_batches(export_directory, xstream_profile, *, profile, account,
                     provider_scope, consent=False, activity_fingerprint=None, catalog_generation=None, source_export=None):
-    plan = prepare_restore(export_directory, xstream_profile,
-                           profile=profile, account=account)
-    preview = preview_changes(plan, xstream_profile, profile=profile)
-    safe_items = preview['plan']['items']
-    plan = preview['plan']
-    chunks = [safe_items[index:index + 100] for index in range(0, len(safe_items), 100)] or [[]]
-    return [build_batch(dict(plan, items=chunk), provider_scope=provider_scope,
-                        consent=consent, activity_fingerprint=activity_fingerprint, catalog_generation=catalog_generation, source_export=source_export)
-            for chunk in chunks]
+    common = dict(provider_scope=provider_scope, consent=consent,
+                  activity_fingerprint=activity_fingerprint,
+                  catalog_generation=catalog_generation, source_export=source_export)
+    tmdb = prepare_tmdb_restore(export_directory, profile=profile, account=account)
+    batches = []
+    for offset in range(0, len(tmdb['items']), 100):
+        batches.append(build_batch(dict(tmdb, items=tmdb['items'][offset:offset + 100]),
+                                   target='tmdb', **common))
+    try:
+        plan = prepare_restore(export_directory, xstream_profile,
+                               profile=profile, account=account)
+        plan = preview_changes(plan, xstream_profile, profile=profile)['plan']
+        safe_items = plan['items']
+    except (OSError, ValueError):
+        # TMDb-native watched state remains importable without a local provider catalog.
+        safe_items = []
+        plan = {'profile': str(profile), 'account': account, 'items': []}
+    for offset in range(0, len(safe_items), 100):
+        batches.append(build_batch(dict(plan, items=safe_items[offset:offset + 100]),
+                                   target='provider', **common))
+    return batches
 
 
 def provider_scope_from_addon(addon, profile):

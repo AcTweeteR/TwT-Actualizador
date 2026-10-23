@@ -67,7 +67,7 @@ def _identity(item, kind):
     return identity
 
 
-def build_batch(plan, *, provider_scope, consent=False, batch_id=None,
+def build_batch(plan, *, provider_scope, consent=False, batch_id=None, target='provider',
                 activity_fingerprint=None, catalog_generation=None, source_export=None):
     """Convert additions-only import plan to a bounded, credential-free batch."""
     if consent is not True:
@@ -77,6 +77,8 @@ def build_batch(plan, *, provider_scope, consent=False, batch_id=None,
             or not re.fullmatch(r'[A-Za-z0-9_-]{1,128}', account)
             or not re.fullmatch(r'[0-9a-f]{64}', str(provider_scope))):
         raise ValueError('account, profile and provider binding required')
+    if target not in ('provider', 'tmdb'):
+        raise ValueError('unsupported projection target')
     items = plan.get('items')
     if not isinstance(items, list) or len(items) > 5000:
         raise ValueError('invalid or oversized import plan')
@@ -89,20 +91,28 @@ def build_batch(plan, *, provider_scope, consent=False, batch_id=None,
             raise ValueError('unsupported content kind')
         identity = _identity(item, kind)
         provider_id = str(item.get('provider_id', ''))
-        if not re.fullmatch(r'[0-9]+', provider_id):
-            raise ValueError('verified provider ID required')
-        common = {'kind': kind, 'provider_id': provider_id,
+        common = {'target': target, 'kind': kind,
                   'identity': identity, 'confidence': 'exact'}
+        if target == 'provider':
+            if not re.fullmatch(r'[0-9]+', provider_id):
+                raise ValueError('verified provider ID required')
+            common['provider_id'] = provider_id
+        else:
+            tmdb_id = identity.get('ids', {}).get('tmdb')
+            if (not isinstance(tmdb_id, str) or not re.fullmatch(r'[1-9][0-9]*', tmdb_id)
+                    or item.get('watched') is not True or 'position' in item):
+                raise ValueError('exact TMDb watched identity required')
         if kind == 'episode':
             series_id = str(item.get('provider_series_id', ''))
             episode_id = str(item.get('provider_episode_id', ''))
-            if (not re.fullmatch(r'[0-9]+', series_id)
-                    or episode_id != provider_id
-                    or type(identity.get('season')) is not int
+            if (type(identity.get('season')) is not int
                     or type(identity.get('episode')) is not int):
                 raise ValueError('exact episode coordinates required')
-            common.update(series_id=series_id, episode_id=episode_id,
-                          season=identity['season'], episode=identity['episode'])
+            common.update(season=identity['season'], episode=identity['episode'])
+            if target == 'provider':
+                if not re.fullmatch(r'[0-9]+', series_id) or episode_id != provider_id:
+                    raise ValueError('exact provider episode reference required')
+                common.update(series_id=series_id, episode_id=episode_id)
         if item.get('watched') is True:
             watched_at = _stamp(item.get('watched_at'))
             if watched_at is None:
@@ -124,7 +134,7 @@ def build_batch(plan, *, provider_scope, consent=False, batch_id=None,
     identifier = batch_id or uuid.uuid4().hex
     if not re.fullmatch(r'[0-9a-f]{32}', identifier):
         raise ValueError('invalid batch ID')
-    envelope = {'schema': 1, 'batch_id': identifier, 'account': account,
+    envelope = {'schema': 1, 'target': target, 'batch_id': identifier, 'account': account,
                 'profile': profile, 'provider_scope': provider_scope,
                 'operations': [{'id': key, **operations[key]}
                                for key in sorted(operations)]}
@@ -191,7 +201,8 @@ def verify_batch(batch, *, profile, account, provider_scope):
     unsigned.pop('sha256', None)
     if supplied != hashlib.sha256(_json(unsigned)).hexdigest():
         raise ValueError('batch checksum mismatch')
-    if (batch.get('schema') != 1 or str(batch.get('profile')) != str(profile)
+    target = batch.get('target', 'provider')
+    if (target not in ('provider', 'tmdb') or batch.get('schema') != 1 or str(batch.get('profile')) != str(profile)
             or batch.get('account') != account
             or batch.get('provider_scope') != provider_scope
             or not re.fullmatch(r'[0-9a-f]{32}', str(batch.get('batch_id', '')))
@@ -214,6 +225,8 @@ def verify_batch(batch, *, profile, account, provider_scope):
         if (not isinstance(operation_id, str)
                 or operation_id != hashlib.sha256(_json(content)).hexdigest()):
             raise ValueError('operation checksum mismatch')
+        if content.get('target', target) != target:
+            raise ValueError('projection target mismatch')
     return batch
 
 
@@ -226,7 +239,8 @@ def write_ack(path, batch, results):
             or any(row.get('status') not in ('applied', 'already_applied', 'superseded', 'deferred')
                    for row in results)):
         raise ValueError('incomplete or invalid operation results')
-    payload = {'schema': 1, 'batch_id': batch['batch_id'],
+    payload = {'schema': 1, 'target': batch.get('target', 'provider'),
+               'batch_id': batch['batch_id'],
                'account': batch['account'], 'profile': batch['profile'],
                'provider_scope': batch['provider_scope'], 'results': results}
     payload['sha256'] = hashlib.sha256(_json(payload)).hexdigest()
@@ -262,7 +276,8 @@ def checkpoint_from_ack(ack, batch):
     if supplied != hashlib.sha256(_json(unsigned)).hexdigest():
         raise ValueError('ack checksum mismatch')
     if any(ack.get(key) != batch.get(key) for key in
-           ('batch_id', 'account', 'profile', 'provider_scope')):
+           ('batch_id', 'account', 'profile', 'provider_scope')) or ack.get(
+               'target', 'provider') != batch.get('target', 'provider'):
         raise PermissionError('ack scope mismatch')
     expected = {operation['id'] for operation in batch['operations']}
     rows = ack.get('results', [])

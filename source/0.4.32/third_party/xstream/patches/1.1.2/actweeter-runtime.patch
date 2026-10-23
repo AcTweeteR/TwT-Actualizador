@@ -2241,8 +2241,19 @@ new file mode 100644
 index 0000000000000000000000000000000000000000..eab1cfb01d6ffd9a86304d2b63035e85a2562c89
 --- /dev/null
 +++ b/resources/lib/watched_actions.py
-@@ -0,0 +1,58 @@
+@@ -0,0 +1,66 @@
 +"""Thin testable dispatch for XStream's existing watched toggle."""
++
++def tmdb_watch_key(kind, tmdb_id, season=None, episode=None):
++    """Namespace imported/manual TMDb marks away from provider numeric IDs."""
++    tmdb_id = str(tmdb_id or '').strip()
++    if kind == 'movie' and tmdb_id.isdigit() and int(tmdb_id) > 0:
++        return 'tmdb:movie:' + tmdb_id
++    if (kind == 'episode' and tmdb_id.isdigit() and int(tmdb_id) > 0
++            and str(season).isdigit() and int(season) >= 0
++            and str(episode).isdigit() and int(episode) > 0):
++        return 'tmdb:episode:{0}:s{1}:e{2}'.format(tmdb_id, int(season), int(episode))
++    return ''
 +
 +
 +def toggle_tmdb_watched(g, args):
@@ -2257,24 +2268,21 @@ index 0000000000000000000000000000000000000000..eab1cfb01d6ffd9a86304d2b63035e85
 +
 +    if tmdb_id and tmdb_type == "movie":
 +        store = g["WatchedMovies"](g["addon"], profile_num=profile_num)
-+        if store.is_watched(tmdb_id):
-+            store.mark_unwatched(tmdb_id)
-+            g["xbmcgui"].Dialog().notification("Xstream Pro", g["_t"](31121))
-+            state = False
-+        else:
-+            store.mark_watched(tmdb_id)
-+            g["xbmcgui"].Dialog().notification("Xstream Pro", g["_t"](31120))
-+            state = True
++        key = tmdb_watch_key('movie', tmdb_id)
++        if key:
++            previous = store._data.get(key, False)
++            state = not bool(previous)
++            store._data[key] = state
++            store._save()
++            g["xbmcgui"].Dialog().notification("Xstream Pro", g["_t"](31120 if state else 31121))
 +    elif tmdb_id and tmdb_type == "tv" and season and episode:
-+        store = g["WatchedEpisodes"](g["addon"], profile_num=profile_num)
-+        if store.is_watched(tmdb_id, season, episode):
-+            store.mark_unwatched(tmdb_id, season, episode)
-+            g["xbmcgui"].Dialog().notification("Xstream Pro", g["_t"](31121))
-+            state = False
-+        else:
-+            store.mark_watched(tmdb_id, season, episode)
-+            g["xbmcgui"].Dialog().notification("Xstream Pro", g["_t"](31120))
-+            state = True
++        store = g["WatchedMovies"](g["addon"], profile_num=profile_num)
++        key = tmdb_watch_key('episode', tmdb_id, season, episode)
++        if key:
++            state = not bool(store._data.get(key, False))
++            store._data[key] = state
++            store._save()
++            g["xbmcgui"].Dialog().notification("Xstream Pro", g["_t"](31120 if state else 31121))
 +    elif tmdb_id and tmdb_type == "tv" and season:
 +        store = g["WatchedMovies"](g["addon"], profile_num=profile_num)
 +        key = "season:{0}:{1}".format(tmdb_id, season)
@@ -2349,4 +2357,5 @@ index d2239a19aa59f70b3ee3ad69041334c0f58e9958..9427f1c90eb65b6a2848ec15f7e985ce
      if remember_current_pvr_group is not None:
          try:
              remember_current_pvr_group()
+
 

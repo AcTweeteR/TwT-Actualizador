@@ -97,11 +97,14 @@ def apply_batch(batch_path, ack_directory, *, profile, account, provider_scope,
                     'reason': 'playback_active'} for operation in batch['operations']]
         return write_ack(Path(ack_directory) / (batch['batch_id'] + '.json'),
                          batch, results)
-    if batch['operations'] and not _catalog_scope_verified(batch['operations'], catalog_root, profile, provider_scope, addon):
+    target = batch.get('target', 'provider')
+    if (target == 'provider' and batch['operations']
+            and not _catalog_scope_verified(batch['operations'], catalog_root, profile, provider_scope, addon)):
         return write_ack(Path(ack_directory) / (batch['batch_id'] + '.json'), batch,
             [{'id': op['id'], 'status': 'deferred', 'reason': 'provider_catalog_scope_changed'}
              for op in batch['operations']])
-    catalog_index = _verified_catalog_index(batch['operations'], catalog_root, profile)
+    catalog_index = (_verified_catalog_index(batch['operations'], catalog_root, profile)
+                     if target == 'provider' else None)
     watched_movies = history.WatchedMovies(addon, profile_num=int(profile))
     watched_episodes = history.WatchedEpisodes(addon, profile_num=int(profile))
     resume = history.ResumePoints(addon, profile_num=int(profile))
@@ -113,23 +116,34 @@ def apply_batch(batch_path, ack_directory, *, profile, account, provider_scope,
         op_id = operation['id']
         kind, action = operation.get('kind'), operation.get('action')
         identity = operation.get('identity')
-        if (operation.get('confidence') != 'exact' or action not in ('watched', 'resume')
+        if (operation.get('target', target) != target
+                or operation.get('confidence') != 'exact' or action not in ('watched', 'resume')
                 or kind not in ('movie', 'episode') or not isinstance(identity, dict)
                 or identity.get('kind') != kind or not isinstance(identity.get('ids'), dict)
-                or not identity['ids'] or not re.fullmatch(r'[0-9]+', str(operation.get('provider_id', '')))
+                or not identity['ids']
                 or type(operation.get('timestamp')) not in (float, int)
                 or not math.isfinite(operation['timestamp']) or operation['timestamp'] <= 0):
             raise ValueError('unsupported or unverified operation')
+        if target == 'provider' and not re.fullmatch(
+                r'[0-9]+', str(operation.get('provider_id', ''))):
+            raise ValueError('verified provider ID required')
+        if target == 'tmdb':
+            ids = identity.get('ids', {})
+            tmdb_id = ids.get('tmdb') if isinstance(ids, dict) else None
+            if (action != 'watched' or not isinstance(tmdb_id, str)
+                    or not re.fullmatch(r'[1-9][0-9]*', tmdb_id)):
+                raise ValueError('verified TMDb watched identity required')
         if kind == 'episode' and (
-                not re.fullmatch(r'[0-9]+', str(operation.get('series_id', '')))
-                or str(operation.get('episode_id')) != str(operation['provider_id'])
+                (target == 'provider' and not re.fullmatch(
+                    r'[0-9]+', str(operation.get('series_id', ''))))
+                or (target == 'provider' and str(operation.get('episode_id')) != str(operation['provider_id']))
                 or type(operation.get('season')) is not int
                 or operation['season'] < 0 or type(operation.get('episode')) is not int
                 or operation['episode'] < 1
                 or identity.get('season') != operation['season']
                 or identity.get('episode') != operation['episode']):
             raise ValueError('episode identity mismatch')
-        if not _catalog_identity_exact(operation, catalog_index):
+        if target == 'provider' and not _catalog_identity_exact(operation, catalog_index):
             results.append({'id': op_id, 'status': 'deferred',
                             'reason': 'provider_identity_not_verified_in_catalog'})
             continue
@@ -140,6 +154,23 @@ def apply_batch(batch_path, ack_directory, *, profile, account, provider_scope,
                     or duration < 120 or position < 60 or position > duration * .93):
                 raise ValueError('invalid resume bounds')
         if action == 'watched':
+            if target == 'tmdb':
+                from watched_actions import tmdb_watch_key
+                key = tmdb_watch_key(kind, identity['ids']['tmdb'],
+                                     operation.get('season'), operation.get('episode'))
+                current = watched_movies._data.get(key)
+                if current is False:
+                    results.append({'id': op_id, 'status': 'deferred',
+                                    'reason': 'local_tmdb_unwatched_conflict'})
+                elif current is True:
+                    results.append({'id': op_id, 'status': 'already_applied'})
+                elif current is not None:
+                    raise ValueError('invalid TMDb watched state')
+                else:
+                    watched_movies._data[key] = True
+                    changed['movie'] = True
+                    results.append({'id': op_id, 'status': 'applied'})
+                continue
             active_ref = _provider_ref(operation, recent) if playing_file else None
             if active_ref is not None and active_ref['url'] == playing_file:
                 results.append({'id': op_id, 'status': 'deferred', 'reason': 'content_is_playing'})
@@ -213,7 +244,13 @@ def apply_batch(batch_path, ack_directory, *, profile, account, provider_scope,
     for operation, result in zip(batch['operations'], results):
         if result['status'] not in ('applied', 'already_applied', 'superseded'):
             continue
-        if operation['action'] == 'watched' and operation['kind'] == 'movie':
+        if operation.get('target', target) == 'tmdb':
+            from watched_actions import tmdb_watch_key
+            key = tmdb_watch_key(operation['kind'], operation['identity']['ids']['tmdb'],
+                                 operation.get('season'), operation.get('episode'))
+            if verify_movies._data.get(key) is not True:
+                raise OSError('TMDb watched state was not persisted')
+        elif operation['action'] == 'watched' and operation['kind'] == 'movie':
             if verify_movies._data.get(str(operation['provider_id'])) is not True:
                 raise OSError('movie watched state was not persisted')
         elif operation['action'] == 'watched':
