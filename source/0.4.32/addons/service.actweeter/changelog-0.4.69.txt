@@ -1,0 +1,4 @@
+0.4.69
+- XStream support is validated by minimum version and required capabilities, not a closed version list.
+- Optional TMDb onboarding is isolated from required setup and resumes safely after interruption.
+- Trakt changes and existing profile data are preserved.

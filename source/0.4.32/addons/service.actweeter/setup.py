@@ -62,8 +62,8 @@ from first_run import (
     tvos_xstream_dependency_status,
 )
 from xstream_setup import (
-    SUPPORTED_XSTREAM_VERSIONS,
     SetupError,
+    inspect_xstream_compatibility,
     parse_xtream_input,
     prepare_https_endpoint,
     save_native_profile,
@@ -264,21 +264,24 @@ def _mandatory_addons_ready():
 
 
 def _xstream_refresh_supported():
-    """Version alone does not establish the AcTweeteR integration route."""
+    """Require the minimum XStream version and the capabilities we consume."""
     try:
         addon = xbmcaddon.Addon("plugin.video.xstream-pro")
-        if addon.getAddonInfo("version") not in SUPPORTED_XSTREAM_VERSIONS:
-            return False
-        handle = xbmcvfs.File(os.path.join(addon.getAddonInfo("path"), "resources", "lib", "addon.py"))
-        try:
-            source = handle.read()
-        finally:
-            handle.close()
-        if isinstance(source, bytes):
-            source = source.decode("utf-8")
-        return bool(re.search(r'''elif\s+mode\s*==\s*["']actweeter_refresh_profile["']\s*:''', source))
+        path = xbmcvfs.translatePath(addon.getAddonInfo("path"))
+        return inspect_xstream_compatibility(
+            path, addon.getAddonInfo("version"))[0]
     except Exception:
         return False
+
+
+def _xstream_missing_capabilities():
+    try:
+        addon = xbmcaddon.Addon("plugin.video.xstream-pro")
+        path = xbmcvfs.translatePath(addon.getAddonInfo("path"))
+        return inspect_xstream_compatibility(
+            path, addon.getAddonInfo("version"))[1]
+    except Exception:
+        return ("xstream_addon_api",)
 
 
 def _catalog_refresh_state_path():
@@ -307,30 +310,15 @@ def _dispatch_plugin_query(url, source, *, wait=False):
 
 def _xstream_catalog_callback_supported():
     """Require the exact result bridge before exposing a completion claim."""
-    if not _xstream_refresh_supported():
-        return False
-    try:
-        addon = xbmcaddon.Addon("plugin.video.xstream-pro")
-        handle = xbmcvfs.File(os.path.join(
-            addon.getAddonInfo("path"), "resources", "lib", "addon.py"))
-        try:
-            source = handle.read()
-        finally:
-            handle.close()
-        if isinstance(source, bytes):
-            source = source.decode("utf-8")
-        return ('actweeter_callback' in source
-                and 'catalog_refresh_result' in source
-                and 'RunScript(service.actweeter,catalog_refresh_result' in source)
-    except Exception:
-        return False
+    return _xstream_refresh_supported()
 
 
 def _catalog_refresh_start(dialog):
     addon_id = "plugin.video.xstream-pro"
     if (not _addon_requirement_ready(addon_id)
             or not _xstream_catalog_callback_supported()):
-        dialog.notification("AcTweeteR", "XStream Pro no ofrece la integración de actualización requerida.",
+        dialog.notification("AcTweeteR", "XStream no cumple las capacidades requeridas (%s)." %
+                             ", ".join(_xstream_missing_capabilities()),
                             xbmcgui.NOTIFICATION_WARNING, 6000)
         return
     request_id = None
@@ -801,7 +789,7 @@ def _enable_xstream_pvr_sync(addon):
 def _pvr_profile_binding():
     try:
         addon = xbmcaddon.Addon(OPTIONAL_ADDONS["xstream"])
-        if addon.getAddonInfo("version") not in SUPPORTED_XSTREAM_VERSIONS:
+        if not _xstream_refresh_supported():
             return False
         active = addon.getSetting("active_pvr_profile") or "Profile 1"
         match = re.search(r"([0-9]+)$", active)
@@ -828,7 +816,8 @@ def _configure_pvr_from_xstream(dialog):
         return False
     if not _xstream_refresh_supported():
         dialog.ok("Integración XStream pendiente",
-                  "XStream está instalado, pero no ofrece la integración de configuración AcTweeteR. Repara su paquete desde el repositorio AcTweeteR conservando sus datos.")
+                  "XStream no cumple las capacidades requeridas por AcTweeteR (%s). Repara su paquete desde el canal correspondiente conservando sus datos." %
+                  ", ".join(_xstream_missing_capabilities()))
         return False
     if not _addon_requirement_ready(pvr_id):
         dialog.ok("PVR no disponible",
@@ -1108,15 +1097,15 @@ def _configure_xstream_provider(dialog):
     if not _addon_ready(addon_id):
         _open_settings(dialog, "xstream")
         return False
-    if _addon_version(addon_id) not in SUPPORTED_XSTREAM_VERSIONS:
+    if not _xstream_refresh_supported():
         dialog.ok(
-            "XStream Pro no compatible",
-            "Esta versión de XStream no coincide con la integración comprobada. Actualiza el componente desde AcTweeteR Repository; tus datos se conservarán.",
+            "Integración XStream incompleta",
+            "XStream no expone todas las capacidades necesarias (%s). Actualiza o repara desde el canal AcTweeteR correspondiente; tus ajustes se conservarán." % ", ".join(_xstream_missing_capabilities()),
         )
         return False
     if not _xstream_refresh_supported():
         dialog.ok("Integración XStream pendiente",
-                  "El paquete instalado no permite preparar el contenido automáticamente desde AcTweeteR. Repara XStream desde nuestro repositorio antes de introducir datos; tus ajustes se conservarán.")
+                  "Faltan capacidades XStream (%s). Repara desde el canal AcTweeteR correspondiente antes de introducir datos; tus ajustes se conservarán." % ", ".join(_xstream_missing_capabilities()))
         return False
     try:
         addon = xbmcaddon.Addon(addon_id)
@@ -1385,8 +1374,8 @@ def _install_components_once(dialog, *, consent_granted=False, quiet=False,
     for addon_id in missing:
         on_component(addon_id)
         if (addon_id == "plugin.video.xstream-pro" and _addon_ready(addon_id)
-                and _addon_version(addon_id) in SUPPORTED_XSTREAM_VERSIONS and not _xstream_refresh_supported()):
-            outcomes.append("XStream: falta la integración AcTweeteR. Kodi debe reinstalar el paquete correcto desde el repositorio AcTweeteR conservando sus datos; InstallAddon no sustituye un ID ya instalado.")
+                and not _xstream_refresh_supported()):
+            outcomes.append("XStream: faltan capacidades AcTweeteR (%s). Kodi debe reparar el paquete desde el canal correspondiente conservando sus datos." % ", ".join(_xstream_missing_capabilities()))
             continue
         row = dependency_rows.get(addon_id, {})
         if row.get("status") in ("INVALID_MANIFEST", "DEPENDENCY_CYCLE"):
@@ -1893,6 +1882,20 @@ def _connect_xstream_trakt(dialog):
         return status("FAILED_RECOVERABLE")
 
 
+def _offer_optional_tmdb(dialog):
+    """TMDb is an independent optional step and must never abort core setup."""
+    try:
+        from tmdb_onboarding import offer_once
+        outcome = offer_once(ADDON, xbmcvfs, dialog)
+    except Exception as exc:
+        outcome = "FAILED_RECOVERABLE"
+        xbmc.log("[AcTweeteR] TMDB_ONBOARDING status=%s error_type=%s" %
+                 (outcome, type(exc).__name__), xbmc.LOGWARNING)
+    else:
+        xbmc.log("[AcTweeteR] TMDB_ONBOARDING status=%s" % outcome, xbmc.LOGINFO)
+    return outcome
+
+
 def _run_onboarding(dialog, *, core_configured=False):
     """One sequential setup flow; maintenance is separate from first-run setup."""
     if not dialog.yesno(
@@ -1905,8 +1908,7 @@ def _run_onboarding(dialog, *, core_configured=False):
     _write_state(mark_started(_read_state()))
     from addon_update_policy import configure as configure_updates
     configure_updates(xbmc, ADDON, xbmcvfs, dialog)
-    from tmdb_onboarding import offer_once as offer_tmdb
-    offer_tmdb(ADDON, xbmcvfs, dialog)
+    _offer_optional_tmdb(dialog)
     while not xbmc.Monitor().abortRequested():
         _write_state(mark_step(_read_state(), "Preparar componentes automáticamente", "IN_PROGRESS"))
         if _complete_missing_components(dialog, consent_granted=True, quiet=True):
@@ -2179,11 +2181,7 @@ def main():
                      xbmc.LOGINFO)
             # On existing configured installations present optional TMDb setup
             # once, without restarting the IPTV wizard or touching credentials.
-            try:
-                from tmdb_onboarding import offer_once as offer_tmdb
-                offer_tmdb(ADDON, xbmcvfs, dialog)
-            except Exception as exc:
-                xbmc.log("[AcTweeteR] TMDB_ONBOARDING error_type=%s" % type(exc).__name__, xbmc.LOGWARNING)
+            _offer_optional_tmdb(dialog)
             missing = _missing_components()
             if should_offer_component_completion(state, missing, configured):
                 # Persist before opening UI so repeated Home loads cannot stack
