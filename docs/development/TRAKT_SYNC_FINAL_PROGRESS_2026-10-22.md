@@ -235,7 +235,7 @@ Commit: `da9b32d` (`Coordinate XStream history store writes`). No se hizo push.
   integración del ZIP candidato. `git diff --check`: PASS.
 - ZIP de XStream `1.1.2.24~beta1`, construido dos veces desde el upstream
   bloqueado `1.1.2` y el mismo conjunto de fuentes/parches: SHA-256 idéntico
-  `7d81c9fe22dbdaaeee5b00e4e53bd587b3d9ba08fe8f27bc8c8f69d0aaddf502`; CRC,
+  `b58c0e1640907a8ac396216f1ca158bd1cab4f4d9d1212702fa035ff82449198`; CRC,
   versión, sintaxis Python y presencia del coordinador pasan en el constructor.
 - Tests y manipulación de datos se ejecutaron en directorios temporales. No se
   tocó el perfil activo, no hubo llamadas a Trakt, ni operaciones remotas de

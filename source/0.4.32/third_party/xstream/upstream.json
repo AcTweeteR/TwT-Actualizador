@@ -98,6 +98,6 @@
   "trakt_snapshot_sources_sha256": {
     "trakt_sync.py": "aa9e14bab1b59340a62a1ed3d8201fe249493a136e7665d0452f42a791da1a1d",
     "trakt_snapshot.py": "427e8ec5ca2e20b50e23c806190d97303bf6160fae63f09209a993bd0a537f0b",
-    "history_store_coordinator.py": "58cb89a7f6e75c99a092e05b1a1a367f0517d55a6488c7b1be31c32502e04c71"
+    "history_store_coordinator.py": "377a6443f1d6312a9f9fa86c10292857889129a90e04fbaeb0925197b8713869"
   }
 }
