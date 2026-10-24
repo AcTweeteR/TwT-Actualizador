@@ -16,6 +16,16 @@ import build_test_channel  # noqa: E402
 
 
 class OfficialTestChannelTests(unittest.TestCase):
+    def assert_current_xstream_index_matches_package(self, index):
+        addon = ET.parse(index).getroot().find("addon[@id='plugin.video.xstream-pro']")
+        package = index.parent / "plugin.video.xstream-pro" / (
+            "plugin.video.xstream-pro-" + addon.get("version") + ".zip")
+        with zipfile.ZipFile(package) as archive:
+            self.assertIsNone(archive.testzip())
+            installed = ET.fromstring(archive.read("plugin.video.xstream-pro/addon.xml"))
+        self.assertEqual((installed.get("id"), installed.get("version")),
+                         (addon.get("id"), addon.get("version")))
+
     def test_beta10_manifest_matches_testing_artifacts_and_preserves_stable(self):
         manifest = json.loads((ROOT / "manifests/0.4.37-beta10.json").read_text())
         self.assertTrue(manifest["stable_untouched"])
@@ -221,9 +231,7 @@ class OfficialTestChannelTests(unittest.TestCase):
                          manifest["testing_index"]["sha256"])
         self.assertEqual(hashlib.md5(payload).hexdigest(),
                          manifest["testing_index"]["md5"])
-        self.assertEqual(ET.parse(index).getroot().find(
-            "addon[@id='plugin.video.xstream-pro']").get("version"), json.loads(
-                (ROOT / "source/0.4.32/third_party/xstream/upstream.json").read_text())["distribution_version"])
+        self.assert_current_xstream_index_matches_package(index)
 
 
     def test_unified_beta_manifest_matches_immutable_packages_and_stable(self):
@@ -279,9 +287,7 @@ class OfficialTestChannelTests(unittest.TestCase):
         # Subsequent Testing releases must not rewrite that historical record.
         historical_manifest = json.loads((ROOT / "manifests/xstream-performance31-cold-start-20261020.json").read_text())
         self.assertEqual(manifest["testing_index"], historical_manifest["testing_index"])
-        versions = {a.get("id"): a.get("version") for a in ET.parse(index).getroot()}
-        self.assertEqual(versions["plugin.video.xstream-pro"], json.loads(
-            (ROOT / "source/0.4.32/third_party/xstream/upstream.json").read_text())["distribution_version"])
+        self.assert_current_xstream_index_matches_package(index)
         package = ROOT / "docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.14.zip"
         xstream = next(a for a in manifest["addons"] if a["id"] == "plugin.video.xstream-pro")
         self.assertEqual(xstream["sha256"], hashlib.sha256(package.read_bytes()).hexdigest())
