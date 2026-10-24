@@ -32,7 +32,7 @@
 			<icon>resources/icon.png</icon>
 		</assets>
 	</extension>
-</addon><addon id="skin.actweeter" version="1.2.32" name="AcTweeteR" provider-name="AcTweeteR maintainers">
+</addon><addon id="skin.actweeter" version="1.2.33" name="AcTweeteR" provider-name="AcTweeteR maintainers">
 	<requires>
 		<import version="5.17.0" addon="xbmc.gui" />
 		<import addon="script.bingie.helper" version="1.1.2" />
@@ -95,7 +95,7 @@
     <license>GPL-2.0-or-later</license>
     <news>changelog-0.4.81.txt</news>
   </extension>
-</addon><addon id="plugin.video.xstream-pro" name="Xstream Pro" version="1.1.2.30" provider-name="PesicP">
+</addon><addon id="plugin.video.xstream-pro" name="Xstream Pro" version="1.1.2.31" provider-name="PesicP">
     <requires>
         <import addon="xbmc.python" version="3.0.1" />
         <import addon="script.module.requests" version="2.22.0" />
