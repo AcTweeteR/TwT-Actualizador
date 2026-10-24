@@ -1,0 +1,1 @@
+Corrige la identificación segura del vídeo de introducción mediante Player.Filenameandpath, validada en Kodi real.

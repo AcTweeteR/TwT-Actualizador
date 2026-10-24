@@ -171,7 +171,7 @@ class SlyGuyTrailerReturnPlayer(_PLAYER_BASE):
         if self.kodi.getInfoLabel(
                 "Window(Home).Property(AcTweeteRIntroPlayback)") != "1":
             return False
-        playing_file = self.kodi.getInfoLabel("VideoPlayer.Filenameandpath")
+        playing_file = self.kodi.getInfoLabel("Player.Filenameandpath")
         return os.path.basename(str(playing_file).split("?", 1)[0]).casefold() == \
             "actweeter_intro_kodi.mp4"
 

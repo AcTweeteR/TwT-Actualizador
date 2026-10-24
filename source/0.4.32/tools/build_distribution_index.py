@@ -18,8 +18,8 @@ from xml.etree import ElementTree as ET
 
 EXPECTED = {
     "repository": ("repository.actweeter.testing", "1.0.2"),
-    "skin": ("skin.actweeter", "1.2.32~beta5"),
-    "service": ("service.actweeter", "0.4.77"),
+    "skin": ("skin.actweeter", "1.2.32~beta6"),
+    "service": ("service.actweeter", "0.4.78"),
     "xstream": ("plugin.video.xstream-pro", "1.1.2.28~beta16"),
 }
 
@@ -75,8 +75,8 @@ def build(repository_zip: Path, skin_zip: Path, service_zip: Path,
     service = addon_from_zip(service_zip, *EXPECTED["service"])
     xstream = addon_from_zip(xstream_zip, *EXPECTED["xstream"])
     validate_service_xstream_pair(service, xstream)
-    set_news(skin, "changelog-1.2.32~beta5.txt")
-    set_news(service, "changelog-0.4.77.txt")
+    set_news(skin, "changelog-1.2.32~beta6.txt")
+    set_news(service, "changelog-0.4.78.txt")
     root = ET.Element("addons")
     for addon in (repository, skin, service, xstream):
         root.append(addon)

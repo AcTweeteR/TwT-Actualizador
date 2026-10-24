@@ -1,0 +1,1 @@
+Restringe la parada del splash alternativo mediante la etiqueta oficial Player.Filenameandpath.

@@ -44,6 +44,21 @@ class TerminalTests(unittest.TestCase):
         player.stop = Mock()
         return player, properties
 
+    def test_intro_identity_uses_official_player_label(self):
+        source = ast.parse((ROOT / "addons/service.actweeter/service.py").read_bytes())
+        cls = next(n for n in source.body if isinstance(n, ast.ClassDef) and n.name == "SlyGuyTrailerReturnPlayer")
+        method = next(n for n in cls.body if isinstance(n, ast.FunctionDef) and n.name == "_is_actweeter_intro")
+        env = {"os": os}
+        exec(compile(ast.Module(body=[method], type_ignores=[]), "identity", "exec"), env)
+        values = {"Window(Home).Property(AcTweeteRIntroPlayback)": "1",
+                  "Player.Filenameandpath": "/local/actweeter_intro_Kodi.mp4"}
+        player = SimpleNamespace(kodi=SimpleNamespace(getInfoLabel=lambda name: values.get(name, "")))
+        self.assertTrue(env["_is_actweeter_intro"](player))
+        values["Player.Filenameandpath"] = "/local/other.mp4"
+        self.assertFalse(env["_is_actweeter_intro"](player))
+        values["Player.Filenameandpath"] = ""
+        self.assertFalse(env["_is_actweeter_intro"](player))
+
     def test_natural_error_and_duplicate_terminal_events_query_no_player(self):
         for event in ("ended", "stopped", "error", "watchdog"):
             player, properties = self.player()
