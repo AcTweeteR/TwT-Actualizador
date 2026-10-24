@@ -29,10 +29,10 @@
 		<license>MIT</license>
 		<news>changelog-1.0.2.txt</news>
 	</extension>
-</addon><addon id="service.actweeter" name="AcTweeteR Service" version="0.4.54" provider-name="AcTweeteR maintainers">
+</addon><addon id="service.actweeter" name="AcTweeteR Service" version="0.4.69" provider-name="AcTweeteR maintainers">
   <requires>
     <import addon="xbmc.python" version="3.0.0" />
-    <import addon="plugin.video.xstream-pro" version="1.1.2.16" />
+    <import addon="plugin.video.xstream-pro" version="1.1.2.28~beta9" />
     <import addon="pvr.iptvsimple" version="21.4.0" />
     <import addon="slyguy.trailers" version="0.2.1" optional="true" />
     <import addon="plugin.video.youtube" />
@@ -53,7 +53,7 @@
     <description lang="es_ES">Búsqueda visual inteligente de películas, series, programas y personas. Consulta el índice local de XStream, la guía EPG y los metadatos del helper TMDb existente. Coordina la configuración reanudable y las actualizaciones del catálogo. Las credenciales permanecen en los ajustes oficiales de cada complemento.</description>
     <platform>all</platform>
     <license>GPL-2.0-or-later</license>
-    <news>changelog-0.4.54.txt</news>
+    <news>changelog-0.4.69.txt</news>
   </extension>
 </addon><addon id="skin.actweeter" version="1.2.32~beta1" name="AcTweeteR" provider-name="AcTweeteR maintainers">
 	<requires>
@@ -92,7 +92,7 @@
 			<fanart>extras/media/backgrounds/settings_interface.jpg</fanart>
 		</assets>
 	</extension>
-</addon><addon id="plugin.video.xstream-pro" name="Xstream Pro" version="1.1.2.22~beta1" provider-name="PesicP">
+</addon><addon id="plugin.video.xstream-pro" name="Xstream Pro" version="1.1.2.28~beta9" provider-name="PesicP">
     <requires>
         <import addon="xbmc.python" version="3.0.1" />
         <import addon="script.module.requests" version="2.22.0" />
