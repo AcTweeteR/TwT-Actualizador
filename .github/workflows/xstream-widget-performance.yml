@@ -3,14 +3,14 @@ name: Verify XStream Catalog Candidate
 on:
   pull_request:
     paths:
-      - 'docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.28~beta15.zip'
+      - 'docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.28~beta16.zip'
       - 'docs/testing/repo/addons.xml'
       - 'source/0.4.32/**'
       - '.github/workflows/xstream-widget-performance.yml'
   push:
     branches: [main]
     paths:
-      - 'docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.28~beta15.zip'
+      - 'docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.28~beta16.zip'
       - 'docs/testing/repo/addons.xml'
       - 'source/0.4.32/**'
       - '.github/workflows/xstream-widget-performance.yml'
@@ -36,16 +36,16 @@ jobs:
           echo '915f45708670d07e789bb73b7390a7b5cf30175f818ef5da8ea18c9f13f537fe  '"$RUNNER_TEMP/xstream-upstream-1.1.2.zip" | shasum -a 256 -c -
       - name: Run catalog, concurrency and prefetch regression tests
         env:
-          ACTWEETER_XSTREAM_LIVE_ZIP: ${{ github.workspace }}/docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.28~beta15.zip
-          ACTWEETER_XSTREAM_TEST_ZIP: ${{ github.workspace }}/docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.28~beta15.zip
+          ACTWEETER_XSTREAM_LIVE_ZIP: ${{ github.workspace }}/docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.28~beta16.zip
+          ACTWEETER_XSTREAM_TEST_ZIP: ${{ github.workspace }}/docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.28~beta16.zip
           ACTWEETER_XSTREAM_UPSTREAM_ZIP: ${{ runner.temp }}/xstream-upstream-1.1.2.zip
         run: python3 -m pytest -q -rs source/0.4.32/tests
       - name: Rebuild package from exact verified upstream archive
         run: |
           python3 source/0.4.32/tools/build_xstream_package.py \
             --upstream-zip "$RUNNER_TEMP/xstream-upstream-1.1.2.zip" \
-            --output "$RUNNER_TEMP/plugin.video.xstream-pro-1.1.2.28~beta15.zip"
-          cmp "$RUNNER_TEMP/plugin.video.xstream-pro-1.1.2.28~beta15.zip" \
-            docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.28~beta15.zip
+            --output "$RUNNER_TEMP/plugin.video.xstream-pro-1.1.2.28~beta16.zip"
+          cmp "$RUNNER_TEMP/plugin.video.xstream-pro-1.1.2.28~beta16.zip" \
+            docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.28~beta16.zip
       - name: Verify immutable Stable channel remains unchanged
         run: git diff --exit-code origin/main...HEAD -- repo/

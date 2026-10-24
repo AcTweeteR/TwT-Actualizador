@@ -4,11 +4,11 @@
     <defaultcontrol always="true">10</defaultcontrol>
     <include>DefaultSkinSettings</include>
     <onload>SetProperty(Random,$INFO[System.Time(ss)],Home)</onload>
-    <onload condition="String.IsEqual(Skin.String(splash_screen),actweeter_video) + !Player.HasMedia">RunScript(service.actweeter,startup_intro)</onload>
+    <onload condition="String.IsEqual(Skin.String(splash_screen),actweeter_video) + !Player.HasMedia">SetProperty(StartupMask,1,Home)</onload>
     <!-- start up mask - preload -->
     <onload condition="String.IsEmpty(Skin.String(splash_screen))">SetProperty(StartupMask,1,home)</onload>
-    <onload condition="String.IsEmpty(Skin.String(splash_screen))">ReplaceWindow($VAR[StartUpWindow])</onload>
-    <onunload condition="Player.HasVideo">PlayerControl(Stop)</onunload>
+    <onload condition="String.IsEmpty(Skin.String(splash_screen)) | String.IsEqual(Skin.String(splash_screen),actweeter_video)">ReplaceWindow($VAR[StartUpWindow])</onload>
+    <onunload condition="String.IsEqual(Skin.String(splash_screen),bingie_default) + Player.HasVideo + String.Contains(VideoPlayer.Filenameandpath,bingie_intro_)">PlayerControl(Stop)</onunload>
 	
 	<!-- Start TMDbH service -->
     <onload>Skin.SetBool(TMDbBingieHelper.Service)</onload>

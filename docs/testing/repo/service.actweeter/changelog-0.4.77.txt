@@ -1,0 +1,3 @@
+Fix idempotent intro cleanup and verified SlyGuy inactive terminal-time query.
+Refresh stale Testing metadata through Kodi and observe native installation.
+Share exact watched state across IPTV and Smart Search.

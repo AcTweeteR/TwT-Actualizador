@@ -77,6 +77,16 @@ if isinstance(_MONITOR_BASE, type):
             self.preview = preview
 
         def onNotification(self, sender, method, data):
+            if sender == "service.actweeter" and method in (
+                    "actweeter_intro_finish", "Other.actweeter_intro_finish"):
+                player = getattr(self, "intro_player", None)
+                try:
+                    event = json.loads(data)
+                except (TypeError, ValueError):
+                    event = data
+                if player is not None and event in ("watchdog", "cancelled"):
+                    player._finish_intro(event)
+                return
             if (sender in ("service.actweeter.SIGNAL", "slyguy.trailers.SIGNAL") or
                     method == "actweeter_auto_preview"):
                 kind = type(data).__name__
@@ -155,27 +165,37 @@ class SlyGuyTrailerReturnPlayer(_PLAYER_BASE):
         self.auto_request_generation = ""
         self.auto_request_id = ""
         self.intro_playback_active = False
+        self.intro_terminal_seen = False
 
     def _is_actweeter_intro(self):
         if self.kodi.getInfoLabel(
                 "Window(Home).Property(AcTweeteRIntroPlayback)") != "1":
             return False
-        try:
-            playing_file = self.getPlayingFile()
-        except Exception:
-            return False
+        playing_file = self.kodi.getInfoLabel("VideoPlayer.Filenameandpath")
         return os.path.basename(str(playing_file).split("?", 1)[0]).casefold() == \
             "actweeter_intro_kodi.mp4"
 
     def _finish_intro(self, event):
-        if not self.intro_playback_active and not self._is_actweeter_intro():
-            return False
-        self.intro_playback_active = False
+        # The callback owns the transition; terminal events never query Player APIs.
+        window = xbmcgui.Window(10000)
+        with self.lock:
+            if self.intro_terminal_seen:
+                return False
+            if not self.intro_playback_active and window.getProperty("AcTweeteRIntroPlayback") != "1":
+                return False
+            stop_owned = (event == "cancelled" and self.intro_playback_active
+                          and self._is_actweeter_intro())
+            self.intro_terminal_seen = True
+            self.intro_playback_active = False
+            for key in ("AcTweeteRIntroPlayback", "StartupMask", "AcTweeteRStartupIntroActive"):
+                window.clearProperty(key)
         self.kodi.log("[AcTweeteR] INTRO_PLAYBACK_TERMINAL event=%s" % event,
                       self.kodi.LOGINFO)
-        self.kodi.executebuiltin("ClearProperty(AcTweeteRIntroPlayback,Home)", False)
-        self.kodi.executebuiltin("ClearProperty(StartupMask,Home)", False)
-        self.kodi.executebuiltin("Dialog.Close(1103,true)", False)
+        self.kodi.executebuiltin("CancelAlarm(actweeter_intro_watchdog,silent)", False)
+        if stop_owned:
+            self.stop()
+        if event != "cancelled":
+            self.kodi.executebuiltin("Dialog.Close(1103,true)", False)
         return True
 
     def _capture(self, *, allow_inactive=False):
@@ -226,6 +246,9 @@ class SlyGuyTrailerReturnPlayer(_PLAYER_BASE):
             self.intro_playback_active = True
             self.kodi.log("[AcTweeteR] INTRO_PLAYBACK_STARTED", self.kodi.LOGINFO)
             return
+        if self.kodi.getInfoLabel("Window(Home).Property(AcTweeteRIntroPlayback)") == "1":
+            self._finish_intro("superseded")
+        self.intro_terminal_seen = False
         if self.auto_preview is not None:
             try:
                 item = self.getPlayingItem()
@@ -647,6 +670,7 @@ def _run_coordinator(kodi, addon_factory, vfs, clock=time.time, monitor=None,
     last_missing_addon_log = 0.0
     pending_refresh = None
     next_refresh_check = service_started_at
+    next_update_check = service_started_at + 30
     cached_profile_path = ""
     cached_profile_number = 1
     service_profile = vfs.translatePath(ADDON.getAddonInfo("profile"))
@@ -659,6 +683,11 @@ def _run_coordinator(kodi, addon_factory, vfs, clock=time.time, monitor=None,
     while not monitor.abortRequested():
         now = clock()
         spotlight_rotation.tick(kodi, now, active_window=_window_id(kodi))
+        if now >= next_update_check and not kodi.getCondVisibility("Player.HasMedia"):
+            from testing_updates import check as check_testing_updates
+            threading.Thread(target=check_testing_updates,
+                args=(kodi, ADDON, vfs), name="AcTweeteR-TestingUpdate", daemon=True).start()
+            next_update_check = now + 15 * 60
         # The XStream plugin owns OAuth and network access. This loop only
         # schedules an opt-in cycle and never reads or stores Trakt tokens.
         try:
@@ -838,6 +867,12 @@ class _null_measure:
 
 def run_service(kodi, addon_factory, vfs, clock=time.time):
     """Log one opaque lifecycle identity around the sole coordinator loop."""
+    try:
+        from slyguy_player_guard import install as guard_slyguy_player
+        status = guard_slyguy_player(kodi, addon_factory, vfs)
+        kodi.log("[AcTweeteR] SLYGUY_PLAYER_GUARD status=" + status, kodi.LOGINFO)
+    except (OSError, ValueError, RuntimeError) as exc:
+        kodi.log("[AcTweeteR] SLYGUY_PLAYER_GUARD error_type=" + type(exc).__name__, kodi.LOGWARNING)
     instance_id = uuid.uuid4().hex
     profile = _profile_kind(kodi)
     kodi.log("[AcTweeteR] SERVICE_INSTANCE_START profile=%s instance=%s" %
@@ -862,6 +897,7 @@ def run_service(kodi, addon_factory, vfs, clock=time.time):
     return_monitor = AcTweeteRMonitor(auto_preview)
     trailer_return_player = SlyGuyTrailerReturnPlayer(kodi, return_monitor,
                                                       auto_preview=auto_preview)
+    return_monitor.intro_player = trailer_return_player
     try:
         try:
             from addon_update_policy import review as review_updates

@@ -1,0 +1,12 @@
+diff --git a/resources/lib/addon.py b/resources/lib/addon.py
+--- a/resources/lib/addon.py
++++ b/resources/lib/addon.py
+@@ -1591,7 +1591,7 @@
+         "cast": [],
+         "genre": "",
+         "duration": 0,
+-        "tmdb_id": "",
++        "tmdb_id": str(s.get("tmdb_id") or s.get("tmdb") or ""),
+         "imdb_id": "",
+         "fanart_url": "",
+     }

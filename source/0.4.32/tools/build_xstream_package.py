@@ -112,6 +112,8 @@ def add_season_playcount(root: Path) -> None:
         b"    for season_num in sorted(",
     ))
     after_loop = newline.join((
+        b'    show_counts = addon.getSetting("show_content_counts").lower() == "true"',
+        b"    ctx = []",
         b"    season_inventory_record = series_changes.inventory_map(addon, pnum).get(str(series_id))",
         b'    season_tmdb_id = str((info.get("info") or {}).get("tmdb_id") or (info.get("info") or {}).get("tmdb") or "")',
         b"    season_watched_store = WatchedEpisodes(addon, profile_num=pnum)",
@@ -124,7 +126,7 @@ def add_season_playcount(root: Path) -> None:
     ))
     after_tag = newline.join((
         b"        li = _new_listitem(label)",
-        b"        if season_inventory_record and season_tmdb_id:",
+        b"        if season_inventory_record:",
         b"            season_record = dict(season_inventory_record)",
         b'            season_record["episodes"] = [row for row in season_inventory_record.get("episodes", [])',
         b'                                         if str(row.get("season")) == str(season_num)]',
@@ -428,6 +430,10 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
                 raise ValueError(f"patch application failed for {patch_path.name}: {detail}")
 
         add_season_playcount(root)
+        state_patch = ROOT / "third_party/xstream/patches/1.1.2/actweeter-listitem-state.patch"
+        if sha256(state_patch) != data["listitem_state_patch_sha256"]:
+            raise ValueError("ListItem state patch hash mismatch")
+        apply_contextual_unified_patch(root, state_patch)
 
         if sha256(DIAGNOSTICS_SOURCE) != data["performance_diagnostics_sha256"]:
             raise ValueError("performance diagnostics source SHA-256 mismatch")
@@ -485,6 +491,12 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             raise ValueError("XStream series-change source hash mismatch")
         (root / "resources/lib/series_changes.py").write_bytes(
             SERIES_CHANGES_SOURCE.read_bytes())
+
+        for name in ("content_state.py", "series_state.py"):
+            source = ROOT / "addons/service.actweeter/resources/lib" / name
+            if sha256(source) != data["shared_state_sources_sha256"][name]:
+                raise ValueError("Shared state source hash mismatch: " + name)
+            (root / "resources/lib" / name).write_bytes(source.read_bytes())
 
         validate_python_sources(root)
 

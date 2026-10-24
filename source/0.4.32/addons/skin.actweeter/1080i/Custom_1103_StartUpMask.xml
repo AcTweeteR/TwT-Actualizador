@@ -16,15 +16,15 @@
 	<onunload>CancelAlarm(actweeter_intro_watchdog,silent)</onunload>
 	<onunload>CancelAlarm(actweeter_splash_clear,silent)</onunload>
 	<onunload>CancelAlarm(actweeter_splash_close,silent)</onunload>
-	<onunload condition="!String.IsEmpty(Window(Home).Property(AcTweeteRIntroPlayback)) + Player.HasMedia + String.EndsWith(VideoPlayer.Filenameandpath,actweeter_intro_Kodi.mp4)">PlayerControl(Stop)</onunload>
+	<onunload condition="String.IsEqual(Window(Home).Property(AcTweeteRIntroPlayback),1)">NotifyAll(service.actweeter,actweeter_intro_finish,cancelled)</onunload>
 	<!-- Back remains a recovery path if the decoder/player never reports a terminal event. -->
 	<control type="button" id="10">
 		<include>HiddenObject</include>
 		<onback>Dialog.Close(1103,true)</onback>
 	</control>
-	<onunload>ClearProperty(AcTweeteRIntroPlayback,Home)</onunload>
-	<onunload>ClearProperty(StartupMask,home)</onunload>
-	<onunload>ClearProperty(AcTweeteRStartupIntroActive,Home)</onunload>
+	<onunload condition="!String.IsEqual(Skin.String(splash_screen),actweeter_video)">ClearProperty(AcTweeteRIntroPlayback,Home)</onunload>
+	<onunload condition="!String.IsEqual(Skin.String(splash_screen),actweeter_video)">ClearProperty(StartupMask,home)</onunload>
+	<onunload condition="!String.IsEqual(Skin.String(splash_screen),actweeter_video)">ClearProperty(AcTweeteRStartupIntroActive,Home)</onunload>
 	<onunload condition="String.IsEqual(Window(Home).Property(AcTweeteRFirstRunPending),1)">RunScript(service.actweeter,first_run_resume)</onunload>
 	<controls>
 		<!-- intro -->

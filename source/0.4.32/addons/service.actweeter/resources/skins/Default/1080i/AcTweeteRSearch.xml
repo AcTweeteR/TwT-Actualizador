@@ -531,7 +531,13 @@
                 <shadowcolor>FF000000</shadowcolor>
                 <label>$INFO[ListItem.Property(search.badge)]</label>
               </control>
-            </itemlayout>
+                          <control type="group">
+                <visible>String.IsEqual(ListItem.Property(search.watched),true) + !ListItem.IsResumable</visible>
+                <left>138</left><top>6</top><width>32</width><height>32</height>
+                <control type="image"><width>32</width><height>32</height><texture colordiffuse="FFE50914">colors/color_white.png</texture></control>
+                <control type="label"><width>32</width><height>32</height><align>center</align><aligny>center</aligny><font>Reg20</font><textcolor>FFFFFFFF</textcolor><label>✓</label></control>
+              </control>
+</itemlayout>
             <focusedlayout width="190" height="310">
               <control type="image">
                 <left>0</left>
@@ -591,7 +597,13 @@
                 <shadowcolor>FF000000</shadowcolor>
                 <label>$INFO[ListItem.Property(search.badge)]</label>
               </control>
-            </focusedlayout>
+                          <control type="group">
+                <visible>String.IsEqual(ListItem.Property(search.watched),true) + !ListItem.IsResumable</visible>
+                <left>138</left><top>6</top><width>32</width><height>32</height>
+                <control type="image"><width>32</width><height>32</height><texture colordiffuse="FFE50914">colors/color_white.png</texture></control>
+                <control type="label"><width>32</width><height>32</height><align>center</align><aligny>center</aligny><font>Reg20</font><textcolor>FFFFFFFF</textcolor><label>✓</label></control>
+              </control>
+</focusedlayout>
           </control>
         </control>
         <control type="group">
@@ -681,7 +693,13 @@
                 <shadowcolor>FF000000</shadowcolor>
                 <label>$INFO[ListItem.Property(search.badge)]</label>
               </control>
-            </itemlayout>
+                          <control type="group">
+                <visible>String.IsEqual(ListItem.Property(search.watched),true) + !ListItem.IsResumable</visible>
+                <left>138</left><top>6</top><width>32</width><height>32</height>
+                <control type="image"><width>32</width><height>32</height><texture colordiffuse="FFE50914">colors/color_white.png</texture></control>
+                <control type="label"><width>32</width><height>32</height><align>center</align><aligny>center</aligny><font>Reg20</font><textcolor>FFFFFFFF</textcolor><label>✓</label></control>
+              </control>
+</itemlayout>
             <focusedlayout width="190" height="310">
               <control type="image">
                 <left>0</left>
@@ -741,7 +759,13 @@
                 <shadowcolor>FF000000</shadowcolor>
                 <label>$INFO[ListItem.Property(search.badge)]</label>
               </control>
-            </focusedlayout>
+                          <control type="group">
+                <visible>String.IsEqual(ListItem.Property(search.watched),true) + !ListItem.IsResumable</visible>
+                <left>138</left><top>6</top><width>32</width><height>32</height>
+                <control type="image"><width>32</width><height>32</height><texture colordiffuse="FFE50914">colors/color_white.png</texture></control>
+                <control type="label"><width>32</width><height>32</height><align>center</align><aligny>center</aligny><font>Reg20</font><textcolor>FFFFFFFF</textcolor><label>✓</label></control>
+              </control>
+</focusedlayout>
           </control>
         </control>
         <control type="group">
@@ -831,7 +855,13 @@
                 <shadowcolor>FF000000</shadowcolor>
                 <label>$INFO[ListItem.Property(search.badge)]</label>
               </control>
-            </itemlayout>
+                          <control type="group">
+                <visible>String.IsEqual(ListItem.Property(search.watched),true) + !ListItem.IsResumable</visible>
+                <left>268</left><top>6</top><width>32</width><height>32</height>
+                <control type="image"><width>32</width><height>32</height><texture colordiffuse="FFE50914">colors/color_white.png</texture></control>
+                <control type="label"><width>32</width><height>32</height><align>center</align><aligny>center</aligny><font>Reg20</font><textcolor>FFFFFFFF</textcolor><label>✓</label></control>
+              </control>
+</itemlayout>
             <focusedlayout width="320" height="260">
               <control type="image">
                 <left>0</left>
@@ -891,7 +921,13 @@
                 <shadowcolor>FF000000</shadowcolor>
                 <label>$INFO[ListItem.Property(search.badge)]</label>
               </control>
-            </focusedlayout>
+                          <control type="group">
+                <visible>String.IsEqual(ListItem.Property(search.watched),true) + !ListItem.IsResumable</visible>
+                <left>268</left><top>6</top><width>32</width><height>32</height>
+                <control type="image"><width>32</width><height>32</height><texture colordiffuse="FFE50914">colors/color_white.png</texture></control>
+                <control type="label"><width>32</width><height>32</height><align>center</align><aligny>center</aligny><font>Reg20</font><textcolor>FFFFFFFF</textcolor><label>✓</label></control>
+              </control>
+</focusedlayout>
           </control>
         </control>
         <control type="group">
@@ -981,7 +1017,13 @@
                 <shadowcolor>FF000000</shadowcolor>
                 <label>$INFO[ListItem.Property(search.badge)]</label>
               </control>
-            </itemlayout>
+                          <control type="group">
+                <visible>String.IsEqual(ListItem.Property(search.watched),true) + !ListItem.IsResumable</visible>
+                <left>138</left><top>6</top><width>32</width><height>32</height>
+                <control type="image"><width>32</width><height>32</height><texture colordiffuse="FFE50914">colors/color_white.png</texture></control>
+                <control type="label"><width>32</width><height>32</height><align>center</align><aligny>center</aligny><font>Reg20</font><textcolor>FFFFFFFF</textcolor><label>✓</label></control>
+              </control>
+</itemlayout>
             <focusedlayout width="190" height="310">
               <control type="image">
                 <left>0</left>
@@ -1041,7 +1083,13 @@
                 <shadowcolor>FF000000</shadowcolor>
                 <label>$INFO[ListItem.Property(search.badge)]</label>
               </control>
-            </focusedlayout>
+                          <control type="group">
+                <visible>String.IsEqual(ListItem.Property(search.watched),true) + !ListItem.IsResumable</visible>
+                <left>138</left><top>6</top><width>32</width><height>32</height>
+                <control type="image"><width>32</width><height>32</height><texture colordiffuse="FFE50914">colors/color_white.png</texture></control>
+                <control type="label"><width>32</width><height>32</height><align>center</align><aligny>center</aligny><font>Reg20</font><textcolor>FFFFFFFF</textcolor><label>✓</label></control>
+              </control>
+</focusedlayout>
           </control>
         </control>
         <control type="group">
@@ -1131,7 +1179,13 @@
                 <shadowcolor>FF000000</shadowcolor>
                 <label>$INFO[ListItem.Property(search.badge)]</label>
               </control>
-            </itemlayout>
+                          <control type="group">
+                <visible>String.IsEqual(ListItem.Property(search.watched),true) + !ListItem.IsResumable</visible>
+                <left>138</left><top>6</top><width>32</width><height>32</height>
+                <control type="image"><width>32</width><height>32</height><texture colordiffuse="FFE50914">colors/color_white.png</texture></control>
+                <control type="label"><width>32</width><height>32</height><align>center</align><aligny>center</aligny><font>Reg20</font><textcolor>FFFFFFFF</textcolor><label>✓</label></control>
+              </control>
+</itemlayout>
             <focusedlayout width="190" height="310">
               <control type="image">
                 <left>0</left>
@@ -1191,7 +1245,13 @@
                 <shadowcolor>FF000000</shadowcolor>
                 <label>$INFO[ListItem.Property(search.badge)]</label>
               </control>
-            </focusedlayout>
+                          <control type="group">
+                <visible>String.IsEqual(ListItem.Property(search.watched),true) + !ListItem.IsResumable</visible>
+                <left>138</left><top>6</top><width>32</width><height>32</height>
+                <control type="image"><width>32</width><height>32</height><texture colordiffuse="FFE50914">colors/color_white.png</texture></control>
+                <control type="label"><width>32</width><height>32</height><align>center</align><aligny>center</aligny><font>Reg20</font><textcolor>FFFFFFFF</textcolor><label>✓</label></control>
+              </control>
+</focusedlayout>
           </control>
         </control>
       </control>

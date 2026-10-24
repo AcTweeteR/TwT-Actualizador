@@ -280,19 +280,17 @@ class SeriesChangesTests(unittest.TestCase):
 
     def test_startup_uses_the_configured_splash_setting_before_home(self):
         startup = ET.parse(ROOT / "addons/skin.actweeter/1080i/Startup.xml").getroot()
-        actions = [node for node in startup.findall("onload")
-                   if "ReplaceWindow" in (node.text or "")]
+        actions = [node for node in startup.findall("onload") if "ReplaceWindow" in (node.text or "")]
         self.assertEqual(len(actions), 1)
-        self.assertEqual(actions[0].get("condition"),
-                         "String.IsEmpty(Skin.String(splash_screen))")
-        intro = [node for node in startup.findall("onload")
-                 if "RunScript(service.actweeter,startup_intro)" in (node.text or "")]
-        self.assertEqual(len(intro), 1)
-        self.assertEqual(intro[0].get("condition"),
-                         "String.IsEqual(Skin.String(splash_screen),actweeter_video) + !Player.HasMedia")
-        setup = (ROOT / "addons/service.actweeter/setup.py").read_text(encoding="utf-8")
+        self.assertIn("actweeter_video", actions[0].get("condition"))
+        mask = [node for node in startup.findall("onload") if node.text == "SetProperty(StartupMask,1,Home)"]
+        self.assertEqual(len(mask), 1)
+        self.assertLess(list(startup).index(mask[0]), list(startup).index(actions[0]))
+        self.assertFalse(any("startup_intro" in (node.text or "") for node in startup.findall("onload")))
+        home = (ROOT / "addons/skin.actweeter/1080i/Home.xml").read_text()
+        self.assertIn("RunScript(service.actweeter,first_run)", home)
+        setup = (ROOT / "addons/service.actweeter/setup.py").read_text()
         self.assertIn('elif action == "startup_intro":', setup)
-        self.assertIn("_play_intro()", setup)
 
     def test_five_thousand_series_catalog_has_bounded_processing_cost(self):
         rows = [{"series_id": str(i), "name": "Series %d" % i} for i in range(5000)]

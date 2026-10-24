@@ -1666,9 +1666,7 @@ def _intro_watchdog():
         xbmc.log("[AcTweeteR] INTRO_WATCHDOG status=player_active", xbmc.LOGINFO)
         return
     xbmc.log("[AcTweeteR] INTRO_WATCHDOG status=playback_not_started", xbmc.LOGWARNING)
-    xbmc.executebuiltin("ClearProperty(AcTweeteRIntroPlayback,Home)")
-    xbmc.executebuiltin("ClearProperty(StartupMask,Home)")
-    xbmc.executebuiltin("Dialog.Close(1103,true)")
+    xbmc.executebuiltin("NotifyAll(service.actweeter,actweeter_intro_finish,watchdog)")
 
 
 def _prepare_product_interface(dialog, *, allow_prompt=False):
@@ -2013,6 +2011,7 @@ def _wizard(dialog, *, first_run=False, core_configured=False):
         "Actualizar catálogo y recomendaciones de XStream",
         "Actualizaciones y canal",
         "Configurar TMDb (opcional)",
+        "Buscar actualizaciones de Testing",
     ]
     while True:
         state = _read_state()
@@ -2021,6 +2020,18 @@ def _wizard(dialog, *, first_run=False, core_configured=False):
                                preselect=min(start_at, len(options) - 1))
         if choice < 0:
             break
+        if choice == 13:
+            from testing_updates import check as check_testing_updates
+            labels = {"CHECKING_FEED": "Comprobando Testing", "UPDATING_INDEX": "Actualizando índice",
+                      "WAITING_VERSION": "Esperando versión", "WAITING_INSTALL": "Esperando instalación de Kodi",
+                      "REQUESTING_UPDATE": "Solicitando actualización a Kodi",
+                      "INSTALLED": "Actualización instalada", "CURRENT": "Ya está actualizado",
+                      "INDIVIDUAL_UPDATE_BLOCKED": "Actualización individual bloqueada en Kodi",
+                      "INSTALL_TIMEOUT": "Instalación pendiente: revisa dependencias y el registro de Kodi",
+                      "INDEX_TIMEOUT": "La versión todavía no está visible en Kodi"}
+            check_testing_updates(xbmc, ADDON, xbmcvfs,
+                notify=lambda status: dialog.notification("Actualizaciones AcTweeteR", labels.get(status, status)))
+            continue
         if choice == 12:
             from tmdb_onboarding import configure as configure_tmdb
             configure_tmdb(ADDON, xbmcvfs, dialog)

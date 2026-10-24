@@ -1,5 +1,6 @@
 import ast
 import os
+import threading
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
@@ -40,6 +41,7 @@ class StartupIntroTests(unittest.TestCase):
         window = SimpleNamespace(
             setProperty=lambda key, value: self.properties.__setitem__(key, value),
             getProperty=lambda key: self.properties.get(key, ""),
+            clearProperty=lambda key: self.properties.pop(key, None),
         )
         self.globals = {
             "xbmc": self.kodi,
@@ -80,11 +82,7 @@ class StartupIntroTests(unittest.TestCase):
         self.assertEqual(self.builtins, [])
         self.has_video = False
         self.globals["_intro_watchdog"]()
-        self.assertEqual(self.builtins, [
-            "ClearProperty(AcTweeteRIntroPlayback,Home)",
-            "ClearProperty(StartupMask,Home)",
-            "Dialog.Close(1103,true)",
-        ])
+        self.assertEqual(self.builtins, ["NotifyAll(service.actweeter,actweeter_intro_finish,watchdog)"])
 
     def test_intro_terminal_event_releases_only_its_startup_mask(self):
         tree = ast.parse(SERVICE.read_bytes(), filename=str(SERVICE))
@@ -92,23 +90,21 @@ class StartupIntroTests(unittest.TestCase):
                       and node.name == "SlyGuyTrailerReturnPlayer")
         method = next(node for node in player.body if isinstance(node, ast.FunctionDef)
                       and node.name == "_finish_intro")
-        namespace = {}
+        namespace = {"xbmcgui": self.globals["xbmcgui"]}
         exec(compile(ast.Module(body=[method], type_ignores=[]), str(SERVICE), "exec"),
              namespace)
 
         class Player:
             intro_playback_active = True
+            intro_terminal_seen = False
+            lock = threading.Lock()
             kodi = self.kodi
 
         Player._finish_intro = namespace["_finish_intro"]
         instance = Player()
         self.assertTrue(instance._finish_intro("ended"))
         self.assertFalse(instance.intro_playback_active)
-        self.assertEqual(self.builtins[-3:], [
-            "ClearProperty(AcTweeteRIntroPlayback,Home)",
-            "ClearProperty(StartupMask,Home)",
-            "Dialog.Close(1103,true)",
-        ])
+        self.assertEqual(self.builtins[-2:], ["CancelAlarm(actweeter_intro_watchdog,silent)", "Dialog.Close(1103,true)"])
 
 
 if __name__ == "__main__":

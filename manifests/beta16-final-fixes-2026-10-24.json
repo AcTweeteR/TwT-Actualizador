@@ -1,0 +1,32 @@
+{
+  "release": "beta16-final-fixes-2026-10-24",
+  "base": "7fa9ad30af5a1fb2a62dfc9d2dd06cc3296ed24d",
+  "packages": [
+    {
+      "file": "service.actweeter-0.4.77.zip",
+      "sha256": "25884837dd701259d8da6787f0fc692e73067346c46055d02594148e3ef8d674",
+      "entries": 174,
+      "python": 74,
+      "xml": 3,
+      "reproducible": true
+    },
+    {
+      "file": "skin.actweeter-1.2.32~beta5.zip",
+      "sha256": "e500ac805d93d4b1ffc8f0bdff1910f4cef2af859dcf3023d9a003589cc7d96c",
+      "entries": 396,
+      "python": 0,
+      "xml": 195,
+      "reproducible": true
+    },
+    {
+      "file": "plugin.video.xstream-pro-1.1.2.28~beta16.zip",
+      "sha256": "291055080e2df78ed4813addc2cb198056f0c85edeb930a2772f54f712788442",
+      "entries": 116,
+      "python": 41,
+      "xml": 2,
+      "reproducible": true
+    }
+  ],
+  "upstream_sha256": "915f45708670d07e789bb73b7390a7b5cf30175f818ef5da8ea18c9f13f537fe",
+  "suite": "633 passed, 69 subtests passed; no skipped"
+}

@@ -47,6 +47,9 @@ class _Kodi:
     def log(self, message, *_args):
         self.logs.append(message)
 
+    def getCondVisibility(self, _condition):
+        return True
+
     def Player(self):
         return None
 

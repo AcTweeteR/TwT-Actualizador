@@ -1,0 +1,2 @@
+Single-owner intro completion; preserve other splash modes.
+Verified watched overlays consume native PlayCount.
