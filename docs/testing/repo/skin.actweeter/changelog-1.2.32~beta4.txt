@@ -1,0 +1,2 @@
+1.2.32~beta4
+- Loads Home behind the startup introduction so Home is ready when the video ends.
