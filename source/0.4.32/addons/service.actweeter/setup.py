@@ -258,6 +258,27 @@ def _wait_for_addon_ready(addon_id, timeout=120, *, required=False,
             and version_ok)
 
 
+def _wait_for_installable_addon(addon_id, minimum_version=None, timeout=120):
+    """Wait until Kodi's refreshed repository index exposes an installable add-on."""
+    import time
+
+    monitor = xbmc.Monitor()
+    stop_at = time.monotonic() + timeout
+    params = {"type": "unknown", "enabled": "all", "installed": False,
+              "properties": ["addonid", "version", "installed"]}
+    while time.monotonic() < stop_at:
+        result = _jsonrpc("Addons.GetAddons", params)
+        addons = result.get("addons", ()) if isinstance(result, dict) else ()
+        if any(item.get("addonid") == addon_id
+               and (not minimum_version or addon_version_satisfies(
+                   item.get("version", ""), minimum_version))
+               for item in addons if isinstance(item, dict)):
+            return True
+        if monitor.waitForAbort(1.0):
+            return False
+    return False
+
+
 def _mandatory_addons_ready():
     return all(_addon_requirement_ready(item["id"])
                for item in installation_plan(_platform()) if item["supported"]) and all(
@@ -573,6 +594,10 @@ def _request_native_addon_install(dialog, addon_id, source_id, *, required=True,
         try:
             # Kodi's native installer handles dependency resolution, licenses,
             # platform packages, and its own confirmation UI.
+            if addon_id == "plugin.video.rivulet" and not _addon_installed(addon_id):
+                xbmc.executebuiltin("UpdateAddonRepos", True)
+                if not _wait_for_installable_addon(addon_id, minimum):
+                    return "FAILED"
             update_needed = (_addon_installed(addon_id)
                              and minimum is not None
                              and not addon_version_satisfies(_addon_version(addon_id), minimum))
@@ -1452,7 +1477,7 @@ def _install_components_once(dialog, *, consent_granted=False, quiet=False,
             dialog, addon_id, ", ".join(enabled_sources) or "instalación existente de Kodi",
             required=True, consent_granted=True,
             minimum_version=row.get("minimum") or None)
-        if addon_id in ("repository.slyguy", "repository.rivulet") and result == "INSTALLED":
+        if addon_id == "repository.slyguy" and result == "INSTALLED":
             xbmc.executebuiltin("UpdateAddonRepos", True)
         on_component(addon_id)
         outcomes.append("%s: %s." % (

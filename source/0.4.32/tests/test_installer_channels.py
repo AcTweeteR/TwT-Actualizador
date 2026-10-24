@@ -4,7 +4,7 @@ import copy
 import sys
 import unittest
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, call
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "addons/service.actweeter/resources/lib"))
@@ -38,7 +38,8 @@ class InstallerChannelTests(unittest.TestCase):
             _offer_automatic_previews=Mock(return_value="CURRENT"),
         )
         names = {"_install_slyguy_stack", "_slyguy_stack_ready", "_enabled_install_sources",
-                 "_request_native_addon_install", "_ensure_repository_enabled", "_open_settings"}
+                 "_request_native_addon_install", "_ensure_repository_enabled", "_open_settings",
+                 "_wait_for_installable_addon"}
         tree = ast.parse((ROOT / "addons/service.actweeter/setup.py").read_text())
         funcs = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name in names]
         exec(compile(ast.Module(body=funcs, type_ignores=[]), "setup.py", "exec"), self.ns)
@@ -142,6 +143,42 @@ class InstallerChannelTests(unittest.TestCase):
         self.ns["_wait_for_addon_ready"] = Mock(return_value=False)
         self.assertEqual(self.native_install(self.dialog, "slyguy.trailers", "Beta", consent_granted=True), "FAILED")
         self.assertEqual(self.ns["_wait_for_addon_ready"].call_count, 2)
+
+    def test_rivulet_refreshes_and_waits_for_installable_catalog_before_install(self):
+        self.ns["_wait_for_installable_addon"] = Mock(return_value=True)
+        self.ns["_wait_for_addon_ready"] = Mock(return_value=True)
+        self.assertEqual(self.native_install(
+            self.dialog, "plugin.video.rivulet", "repository.rivulet",
+            consent_granted=True, minimum_version="0.36.0"), "INSTALLED")
+        self.assertEqual(self.kodi.executebuiltin.call_args_list, [
+            call("UpdateAddonRepos", True),
+            call("InstallAddon(plugin.video.rivulet)", True),
+        ])
+        self.ns["_wait_for_installable_addon"].assert_called_once_with(
+            "plugin.video.rivulet", "0.36.0")
+
+    def test_rivulet_catalog_timeout_does_not_issue_install_command(self):
+        self.ns["_wait_for_installable_addon"] = Mock(return_value=False)
+        self.ns["_wait_for_addon_ready"] = Mock()
+        self.assertEqual(self.native_install(
+            self.dialog, "plugin.video.rivulet", "repository.rivulet",
+            consent_granted=True, minimum_version="0.36.0"), "FAILED")
+        self.kodi.executebuiltin.assert_called_once_with("UpdateAddonRepos", True)
+        self.ns["_wait_for_addon_ready"].assert_not_called()
+
+    def test_rivulet_catalog_wait_uses_kodis_installable_addon_api(self):
+        self.ns["_jsonrpc"] = Mock(return_value={"addons": [{
+            "addonid": "plugin.video.rivulet", "version": "0.36.0",
+            "installed": False,
+        }]})
+        self.assertTrue(self.ns["_wait_for_installable_addon"](
+            "plugin.video.rivulet", "0.36.0"))
+        self.ns["_jsonrpc"].assert_called_once_with("Addons.GetAddons", {
+            "type": "unknown", "enabled": "all", "installed": False,
+            "properties": ["addonid", "version", "installed"],
+        })
+        self.assertFalse(self.ns["_wait_for_installable_addon"](
+            "plugin.video.rivulet", "0.36.0", timeout=0))
 
     def test_optional_inputstream_is_not_a_core_install_gate(self):
         for platform in module_catalog.ALL_TARGET_PLATFORMS:

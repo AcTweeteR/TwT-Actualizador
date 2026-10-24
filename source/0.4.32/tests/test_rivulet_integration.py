@@ -39,8 +39,8 @@ class RivuletIntegrationTests(unittest.TestCase):
                          "e4aabb495d6b49f39b8ec0c828ad9fa4562c387547739e0f38351ddabac9a815")
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
-            service = self._addon_zip(root / "service.actweeter-0.4.82.zip",
-                                      "service.actweeter", "0.4.82")
+            service = self._addon_zip(root / "service.actweeter-0.4.83.zip",
+                                      "service.actweeter", "0.4.83")
             repository = ROOT / "source/0.4.32/third_party/rivulet/repository.rivulet-1.0.2.zip"
             _, index, checksum = build_test_channel.build(
                 ROOT / "testing/repository.actweeter.testing", service,
@@ -56,8 +56,8 @@ class RivuletIntegrationTests(unittest.TestCase):
     def test_required_service_candidate_cannot_omit_rivulet_seed(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
-            service = self._addon_zip(root / "service.actweeter-0.4.82.zip",
-                                      "service.actweeter", "0.4.82")
+            service = self._addon_zip(root / "service.actweeter-0.4.83.zip",
+                                      "service.actweeter", "0.4.83")
             with self.assertRaisesRegex(ValueError, "pinned Rivulet repository"):
                 build_test_channel.build(
                     ROOT / "testing/repository.actweeter.testing", service,
@@ -67,8 +67,8 @@ class RivuletIntegrationTests(unittest.TestCase):
     def test_candidate_rejects_a_changed_upstream_repository_package(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
-            service = self._addon_zip(root / "service.actweeter-0.4.82.zip",
-                                      "service.actweeter", "0.4.82")
+            service = self._addon_zip(root / "service.actweeter-0.4.83.zip",
+                                      "service.actweeter", "0.4.83")
             repository = self._addon_zip(root / "repository.rivulet-1.0.2.zip",
                                          "repository.rivulet", "1.0.2")
             with self.assertRaisesRegex(ValueError, "pinned upstream SHA-256"):
@@ -79,7 +79,9 @@ class RivuletIntegrationTests(unittest.TestCase):
 
     def test_kodi_refreshes_repository_catalog_after_native_seed_install(self):
         setup = (ROOT / "source/0.4.32/addons/service.actweeter/setup.py").read_text()
-        self.assertIn('addon_id in ("repository.slyguy", "repository.rivulet")', setup)
+        self.assertIn('addon_id == "plugin.video.rivulet" and not _addon_installed(addon_id)', setup)
+        self.assertIn('_wait_for_installable_addon(addon_id, minimum)', setup)
+        self.assertIn('"installed": False', setup)
         self.assertIn('"plugin.video.rivulet": "Rivulet"', setup)
         self.assertNotIn('InstallAddon(plugin.video.rivulet)', setup)
 

@@ -1,0 +1,1 @@
+* Wait for Kodi's refreshed add-on index to expose Rivulet before invoking its native installer.

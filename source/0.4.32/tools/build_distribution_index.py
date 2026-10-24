@@ -19,7 +19,7 @@ from xml.etree import ElementTree as ET
 EXPECTED = {
     "repository": ("repository.actweeter.testing", "1.0.2"),
     "skin": ("skin.actweeter", "1.2.32~beta8"),
-    "service": ("service.actweeter", "0.4.82"),
+    "service": ("service.actweeter", "0.4.83"),
     "xstream": ("plugin.video.xstream-pro", "1.1.2.28~beta20"),
     "rivulet_repository": ("repository.rivulet", "1.0.2"),
 }
@@ -84,7 +84,7 @@ def build(repository_zip: Path, skin_zip: Path, service_zip: Path,
         raise ValueError("Rivulet repository ZIP does not match the pinned upstream SHA-256")
     rivulet = addon_from_zip(rivulet_repository_zip, *EXPECTED["rivulet_repository"])
     set_news(skin, "changelog-1.2.32~beta8.txt")
-    set_news(service, "changelog-0.4.82.txt")
+    set_news(service, "changelog-0.4.83.txt")
     root = ET.Element("addons")
     for addon in (repository, skin, service, xstream, rivulet):
         root.append(addon)
