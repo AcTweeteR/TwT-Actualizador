@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TEST_REPOSITORY_ID = "repository.actweeter.testing"
 TEST_REPOSITORY_VERSION = "1.0.2"
 SERVICE_ID = "service.actweeter"
-SERVICE_VERSION = "0.4.53"
+SERVICE_VERSION = "0.4.74"
 XSTREAM_ID = "plugin.video.xstream-pro"
 FIXED_TIME = (2026, 10, 3, 0, 0, 0)
 
@@ -185,9 +185,10 @@ def _write_test_channel(output: Path, repository_source: Path, repo_addon: ET.El
         shutil.copyfile(xstream_zip, xstream_package)
 
     index_root = ET.Element("addons")
-    index_root.extend((repo_addon, service))
+    index_root.append(repo_addon)
     if skin is not None:
         index_root.append(skin)
+    index_root.append(service)
     if xstream is not None:
         index_root.append(xstream)
     payload = ET.tostring(index_root, encoding="utf-8", xml_declaration=True) + b"\n"
