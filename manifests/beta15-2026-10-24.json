@@ -42,7 +42,13 @@
       "xstream_sha256": "40be333f93ab55c835c9f92138118b9a9d51bb782fe3021de30fac3d52a0b23f",
       "service_sha256": "c19595d032dd5734b95b7b1b9bba11e7b8d4f9e56975450e1c3c2d4dc9535ef0",
       "skin_sha256": "92fd906dd37edcd622e8a26cb8cc96944e7aaf41846ed9d3b0118f1ec1ed9b70"
-    }
+    },
+    "workflow_fixtures": {
+      "candidate_zip": "Testing XStream Beta14",
+      "upstream_url": "https://github.com/Pesicp/XStreamPro/releases/download/1.1.2/plugin.video.xstream-pro-1.1.2.zip",
+      "upstream_sha256_verified_before_tests": "915f45708670d07e789bb73b7390a7b5cf30175f818ef5da8ea18c9f13f537fe"
+    },
+    "github_actions": "rerun_pending"
   },
   "upstream_zip_sha256": "915f45708670d07e789bb73b7390a7b5cf30175f818ef5da8ea18c9f13f537fe",
   "publication_commit": "76d3168488c0939301993754db32a0545e040660",
