@@ -20,9 +20,9 @@ jobs:
       - name: Verify isolated Beta feed and immutable dependencies
         run: |
           python3 tools/build_test_channel.py \
-            --service-zip docs/testing/repo/service.actweeter/service.actweeter-0.4.74.zip \
-            --skin-zip docs/testing/repo/skin.actweeter/skin.actweeter-1.2.32~beta1.zip \
-            --xstream-zip docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.28~beta13.zip \
+            --service-zip docs/testing/repo/service.actweeter/service.actweeter-0.4.75.zip \
+            --skin-zip docs/testing/repo/skin.actweeter/skin.actweeter-1.2.32~beta2.zip \
+            --xstream-zip docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.28~beta14.zip \
             --output "$RUNNER_TEMP/testing"
           cmp "$RUNNER_TEMP/testing/repo/addons.xml" docs/testing/repo/addons.xml
           cmp "$RUNNER_TEMP/testing/repo/addons.xml.md5" docs/testing/repo/addons.xml.md5

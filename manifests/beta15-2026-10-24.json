@@ -1,0 +1,40 @@
+{
+  "release": "beta15-2026-10-24",
+  "base_commit": "89a371399cf12c027c94465c3c82ce06e0781408",
+  "stable_untouched": true,
+  "scope": [
+    "docs/testing/",
+    "tools/build_test_channel.py",
+    ".github/workflows/installer-beta.yml",
+    "manifests/beta15-2026-10-24.json"
+  ],
+  "addons": [
+    {
+      "id": "plugin.video.xstream-pro",
+      "version": "1.1.2.28~beta14",
+      "sha256": "40be333f93ab55c835c9f92138118b9a9d51bb782fe3021de30fac3d52a0b23f"
+    },
+    {
+      "id": "service.actweeter",
+      "version": "0.4.75",
+      "sha256": "c19595d032dd5734b95b7b1b9bba11e7b8d4f9e56975450e1c3c2d4dc9535ef0"
+    },
+    {
+      "id": "skin.actweeter",
+      "version": "1.2.32~beta2",
+      "sha256": "92fd906dd37edcd622e8a26cb8cc96944e7aaf41846ed9d3b0118f1ec1ed9b70"
+    }
+  ],
+  "testing_index": {
+    "sha256": "da7ae19aed84a7d4fa02563c7ad8ea97ff82dddab75f9ffae7b1115f8585891d",
+    "md5": "fbda14c954187e823ca5805a2e24cd92"
+  },
+  "automated_validation": {
+    "pytest": "619 passed",
+    "python_ast": "80 passed",
+    "xml_parse": "198 passed",
+    "zip_crc": "PASS",
+    "device_installation": "NOT_PERFORMED_BY_SCOPE"
+  },
+  "upstream_zip_sha256": "915f45708670d07e789bb73b7390a7b5cf30175f818ef5da8ea18c9f13f537fe"
+}
