@@ -9,7 +9,7 @@ import os
 import tempfile
 from pathlib import Path
 
-from .trakt_live_queue import verify_batch, write_batch
+from .trakt_live_queue import verify_batch, verify_ack, write_batch
 from .trakt_live_sync import confirm_batch, prepare_batches
 from .trakt_sync_consent import authorized
 
@@ -122,14 +122,20 @@ def _run_cycle(service_root, xstream_root, *, account, profile, provider_scope,
                           account=account, provider_scope=provider_scope,
                           addon=addon, history=history,
                           catalog_root=xstream_root, playing_file=playing_file)
+        # A deferred ACK is valid evidence of an attempted batch, but must
+        # never advance the durable applied checkpoint or remote cursor.
+        rows = verify_ack(ack, batch)
+        if any(row['status'] == 'deferred' for row in rows):
+            _write(rotation_path, {'account': account, 'profile': profile,
+                                   'provider_scope': provider_scope,
+                                   'last_batch': batch_path.name})
+            return {'status': 'deferred', 'reason': 'operations_deferred',
+                    'remaining_batches': len(pending)}
         if confirm_batch(_ServiceAddon(root), _VFS(), batch) is None:
             return {'status': 'deferred', 'reason': 'operations_unconfirmed'}
         _write(rotation_path, {'account': account, 'profile': profile,
                                'provider_scope': provider_scope,
                                'last_batch': batch_path.name})
-        if any(row.get('status') == 'deferred' for row in ack['results']):
-            return {'status': 'deferred', 'reason': 'operations_deferred',
-                    'remaining_batches': len(pending)}
         batch_path.unlink()
         remaining = sorted(queue.glob('*.json')) if queue.is_dir() else []
         if remaining:

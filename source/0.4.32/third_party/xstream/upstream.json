@@ -107,7 +107,7 @@
     "trakt_sync.py": "2aab0525363d5b99875b3c1bb26c50295f37624994f98593930c9fc864df54b3",
     "trakt_snapshot.py": "14157a25e194efec8f64d6b2f71142aabb97aa0d44fa8d15839c8103a4fbee0f",
     "history_store_coordinator.py": "377a6443f1d6312a9f9fa86c10292857889129a90e04fbaeb0925197b8713869",
-    "trakt_live_queue.py": "17d0b1e75f42bb5c9f5aba86b7369015934a7863f2f7f8708cf603be1a86cdf3",
+    "trakt_live_queue.py": "fe5e04ca5df79197b11f10f819c3764dc4a15a26d6bde90955ad6d4f5a3aeb29",
     "trakt_live_consumer.py": "fbe818b4a481e39b3e82f8c8d357d237e4393b5dce7face338b958a735ccc554",
     "trakt_provider_index.py": "b0c0b0e9ddec5db71aa959309c3025375c7394f3cbc18fb9614d68e8b3fcaefe",
     "trakt_series_index.py": "5faf171deddd134155f035df0a0106dbd4e73a7f7a3539b558746410a16c85fa",

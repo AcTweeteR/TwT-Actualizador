@@ -270,7 +270,7 @@ def write_ack(path, batch, results):
     return payload
 
 
-def checkpoint_from_ack(ack, batch):
+def verify_ack(ack, batch):
     if not isinstance(ack, dict) or ack.get('schema') != 1:
         raise ValueError('invalid acknowledgement')
     supplied = ack.get('sha256')
@@ -287,8 +287,16 @@ def checkpoint_from_ack(ack, batch):
             or any(not isinstance(row, dict) for row in rows)
             or {row.get('id') for row in rows} != expected
             or any(row.get('status') not in
-                   ('applied', 'already_applied', 'superseded') for row in rows)):
+                   ('applied', 'already_applied', 'superseded', 'deferred') for row in rows)):
         raise RuntimeError('batch has unconfirmed operations')
+    return rows
+
+
+def checkpoint_from_ack(ack, batch):
+    rows = verify_ack(ack, batch)
+    if any(row['status'] == 'deferred' for row in rows):
+        raise RuntimeError('batch has unconfirmed operations')
+    expected = {operation['id'] for operation in batch['operations']}
     return {'account': batch['account'], 'profile': batch['profile'],
             'provider_scope': batch['provider_scope'],
             'batch_id': batch['batch_id'],

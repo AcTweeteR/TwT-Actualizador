@@ -217,13 +217,13 @@ class CompleteCatalogTests(unittest.TestCase):
         args = dict(account='user', profile='1', provider_scope='a'*64,
                     activity_get=lambda:('user',{}), export_snapshot=lambda: self.root,
                     apply_batch=apply, addon=None, history=None, one_shot=True)
-        with patch.object(trakt_auto_cycle, 'confirm_batch', return_value={'ok':True}):
-            self.assertEqual(run_cycle(service, self.root, **args)['status'], 'deferred')
-            self.assertEqual(run_cycle(service, self.root, **args)['status'], 'pending')
-            self.assertEqual(visited, ['0'*32, 'f'*32])
-            self.assertEqual(len(list(queue.glob('*.json'))), 1)
-            self.assertEqual(run_cycle(service, self.root, **args)['status'], 'deferred')
-            self.assertEqual(visited[-1], '0'*32)
+        self.assertEqual(run_cycle(service, self.root, **args)['status'], 'deferred')
+        self.assertFalse(list((service / 'trakt_live/checkpoints').glob('*.json')))
+        self.assertEqual(run_cycle(service, self.root, **args)['status'], 'pending')
+        self.assertEqual(visited, ['0'*32, 'f'*32])
+        self.assertEqual(len(list(queue.glob('*.json'))), 1)
+        self.assertEqual(run_cycle(service, self.root, **args)['status'], 'deferred')
+        self.assertEqual(visited[-1], '0'*32)
 
     def test_unchanged_remote_activity_reuses_verified_export_when_catalog_grows(self):
         from lib.trakt_live_queue import build_batch, write_ack

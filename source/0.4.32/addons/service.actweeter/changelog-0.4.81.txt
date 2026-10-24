@@ -1,0 +1,1 @@
+Corrige rotación de lotes Trakt con ACK aplazado validado criptográficamente: no exige confirmación completa para pasar al siguiente lote, ni elimina operaciones aplazadas.
