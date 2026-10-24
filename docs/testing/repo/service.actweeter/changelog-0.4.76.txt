@@ -1,0 +1,4 @@
+0.4.76
+- Unifies the Trakt watched-state bridge across movies, episodes, series and complete seasons.
+- Requires XStream Beta15 for generation-safe catalog refresh and IPTV season PlayCount.
+- Keeps startup intro and refresh error recovery within the existing Kodi service lifecycle.

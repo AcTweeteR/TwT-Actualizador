@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TEST_REPOSITORY_ID = "repository.actweeter.testing"
 TEST_REPOSITORY_VERSION = "1.0.2"
 SERVICE_ID = "service.actweeter"
-SERVICE_VERSION = "0.4.75"
+SERVICE_VERSION = "0.4.76"
 XSTREAM_ID = "plugin.video.xstream-pro"
 FIXED_TIME = (2026, 10, 3, 0, 0, 0)
 
@@ -144,6 +144,24 @@ def build(repository_source: Path, service_zip: Path, output: Path,
 
 
 
+def _copy_changelog(package: Path, addon: ET.Element, addon_id: str,
+                    output: Path) -> None:
+    news = addon.find("./extension[@point='xbmc.addon.metadata']/news")
+    filename = (news.text or "").strip() if news is not None else ""
+    if not filename:
+        return
+    if Path(filename).name != filename:
+        raise ValueError("unsafe add-on changelog path")
+    member = f"{addon_id}/{filename}"
+    with zipfile.ZipFile(package) as archive:
+        if member not in archive.namelist():
+            raise ValueError(f"missing packaged changelog: {member}")
+        content = archive.read(member)
+    target = output / "repo" / addon_id / filename
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(content)
+
+
 def bootstrap_index_html(current_zip_name: str) -> str:
     """Kodi-compatible browse page: current installer and archived versions only."""
     if not re.fullmatch(r"repository[.]actweeter[.]testing-[0-9]+[.][0-9]+[.][0-9]+[.]zip",
@@ -175,10 +193,12 @@ def _write_test_channel(output: Path, repository_source: Path, repo_addon: ET.El
     service_package = output / "repo" / SERVICE_ID / service_zip.name
     service_package.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(service_zip, service_package)
+    _copy_changelog(service_zip, service, SERVICE_ID, output)
     if skin is not None:
         skin_package = output / "repo" / "skin.actweeter" / skin_zip.name
         skin_package.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(skin_zip, skin_package)
+        _copy_changelog(skin_zip, skin, "skin.actweeter", output)
     if xstream is not None:
         xstream_package = output / "repo" / XSTREAM_ID / xstream_zip.name
         xstream_package.parent.mkdir(parents=True, exist_ok=True)

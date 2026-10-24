@@ -1,0 +1,3 @@
+1.2.32~beta3
+- Starts the selected AcTweeteR introduction from Kodi Startup before Home becomes visible.
+- Retains the common watched indicators for movie, episode, series and season ListItems.
