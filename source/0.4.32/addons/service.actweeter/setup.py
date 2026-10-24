@@ -1103,10 +1103,6 @@ def _configure_xstream_provider(dialog):
             "XStream no expone todas las capacidades necesarias (%s). Actualiza o repara desde el canal AcTweeteR correspondiente; tus ajustes se conservarán." % ", ".join(_xstream_missing_capabilities()),
         )
         return False
-    if not _xstream_refresh_supported():
-        dialog.ok("Integración XStream pendiente",
-                  "Faltan capacidades XStream (%s). Repara desde el canal AcTweeteR correspondiente antes de introducir datos; tus ajustes se conservarán." % ", ".join(_xstream_missing_capabilities()))
-        return False
     try:
         addon = xbmcaddon.Addon(addon_id)
     except Exception as exc:  # noqa: BLE001 - avoid surfacing external add-on details.

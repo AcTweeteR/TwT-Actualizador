@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
 import re
 from urllib.parse import urlencode
@@ -89,19 +88,15 @@ def offer_once(addon, vfs, dialog, *, requester=None):
         except Exception:
             pass
         return "CONFIGURED"
-    pid = os.getpid()
     result = state.get("result")
     if state.get("version") == VERSION:
         if result in ("SKIPPED", "CONFIGURED", "INVALID", "CANCELLED", "UNVERIFIED",
                       "SAVE_FAILED"):
             return "ALREADY_OFFERED"
-        if (result in ("OFFERED", "FAILED_RECOVERABLE")
-                and state.get("process_id") == pid):
-            return "ALREADY_OFFERED"
-    # An OFFERED marker from another process means Kodi may have closed mid-dialog.
+    # Failed/interrupted offers remain retryable in the same Kodi process.
+    # The caller guards concurrent first-run wizard sessions.
     try:
-        atomic_write(path, json.dumps({"version": VERSION, "result": "OFFERED",
-                                       "process_id": pid}).encode("utf-8"))
+        atomic_write(path, json.dumps({"version": VERSION, "result": "OFFERED"}).encode("utf-8"))
     except Exception:
         return "FAILED_RECOVERABLE"
     try:
@@ -109,8 +104,7 @@ def offer_once(addon, vfs, dialog, *, requester=None):
     except Exception:
         outcome = "FAILED_RECOVERABLE"
     try:
-        atomic_write(path, json.dumps({"version": VERSION, "result": outcome,
-                                       "process_id": pid}).encode("utf-8"))
+        atomic_write(path, json.dumps({"version": VERSION, "result": outcome}).encode("utf-8"))
     except Exception:
         return "FAILED_RECOVERABLE"
     return outcome

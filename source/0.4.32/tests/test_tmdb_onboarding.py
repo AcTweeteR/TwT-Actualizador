@@ -80,15 +80,26 @@ class TMDbOnboardingTests(unittest.TestCase):
         self.assertFalse(state.get("completed", False))
         self.assertTrue(first_run.should_offer_first_run(state, core_configured=True))
 
-    def test_interrupted_tmdb_prompt_retries_after_kodi_process_changes_only(self):
+    def test_interrupted_tmdb_prompt_retries_in_same_process(self):
         self.dialog.yesno.side_effect = [RuntimeError("dialog interrupted"), False]
-        with mock.patch.object(tmdb.os, "getpid", side_effect=[100, 100, 200]):
-            self.assertEqual(tmdb.offer_once(self.addon, self.vfs, self.dialog),
-                             "FAILED_RECOVERABLE")
-            self.assertEqual(tmdb.offer_once(self.addon, self.vfs, self.dialog),
-                             "ALREADY_OFFERED")
-            self.assertEqual(tmdb.offer_once(self.addon, self.vfs, self.dialog), "SKIPPED")
+        self.assertEqual(tmdb.offer_once(self.addon, self.vfs, self.dialog),
+                         "FAILED_RECOVERABLE")
+        self.assertEqual(tmdb.offer_once(self.addon, self.vfs, self.dialog), "SKIPPED")
+        self.assertEqual(tmdb.offer_once(self.addon, self.vfs, self.dialog),
+                         "ALREADY_OFFERED")
         self.assertEqual(self.dialog.yesno.call_count, 2)
+
+    def test_legacy_offered_marker_retries_in_same_process(self):
+        Path(self.directory.name, "tmdb_onboarding.json").write_text(
+            json.dumps({"version": tmdb.VERSION, "result": "OFFERED", "process_id": 100}))
+        self.dialog.yesno.return_value = False
+        self.assertEqual(tmdb.offer_once(self.addon, self.vfs, self.dialog), "SKIPPED")
+        self.dialog.yesno.assert_called_once()
+
+    def test_provider_setup_has_single_capability_gate(self):
+        setup = (ROOT / "addons/service.actweeter/setup.py").read_text()
+        body = setup.split("def _configure_xstream_provider(dialog):", 1)[1].split("\ndef ", 1)[0]
+        self.assertEqual(body.count("if not _xstream_refresh_supported():"), 1)
 
     def test_setup_isolates_optional_tmdb_and_continues_with_required_steps(self):
         setup = (ROOT / "addons/service.actweeter/setup.py").read_text()
