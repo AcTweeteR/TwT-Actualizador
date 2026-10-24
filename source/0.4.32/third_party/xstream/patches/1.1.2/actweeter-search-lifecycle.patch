@@ -1,0 +1,200 @@
+diff --git a/resources/lib/premium_routes.py b/resources/lib/premium_routes.py
+--- a/resources/lib/premium_routes.py
++++ b/resources/lib/premium_routes.py
+@@ -488,6 +488,68 @@
+     return os.path.join(profile, 'provider_search_%s.sqlite' % pnum)
+ 
+ 
++def _search_refresh_error(exc):
++    import datetime
++    import email.utils
++    import socket
++    import urllib.error
++    current = exc
++    seen = set()
++    status, headers, auth_error = None, None, False
++    error_types = set()
++    message = ''
++    while current is not None and id(current) not in seen:
++        seen.add(id(current))
++        auth_error = auth_error or type(current).__name__ == 'ProviderAuthError'
++        error_types.add(type(current).__name__)
++        message += ' ' + str(current).casefold()
++        response = getattr(current, 'response', None)
++        status = (getattr(current, 'code', None) or
++                  getattr(response, 'status_code', None) or status)
++        headers = (getattr(current, 'headers', None) or
++                   getattr(response, 'headers', None) or headers)
++        current = getattr(current, '__cause__', None) or getattr(current, '__context__', None)
++    if status is None:
++        import re
++        match = re.search(r'\b(401|403|408|429|504)\b', message)
++        status = int(match.group(1)) if match else None
++    if status in (401, 403) or auth_error or any(
++            marker in message for marker in ('auth failed', 'auth error', 'expired',
++                                             'credentials unavailable', 'banned', 'disabled')):
++        category = 'authentication'
++    elif status == 429:
++        category = 'rate_limited'
++    elif (status in (408, 504)
++          or error_types.intersection(('Timeout', 'ConnectTimeout', 'ReadTimeout',
++                                       'TimeoutError', 'socket.timeout'))
++          or isinstance(exc, (TimeoutError, socket.timeout))
++          or 'timed out' in message or 'timeout' in message):
++        category = 'timeout'
++    elif (isinstance(exc, urllib.error.URLError)
++          or error_types.intersection(('ConnectionError', 'ConnectError',
++                                       'NameResolutionError', 'URLError'))
++          or 'connectionerror' in message or 'failed to establish a new connection' in message
++          or 'name resolution' in message):
++        category = 'connection'
++    else:
++        category = 'incomplete'
++    retry_after = 0
++    value = headers.get('Retry-After') if headers is not None else None
++    if value:
++        try:
++            retry_after = max(0, int(float(value)))
++        except (TypeError, ValueError):
++            try:
++                target = email.utils.parsedate_to_datetime(value)
++                if target.tzinfo is None:
++                    target = target.replace(tzinfo=datetime.timezone.utc)
++                retry_after = max(0, int((target - datetime.datetime.now(
++                    datetime.timezone.utc)).total_seconds()))
++            except (TypeError, ValueError, OverflowError):
++                retry_after = 0
++    return category, retry_after
++
++
+ def _ensure_search_index(g, pnum, *, force_provider_refresh=False):
+     import os
+     import sqlite3
+@@ -511,9 +573,11 @@
+             g['_refresh_catalog_generation'](pnum, force=True)
+         except Exception as exc:
+             g['_log']('provider catalog generation refresh failed error_type=%s' % type(exc).__name__)
++            category, retry_after = _search_refresh_error(exc)
+             conn.rollback()
+             results = [{'scanned':0, 'added':0, 'changed':0, 'removed':0,
+-                        'status':'error'} for _ in ('movie', 'series')]
++                        'status':'error', 'error_category':category,
++                        'retry_after':retry_after} for _ in ('movie', 'series')]
+             return conn, results
+     for stype in ('movie', 'series'):
+         source_stamp = _search_source_stamp(g, pnum, stype)
+@@ -530,13 +594,16 @@
+         except Exception as exc:
+             g['_log']('provider search refresh type=%s status=error error_type=%s' %
+                       (stype, type(exc).__name__))
++            category, retry_after = _search_refresh_error(exc)
+             results.append({'scanned':0, 'added':0, 'changed':0, 'removed':0,
+-                            'status':'error'})
++                            'status':'error', 'error_category':category,
++                            'retry_after':retry_after})
+             continue
+         if not all(credentials) or not isinstance(items, list):
+             g['_log']('provider search refresh type=%s status=error reason=catalog_unavailable' % stype)
+             results.append({'scanned':0, 'added':0, 'changed':0, 'removed':0,
+-                            'status':'error'})
++                            'status':'error', 'error_category':'incomplete',
++                            'retry_after':0})
+             continue
+         rows = {}
+         for item in items:
+@@ -804,6 +871,7 @@
+         conn = None
+         callback = get('actweeter_callback')
+         success = False
++        error_category, retry_after = 'incomplete', 0
+         try:
+             force_provider_refresh = get('force_provider_refresh') == '1'
+             if not force_provider_refresh:
+@@ -820,6 +888,13 @@
+             conn, results = _ensure_search_index(
+                 g, pnum, force_provider_refresh=force_provider_refresh)
+             if any(result.get('status') == 'error' for result in results):
++                priorities = {'authentication': 5, 'rate_limited': 4, 'timeout': 3,
++                              'connection': 2, 'incomplete': 1}
++                failures = [result for result in results if result.get('status') == 'error']
++                error_category = max(
++                    (item.get('error_category', 'incomplete') for item in failures),
++                    key=lambda category: priorities.get(category, 0))
++                retry_after = max(int(item.get('retry_after', 0) or 0) for item in failures)
+                 conn.close()
+                 conn = None
+                 g['_log']('SEARCH_REFRESH_END status=error reason=provider_snapshot_incomplete duration_ms=%d' %
+@@ -827,7 +902,8 @@
+                 if (len(callback) == 32
+                         and all(char in '0123456789abcdef' for char in callback.lower())):
+                     g['xbmc'].executebuiltin(
+-                        'RunScript(service.actweeter,catalog_refresh_result,%s,error)' % callback, False)
++                        'RunScript(service.actweeter,catalog_refresh_result,%s,error,%s,%d)' %
++                        (callback, error_category, retry_after), False)
+                 plugin.endOfDirectory(handle, succeeded=True, updateListing=False, cacheToDisc=False)
+                 return
+             conn.execute('BEGIN IMMEDIATE')
+@@ -850,11 +926,12 @@
+                 conn.close()
+             g['_log']('SEARCH_REFRESH_END status=error error_type=%s duration_ms=%d' %
+                       (type(exc).__name__, int((time.perf_counter() - started) * 1000)))
++            error_category, retry_after = _search_refresh_error(exc)
+         if (len(callback) == 32
+                 and all(char in '0123456789abcdef' for char in callback.lower())):
+             g['xbmc'].executebuiltin(
+-                'RunScript(service.actweeter,catalog_refresh_result,%s,%s)' %
+-                (callback, 'success' if success else 'error'), False)
++                'RunScript(service.actweeter,catalog_refresh_result,%s,%s,%s,%d)' %
++                (callback, 'success' if success else 'error', error_category, retry_after), False)
+         plugin.endOfDirectory(handle, succeeded=True, updateListing=False, cacheToDisc=False)
+         return
+     if view == 'search':
+diff --git a/resources/lib/iptv.py b/resources/lib/iptv.py
+--- a/resources/lib/iptv.py
++++ b/resources/lib/iptv.py
+@@ -19,6 +19,10 @@
+     A valid provider response with zero items is still returned as [].
+     Network, DNS, timeout, HTTP, JSON, or parser failures must raise this.
+     """
++
++
++class ProviderAuthError(ProviderFetchError):
++    """Provider rejected the configured credentials or account status."""
+ 
+ 
+ def _check_auth_status(data, expect_list=False):
+@@ -480,7 +484,7 @@
+             if auth_err:
+                 _log("Xtream categories ({0}): auth error detected".format(stype))
+                 _notify(auth_err)
+-                raise ProviderFetchError(auth_err)
++                raise ProviderAuthError(auth_err)
+             _log(f"Xtream categories ({stype}): got {len(data)} items")
+             return data or []
+         except ProviderFetchError:
+@@ -488,7 +492,7 @@
+         except Exception as e:
+             _log(f"Xtream categories error ({stype}): {e}")
+             _notify(_t(30821))
+-            raise ProviderFetchError(str(e))
++            raise ProviderFetchError(str(e)) from e
+ 
+     @staticmethod
+     def get_xtream_streams(
+@@ -510,14 +514,14 @@
+             if auth_err:
+                 _log("Xtream streams ({0}): auth error detected".format(stype))
+                 _notify(auth_err)
+-                raise ProviderFetchError(auth_err)
++                raise ProviderAuthError(auth_err)
+             _log(f"Xtream streams ({stype}): got {len(data)} items")
+             return data or []
+         except ProviderFetchError:
+             raise
+         except Exception as e:
+             _log(f"Xtream streams error ({stype}): {e}")
+-            raise ProviderFetchError(str(e))
++            raise ProviderFetchError(str(e)) from e
+ 
+     @staticmethod
+     def get_xtream_series_info(base_url, username, password, series_id):

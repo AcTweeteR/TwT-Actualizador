@@ -1,0 +1,3 @@
+0.4.74
+- Fixes terminal refresh handling: keep the pending operation record separate from the boolean scheduling flag.
+- Adds a safe coordinator phase to refresh-unavailable diagnostics without logging provider or profile data.

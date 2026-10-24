@@ -22,8 +22,29 @@ LIB_PATH = os.path.join(ADDON_PATH, "resources", "lib")
 if LIB_PATH not in sys.path:
     sys.path.insert(0, LIB_PATH)
 
+# Read-only boot gate. An interrupted two-store restore must be recovered
+# outside the running Kodi process before any subsequent restore is allowed.
+def _check_trakt_restore_on_boot():
+    try:
+        from pathlib import Path
+        resources_parent = os.path.join(ADDON_PATH, "resources")
+        if resources_parent not in sys.path:
+            sys.path.insert(0, resources_parent)
+        from lib.trakt_restore_bootcheck import inspect_all_profiles
+        profile = xbmcvfs.translatePath('special://profile/addon_data/plugin.video.xstream-pro')
+        status = inspect_all_profiles(profile,
+            lambda message: xbmc.log('[AcTweeteR] ' + message, xbmc.LOGWARNING))
+        return status
+    except Exception as exc:
+        xbmc.log('[AcTweeteR] Trakt boot check unavailable: ' + type(exc).__name__, xbmc.LOGWARNING)
+        return {'safe': False, 'reason': 'boot_check_failed'}
+
+
+_check_trakt_restore_on_boot()
+
 from search_background import (last_successful_sync, plugin_refresh_url,
-                               RefreshGate, xstream_profile_number)  # noqa: E402
+                               refresh_interval, RefreshGate,
+                               xstream_profile_number)  # noqa: E402
 from slyguy_trailer_return import (  # noqa: E402
     capture_context, identity_matches, parse_identity, return_decision,
     manual_exit_requires_stop,
@@ -40,6 +61,12 @@ from interaction_trace import player_terminal as trace_player_terminal  # noqa: 
 from search_background import (COORDINATOR_PENDING_CHECK_SECONDS,
                                COORDINATOR_REFRESH_CHECK_SECONDS,
                                refresh_state_check_due)  # noqa: E402
+from catalog_refresh import (SEARCH_REFRESH_TIMEOUT_SECONDS,
+                             begin_search_operation, finish_search_operation,
+                             recover_search_operations, search_operation,
+                             read_retry_state, record_retry_result)  # noqa: E402
+from trakt_sync_consent import enabled as trakt_sync_enabled  # noqa: E402
+from trakt_sync_scheduler import Scheduler as TraktSyncScheduler  # noqa: E402
 
 
 _MONITOR_BASE = getattr(xbmc, "Monitor", object)
@@ -622,26 +649,77 @@ def _run_coordinator(kodi, addon_factory, vfs, clock=time.time, monitor=None,
     next_refresh_check = service_started_at
     cached_profile_path = ""
     cached_profile_number = 1
+    service_profile = vfs.translatePath(ADDON.getAddonInfo("profile"))
+    recovered = recover_search_operations(service_profile, now=service_started_at)
+    if recovered:
+        kodi.log("[AcTweeteR] SEARCH_REFRESH_RECOVERY status=interrupted count=%d" % recovered,
+                 kodi.LOGWARNING)
+    trakt_scheduler = TraktSyncScheduler(
+        os.path.join(service_profile, "trakt_live", "scheduler.json"))
     while not monitor.abortRequested():
         now = clock()
         spotlight_rotation.tick(kodi, now, active_window=_window_id(kodi))
-        pending = pending_refresh is not None
-        if not refresh_state_check_due(now, next_refresh_check, pending=pending):
+        # The XStream plugin owns OAuth and network access. This loop only
+        # schedules an opt-in cycle and never reads or stores Trakt tokens.
+        try:
+            consent_path = os.path.join(service_profile, "trakt_live", "consent.json")
+            player = getattr(kodi, "Player", lambda: None)()
+            playing = bool(player and player.isPlaying())
+            if trakt_sync_enabled(consent_path):
+                trakt_scheduler.dispatch_if_due(
+                    lambda: kodi.executebuiltin(
+                        "RunPlugin(plugin://plugin.video.xstream-pro/?mode=xstream_trakt_sync_cycle)",
+                        False),
+                    authorized=True, playing=playing)
+        except Exception as exc:
+            if now - last_missing_addon_log >= 3600:
+                kodi.log("[AcTweeteR] TRAKT_SYNC_SCHEDULER unavailable error_type=%s" %
+                         type(exc).__name__, kodi.LOGINFO)
+                last_missing_addon_log = now
+        has_pending_refresh = pending_refresh is not None
+        if not refresh_state_check_due(now, next_refresh_check,
+                                       pending=has_pending_refresh):
             if performance is not None:
                 performance.count("coordinator.refresh_cache_hit")
             if monitor.waitForAbort(60):
                 break
             continue
+        phase = "pending_status"
         try:
-            if pending:
-                # Reuse the active profile captured at dispatch while polling
-                # completion; do not recreate the add-on object each minute.
-                xstream_profile = cached_profile_path
-                profile_number = cached_profile_number
-                with (performance.measure("coordinator.pending_refresh_read")
-                      if performance is not None else _null_measure()):
-                    last_sync = last_successful_sync(xstream_profile, profile_number)
-            else:
+            if has_pending_refresh:
+                operation = search_operation(
+                    service_profile, pending_refresh["trace"]["correlation_id"])
+                terminal = operation.get("status")
+                if terminal in ("COMPLETED", "ERROR", "TIMEOUT", "CANCELLED", "INTERRUPTED"):
+                    trace_state = {"COMPLETED": "finished", "ERROR": "error",
+                                   "TIMEOUT": "timeout", "CANCELLED": "cancelled",
+                                   "INTERRUPTED": "interrupted"}[terminal]
+                    emit_plugin_trace(
+                        pending_refresh["trace"], trace_state,
+                        error_type="XStreamRefreshError" if terminal != "COMPLETED" else "",
+                        log=lambda message: kodi.log(
+                            message, kodi.LOGINFO if terminal == "COMPLETED" else kodi.LOGWARNING))
+                    pending_refresh = None
+                    next_refresh_check = now + COORDINATOR_REFRESH_CHECK_SECONDS
+                elif now - pending_refresh["requested_at"] >= SEARCH_REFRESH_TIMEOUT_SECONDS:
+                    finish_search_operation(
+                        service_profile, pending_refresh["trace"]["correlation_id"],
+                        "timeout", now=now)
+                    record_retry_result(
+                        service_profile, cached_profile_number, "error",
+                        category="timeout", now=now, jitter=0)
+                    emit_plugin_trace(
+                        pending_refresh["trace"], "timeout", error_type="TimeoutError",
+                        log=lambda message: kodi.log(message, kodi.LOGWARNING))
+                    pending_refresh = None
+                    next_refresh_check = now + COORDINATOR_REFRESH_CHECK_SECONDS
+                else:
+                    next_refresh_check = now + COORDINATOR_PENDING_CHECK_SECONDS
+                    if monitor.waitForAbort(COORDINATOR_PENDING_CHECK_SECONDS):
+                        break
+                    continue
+            if not pending_refresh:
+                phase = "read_refresh_state"
                 with (performance.measure("coordinator.refresh_state_read")
                       if performance is not None else _null_measure()):
                     xstream = addon_factory("plugin.video.xstream-pro")
@@ -651,27 +729,9 @@ def _run_coordinator(kodi, addon_factory, vfs, clock=time.time, monitor=None,
                     last_sync = last_successful_sync(xstream_profile, profile_number)
                 cached_profile_path = xstream_profile
                 cached_profile_number = profile_number
+                refresh_gate.interval = refresh_interval(xstream_profile, profile_number)
                 if performance is not None:
                     performance.count("coordinator.refresh_state_check")
-            if pending_refresh and last_sync > pending_refresh["last_sync"]:
-                emit_plugin_trace(
-                    pending_refresh["trace"], "finished",
-                    log=lambda message: kodi.log(message, kodi.LOGINFO))
-                pending_refresh = None
-                next_refresh_check = now + COORDINATOR_REFRESH_CHECK_SECONDS
-            elif pending_refresh:
-                # A dispatch without an observable provider commit must not
-                # block all future refreshes for the lifetime of Kodi.
-                if now - pending_refresh["requested_at"] >= 2 * refresh_gate.interval:
-                    emit_plugin_trace(
-                        pending_refresh["trace"], "unobserved",
-                        log=lambda message: kodi.log(message, kodi.LOGWARNING))
-                    pending_refresh = None
-                else:
-                    next_refresh_check = now + COORDINATOR_PENDING_CHECK_SECONDS
-                    if monitor.waitForAbort(COORDINATOR_PENDING_CHECK_SECONDS):
-                        break
-                    continue
             # XStream builds a new profile's initial index during its own
             # startup. Give that bootstrap time to finish before this hourly
             # coordinator can request a stale/missing-index refresh.
@@ -680,7 +740,12 @@ def _run_coordinator(kodi, addon_factory, vfs, clock=time.time, monitor=None,
                 if monitor.waitForAbort(60):
                     break
                 continue
-            if refresh_gate.should_request(last_sync, now, abort=monitor.abortRequested()):
+            phase = "read_retry_state"
+            retry = read_retry_state(service_profile, profile_number)
+            retry_waiting = (retry["automatic_blocked"] or retry["retry_at"] > now)
+            if (not retry_waiting
+                    and refresh_gate.should_request(last_sync, now,
+                                                    abort=monitor.abortRequested())):
                 # RunPlugin executes in Kodi's plugin runtime; this service only
                 # schedules it and never reads provider settings or credentials.
                 if pending_refresh:
@@ -688,13 +753,19 @@ def _run_coordinator(kodi, addon_factory, vfs, clock=time.time, monitor=None,
                         pending_refresh["trace"], "unobserved",
                         log=lambda message: kodi.log(message, kodi.LOGWARNING))
                     pending_refresh = None
-                url = plugin_refresh_url(profile_number)
                 trace = begin_plugin_trace(
-                    url, "service.search_refresh",
+                    plugin_refresh_url(profile_number), "service.search_refresh",
                     log=lambda message: kodi.log(message, kodi.LOGINFO))
+                url = plugin_refresh_url(profile_number, trace["correlation_id"])
+                phase = "persist_refresh_operation"
+                begin_search_operation(service_profile, trace["correlation_id"],
+                                       profile_number, now=now)
                 try:
+                    phase = "dispatch_refresh"
                     kodi.executebuiltin("RunPlugin(%s)" % url, False)
                 except Exception as exc:
+                    finish_search_operation(
+                        service_profile, trace["correlation_id"], "error", now=now)
                     emit_plugin_trace(
                         trace, "error", error_type=type(exc).__name__,
                         log=lambda message: kodi.log(
@@ -702,14 +773,7 @@ def _run_coordinator(kodi, addon_factory, vfs, clock=time.time, monitor=None,
                     raise
                 emit_plugin_trace(trace, "dispatched",
                                   log=lambda message: kodi.log(message, kodi.LOGINFO))
-                observed_sync = last_successful_sync(xstream_profile, profile_number)
-                if observed_sync > last_sync:
-                    emit_plugin_trace(
-                        trace, "finished",
-                        log=lambda message: kodi.log(message, kodi.LOGINFO))
-                else:
-                    pending_refresh = {"trace": trace, "last_sync": last_sync,
-                                       "requested_at": now}
+                pending_refresh = {"trace": trace, "requested_at": now}
                 if performance is not None:
                     performance.count("coordinator.refresh_dispatch")
                 refresh_gate.mark_requested(now)
@@ -719,8 +783,8 @@ def _run_coordinator(kodi, addon_factory, vfs, clock=time.time, monitor=None,
         except Exception as exc:
             # Add-on may be absent on a clean install before private provisioning.
             if now - last_missing_addon_log >= 3600:
-                kodi.log("[AcTweeteR] Search refresh unavailable error_type=%s" %
-                         type(exc).__name__, kodi.LOGINFO)
+                kodi.log("[AcTweeteR] Search refresh unavailable phase=%s error_type=%s" %
+                         (phase, type(exc).__name__), kodi.LOGINFO)
                 last_missing_addon_log = now
             next_refresh_check = now + COORDINATOR_REFRESH_CHECK_SECONDS
         if monitor.waitForAbort(60):

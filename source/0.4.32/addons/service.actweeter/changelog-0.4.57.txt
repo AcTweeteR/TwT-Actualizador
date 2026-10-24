@@ -1,0 +1,5 @@
+- Add a revocable, account/profile/provider-bound opt-in for Trakt-to-XStream sync.
+- Schedule one XStream-owned sync cycle no more often than every five minutes.
+- Check Trakt activity before exporting full snapshots; keep work durable and bounded.
+- Suspend consent when its account, XStream profile, provider, or policy binding changes.
+- Keep sync disabled for existing users unless they explicitly authorize it.

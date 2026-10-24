@@ -5,8 +5,8 @@
     <include>DefaultSkinSettings</include>
     <onload>SetProperty(Random,$INFO[System.Time(ss)],Home)</onload>
     <!-- start up mask - preload -->
-    <onload condition="String.IsEmpty(Skin.String(SplashScreen))">SetProperty(StartupMask,1,home)</onload>
-    <onload condition="String.IsEmpty(Skin.String(SplashScreen))">ReplaceWindow($VAR[StartUpWindow])</onload>
+    <onload condition="String.IsEmpty(Skin.String(splash_screen))">SetProperty(StartupMask,1,home)</onload>
+    <onload condition="String.IsEmpty(Skin.String(splash_screen))">ReplaceWindow($VAR[StartUpWindow])</onload>
     <onunload condition="Player.HasVideo">PlayerControl(Stop)</onunload>
 	
 	<!-- Start TMDbH service -->

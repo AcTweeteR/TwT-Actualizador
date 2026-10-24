@@ -105,7 +105,7 @@
                      {'include_image_language':'es,null,en'}, ttl=168)
                  logos = [a for a in images.get('logos', []) if a.get('file_path')]
                  logos.sort(key=lambda a: ({'es':0, None:1, 'en':2}.get(a.get('iso_639_1'), 3),
-@@ -182,19 +189,19 @@
+@@ -182,20 +189,19 @@
  
  
  def catalog(g, stype, pnum, *, force_refresh=False):
@@ -120,8 +120,9 @@
      # Record the unfiltered provider catalogue before UI visibility filters.
      if stype == 'series' and items and host and user and password:
          try:
--            g['series_changes'].record_catalog(g['addon'], pnum, items)
-+            _performance_call(g, 'storage.series_catalog_write', g['series_changes'].record_catalog, g['addon'], pnum, items)
+-            g['series_changes'].record_catalog(g['addon'], pnum, items,
+-                                               provider=(host, user))
++            _performance_call(g, 'storage.series_catalog_write', g['series_changes'].record_catalog, g['addon'], pnum, items, provider=(host, user))
          except Exception as exc:
              g['_log']('Series baseline refresh failed: %s' % exc)
 -    categories = g['_get_cached_xtream_categories'](

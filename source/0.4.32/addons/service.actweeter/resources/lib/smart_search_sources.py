@@ -76,12 +76,16 @@ def provider_children(kodi, parent, scope):
         if not season.isdigit() or (kind == "episode" and not episode.isdigit()):
             continue
         art = item.get("art") or {}
-        rows.append(dict(kind=kind, id="provider:%s:%s:%s" % (series, season, episode),
+        row = dict(kind=kind, id="provider:%s:%s:%s" % (series, season, episode),
             title=item.get("title") or item.get("label") or "", plot=item.get("plot") or "",
             year=item.get("year") or "", poster=art.get("poster") or art.get("thumb") or parent.get("poster", ""),
             fanart=art.get("fanart") or parent.get("fanart", ""), available=True, path=path,
             season=int(season), episode=int(episode) if episode else -1,
-            subtitle="Temporada " + season if kind == "season" else "T%s · E%s" % (season, episode)))
+            subtitle="Temporada " + season if kind == "season" else "T%s · E%s" % (season, episode))
+        tmdb_id = str(parent.get("tmdb_id") or "")
+        if tmdb_id.isdigit() and int(tmdb_id) > 0:
+            row["tmdb_show_id"] = tmdb_id
+        rows.append(row)
     return unique_rows(rows)
 
 
@@ -137,6 +141,7 @@ class Metadata:
         while len(self.cache) > 24:
             self.cache.popitem(last=False)
         return [dict(row) for row in rows]
+
 
     def search(self, query):
         return self._directory({"info": "search", "tmdb_type": "both", "query": query})
@@ -228,6 +233,56 @@ class Metadata:
                     result.append(row)
                     seen.add(key)
         return result
+
+
+class WatchedState:
+    """Read XStream's profile-scoped TMDb watch keys without changing them."""
+    def __init__(self):
+        self.path, self.signature, self.data = None, None, {}
+
+    def _load(self, scope):
+        root, profile = scope or ("", 0)
+        if not root or not str(profile).isdigit():
+            return {}
+        path = Path(root) / ("watched_movies_p%d.json" % int(profile))
+        try:
+            stat = path.stat()
+            signature = (stat.st_mtime_ns, stat.st_size)
+        except OSError:
+            return {}
+        if path != self.path or signature != self.signature:
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+                self.data = data if isinstance(data, dict) else {}
+            except (OSError, ValueError):
+                self.data = {}
+            self.path, self.signature = path, signature
+        return self.data
+
+    def badge(self, scope, row):
+        kind = row.get("kind")
+        identity = str(row.get("tmdb_show_id") or row.get("tmdb_id") or "")
+        data = self._load(scope)
+        if kind == "movie":
+            watched = ((identity.isdigit() and int(identity) > 0 and
+                        data.get("tmdb:movie:" + identity) is True) or
+                       (row.get("available") and str(row.get("id", "")).isdigit() and
+                        data.get(str(row["id"])) is True))
+        elif not identity.isdigit() or int(identity) < 1:
+            return ""
+        elif kind == "series":
+            watched = data.get("tvshow:" + identity) is True
+            if not watched and any(key.startswith("tmdb:episode:" + identity + ":") and value is True
+                                   for key, value in data.items() if isinstance(key, str)):
+                return "EPISODIOS VISTOS"
+        elif kind == "season" and str(row.get("season", "")).isdigit():
+            watched = data.get("season:%s:%s" % (identity, int(row["season"]))) is True
+        elif kind == "episode" and str(row.get("season", "")).isdigit() and str(row.get("episode", "")).isdigit():
+            key = "tmdb:episode:%s:s%d:e%d" % (identity, int(row["season"]), int(row["episode"]))
+            watched = data.get(key) is True
+        else:
+            watched = False
+        return "VISTO" if watched else ""
 
 
 def _database(root, prefix):

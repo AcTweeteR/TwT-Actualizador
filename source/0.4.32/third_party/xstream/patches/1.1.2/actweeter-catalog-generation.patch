@@ -1,0 +1,299 @@
+diff --git a/resources/lib/addon.py b/resources/lib/addon.py
+--- a/resources/lib/addon.py
++++ b/resources/lib/addon.py
+@@ -48,6 +48,7 @@
+ from favorites import Favorites
+ from history import WatchedMovies, WatchedEpisodes, WatchHistory, ResumePoints
+ import series_changes
++import catalog_cache
+ import trakt_playback_metadata
+ 
+ _tmdb_routes = None
+@@ -1730,11 +1731,48 @@
+     return result
+ 
+ 
+-def _cache_path(name):
++def _catalog_provider_source(profile_num):
++    creds = _get_credentials_for_profile(profile_num)
++    return "|".join(creds.get(k, "") for k in
++                    ("xtream_url", "xtream_username", "xtream_password"))
++
++
++def _cache_path(name, profile_num=None):
+     profile = xbmcvfs.translatePath(addon.getAddonInfo("profile"))
+-    # Sanitize name to prevent path traversal - only allow alphanumeric, hyphen, underscore
++    pnum = int(profile_num or pm.active)
+     safe_name = re.sub(r"[^a-zA-Z0-9_-]", "", str(name))
+-    return os.path.join(profile, f"data_cache_p{pm.active}_{safe_name}.json")
++    legacy = os.path.join(profile, f"data_cache_p{pnum}_{safe_name}.json")
++    if name in catalog_cache.FILES:
++        return catalog_cache.cache_path(profile, pnum,
++            _catalog_provider_source(pnum), name, legacy)
++    return legacy
++
++
++def _refresh_catalog_generation(profile_num=None, *, force=True, timeout=120):
++    pnum = int(profile_num or pm.active)
++    creds = _get_credentials_for_profile(pnum)
++    host, user, password = (creds.get(k, "") for k in
++                            ("xtream_url", "xtream_username", "xtream_password"))
++    if not all((host, user, password)):
++        raise ProviderFetchError("Xtream credentials unavailable")
++    source = "|".join((host, user, password))
++    profile = xbmcvfs.translatePath(addon.getAddonInfo("profile"))
++    fetchers = {
++        "xtream_streams_movie": lambda: IPTV.get_xtream_streams(host, user, password, "movie", None),
++        "xtream_cats_movie": lambda: IPTV.get_xtream_categories(host, user, password, "movie"),
++        "xtream_streams_series": lambda: IPTV.get_xtream_streams(host, user, password, "series", None),
++        "xtream_cats_series": lambda: IPTV.get_xtream_categories(host, user, password, "series"),
++    }
++    def legacy():
++        snapshots = {}
++        for key in catalog_cache.KEYS:
++            value = _cache_load(key, pnum)
++            snapshots[key] = (value.get("_data", []) if isinstance(value, dict)
++                              and catalog_cache.source_matches(value, source) else [])
++        return snapshots
++    fetchers["_legacy"] = legacy
++    return catalog_cache.refresh(profile, pnum, source, fetchers,
++                                 force=force, timeout=timeout)
+ 
+ 
+ def _playback_duration_path(stream_id):
+@@ -1776,19 +1814,19 @@
+         return 0
+ 
+ 
+-def _cache_load(name):
+-    try:
+-        with open(_cache_path(name), "r", encoding="utf-8") as f:
++def _cache_load(name, profile_num=None):
++    try:
++        with open(_cache_path(name, profile_num), "r", encoding="utf-8") as f:
+             return json.load(f)
+     except Exception:
+         return None
+ 
+ 
+-def _cache_save(name, data):
++def _cache_save(name, data, profile_num=None):
+     import uuid
+     profile = xbmcvfs.translatePath(addon.getAddonInfo("profile"))
+     os.makedirs(profile, exist_ok=True)
+-    cache_file = _cache_path(name)
++    cache_file = _cache_path(name, profile_num)
+     tmp_file = cache_file + "." + uuid.uuid4().hex + ".tmp"
+     with open(tmp_file, "w", encoding="utf-8") as f:
+         json.dump(data, f)
+@@ -1923,7 +1961,7 @@
+     })
+ 
+ 
+-def _cache_valid(name, hours=None):
++def _cache_valid(name, hours=None, profile_num=None):
+     if hours is not None:
+         pass
+     elif name.startswith("vod_info_"):
+@@ -1933,7 +1971,7 @@
+             hours = float(addon.getSetting("auto_refresh_interval") or "24")
+         except ValueError:
+             hours = 24
+-    path = _cache_path(name)
++    path = _cache_path(name, profile_num)
+     if not os.path.exists(path):
+         return False
+     age = time.time() - os.path.getmtime(path)
+@@ -2059,46 +2097,68 @@
+     return data
+ 
+ 
+-def _get_cached_xtream_categories(url, user, pwd, stype, force_refresh=False, require_fresh=False):
++def _get_cached_xtream_categories(url, user, pwd, stype, force_refresh=False,
++                                  require_fresh=False, profile_num=None):
+     if not url or not user or not pwd:
+         return []
++    pnum = int(profile_num or pm.active)
+     key = f"xtream_cats_{stype}"
+-    cached = _cache_load(key)
+     source = f"{url}|{user}|{pwd}"
+-    if not force_refresh and isinstance(cached, dict) and cached.get("_src") == source and _cache_valid(key):
+-        cached_data = cached.get("_data") or []
+-        if not isinstance(cached_data, list):
+-            _log("Xtream categories ({0}): cached data is not a list, re-fetching".format(stype))
+-        else:
+-            return cached_data
+-    try:
+-        data = IPTV.get_xtream_categories(url, user, pwd, stype)
+-    except ProviderFetchError as e:
+-        if require_fresh:
+-            raise
+-        if isinstance(cached, dict) and cached.get("_src") == source:
+-            stale = cached.get("_data") or []
+-            if isinstance(stale, list):
+-                _log(f"Xtream categories ({stype}) fetch failed; using stale cache: {e}")
+-                return stale
+-        raise
++    cached = _cache_load(key, pnum)
++    if stype in ("movie", "series"):
++        usable = (catalog_cache.source_matches(cached, source)
++                  and isinstance(cached.get("_data"), list))
++        if force_refresh or require_fresh or not usable:
++            try:
++                _refresh_catalog_generation(pnum, force=True)
++            except Exception:
++                if require_fresh or not (catalog_cache.source_matches(cached, source)
++                        and isinstance(cached.get("_data"), list)):
++                    raise
++                _log("Xtream %s catalog refresh failed; using active generation" % stype)
++            cached = _cache_load(key, pnum)
++        if (catalog_cache.source_matches(cached, source)
++                and isinstance(cached.get("_data"), list)):
++            return cached["_data"]
++        raise ValueError("active Xtream %s catalog is unavailable" % stype)
++    if not force_refresh and isinstance(cached, dict) and cached.get("_src") == source and _cache_valid(key, profile_num=pnum):
++        data = cached.get("_data") or []
++        if isinstance(data, list):
++            return data
++    data = IPTV.get_xtream_categories(url, user, pwd, stype)
+     if not isinstance(data, list):
+         raise ValueError("invalid Xtream categories snapshot")
+-    # shortcut: reject empty-over-nonempty snapshots until XStream validates a legitimate empty catalogue.
+-    stale = cached.get("_data") if isinstance(cached, dict) and cached.get("_src") == source else None
+-    if not data and isinstance(stale, list) and stale:
+-        if require_fresh:
+-            raise ValueError("empty Xtream categories snapshot")
+-        _log("Xtream categories (%s): empty snapshot rejected; using stale cache" % stype)
+-        return stale
+-    _cache_save(key, {"_src": source, "_data": data})
++    _cache_save(key, {"_src": source, "_data": data}, pnum)
+     return data
+ 
+-
+ def _get_cached_xtream_streams(url, user, pwd, stype, category_id=None,
+-                               force_refresh=False, require_fresh=False):
++                               force_refresh=False, require_fresh=False, profile_num=None):
+     if not url or not user or not pwd:
+         return []
++    pnum = int(profile_num or pm.active)
++    if stype in ("movie", "series"):
++        key = f"xtream_streams_{stype}"
++        source = f"{url}|{user}|{pwd}"
++        cached = _cache_load(key, pnum)
++        usable = (catalog_cache.source_matches(cached, source)
++                  and isinstance(cached.get("_data"), list))
++        if force_refresh or require_fresh or not usable:
++            try:
++                _refresh_catalog_generation(pnum, force=True)
++            except Exception:
++                if require_fresh or not (catalog_cache.source_matches(cached, source)
++                        and isinstance(cached.get("_data"), list)):
++                    raise
++                _log("Xtream %s catalog refresh failed; using active generation" % stype)
++            cached = _cache_load(key, pnum)
++        if not (catalog_cache.source_matches(cached, source)
++                and isinstance(cached.get("_data"), list)):
++            raise ValueError("active Xtream %s catalog is unavailable" % stype)
++        data = cached["_data"]
++        if category_id:
++            return [item for item in data
++                    if str(item.get("category_id", "")) == str(category_id)]
++        return data
+     key = f"xtream_streams_{stype}"
+     cached = _cache_load(key)
+     source = f"{url}|{user}|{pwd}"
+diff --git a/resources/lib/premium_routes.py b/resources/lib/premium_routes.py
+--- a/resources/lib/premium_routes.py
++++ b/resources/lib/premium_routes.py
+@@ -194,7 +194,7 @@
+                             ('xtream_url', 'xtream_username', 'xtream_password'))
+     items = _performance_call(g, 'provider.streams', g['_get_cached_xtream_streams'],
+         host, user, password, stype, None,
+-        force_refresh=force_refresh, require_fresh=force_refresh)
++        force_refresh=False, require_fresh=False, profile_num=pnum)
+     # Record the unfiltered provider catalogue before UI visibility filters.
+     if stype == 'series' and items and host and user and password:
+         try:
+@@ -203,7 +203,7 @@
+             g['_log']('Series baseline refresh failed: %s' % exc)
+     categories = _performance_call(g, 'provider.categories', g['_get_cached_xtream_categories'],
+         host, user, password, stype,
+-        force_refresh=force_refresh, require_fresh=force_refresh)
++        force_refresh=False, require_fresh=False, profile_num=pnum)
+     hidden_cats = set(g['_get_hidden_subcats'](stype, pnum))
+     # Premium collections do not bypass parental control or hidden categories.
+     blocked = hidden_cats | {str(c.get('category_id', '')) for c in categories
+@@ -506,6 +506,15 @@
+     results = []
+     snapshots = {}
+     saved_meta = dict(conn.execute('SELECT key, value FROM meta'))
++    if force_provider_refresh:
++        try:
++            g['_refresh_catalog_generation'](pnum, force=True)
++        except Exception as exc:
++            g['_log']('provider catalog generation refresh failed error_type=%s' % type(exc).__name__)
++            conn.rollback()
++            results = [{'scanned':0, 'added':0, 'changed':0, 'removed':0,
++                        'status':'error'} for _ in ('movie', 'series')]
++            return conn, results
+     for stype in ('movie', 'series'):
+         source_stamp = _search_source_stamp(g, pnum, stype)
+         saved = saved_meta.get(stype)
+@@ -517,8 +526,7 @@
+             continue
+         started = time.perf_counter()
+         try:
+-            items, credentials = catalog(g, stype, pnum,
+-                                         force_refresh=force_provider_refresh)
++            items, credentials = catalog(g, stype, pnum, force_refresh=False)
+         except Exception as exc:
+             g['_log']('provider search refresh type=%s status=error error_type=%s' %
+                       (stype, type(exc).__name__))
+diff --git a/resources/lib/premium_routes.py b/resources/lib/premium_routes.py
+--- a/resources/lib/premium_routes.py
++++ b/resources/lib/premium_routes.py
+@@ -232,7 +232,8 @@
+         if not all((host, user, password)):
+             return None
+         cache_key = 'xtream_streams_movie'
+-        if not g['_cache_valid'](cache_key):
++        cache_path = g['_cache_path'](cache_key, profile_num=pnum)
++        if not os.path.isfile(cache_path):
+             return None
+         cached_ranks = None
+         if view in ('popular', 'trending'):
+@@ -240,7 +241,6 @@
+             cached_ranks = g['_cache_load'](rank_key) or {}
+             if cached_ranks.get('expires', 0) <= time.time():
+                 return None
+-        cache_path = g['_cache_path'](cache_key)
+         trace = g.get('_performance')
+         source = '%s|%s|%s' % (host, user, password)
+         try:
+@@ -255,7 +255,7 @@
+                 if trace is not None:
+                     trace.count('index.rebuild.schedule_failed')
+             return None
+-        categories = g['_get_cached_xtream_categories'](host, user, password, 'movie')
++        categories = g['_get_cached_xtream_categories'](host, user, password, 'movie', profile_num=pnum)
+         blocked = set(g['_get_hidden_subcats']('movie', pnum))
+         blocked.update(str(category.get('category_id', '')) for category in categories
+                        if g['_is_adult_category'](category.get('category_name', '')))
+@@ -297,7 +297,7 @@
+ def metadata(g, item, stype, credentials):
+     sid = provider_id(item, stype)
+     if stype == 'movie':
+-        data = _performance_call(g, 'provider.movie_info', g['_enrich_movie_info'], item, *credentials)
++        data = _performance_call(g, 'provider.movie_info', g['_enrich_movie_info'], item)
+         raw = g['_cache_load']('vod_info_' + sid) or {}
+     else:
+         data = _performance_call(g, 'provider.series_info', g['_enrich_series_info'], item, *credentials)
+@@ -1147,8 +1147,6 @@
+         has_more = len(items) > offset + len(selected)
+     else:
+         selected = items
+-    if stype == 'movie':
+-        _performance_call(g, 'provider.vod_prefetch', g['_prefetch_vod_info_batch'], selected, *credentials)
+     plugin.setContent(handle, 'movies' if stype == 'movie' else 'tvshows')
+     series_context = (prepare_series_state_context(g, pnum)
+                       if stype == 'series' and selected else None)

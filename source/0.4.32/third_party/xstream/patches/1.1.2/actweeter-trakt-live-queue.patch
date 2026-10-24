@@ -1,0 +1,58 @@
+diff --git a/resources/lib/addon.py b/resources/lib/addon.py
+--- a/resources/lib/addon.py
++++ b/resources/lib/addon.py
+@@ -1,6 +1,9 @@
+ elif mode == "xstream_trakt_snapshot":
+     if _setup_tmdb_routes():
+         _tmdb_routes.trakt_snapshot_route(args)
++elif mode == "xstream_trakt_apply":
++    if _setup_tmdb_routes():
++        _tmdb_routes.trakt_apply_route(args)
+ elif mode == "xstream_trakt_authorize":
+     if _setup_tmdb_routes():
+         _tmdb_routes.trakt_authorize_route(args)
+diff --git a/resources/lib/tmdb_routes.py b/resources/lib/tmdb_routes.py
+--- a/resources/lib/tmdb_routes.py
++++ b/resources/lib/tmdb_routes.py
+@@ -1,1 +1,41 @@
++def trakt_apply_route(params):
++    """Consume one local batch; network use is read-only and writes stay in XStream."""
++    import re
++    from pathlib import Path
++    import xbmcaddon
++    import history
++    import trakt_live_consumer
++    from trakt_live_queue import provider_fingerprint
++
++    if not _trakt_guard(auth=True) or not trakt.authorized():
++        return
++    batch_id = _param(params, "batch", "")
++    if not re.fullmatch(r"[0-9a-f]{32}", batch_id):
++        raise ValueError("invalid batch ID")
++    profile = str(c("pm").active)
++    service = xbmcaddon.Addon("service.actweeter")
++    service_root = Path(xbmcvfs.translatePath(service.getAddonInfo("profile")))
++    queue = service_root / "trakt_live" / "queue" / (batch_id + ".json")
++    ack_root = service_root / "trakt_live" / "acks"
++    current, _ = trakt.snapshot_request("/users/settings", {})
++    account = str(current.get("user", {}).get("ids", {}).get("slug", ""))
++    creds = c("pm").get_credentials()
++    scope = provider_fingerprint(profile, creds.get("source_type"),
++        creds.get("xtream_url"), creds.get("xtream_username"), creds.get("m3u_url"))
++    if not account or not scope:
++        raise PermissionError("Trakt account or provider binding unavailable")
++    player = xbmc.Player()
++    playing = player.getPlayingFile() if player.isPlaying() else ""
++    catalog_root = Path(xbmcvfs.translatePath(c("addon").getAddonInfo("profile")))
++    result = trakt_live_consumer.apply_batch(str(queue), str(ack_root),
++        profile=profile, account=account, provider_scope=scope,
++        addon=c("addon"), history=history, catalog_root=catalog_root,
++        playing_file=playing)
++    item = c("_new_listitem")("AcTweeteR: lote Trakt procesado de forma local")
++    item.setProperty("actweeter.trakt.batch", batch_id)
++    item.setProperty("actweeter.trakt.ack", result["sha256"])
++    xbmcplugin.addDirectoryItem(c("addon_handle"), "", item, isFolder=False)
++    xbmcplugin.endOfDirectory(c("addon_handle"), cacheToDisc=False)
++
++
+ def trakt_list_route(params):

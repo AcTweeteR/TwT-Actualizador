@@ -8,13 +8,14 @@ This module never persists a second copy or logs input values.
 from __future__ import annotations
 
 import json
+import ast
+import re
 import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 
-SUPPORTED_XSTREAM_VERSION = "1.1.2"
-SUPPORTED_XSTREAM_VERSIONS = frozenset((SUPPORTED_XSTREAM_VERSION, "1.1.2.1", "1.1.2.2", "1.1.2.3", "1.1.2.4", "1.1.2.5", "1.1.2.6", "1.1.2.7", "1.1.2.8", "1.1.2.9", "1.1.2.10"))
+MINIMUM_XSTREAM_VERSION = "1.1.2"
 DEFAULT_XSTREAM_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
 PROFILE_SETTINGS = {
     "profile_1_enabled": ("bool", "true"),
@@ -26,10 +27,122 @@ PROFILE_SETTINGS = {
     "profile_1_load_movies": ("bool", "true"),
     "profile_1_load_series": ("bool", "true"),
 }
+REQUIRED_XSTREAM_DEPENDENCIES = {
+    "xbmc.python": "3.0.1",
+    "script.module.requests": "2.22.0",
+    "pvr.iptvsimple": "21.4.0",
+}
 
 
 class SetupError(ValueError):
     """Safe-to-display error code; never includes submitted values."""
+
+
+_VERSION = re.compile(
+    r"^(\d+(?:\.\d+){2,3})(?:~(alpha|beta|rc)(\d+))?$", re.IGNORECASE)
+_PRERELEASE_ORDER = {"alpha": 0, "beta": 1, "rc": 2}
+
+
+def parse_xstream_version(value):
+    """Parse Kodi dotted versions and order prereleases before the same release."""
+    if not isinstance(value, str):
+        return None
+    match = _VERSION.fullmatch(value.strip())
+    if not match:
+        return None
+    try:
+        numbers = tuple(int(part) for part in match.group(1).split("."))
+        stage = match.group(2)
+        suffix = (3, 0) if stage is None else (
+            _PRERELEASE_ORDER[stage.casefold()], int(match.group(3)))
+    except (KeyError, ValueError):
+        return None
+    return numbers + (0,) * (4 - len(numbers)) + suffix
+
+
+def xstream_version_satisfies(installed, minimum=MINIMUM_XSTREAM_VERSION):
+    current = parse_xstream_version(installed)
+    required = parse_xstream_version(minimum)
+    return current is not None and required is not None and current >= required
+
+
+def _mode_routes(tree):
+    routes = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Compare) or len(node.ops) != 1 or not isinstance(node.ops[0], ast.Eq):
+            continue
+        if isinstance(node.left, ast.Name) and node.left.id == "mode":
+            routes.update(item.value for item in node.comparators
+                          if isinstance(item, ast.Constant) and isinstance(item.value, str))
+    return routes
+
+
+def _read_ast(path):
+    with open(path, "r", encoding="utf-8") as source:
+        return ast.parse(source.read())
+
+
+def inspect_xstream_compatibility(path, version):
+    """Verify the settings, declared dependencies and AcTweeteR routes we use.
+
+    Returns ``(compatible, missing_capabilities)``; version is only a minimum
+    gate, never a closed allowlist. The AST/XML checks protect future releases.
+    """
+    missing = []
+    if not xstream_version_satisfies(version):
+        missing.append("version>=1.1.2")
+    root_path = str(path or "").rstrip("/\\")
+    try:
+        manifest = ET.parse(root_path + "/addon.xml").getroot()
+        if manifest.get("id") != "plugin.video.xstream-pro" or manifest.get("version") != version:
+            missing.append("addon_manifest_identity")
+        imports = {node.get("addon"): node.get("version")
+                   for node in manifest.findall("./requires/import")
+                   if node.get("addon")}
+        if any(not xstream_version_satisfies(
+                imports.get(dependency, ""), minimum)
+               for dependency, minimum in REQUIRED_XSTREAM_DEPENDENCIES.items()):
+            missing.append("required_dependencies")
+    except (OSError, ET.ParseError):
+        missing.append("addon_manifest")
+    try:
+        settings = ET.parse(root_path + "/resources/settings.xml").getroot()
+        found = {node.get("id"): node.get("type") for node in settings.iter("setting")
+                 if node.get("id")}
+        if any(found.get(key) != expected[0]
+               for key, expected in PROFILE_SETTINGS.items()):
+            missing.append("xtream_profile_settings")
+    except (OSError, ET.ParseError):
+        missing.append("xtream_profile_settings")
+    try:
+        addon_tree = _read_ast(root_path + "/resources/lib/addon.py")
+        routes = _mode_routes(addon_tree)
+        strings = {node.value for node in ast.walk(addon_tree)
+                   if isinstance(node, ast.Constant) and isinstance(node.value, str)}
+        if "actweeter_refresh_profile" not in routes:
+            missing.append("profile_refresh_route")
+        if ("actweeter_callback" not in strings
+                or not any("catalog_refresh_result" in value for value in strings)):
+            missing.append("catalog_refresh_callback")
+    except (OSError, SyntaxError, UnicodeError):
+        missing.append("xstream_dispatch_module")
+    try:
+        premium = _read_ast(root_path + "/resources/lib/premium_routes.py")
+        functions = {node.name for node in premium.body
+                     if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))}
+        if not {"catalog", "metadata", "dispatch"} <= functions:
+            missing.append("provider_widget_and_metadata_routes")
+    except (OSError, SyntaxError, UnicodeError):
+        missing.append("provider_widget_and_metadata_routes")
+    try:
+        changes = _read_ast(root_path + "/resources/lib/series_changes.py")
+        functions = {node.name for node in changes.body
+                     if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))}
+        if not {"record_catalog", "record_series_info", "status"} <= functions:
+            missing.append("series_change_events")
+    except (OSError, SyntaxError, UnicodeError):
+        missing.append("series_change_events")
+    return not missing, tuple(missing)
 
 
 def parse_xtream_input(server, username="", password=""):
@@ -222,8 +335,8 @@ def validate_xtream_credentials(server, username, password, *, timeout=10,
 
 
 def _settings_schema(addon, translated_addon_path=None):
-    if addon.getAddonInfo("version") not in SUPPORTED_XSTREAM_VERSIONS:
-        raise SetupError("UNSUPPORTED_XSTREAM_VERSION")
+    if not xstream_version_satisfies(addon.getAddonInfo("version")):
+        raise SetupError("XSTREAM_VERSION_BELOW_MINIMUM")
     path = translated_addon_path or addon.getAddonInfo("path")
     settings_path = path.rstrip("/\\") + "/resources/settings.xml"
     try:

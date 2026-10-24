@@ -14,9 +14,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Install test-only Python dependencies
+        run: python3 -m pip install --disable-pip-version-check pytest requests
       - name: Installer and channel-isolation tests
-        run: |
-          python3 -m unittest discover -s source/0.4.32/tests -v
+        run: python3 -m pytest -q -rs source/0.4.32/tests
       - name: Verify isolated Beta feed and immutable dependencies
         run: |
           python3 tools/build_test_channel.py \

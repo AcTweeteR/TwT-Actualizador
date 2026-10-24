@@ -18,9 +18,9 @@ from xml.etree import ElementTree as ET
 
 EXPECTED = {
     "repository": ("repository.actweeter.testing", "1.0.2"),
-    "skin": ("skin.actweeter", "1.2.32~beta1"),
-    "service": ("service.actweeter", "0.4.53"),
-    "xstream": ("plugin.video.xstream-pro", "1.1.2.19"),
+    "skin": ("skin.actweeter", "1.2.32~beta2"),
+    "service": ("service.actweeter", "0.4.75"),
+    "xstream": ("plugin.video.xstream-pro", "1.1.2.28~beta14"),
 }
 
 
@@ -60,14 +60,23 @@ def set_news(addon: ET.Element, filename: str) -> None:
     news.text = filename
 
 
+def validate_service_xstream_pair(service: ET.Element, xstream: ET.Element) -> None:
+    dependency = service.find("requires/import[@addon='plugin.video.xstream-pro']")
+    expected = EXPECTED["xstream"][1]
+    if (dependency is None or dependency.get("version") != expected
+            or xstream.get("version") != expected):
+        raise ValueError("Service/XStream Trakt sync protocol generation mismatch")
+
+
 def build(repository_zip: Path, skin_zip: Path, service_zip: Path,
           xstream_zip: Path, output_dir: Path) -> tuple[Path, Path]:
     repository = addon_from_zip(repository_zip, *EXPECTED["repository"])
     skin = addon_from_zip(skin_zip, *EXPECTED["skin"])
     service = addon_from_zip(service_zip, *EXPECTED["service"])
     xstream = addon_from_zip(xstream_zip, *EXPECTED["xstream"])
-    set_news(skin, "changelog-1.2.32~beta1.txt")
-    set_news(service, "changelog-0.4.53.txt")
+    validate_service_xstream_pair(service, xstream)
+    set_news(skin, "changelog-1.2.32~beta2.txt")
+    set_news(service, "changelog-0.4.75.txt")
     root = ET.Element("addons")
     for addon in (repository, skin, service, xstream):
         root.append(addon)

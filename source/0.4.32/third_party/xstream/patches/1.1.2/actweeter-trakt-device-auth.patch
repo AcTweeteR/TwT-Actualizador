@@ -1,0 +1,57 @@
+diff --git a/resources/lib/trakt.py b/resources/lib/trakt.py
+--- a/resources/lib/trakt.py
++++ b/resources/lib/trakt.py
+@@ -84,2 +84,2 @@
+ def auth_configured():
+-    return bool(client_id() and client_secret())
++    return bool(client_id())
+@@ -203,5 +203,5 @@
+ def device_code():
+     resp = _http_request(
+         "POST",
+-        BASE_URL + "/oauth/device/code",
++        "https://auth.trakt.tv/oauth/device/code",
+         json={"client_id": client_id()},
+@@ -218,5 +218,4 @@
+     payload = {
+         "code": device_code_value,
+         "client_id": client_id(),
+-        "client_secret": client_secret(),
+     }
+@@ -224,5 +223,5 @@
+     resp = _http_request(
+         "POST",
+-        BASE_URL + "/oauth/device/token",
++        "https://auth.trakt.tv/oauth/device/token",
+         json=payload,
+         headers=_headers(False),
+@@ -251,6 +250,5 @@
+     payload = {
+         "refresh_token": refresh,
+         "client_id": client_id(),
+-        "client_secret": client_secret(),
+         "grant_type": "refresh_token",
+     }
+@@ -257,6 +255,6 @@
+     resp = _http_request(
+         "POST",
+-        BASE_URL + "/oauth/token",
++        "https://auth.trakt.tv/oauth/token",
+         json=payload,
+         headers=_headers(False),
+         timeout=15,
+diff --git a/resources/lib/tmdb_routes.py b/resources/lib/tmdb_routes.py
+--- a/resources/lib/tmdb_routes.py
++++ b/resources/lib/tmdb_routes.py
+@@ -240,6 +240,6 @@
+         _end_empty(31227)
+         return False
+     if auth:
+         if not trakt.auth_configured():
+-            _end_empty("Trakt account authorization requires a client ID and client secret in settings.")
++            _end_empty("Trakt account authorization requires an authorized application client ID in settings.")
+             return False
+@@ -2518,2 +2518,2 @@
+     else:
+-        items.append(_folder_item("Add Trakt client secret for account features", {"mode": "settings"}, "settings"))
++        items.append(_folder_item("Configure Trakt application for account features", {"mode": "settings"}, "settings"))

@@ -1,0 +1,3 @@
+0.4.75
+- Requires the unified catalog-generation and five-day series-change behavior from XStream Beta14.
+- Keeps the Testing package dependency aligned with the exact XStream Beta version.

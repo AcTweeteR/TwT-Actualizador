@@ -13,13 +13,13 @@ import xbmcgui
 import xbmcvfs
 
 from smart_search_engine import LatestRequest, MAX_QUERY, normalize, unique_rows, words
-from smart_search_sources import Metadata, catalogue, context, programmes, provider_children, rpc
+from smart_search_sources import Metadata, WatchedState, catalogue, context, programmes, provider_children, rpc
 
 ROWS = {5101: "movie", 5102: "series", 5103: "programme", 5104: "person", 5105: "discovery"}
 KEYS = list("QWERTYUIOPASDFGHJKLÑZXCVBNM") + ["ESPACIO", "BORRAR", "LISTO"]
 
 
-def listitem(row):
+def listitem(row, watch_badge=""):
     item = xbmcgui.ListItem(label=row["title"], label2=str(row.get("subtitle") or
         row.get("year") or ("Persona" if row["kind"] == "person" else "")),
         path=row.get("path", ""))
@@ -49,8 +49,10 @@ def listitem(row):
         item.setProperty("IsPlayable", "true" if row.get("available") and row["kind"] in ("movie", "episode") else "false")
     item.setProperty("search.availability", "EN TU CATÁLOGO" if row.get("available") else
                      ("ACTORES Y CREADORES" if row["kind"] == "person" else "SOLO INFORMACIÓN · TMDb"))
-    item.setProperty("search.badge", "TV / EPG" if row["kind"] == "programme" else
-                     "PERSONA" if row["kind"] == "person" else "EN IPTV" if row.get("available") else "TMDb")
+    badge = "TV / EPG" if row["kind"] == "programme" else (
+        "PERSONA" if row["kind"] == "person" else "EN IPTV" if row.get("available") else "TMDb")
+    item.setProperty("search.badge", badge + (" · " + watch_badge if watch_badge else ""))
+    item.setProperty("search.watched", "true" if watch_badge == "VISTO" else "false")
     item.setProperty("path", row.get("path", ""))
     return item
 
@@ -79,6 +81,7 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
         self.resume_positions = {}
         self.keyboard_focus_pending = False
         self.metadata = Metadata(xbmc, alias_api_key=xbmcaddon.Addon("service.actweeter").getSetting("tmdb_alias_api_key"))
+        self.watched = WatchedState()
         self.shared_index = None
         self.monitor = xbmc.Monitor()
 
@@ -227,7 +230,9 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
         selected = previous[index].get("id") if 0 <= index < len(previous) else None
         self.rows[control] = rows
         listing.reset()
-        listing.addItems([listitem(row) for row in self.rows[control]])
+        watched = getattr(self, "watched", None)
+        listing.addItems([listitem(row, watched.badge(getattr(self, "scope", None), row) if watched else "")
+                          for row in self.rows[control]])
         if selected:
             position = next((i for i, row in enumerate(rows) if row.get("id") == selected), 0)
             listing.selectItem(position)

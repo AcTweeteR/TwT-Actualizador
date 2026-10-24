@@ -1,0 +1,2 @@
+1.2.32~beta2
+- Read the configured splash_screen setting during Kodi startup so the startup mask remains visible while the intro starts.

@@ -74,7 +74,7 @@ def configure(addon, vfs, dialog, *, requester=None):
 
 
 def offer_once(addon, vfs, dialog, *, requester=None):
-    """Offer once per onboarding revision; never prompt repeatedly on re-entry."""
+    """Offer independently from core setup; recover a modal interrupted by restart."""
     path = marker(addon, vfs)
     try:
         state = json.loads(path.read_text(encoding="utf-8"))
@@ -83,11 +83,28 @@ def offer_once(addon, vfs, dialog, *, requester=None):
     except (OSError, ValueError):
         state = {}
     if valid_key(addon.getSetting(SETTING)):
+        try:
+            atomic_write(path, json.dumps({"version": VERSION, "result": "CONFIGURED"}).encode("utf-8"))
+        except Exception:
+            pass
         return "CONFIGURED"
+    result = state.get("result")
     if state.get("version") == VERSION:
-        return "ALREADY_OFFERED"
-    # Claim before opening the modal: repeated Home loads cannot stack prompts.
-    atomic_write(path, json.dumps({"version": VERSION, "result": "OFFERED"}).encode("utf-8"))
-    outcome = configure(addon, vfs, dialog, requester=requester)
-    atomic_write(path, json.dumps({"version": VERSION, "result": outcome}).encode("utf-8"))
+        if result in ("SKIPPED", "CONFIGURED", "INVALID", "CANCELLED", "UNVERIFIED",
+                      "SAVE_FAILED"):
+            return "ALREADY_OFFERED"
+    # Failed/interrupted offers remain retryable in the same Kodi process.
+    # The caller guards concurrent first-run wizard sessions.
+    try:
+        atomic_write(path, json.dumps({"version": VERSION, "result": "OFFERED"}).encode("utf-8"))
+    except Exception:
+        return "FAILED_RECOVERABLE"
+    try:
+        outcome = configure(addon, vfs, dialog, requester=requester)
+    except Exception:
+        outcome = "FAILED_RECOVERABLE"
+    try:
+        atomic_write(path, json.dumps({"version": VERSION, "result": outcome}).encode("utf-8"))
+    except Exception:
+        return "FAILED_RECOVERABLE"
     return outcome

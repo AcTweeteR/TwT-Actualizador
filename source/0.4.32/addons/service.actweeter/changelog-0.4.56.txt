@@ -1,0 +1,4 @@
+0.4.56 (private candidate; not published)
+- Add an opt-in, account/profile/provider-bound durable hand-off format for verified Trakt deltas to XStream.
+- Require XStream's persisted acknowledgement before advancing the local applied-batch ledger.
+- Keep automatic scheduling and live sync disabled until explicit user consent and runtime validation.

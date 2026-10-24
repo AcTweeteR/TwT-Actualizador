@@ -1,0 +1,38 @@
+diff --git a/resources/lib/addon.py b/resources/lib/addon.py
+--- a/resources/lib/addon.py
++++ b/resources/lib/addon.py
+@@ -1,4 +1,13 @@
+ elif mode == "xstream_trakt_apply":
+     if _setup_tmdb_routes():
+         _tmdb_routes.trakt_apply_route(args)
++elif mode == "xstream_trakt_sync_consent":
++    if _setup_tmdb_routes():
++        _tmdb_routes.trakt_sync_consent_route(args)
++elif mode == "xstream_trakt_sync_cycle":
++    if _setup_tmdb_routes():
++        _tmdb_routes.trakt_sync_cycle_route(args)
++elif mode == "xstream_trakt_sync_once":
++    if _setup_tmdb_routes():
++        _tmdb_routes.trakt_sync_once_route(args)
+ elif mode == "xstream_trakt_authorize":
+diff --git a/resources/lib/tmdb_routes.py b/resources/lib/tmdb_routes.py
+--- a/resources/lib/tmdb_routes.py
++++ b/resources/lib/tmdb_routes.py
+@@ -1,1 +1,17 @@
++def trakt_sync_consent_route(params):
++    import xbmcaddon, xbmcgui, xbmcplugin, xbmcvfs
++    from trakt_auto_routes import consent_route
++    return consent_route(c, _trakt_guard, trakt, xbmcaddon, xbmcgui, xbmcplugin, xbmcvfs)
++
++
++def trakt_sync_cycle_route(params):
++    import xbmcaddon, xbmc, xbmcplugin, xbmcvfs
++    from trakt_auto_routes import cycle_route
++    return cycle_route(c, _trakt_guard, trakt, xbmcaddon, xbmc, xbmcplugin, xbmcvfs)
++
++def trakt_sync_once_route(params):
++    import xbmcaddon, xbmc, xbmcplugin, xbmcvfs
++    from trakt_auto_routes import sync_once_route
++    return sync_once_route(c, _trakt_guard, trakt, xbmcaddon, xbmc, xbmcplugin, xbmcvfs)
++
+ def trakt_list_route(params):

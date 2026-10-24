@@ -1,0 +1,3 @@
+0.4.70
+
+Unifica la actualización de películas y series mediante generaciones completas de caché. Evita descargas simultáneas del mismo proveedor y perfil, conserva la generación anterior ante errores y recupera catálogos tras interrupciones.

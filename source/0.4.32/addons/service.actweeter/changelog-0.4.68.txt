@@ -1,0 +1,1 @@
+0.4.68 — Smart Search muestra estados vistos exactos por perfil; las fichas de temporadas y episodios heredan la identidad de serie solo para consultar el estado TMDb. Navegación de episodios usa el paquete XStream beta8 con selección de proveedor inequívoca.

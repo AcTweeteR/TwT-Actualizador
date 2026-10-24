@@ -15,7 +15,7 @@ import xml.etree.ElementTree as ET
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "addons/service.actweeter/resources/lib"))
 from smart_search_engine import CatalogSearch, LatestRequest, normalize, provider_path, unique_rows
-from smart_search_sources import Metadata, context, metadata_row, programmes, provider_children
+from smart_search_sources import Metadata, WatchedState, context, metadata_row, programmes, provider_children
 
 
 def store(path, rows):
@@ -139,6 +139,59 @@ class CatalogueTests(unittest.TestCase):
             db.execute("DELETE FROM items WHERE provider_id='3'")
         self.assertNotIn("3", [row["id"] for row in self.engine.search("matrix")])
 
+
+class WatchedStateTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp.name)
+        self.path = self.root / "watched_movies_p2.json"
+        self.watched = WatchedState()
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def write(self, data):
+        self.path.write_text(json.dumps(data), encoding="utf-8")
+
+    def test_exact_tmdb_movie_episode_season_and_show_keys(self):
+        self.write({"tmdb:movie:42": True, "tmdb:episode:77:s1:e2": True,
+                    "season:77:1": True, "tvshow:88": True})
+        scope = (str(self.root), 2)
+        for row in (dict(kind="movie", tmdb_id="42"),
+                    dict(kind="episode", tmdb_show_id="77", season=1, episode=2),
+                    dict(kind="season", tmdb_show_id="77", season=1),
+                    dict(kind="series", tmdb_id="88")):
+            with self.subTest(row=row):
+                self.assertEqual(self.watched.badge(scope, row), "VISTO")
+
+    def test_series_badge_distinguishes_partial_episode_marks(self):
+        self.write({"tmdb:episode:77:s1:e2": True})
+        self.assertEqual(self.watched.badge((str(self.root), 2),
+                         dict(kind="series", tmdb_id="77")), "EPISODIOS VISTOS")
+
+    def test_provider_movie_uses_only_its_exact_available_provider_id(self):
+        self.write({"123": True})
+        scope = (str(self.root), 2)
+        self.assertEqual(self.watched.badge(scope, dict(kind="movie", id="123", available=True)), "VISTO")
+        self.assertEqual(self.watched.badge(scope, dict(kind="movie", tmdb_id="42",
+                         id="123", available=False)), "")
+
+    def test_profile_scope_and_unverified_ids_fail_closed(self):
+        self.write({"tmdb:movie:42": True})
+        self.assertEqual(self.watched.badge((str(self.root), 1),
+                         dict(kind="movie", tmdb_id="42")), "")
+        self.assertEqual(self.watched.badge((str(self.root), 2),
+                         dict(kind="movie", tmdb_id="0042x")), "")
+
+    def test_changed_watch_store_is_reloaded_without_restart(self):
+        self.write({})
+        scope, row = (str(self.root), 2), dict(kind="movie", tmdb_id="42")
+        self.assertEqual(self.watched.badge(scope, row), "")
+        self.write({"tmdb:movie:42": True})
+        self.assertEqual(self.watched.badge(scope, row), "VISTO")
+
+
+class CatalogueSnapshotTests(CatalogueTests):
     def test_completed_snapshot_is_shared_without_second_catalogue_load(self):
         self.engine.refresh()
         view = self.engine.fork()
@@ -427,6 +480,21 @@ class WindowBehaviourTests(unittest.TestCase):
         self.window.getProperty = Mock(return_value="")
         self.window.getControl.return_value.getSelectedPosition.return_value = 0
 
+    def test_watched_state_is_rendered_through_the_skin_badge(self):
+        item = Mock()
+        with patch.object(self.ui.xbmcgui, "ListItem", return_value=item, create=True):
+            self.ui.listitem(dict(kind="movie", id="1", title="Film", tmdb_id="42"), "VISTO")
+        properties = {call.args[0]: call.args[1] for call in item.setProperty.call_args_list}
+        self.assertEqual(properties["search.watched"], "true")
+        self.assertEqual(properties["search.badge"], "TMDb · VISTO")
+
+    def test_episode_parent_tmdb_id_is_not_misreported_as_episode_identity(self):
+        item = Mock()
+        with patch.object(self.ui.xbmcgui, "ListItem", return_value=item, create=True):
+            self.ui.listitem(dict(kind="episode", id="provider:9:1:2", title="Ep",
+                                  tmdb_show_id="777", season=1, episode=2), "VISTO")
+        item.getVideoInfoTag.return_value.setUniqueIDs.assert_not_called()
+
     def test_visible_android_query_tracks_text_and_clear_without_edit_focus(self):
         self.window._set_edit_text("Matrix")
         self.window.getControl.assert_called_with(100)
@@ -465,7 +533,7 @@ class WindowBehaviourTests(unittest.TestCase):
         movie = dict(kind="movie", id="99", title="Matrix", available=True)
         person = dict(kind="person", id="tmdb:6384", title="Keanu Reeves", tmdb_id="6384")
         self.window.rows[5101] = [movie]
-        with patch.object(self.ui, "listitem", side_effect=lambda row: row):
+        with patch.object(self.ui, "listitem", side_effect=lambda row, *_args: row):
             self.window._browse(dict(movie, tmdb_id="603"), "cast")
             self.window.rows[5104] = [person]
             self.window._browse(person)
@@ -492,7 +560,7 @@ class WindowBehaviourTests(unittest.TestCase):
         self.window.rows[5101] = [{"kind": "movie", "id": "1"}, {"kind": "movie", "id": "2"}]
         listing = self.window.getControl.return_value
         listing.getSelectedPosition.return_value = 1
-        with patch.object(self.ui, "listitem", side_effect=lambda row: row):
+        with patch.object(self.ui, "listitem", side_effect=lambda row, *_args: row):
             self.window._fill(5101, [{"kind": "movie", "id": "2"}, {"kind": "movie", "id": "1"}])
         listing.selectItem.assert_called_once_with(0)
 
@@ -546,7 +614,7 @@ class WindowBehaviourTests(unittest.TestCase):
         self.window.detail = dict(kind="movie", title="Matrix")
         self.window.rows[5101] = [dict(kind="movie", id="1", title="Matrix")]
         self.window.resume_positions = {5101: 0}
-        with patch.object(self.ui, "listitem", side_effect=lambda row: row), \
+        with patch.object(self.ui, "listitem", side_effect=lambda row, *_args: row), \
              patch.object(self.ui.xbmcgui, "ListItem", create=True), \
              patch.object(self.ui.threading, "Thread") as thread:
             self.window.onInit()
@@ -610,7 +678,8 @@ class ProviderBrowseTests(unittest.TestCase):
         self.assertEqual(rows[0]["season"], 1)
 
     def test_duplicate_episode_sources_collapse_without_inventing_urls(self):
-        parent = dict(path="plugin://plugin.video.xstream-pro/?mode=xtream_season&series_id=99&profile_num=2&season_num=1")
+        parent = dict(path="plugin://plugin.video.xstream-pro/?mode=xtream_season&series_id=99&profile_num=2&season_num=1",
+                      tmdb_id="777")
         path = "plugin://plugin.video.xstream-pro/?mode=source_select&tmdb_type=tv&season=1&episode=2&title=Episode"
         result = {"files": [dict(label="Episodio", file=path)] * 2 + [dict(label="Externo", file="https://example.test/play")]}
         with patch("smart_search_sources.rpc", return_value=result):
@@ -618,6 +687,8 @@ class ProviderBrowseTests(unittest.TestCase):
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]["path"], path)
         self.assertEqual(rows[0]["kind"], "episode")
+        self.assertEqual(rows[0]["tmdb_show_id"], "777")
+        self.assertNotIn("tmdb_id", rows[0])
 
     def test_invalid_parent_is_rejected_before_kodi_request(self):
         with patch("smart_search_sources.rpc") as request:

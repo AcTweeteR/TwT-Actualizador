@@ -62,7 +62,7 @@ def emit(trace, state: str, *, log, error_type: str = "", wall_clock=time.time,
          monotonic=time.monotonic):
     """Log one lifecycle event. Error text is never accepted, only its type."""
     if state not in {"start", "dispatched", "finished", "error", "cancel_requested",
-                     "unobserved"}:
+                     "unobserved", "timeout", "cancelled", "interrupted"}:
         raise ValueError("invalid trace state")
     elapsed_ms = max(0, int((float(monotonic()) - trace["started_monotonic"]) * 1000))
     error = ""

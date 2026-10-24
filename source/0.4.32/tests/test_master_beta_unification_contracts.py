@@ -46,16 +46,14 @@ class MasterBetaUnificationContracts(unittest.TestCase):
         end = start + end_match.start() if end_match else -1
         section = patch[start:end if end >= 0 else len(patch)]
         catalog = section[section.index("+def catalog("):]
-        hook = "g['series_changes'].record_catalog(g['addon'], pnum, items)"
+        hook = "g['series_changes'].record_catalog(g['addon'], pnum, items,"
         self.assertIn("+    if stype == 'series' and items and host and user and password:", catalog)
         self.assertIn("+            " + hook, catalog)
         self.assertLess(catalog.index(hook), catalog.index("+    categories ="))
-        start = patch.index("+++ b/resources/lib/series_changes.py")
-        end_match = re.search(r"^diff --git ", patch[start:], re.MULTILINE)
-        end = start + end_match.start() if end_match else -1
-        changes = patch[start:end if end >= 0 else len(patch)]
-        self.assertIn("+CATALOG_INTERVAL = 6 * 3600", changes)
-        self.assertIn("+    if not force and now - float(data.get(\"catalog_checked\", 0) or 0) < CATALOG_INTERVAL:", changes)
+        changes = (ROOT / "third_party/xstream/series_changes.py").read_text()
+        self.assertIn("CATALOG_INTERVAL = 6 * 3600", changes)
+        self.assertIn("provider=(host, user)", patch)
+        self.assertNotIn("MAX_EVENTS", changes)
 
     def test_service_does_not_override_kodi_wide_addon_update_preference(self):
         service = (ROOT / "addons/service.actweeter/service.py").read_text()
@@ -73,8 +71,8 @@ class MasterBetaUnificationContracts(unittest.TestCase):
 
     def test_xstream_setup_accepts_installed_beta_and_candidate_versions(self):
         source = (ROOT / "addons/service.actweeter/resources/lib/xstream_setup.py").read_text()
-        self.assertIn('"1.1.2.9"', source)
-        self.assertIn('"1.1.2.10"', source)
+        self.assertIn("MINIMUM_XSTREAM_VERSION = \"1.1.2\"", source)
+        self.assertNotIn("SUPPORTED_XSTREAM_VERSIONS", source)
 
 
 if __name__ == "__main__":

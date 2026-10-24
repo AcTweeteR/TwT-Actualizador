@@ -3,11 +3,13 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest import mock
 from unittest.mock import Mock
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "addons/service.actweeter/resources/lib"))
 import tmdb_onboarding as tmdb
+import first_run
 
 
 class TMDbOnboardingTests(unittest.TestCase):
@@ -60,6 +62,54 @@ class TMDbOnboardingTests(unittest.TestCase):
         value = Path(self.directory.name, 'tmdb_onboarding.json').read_text()
         self.assertEqual(json.loads(value)['version'], tmdb.VERSION)
         self.assertNotIn('a' * 32, value)
+
+    def test_skipping_tmdb_does_not_complete_or_defer_the_core_wizard(self):
+        main_state = first_run.mark_started({})
+        main_path = Path(self.directory.name, "setup_state.json")
+        first_run.save_state(main_path, main_state)
+        self.dialog.yesno.return_value = False
+        self.assertEqual(tmdb.offer_once(self.addon, self.vfs, self.dialog), "SKIPPED")
+        resumed = first_run.load_state(main_path)
+        self.assertFalse(resumed["completed"])
+        self.assertEqual(resumed["setup_state"], "INSTALLING_ADDONS")
+        self.assertTrue(first_run.should_offer_first_run(resumed, core_configured=False))
+
+    def test_legacy_prompted_marker_never_means_incomplete_core_setup_is_complete(self):
+        state = first_run.normalize_state({"prompted": True, "completed": False,
+                                           "setup_state": "INCOMPLETE"})
+        self.assertFalse(state.get("completed", False))
+        self.assertTrue(first_run.should_offer_first_run(state, core_configured=True))
+
+    def test_interrupted_tmdb_prompt_retries_in_same_process(self):
+        self.dialog.yesno.side_effect = [RuntimeError("dialog interrupted"), False]
+        self.assertEqual(tmdb.offer_once(self.addon, self.vfs, self.dialog),
+                         "FAILED_RECOVERABLE")
+        self.assertEqual(tmdb.offer_once(self.addon, self.vfs, self.dialog), "SKIPPED")
+        self.assertEqual(tmdb.offer_once(self.addon, self.vfs, self.dialog),
+                         "ALREADY_OFFERED")
+        self.assertEqual(self.dialog.yesno.call_count, 2)
+
+    def test_legacy_offered_marker_retries_in_same_process(self):
+        Path(self.directory.name, "tmdb_onboarding.json").write_text(
+            json.dumps({"version": tmdb.VERSION, "result": "OFFERED", "process_id": 100}))
+        self.dialog.yesno.return_value = False
+        self.assertEqual(tmdb.offer_once(self.addon, self.vfs, self.dialog), "SKIPPED")
+        self.dialog.yesno.assert_called_once()
+
+    def test_provider_setup_has_single_capability_gate(self):
+        setup = (ROOT / "addons/service.actweeter/setup.py").read_text()
+        body = setup.split("def _configure_xstream_provider(dialog):", 1)[1].split("\ndef ", 1)[0]
+        self.assertEqual(body.count("if not _xstream_refresh_supported():"), 1)
+
+    def test_setup_isolates_optional_tmdb_and_continues_with_required_steps(self):
+        setup = (ROOT / "addons/service.actweeter/setup.py").read_text()
+        helper = setup.index("def _offer_optional_tmdb(dialog):")
+        first_run = setup.index("def _run_onboarding(dialog")
+        body = setup[helper:first_run]
+        self.assertIn('outcome = "FAILED_RECOVERABLE"', body)
+        self.assertLess(setup.index("_offer_optional_tmdb(dialog)", first_run),
+                        setup.index("_complete_missing_components(dialog", first_run))
+        self.assertIn("offer_once", body)
 
     def test_existing_key_keeps_settings_and_does_not_offer(self):
         self.settings[tmdb.SETTING] = "b" * 32

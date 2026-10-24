@@ -1,0 +1,60 @@
+diff --git a/resources/lib/history.py b/resources/lib/history.py
+--- a/resources/lib/history.py
++++ b/resources/lib/history.py
+@@ -327,3 +327,7 @@
+     def clear(self):
+         self._data = {}
+         self._save()
++
++
++from history_store_coordinator import install as _install_history_store_coordinator
++_install_history_store_coordinator(__import__(__name__))
+diff --git a/resources/lib/addon.py b/resources/lib/addon.py
+--- a/resources/lib/addon.py
++++ b/resources/lib/addon.py
+@@ -5150,19 +5150,26 @@
+             WatchHistory(addon, profile_num=pnum).add(name, url, icon, stype, wh_extra)
+         upnext_sent = False
+         cached_dur = 0
+         upnext_dur_warned = False
++        last_resume_save = 0.0
++        last_pos = last_dur = None
++        resume_extra = {"stype": stype, "icon": icon}
++        if extra:
++            resume_extra.update(extra)
++        if title:
++            resume_extra["title"] = str(title)
++        if plot:
++            resume_extra["plot"] = str(plot)
+         while player.isPlaying():
+             try:
+                 pos = player.getTime()
+                 dur = player.getTotalTime()
++                last_pos, last_dur = pos, dur
+                 if stype in ("movie", "series") and dur > 0:
+-                    resume_extra = {"stype": stype, "icon": icon}
+-                    if extra:
+-                        resume_extra.update(extra)
+-                    if title:
+-                        resume_extra["title"] = str(title)
+-                    if plot:
+-                        resume_extra["plot"] = str(plot)
+-                    ResumePoints(addon, profile_num=pnum).save_position(name, url, pos, dur, resume_extra)
++                    now = time.monotonic()
++                    if now - last_resume_save >= 60:
++                        ResumePoints(addon, profile_num=pnum).save_position(
++                            name, url, pos, dur, resume_extra)
++                        last_resume_save = now
+                 if dur > 0:
+                     cached_dur = dur
+@@ -5203,6 +5210,10 @@
+             except Exception as e:
+                 _log(f"Playback monitoring error: {e}")
+             xbmc.sleep(_tvos_sleep(5000))
++        if (stype in ("movie", "series") and last_pos is not None
++                and last_dur is not None and last_dur > 0):
++            ResumePoints(addon, profile_num=pnum).save_position(
++                name, url, last_pos, last_dur, resume_extra, force=True)
+         trakt_playback_metadata.clear_window_ids_if_current(
+             xbmcgui.Window(10000), trakt_ids_json
+         )

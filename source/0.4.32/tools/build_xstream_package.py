@@ -15,6 +15,7 @@ import json
 import re
 import stat
 import subprocess
+import sys
 import tempfile
 import zipfile
 from pathlib import Path
@@ -24,6 +25,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "third_party" / "xstream" / "upstream.json"
 PATCHES = (
     ("patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-runtime.patch"),
+    ("provider_series_lookup_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-provider-series-lookup.patch"),
     ("integration_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-setup-refresh.patch"),
     ("recommendations_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-trakt-recommendations.patch"),
     ("playback_metadata_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-script-trakt.patch"),
@@ -34,9 +36,22 @@ PATCHES = (
     ("collections_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-collections.patch"),
     ("collections_empty_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-collections-empty.patch"),
     ("collections_dedup_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-collections-dedup.patch"),
+    ("trakt_device_auth_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-trakt-device-auth.patch"),
+    ("trakt_snapshot_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-trakt-snapshot.patch"),
+    ("history_store_coordinator_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-history-store-coordinator.patch"),
+    ("trakt_live_queue_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-trakt-live-queue.patch"),
+    ("trakt_auto_cycle_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-trakt-auto-cycle.patch"),
+    ("catalog_generation_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-catalog-generation.patch"),
+    ("search_lifecycle_patch", ROOT / "third_party/xstream/patches/1.1.2/actweeter-search-lifecycle.patch"),
 )
 DIAGNOSTICS_SOURCE = ROOT / "third_party/xstream/performance_diagnostics.py"
 CATALOG_INDEX_SOURCE = ROOT / "third_party/xstream/provider_catalog_index.py"
+CATALOG_CACHE_SOURCE = ROOT / "third_party/xstream/catalog_cache.py"
+HISTORY_STORE_COORDINATOR_SOURCE = ROOT / "third_party/xstream/history_store_coordinator.py"
+TRAKT_AUTO_ROUTES_SOURCE = ROOT / "third_party/xstream/trakt_auto_routes.py"
+TRAKT_PKCE_APPLIER_SOURCE = ROOT / "third_party/xstream/apply_trakt_pkce.py"
+TRAKT_PKCE_SOURCE = ROOT / "third_party/xstream/trakt_pkce.py"
+SERIES_CHANGES_SOURCE = ROOT / "third_party/xstream/series_changes.py"
 FIXED_TIME = (2026, 10, 11, 0, 0, 0)
 UPSTREAM_ROOT = "plugin.video.xstream-pro"
 EXCLUDED_SUFFIXES = {".orig", ".pyc", ".pyo"}
@@ -84,6 +99,129 @@ def validate_python_archive(archive: zipfile.ZipFile) -> int:
                 name, exc
             )) from exc
     return len(members)
+
+
+def validate_trakt_sync_contract(archive, service_queue: bytes) -> None:
+    """Fail closed if a ZIP lacks a complete, generation-matched Trakt path."""
+    root = UPSTREAM_ROOT + "/resources/lib/"
+    required = {
+        "addon.py": (
+            b'elif mode == "xstream_trakt_sync_consent":',
+            b"_tmdb_routes.trakt_sync_consent_route(args)",
+            b'elif mode == "xstream_trakt_sync_cycle":',
+            b"_tmdb_routes.trakt_sync_cycle_route(args)",
+            b'elif mode == "xstream_trakt_sync_once":',
+            b"_tmdb_routes.trakt_sync_once_route(args)",
+        ),
+        "tmdb_routes.py": (
+            b"def trakt_sync_consent_route(params):",
+            b"return consent_route(",
+            b"def trakt_sync_cycle_route(params):",
+            b"return cycle_route(",
+            b"def trakt_sync_once_route(params):",
+            b"return sync_once_route(",
+            b'trakt.snapshot_request("/users/settings", {})',
+        ),
+        "trakt_auto_routes.py": (
+            b"def consent_route(", b"def cycle_route(", b"run_cycle(",
+            b"def sync_once_route(", b"one_shot=True",
+        ),
+        "trakt_live_consumer.py": (
+            b"def apply_batch(", b"verify_batch(", b"write_ack(",
+            b"target == 'tmdb'", b"tmdb_watch_key",
+        ),
+        "trakt_live_queue.py": (b"def verify_batch(", b"def write_ack(",
+                                b"target='provider'", b"target not in ('provider', 'tmdb')"),
+        "watched_actions.py": (b"def tmdb_watch_key(", b"tmdb:movie:",
+                               b"tmdb:episode:"),
+        "tmdb_routes.py": (b"def _is_watched(", b"tmdb_watch_key"),
+        "trakt_sync.py": (b"def validate_export(", b"pagination headers required",),
+        "trakt_snapshot.py": (b"require_page_metadata=True", b"'contract_version': 2",),
+        "trakt.py": (b"def snapshot_request(", b'Unsupported snapshot endpoint',),
+        "trakt_provider_index.py": (b"def catalog_members(", b"def _indexed_members(",),
+        "trakt_series_index.py": (b"def verified_show_records(",),
+        "trakt_episode_index.py": (b"def verified_episode_records(",),
+        "history_store_coordinator.py": (b"def install(history):",),
+        "history.py": (b"_install_history_store_coordinator(__import__(__name__))",),
+    }
+    names = set(archive.namelist())
+    for relative, markers in required.items():
+        member = root + relative
+        if member not in names:
+            raise ValueError("Trakt sync module missing from ZIP: " + relative)
+        source = archive.read(member)
+        if any(marker not in source for marker in markers):
+            raise ValueError("Trakt sync route/dependency incomplete in ZIP: " + relative)
+    if archive.read(root + "trakt_live_queue.py") != service_queue:
+        raise ValueError("Service/XStream Trakt queue protocol differs")
+
+
+def validate_trakt_pkce_contract(archive) -> None:
+    """Ensure the reproducible package includes the staged PKCE auth flow."""
+    root = UPSTREAM_ROOT + "/resources/lib/"
+    required = {
+        "trakt_pkce.py": (b"def begin(", b"def exchange_payload(", b"def exchange("),
+        "trakt.py": (b"def pkce_exchange_callback(", b"trakt_pkce.exchange("),
+        "tmdb_routes.py": (b"def trakt_authorize_route(params):",
+                           b"trakt_pkce.begin(",
+                           b"FULL redirected URL from your browser"),
+    }
+    names = set(archive.namelist())
+    for relative, markers in required.items():
+        member = root + relative
+        if member not in names or any(marker not in archive.read(member)
+                                      for marker in markers):
+            raise ValueError("Trakt PKCE integration incomplete in ZIP: " + relative)
+
+
+def validate_series_changes_contract(archive) -> None:
+    """Validate the exact new-series source and its packaged producer hooks."""
+    root = UPSTREAM_ROOT + "/resources/lib/"
+    source_name = root + "series_changes.py"
+    names = set(archive.namelist())
+    if source_name not in names:
+        raise ValueError("series-change runtime missing from ZIP")
+    source = archive.read(source_name)
+    tree = ast.parse(source, filename=source_name)
+    functions = {node.name: node for node in tree.body
+                 if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))}
+    required = {"record_catalog", "record_series_info", "status", "recent"}
+    if not required <= set(functions):
+        raise ValueError("series-change runtime capability missing from ZIP")
+    constants = {node.targets[0].id: node.value.value for node in tree.body
+                 if isinstance(node, ast.Assign) and len(node.targets) == 1
+                 and isinstance(node.targets[0], ast.Name)
+                 and isinstance(node.value, ast.Constant)}
+    window = next((node.value for node in tree.body
+                   if isinstance(node, ast.Assign) and len(node.targets) == 1
+                   and isinstance(node.targets[0], ast.Name)
+                   and node.targets[0].id == "WINDOW_SECONDS"), None)
+    try:
+        window_seconds = ast.literal_eval(window)
+    except (ValueError, TypeError):
+        window_seconds = (window.left.value * window.right.value
+                          if isinstance(window, ast.BinOp)
+                          and isinstance(window.op, ast.Mult)
+                          and isinstance(window.left, ast.Constant)
+                          and isinstance(window.right, ast.Constant)
+                          and type(window.left.value) is int
+                          and type(window.right.value) is int else None)
+    if (constants.get("STATE_VERSION", 0) < 2 or "MAX_EVENTS" in constants
+            or window_seconds != 5 * 86400):
+        raise ValueError("series-change state is stale or arbitrarily capped")
+    if not {"provider", "complete"} <= {
+            arg.arg for arg in functions["record_catalog"].args.kwonlyargs}:
+        raise ValueError("series-change source/profile scope contract missing")
+    addon_name = root + "addon.py"
+    premium_name = root + "premium_routes.py"
+    if addon_name not in names or premium_name not in names:
+        raise ValueError("series-change producer route missing from ZIP")
+    addon = archive.read(addon_name)
+    premium = archive.read(premium_name)
+    if (b"provider=(url, user)" not in addon
+            or b"provider=(host, user)" not in premium
+            or b"record_series_info" not in addon):
+        raise ValueError("series-change hooks are not profile/provider scoped")
 
 
 def normalize_recommendation_patch_targets(root: Path) -> None:
@@ -187,7 +325,20 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             raise ValueError("XStream upstream license missing or unexpected")
 
         for manifest_key, patch_path in PATCHES:
-            if manifest_key in ("recommendations_patch", "search_index_patch", "prefetch_patch", "catalog_index_patch", "collections_patch", "collections_empty_patch", "collections_dedup_patch"):
+            if manifest_key == "trakt_snapshot_patch":
+                if sha256(patch_path) != data[manifest_key + "_sha256"]:
+                    raise ValueError("Trakt snapshot patch hash mismatch")
+                normalize_recommendation_patch_targets(root)
+                apply_contextual_unified_patch(root, patch_path)
+                continue
+            if manifest_key == "trakt_device_auth_patch":
+                if sha256(patch_path) != data[manifest_key + "_sha256"]:
+                    raise ValueError("Trakt OAuth patch hash mismatch")
+                target = root / "resources/lib/trakt.py"
+                target.write_bytes(target.read_bytes().replace(b"\r\n", b"\n"))
+                apply_contextual_unified_patch(root, patch_path)
+                continue
+            if manifest_key in ("recommendations_patch", "search_index_patch", "prefetch_patch", "catalog_index_patch", "collections_patch", "collections_empty_patch", "collections_dedup_patch", "trakt_live_queue_patch", "trakt_auto_cycle_patch"):
                 # The pinned upstream archive uses CRLF in these files while
                 # earlier tracked patches add LF. Normalize only these two
                 # already-patched files before applying semantic context.
@@ -195,8 +346,35 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             expected_patch_hash = data[manifest_key + "_sha256"]
             if sha256(patch_path) != expected_patch_hash:
                 raise ValueError(f"patch hash mismatch: {patch_path.name}")
-            if manifest_key in ("recommendations_patch", "search_index_patch", "prefetch_patch", "catalog_index_patch", "collections_patch", "collections_empty_patch", "collections_dedup_patch"):
+            if manifest_key in ("recommendations_patch", "search_index_patch", "prefetch_patch", "catalog_index_patch", "collections_patch", "collections_empty_patch", "collections_dedup_patch", "trakt_live_queue_patch", "trakt_auto_cycle_patch"):
                 apply_contextual_unified_patch(root, patch_path)
+                continue
+            if manifest_key == "patch":
+                normalize_recommendation_patch_targets(root)
+                patch_text = patch_path.read_text(encoding="utf-8")
+                target_header = "@@ -2055,7 +2092,17 @@"
+                target_start = patch_text.index(target_header)
+                target_end = patch_text.index("\n@@ ", target_start + len(target_header))
+                target_hunk = patch_text[target_start:target_end]
+                without_target = patch_text[:target_start] + patch_text[target_end + 1:]
+                with tempfile.TemporaryDirectory(prefix="actweeter-runtime-patch-") as temp:
+                    remaining_patch = Path(temp) / "runtime.patch"
+                    exact_hunk_patch = Path(temp) / "stream-snapshot.patch"
+                    remaining_patch.write_text(without_target, encoding="utf-8")
+                    exact_hunk_patch.write_text(
+                        "diff --git a/resources/lib/addon.py b/resources/lib/addon.py\n"
+                        "--- a/resources/lib/addon.py\n"
+                        "+++ b/resources/lib/addon.py\n" + target_hunk + "\n",
+                        encoding="utf-8")
+                    result = subprocess.run(
+                        ["patch", "--batch", "--forward", "--ignore-whitespace",
+                         "-p1", "-i", str(remaining_patch)],
+                        cwd=root, capture_output=True, text=True,
+                    )
+                    if result.returncode:
+                        detail = (result.stdout + result.stderr).strip()
+                        raise ValueError(f"patch application failed for {patch_path.name}: {detail}")
+                    apply_contextual_unified_patch(root, exact_hunk_patch)
                 continue
             result = subprocess.run(
                 ["patch", "--batch", "--forward", "--ignore-whitespace",
@@ -215,6 +393,54 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             raise ValueError("catalog index source SHA-256 mismatch")
         (root / "resources/lib/provider_catalog_index.py").write_bytes(
             CATALOG_INDEX_SOURCE.read_bytes())
+        if sha256(CATALOG_CACHE_SOURCE) != data["catalog_cache_source_sha256"]:
+            raise ValueError("catalog cache source SHA-256 mismatch")
+        (root / "resources/lib/catalog_cache.py").write_bytes(
+            CATALOG_CACHE_SOURCE.read_bytes())
+        for name, source in (
+            ("trakt_sync.py", ROOT / "addons/service.actweeter/resources/lib/trakt_sync.py"),
+            ("trakt_provider_index.py", ROOT / "addons/service.actweeter/resources/lib/trakt_provider_index.py"),
+            ("trakt_series_index.py", ROOT / "addons/service.actweeter/resources/lib/trakt_series_index.py"),
+            ("trakt_episode_index.py", ROOT / "addons/service.actweeter/resources/lib/trakt_episode_index.py"),
+            ("trakt_snapshot.py", ROOT / "third_party/xstream/trakt_snapshot.py"),
+            ("history_store_coordinator.py", HISTORY_STORE_COORDINATOR_SOURCE),
+            ("trakt_live_queue.py", ROOT / "addons/service.actweeter/resources/lib/trakt_live_queue.py"),
+            ("trakt_live_consumer.py", ROOT / "third_party/xstream/trakt_live_consumer.py"),
+            ("trakt_auto_routes.py", TRAKT_AUTO_ROUTES_SOURCE),
+        ):
+            expected_hash = (data.get("trakt_auto_routes_sha256") if name ==
+                             "trakt_auto_routes.py" else
+                             data["trakt_snapshot_sources_sha256"][name])
+            if sha256(source) != expected_hash:
+                raise ValueError("Trakt snapshot source hash mismatch: " + name)
+            (root / "resources/lib" / name).write_bytes(source.read_bytes())
+
+        for relative in ("resources/lib/trakt.py", "resources/lib/tmdb_routes.py"):
+            if sha256(root / relative) != data["local_runtime_sha256"][relative]:
+                raise ValueError("XStream Trakt baseline hash mismatch: " + relative)
+        tmdb_state_patch = ROOT / "third_party/xstream/patches/1.1.2/actweeter-trakt-tmdb-state.patch"
+        if sha256(tmdb_state_patch) != data["tmdb_state_patch_sha256"]:
+            raise ValueError("TMDb watched-state patch hash mismatch")
+        normalize_recommendation_patch_targets(root)
+        apply_contextual_unified_patch(root, tmdb_state_patch)
+
+        for source, key in ((TRAKT_PKCE_APPLIER_SOURCE, "trakt_pkce_applier_sha256"),
+                            (TRAKT_PKCE_SOURCE, "trakt_pkce_source_sha256")):
+            if sha256(source) != data[key]:
+                raise ValueError("Trakt PKCE source hash mismatch: " + source.name)
+        sys.path.insert(0, str(TRAKT_PKCE_APPLIER_SOURCE.parent))
+        try:
+            from apply_trakt_pkce import apply as apply_pkce
+            apply_pkce(root)
+        finally:
+            sys.path.remove(str(TRAKT_PKCE_APPLIER_SOURCE.parent))
+
+        series_changes_hash = data["local_runtime_sha256"].get(
+            "resources/lib/series_changes.py")
+        if not series_changes_hash or sha256(SERIES_CHANGES_SOURCE) != series_changes_hash:
+            raise ValueError("XStream series-change source hash mismatch")
+        (root / "resources/lib/series_changes.py").write_bytes(
+            SERIES_CHANGES_SOURCE.read_bytes())
 
         validate_python_sources(root)
 
@@ -249,6 +475,9 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             "Beta 11 corrects the unified-diff line count for the series-change "
             "provider so the series_recent route is included in the distributed "
             "runtime package.\n"
+            "The native Trakt Device Code flow uses the official authentication "
+            "host and public application ID, without sending a desktop client secret. "
+            "No third-party account token is copied and no new scrobbler is added.\n"
             "AcTweeteR 1.1.2.11 skips background VOD-info threads and their "
             "per-batch delays when provider metadata is off or already cached, "
             "but preserves cold-cache prefetch and full provider art.\n"
@@ -261,6 +490,9 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             "The privacy-safe performance trace is opt-in and disabled by default.\n"
             "The index change leaves provider, artwork, playback and menu behavior\n"
             "unchanged.\n"
+            "XStream resume stores are now coordinated across addon instances with\n"
+            "OS file locks and merge-on-write; playback progress is persisted at\n"
+            "minute cadence plus playback end.\n"
         )
         (root / "ACTWEETER_MODIFICATIONS.txt").write_text(notice, encoding="utf-8")
         # A changed payload must not replace the same published Kodi version.
@@ -286,13 +518,17 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
     with zipfile.ZipFile(output) as archive:
         if archive.testzip() is not None:
             raise ValueError("built XStream ZIP CRC failed")
+        validate_trakt_pkce_contract(archive)
         for relative, expected_hash in data.get("local_runtime_sha256", {}).items():
+            if relative in ("addon.xml", "resources/lib/trakt.py", "resources/lib/tmdb_routes.py"):
+                continue  # Versioning and the hash-locked Trakt patches intentionally transform these.
             member = f"{UPSTREAM_ROOT}/{relative}"
             if member not in archive.namelist():
                 raise ValueError(f"patched runtime file missing from ZIP: {relative}")
             actual_hash = hashlib.sha256(archive.read(member)).hexdigest()
             if actual_hash != expected_hash:
-                raise ValueError(f"patched runtime hash mismatch: {relative}")
+                raise ValueError(f"patched runtime hash mismatch: {relative} "
+                                 f"(expected {expected_hash}, got {actual_hash})")
         validate_python_archive(archive)
         if f"{UPSTREAM_ROOT}/ACTWEETER_MODIFICATIONS.txt" not in archive.namelist():
             raise ValueError("modification attribution missing")
@@ -313,6 +549,10 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
         if (b"_filter_provider_trakt_recommendations" not in routes
                 or b"filter_provider=False" not in routes):
             raise ValueError("strict provider-filtered Trakt recommendation route missing")
+        validate_trakt_sync_contract(
+            archive,
+            (ROOT / "addons/service.actweeter/resources/lib/trakt_live_queue.py").read_bytes(),
+        )
         premium_routes = archive.read(f"{UPSTREAM_ROOT}/resources/lib/premium_routes.py")
         if (b"g['series_changes'].record_catalog" not in premium_routes
                 or b"if stype == 'series' and items and host and user and password:" not in premium_routes):
@@ -334,6 +574,10 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
         if not any(isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
                    and node.name == "recent" for node in series_tree.body):
             raise ValueError("series_changes.recent route provider is missing")
+        validate_series_changes_contract(archive)
+        coordinator_member = f"{UPSTREAM_ROOT}/resources/lib/history_store_coordinator.py"
+        if coordinator_member not in archive.namelist():
+            raise ValueError("XStream history store coordinator missing from package")
     return {"upstream_sha256": actual, "candidate_sha256": sha256(output),
             "version": str(data["distribution_version"]), "file": output.name}
 

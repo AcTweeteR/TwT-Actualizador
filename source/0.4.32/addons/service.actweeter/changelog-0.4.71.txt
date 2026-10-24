@@ -1,0 +1,2 @@
+0.4.71
+- Requires XStream 1.1.2.28~beta11 for the cross-thread catalog generation pin fix.

@@ -107,7 +107,17 @@ index 880518dd074153f6ea3bee426318512d309a0896..3c4c4ad961a0a486c2d5c35ec6636f90
              stale = cached.get("_data") or []
              if isinstance(stale, list):
                  _log(f"Xtream categories ({stype}) fetch failed; using stale cache: {e}")
-@@ -2026,24 +2051,27 @@ def _get_cached_xtream_categories(url, user, pwd, stype):
+@@ -2025,25 +2050,37 @@ def _get_cached_xtream_categories(url, user, pwd, stype):
++    if not isinstance(data, list):
++        raise ValueError("invalid Xtream categories snapshot")
++    # shortcut: reject empty-over-nonempty snapshots until XStream validates a legitimate empty catalogue.
++    stale = cached.get("_data") if isinstance(cached, dict) and cached.get("_src") == source else None
++    if not data and isinstance(stale, list) and stale:
++        if require_fresh:
++            raise ValueError("empty Xtream categories snapshot")
++        _log("Xtream categories (%s): empty snapshot rejected; using stale cache" % stype)
++        return stale
+     _cache_save(key, {"_src": source, "_data": data})
      return data
  
  
@@ -141,6 +151,30 @@ index 880518dd074153f6ea3bee426318512d309a0896..3c4c4ad961a0a486c2d5c35ec6636f90
                  stale = cached.get("_data") or []
                  if isinstance(stale, list):
                      _log(f"Xtream streams ({stype}) fetch failed; using stale cache: {e}")
+@@ -2055,7 +2092,17 @@ def _get_cached_xtream_streams(url, user, pwd, stype, category_id=None):
+         else:
+-            _cache_save(key, {"_src": source, "_data": data})
+-            counts = {}
+-            for s in data:
+-                cid = str(s.get("category_id", ""))
+-                counts[cid] = counts.get(cid, 0) + 1
+-            _cache_save(f"xtream_counts_{stype}", counts)
++            if not isinstance(data, list):
++                raise ValueError("invalid Xtream streams snapshot")
++            # shortcut: reject empty-over-nonempty snapshots until XStream validates a legitimate empty catalogue.
++            stale = cached.get("_data") if isinstance(cached, dict) and cached.get("_src") == source else None
++            if not data and isinstance(stale, list) and stale:
++                if require_fresh:
++                    raise ValueError("empty Xtream streams snapshot")
++                _log("Xtream streams (%s): empty snapshot rejected; using stale cache" % stype)
++                data = stale
++            else:
++                _cache_save(key, {"_src": source, "_data": data})
++                counts = {}
++                for s in data:
++                    cid = str(s.get("category_id", ""))
++                    counts[cid] = counts.get(cid, 0) + 1
++                _cache_save(f"xtream_counts_{stype}", counts)
 @@ -11011,7 +11039,7 @@ def xtream_categories(stype, profile_num=None):
      xbmcplugin.endOfDirectory(addon_handle, succeeded=True, updateListing=False, cacheToDisc=False)
  
@@ -150,7 +184,7 @@ index 880518dd074153f6ea3bee426318512d309a0896..3c4c4ad961a0a486c2d5c35ec6636f90
      if adult == "1" and _is_adult_locked(stype):
          if not _check_pin("Adult Content"):
              xbmcplugin.endOfDirectory(addon_handle, succeeded=False)
-@@ -11021,7 +11049,14 @@ def xtream_streams(stype, cat_id, page=1, adult="0", profile_num=None):
+@@ -11021,7 +11049,15 @@ def xtream_streams(stype, cat_id, page=1, adult="0", profile_num=None):
      url = creds.get("xtream_url", "")
      user = creds.get("xtream_username", "")
      pwd = creds.get("xtream_password", "")
@@ -159,7 +193,8 @@ index 880518dd074153f6ea3bee426318512d309a0896..3c4c4ad961a0a486c2d5c35ec6636f90
 +    if stype == "series" and url and user and pwd:
 +        try:
 +            series_changes.record_catalog(
-+                addon, pnum, _get_cached_xtream_streams(url, user, pwd, "series")
++                addon, pnum, _get_cached_xtream_streams(url, user, pwd, "series"),
++                provider=(url, user)
 +            )
 +        except Exception as exc:
 +            _log("Series change catalogue snapshot unavailable: {0}".format(exc))
@@ -265,7 +300,7 @@ index 880518dd074153f6ea3bee426318512d309a0896..3c4c4ad961a0a486c2d5c35ec6636f90
                  sid, name, "series", s.get("stream_icon", ""), series_url,
                  profile_num=pnum
              )
-@@ -11301,15 +11391,23 @@ def xtream_streams(stype, cat_id, page=1, adult="0", profile_num=None):
+@@ -11301,15 +11391,24 @@ def xtream_streams(stype, cat_id, page=1, adult="0", profile_num=None):
      xbmcplugin.endOfDirectory(addon_handle, succeeded=True, updateListing=False, cacheToDisc=False)
  
  
@@ -281,7 +316,8 @@ index 880518dd074153f6ea3bee426318512d309a0896..3c4c4ad961a0a486c2d5c35ec6636f90
 +    try:
 +        series_changes.record_series_info(
 +            addon, pnum, series_id,
-+            str((info.get("info") or {}).get("name") or series_id), info
++            str((info.get("info") or {}).get("name") or series_id), info,
++            provider=(url, user)
 +        )
 +    except Exception as exc:
 +        _log("Series episode snapshot unavailable: {0}".format(exc))
@@ -508,10 +544,10 @@ index 0000000000000000000000000000000000000000..88befca768166634db06d3349ed70ed2
 +    return actions
 diff --git a/resources/lib/premium_routes.py b/resources/lib/premium_routes.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..f43603caf622701aa4f1bcf8d513e49677651621
+index 0000000000000000000000000000000000000000..2378def6da51b39fa5a39c801638c817aa2db943
 --- /dev/null
 +++ b/resources/lib/premium_routes.py
-@@ -0,0 +1,1010 @@
+@@ -0,0 +1,1036 @@
 +"""Provider-first, bounded widget endpoints. Never returns a discovery item.
 +
 +Called with the existing addon's environment; playback/profile/history remain
@@ -705,7 +741,8 @@ index 0000000000000000000000000000000000000000..f43603caf622701aa4f1bcf8d513e496
 +    # Record the unfiltered provider catalogue before UI visibility filters.
 +    if stype == 'series' and items and host and user and password:
 +        try:
-+            g['series_changes'].record_catalog(g['addon'], pnum, items)
++            g['series_changes'].record_catalog(g['addon'], pnum, items,
++                                               provider=(host, user))
 +        except Exception as exc:
 +            g['_log']('Series baseline refresh failed: %s' % exc)
 +    categories = g['_get_cached_xtream_categories'](
@@ -1225,13 +1262,32 @@ index 0000000000000000000000000000000000000000..f43603caf622701aa4f1bcf8d513e496
 +        started = time.perf_counter()
 +        g['_log']('SEARCH_REFRESH_START profile=%s' % pnum)
 +        conn = None
++        callback = get('actweeter_callback')
++        success = False
 +        try:
-+            conn, results = _ensure_search_index(g, pnum, force_provider_refresh=True)
++            force_provider_refresh = get('force_provider_refresh') == '1'
++            if not force_provider_refresh:
++                creds = g['_get_credentials_for_profile'](pnum)
++                source = '|'.join(creds.get(key, '') for key in
++                                  ('xtream_url', 'xtream_username', 'xtream_password'))
++                for key in ('xtream_streams_movie', 'xtream_cats_movie',
++                            'xtream_streams_series', 'xtream_cats_series'):
++                    cached = g['_cache_load'](key)
++                    if (not g['_cache_valid'](key) or not isinstance(cached, dict)
++                            or not g['catalog_cache'].source_matches(cached, source)):
++                        force_provider_refresh = True
++                        break
++            conn, results = _ensure_search_index(
++                g, pnum, force_provider_refresh=force_provider_refresh)
 +            if any(result.get('status') == 'error' for result in results):
 +                conn.close()
 +                conn = None
 +                g['_log']('SEARCH_REFRESH_END status=error reason=provider_snapshot_incomplete duration_ms=%d' %
 +                          int((time.perf_counter() - started) * 1000))
++                if (len(callback) == 32
++                        and all(char in '0123456789abcdef' for char in callback.lower())):
++                    g['xbmc'].executebuiltin(
++                        'RunScript(service.actweeter,catalog_refresh_result,%s,error)' % callback, False)
 +                plugin.endOfDirectory(handle, succeeded=True, updateListing=False, cacheToDisc=False)
 +                return
 +            conn.execute('BEGIN IMMEDIATE')
@@ -1242,6 +1298,7 @@ index 0000000000000000000000000000000000000000..f43603caf622701aa4f1bcf8d513e496
 +            conn.commit()
 +            conn.close()
 +            conn = None
++            success = True
 +            totals = {key:sum(row.get(key, 0) for row in results)
 +                      for key in ('scanned', 'added', 'changed', 'removed')}
 +            g['_log']('SEARCH_REFRESH_END scanned=%d added=%d changed=%d removed=%d duration_ms=%d status=success' %
@@ -1253,6 +1310,11 @@ index 0000000000000000000000000000000000000000..f43603caf622701aa4f1bcf8d513e496
 +                conn.close()
 +            g['_log']('SEARCH_REFRESH_END status=error error_type=%s duration_ms=%d' %
 +                      (type(exc).__name__, int((time.perf_counter() - started) * 1000)))
++        if (len(callback) == 32
++                and all(char in '0123456789abcdef' for char in callback.lower())):
++            g['xbmc'].executebuiltin(
++                'RunScript(service.actweeter,catalog_refresh_result,%s,%s)' %
++                (callback, 'success' if success else 'error'), False)
 +        plugin.endOfDirectory(handle, succeeded=True, updateListing=False, cacheToDisc=False)
 +        return
 +    if view == 'search':
@@ -1804,7 +1866,7 @@ new file mode 100644
 index 0000000000000000000000000000000000000000..c40ae712cee58327c5022756a1b074ca274ebae6
 --- /dev/null
 +++ b/resources/lib/series_changes.py
-@@ -0,0 +1,142 @@
+@@ -0,0 +1,146 @@
 +"""Small provider-only snapshot for XStream series and episode changes."""
 +import json
 +import os
@@ -1814,7 +1876,7 @@ index 0000000000000000000000000000000000000000..c40ae712cee58327c5022756a1b074ca
 +import series_state
 +
 +
-+WINDOW_SECONDS = 30 * 86400
++WINDOW_SECONDS = 5 * 86400
 +MAX_EVENTS = 50
 +CATALOG_INTERVAL = 6 * 3600
 +
@@ -1896,9 +1958,13 @@ index 0000000000000000000000000000000000000000..c40ae712cee58327c5022756a1b074ca
 +        data["episode_inventory"] = stored_inventories
 +    info = response.get("info")
 +    info = info if isinstance(info, dict) else {}
++    diagnostics = series_state.inventory_diagnostics(episodes) if not inventory_complete else {}
++    conflicting_coordinates = diagnostics.pop("conflicting_coordinates", [])
 +    stored_inventories[str(series_id)] = {
 +        "checked_at": now,
 +        "complete": bool(inventory_complete),
++        "diagnostics": diagnostics,
++        "conflicting_coordinates": conflicting_coordinates,
 +        "tmdb_id": str(info.get("tmdb_id") or info.get("tmdb") or ""),
 +        "episodes": inventory,
 +    }
@@ -1952,7 +2018,7 @@ new file mode 100644
 index 0000000000000000000000000000000000000000..6031feb5a7fb33cba429c00b746fb5302adbf987
 --- /dev/null
 +++ b/resources/lib/series_state.py
-@@ -0,0 +1,174 @@
+@@ -0,0 +1,215 @@
 +"""Fail-closed, read-only series progress derived from XStream state."""
 +
 +import time
@@ -2127,6 +2193,47 @@ index 0000000000000000000000000000000000000000..6031feb5a7fb33cba429c00b746fb530
 +    if state.get("complete") is True:
 +        listitem.setProperty("XStream.SeriesComplete", "true")
 +    return True
++
++
++def inventory_diagnostics(episodes_by_season):
++    """Describe rejected provider rows without retaining titles or private data."""
++    counts = {"invalid_season": 0, "invalid_episode_list": 0,
++              "invalid_episode_row": 0, "missing_episode_number": 0,
++              "missing_provider_id": 0, "conflicting_episode_id": 0}
++    if not isinstance(episodes_by_season, dict):
++        return {"invalid_response": 1}
++    seen = {}
++    conflicting_coordinates = set()
++    for season_raw, episodes in episodes_by_season.items():
++        season = _positive_int(season_raw, allow_zero=True)
++        if season is None:
++            counts["invalid_season"] += 1
++        if not isinstance(episodes, list):
++            counts["invalid_episode_list"] += 1
++            continue
++        for row in episodes:
++            if not isinstance(row, dict):
++                counts["invalid_episode_row"] += 1
++                continue
++            episode = _positive_int(row.get("episode_num", row.get("num")))
++            provider = str(row.get("id") or row.get("episode_id") or "").strip()
++            if episode is None:
++                counts["missing_episode_number"] += 1
++            if not provider:
++                counts["missing_provider_id"] += 1
++            if season is None or episode is None or not provider:
++                continue
++            key = (season, episode)
++            if key in seen and seen[key] != provider:
++                counts["conflicting_episode_id"] += 1
++                conflicting_coordinates.add(key)
++            seen[key] = provider
++    report = {key: value for key, value in counts.items() if value}
++    if conflicting_coordinates:
++        report["conflicting_coordinates"] = [list(key) for key in sorted(conflicting_coordinates)]
++    return report
++
++
 diff --git a/resources/lib/pending_adapter.py b/resources/lib/pending_adapter.py
 new file mode 100644
 index 0000000000000000000000000000000000000000..0000000000000000000000000000000000000000
@@ -2196,8 +2303,19 @@ new file mode 100644
 index 0000000000000000000000000000000000000000..eab1cfb01d6ffd9a86304d2b63035e85a2562c89
 --- /dev/null
 +++ b/resources/lib/watched_actions.py
-@@ -0,0 +1,58 @@
+@@ -0,0 +1,66 @@
 +"""Thin testable dispatch for XStream's existing watched toggle."""
++
++def tmdb_watch_key(kind, tmdb_id, season=None, episode=None):
++    """Namespace imported/manual TMDb marks away from provider numeric IDs."""
++    tmdb_id = str(tmdb_id or '').strip()
++    if kind == 'movie' and tmdb_id.isdigit() and int(tmdb_id) > 0:
++        return 'tmdb:movie:' + tmdb_id
++    if (kind == 'episode' and tmdb_id.isdigit() and int(tmdb_id) > 0
++            and str(season).isdigit() and int(season) >= 0
++            and str(episode).isdigit() and int(episode) > 0):
++        return 'tmdb:episode:{0}:s{1}:e{2}'.format(tmdb_id, int(season), int(episode))
++    return ''
 +
 +
 +def toggle_tmdb_watched(g, args):
@@ -2212,24 +2330,21 @@ index 0000000000000000000000000000000000000000..eab1cfb01d6ffd9a86304d2b63035e85
 +
 +    if tmdb_id and tmdb_type == "movie":
 +        store = g["WatchedMovies"](g["addon"], profile_num=profile_num)
-+        if store.is_watched(tmdb_id):
-+            store.mark_unwatched(tmdb_id)
-+            g["xbmcgui"].Dialog().notification("Xstream Pro", g["_t"](31121))
-+            state = False
-+        else:
-+            store.mark_watched(tmdb_id)
-+            g["xbmcgui"].Dialog().notification("Xstream Pro", g["_t"](31120))
-+            state = True
++        key = tmdb_watch_key('movie', tmdb_id)
++        if key:
++            previous = store._data.get(key, False)
++            state = not bool(previous)
++            store._data[key] = state
++            store._save()
++            g["xbmcgui"].Dialog().notification("Xstream Pro", g["_t"](31120 if state else 31121))
 +    elif tmdb_id and tmdb_type == "tv" and season and episode:
-+        store = g["WatchedEpisodes"](g["addon"], profile_num=profile_num)
-+        if store.is_watched(tmdb_id, season, episode):
-+            store.mark_unwatched(tmdb_id, season, episode)
-+            g["xbmcgui"].Dialog().notification("Xstream Pro", g["_t"](31121))
-+            state = False
-+        else:
-+            store.mark_watched(tmdb_id, season, episode)
-+            g["xbmcgui"].Dialog().notification("Xstream Pro", g["_t"](31120))
-+            state = True
++        store = g["WatchedMovies"](g["addon"], profile_num=profile_num)
++        key = tmdb_watch_key('episode', tmdb_id, season, episode)
++        if key:
++            state = not bool(store._data.get(key, False))
++            store._data[key] = state
++            store._save()
++            g["xbmcgui"].Dialog().notification("Xstream Pro", g["_t"](31120 if state else 31121))
 +    elif tmdb_id and tmdb_type == "tv" and season:
 +        store = g["WatchedMovies"](g["addon"], profile_num=profile_num)
 +        key = "season:{0}:{1}".format(tmdb_id, season)
@@ -2304,4 +2419,5 @@ index d2239a19aa59f70b3ee3ad69041334c0f58e9958..9427f1c90eb65b6a2848ec15f7e985ce
      if remember_current_pvr_group is not None:
          try:
              remember_current_pvr_group()
+
 

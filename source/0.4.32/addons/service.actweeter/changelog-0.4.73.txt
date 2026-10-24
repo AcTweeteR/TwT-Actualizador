@@ -1,0 +1,4 @@
+0.4.73
+- Closes automatic catalog refresh tracking on provider success, failure, timeout, interruption and Service restart using a durable operation result.
+- Persists progressive retry backoff, honors provider Retry-After, and suspends automatic retries after authentication failures.
+- Keeps manual refresh available while deferring it when the provider explicitly rate-limits requests.

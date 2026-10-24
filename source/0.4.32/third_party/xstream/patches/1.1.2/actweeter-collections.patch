@@ -210,7 +210,7 @@ diff --git a/resources/lib/premium_routes.py b/resources/lib/premium_routes.py
                        g['addon_handle'], path, li, stype == 'series')
 -
 +
-@@ -718,12 +700,16 @@
+@@ -718,12 +700,21 @@
              plugin.endOfDirectory(handle, succeeded=False, cacheToDisc=False)
              return
          plugin.setContent(handle, 'videos')
@@ -227,6 +227,11 @@ diff --git a/resources/lib/premium_routes.py b/resources/lib/premium_routes.py
 -                'view': collection, 'stype': stype, 'profile_num': pnum}), li, True)
 +                'view': collection, 'stype': stype, 'profile_num': pnum,
 +                'browse': '1'}), li, True)
++        custom = g['_new_listitem']('Mis listas')
++        custom.setArt({'icon': 'DefaultFolder.png', 'thumb': 'DefaultFolder.png'})
++        custom.setProperty('AcTweeteR.CollectionFolder', '1')
++        plugin.addDirectoryItem(handle,
++            'plugin://service.actweeter/?action=collections', custom, True)
          _performance_call(g, 'kodi.end_directory', plugin.endOfDirectory, handle, cacheToDisc=False)
          return
      if view == 'favorites_root':

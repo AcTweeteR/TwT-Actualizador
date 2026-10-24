@@ -1,0 +1,1 @@
+0.4.66 — Vistos TMDb aislados de IDs Xtream; importación y visualización de episodios especiales correctamente numerados.
