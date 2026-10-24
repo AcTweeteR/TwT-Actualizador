@@ -22,10 +22,20 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Regression tests, mandatory release checks and security contract
+      - name: Install test-only Python dependencies
+        run: python3 -m pip install --disable-pip-version-check pytest requests
+      - name: Fetch and verify pinned XStream upstream fixture
         run: |
-          set -eu
-          python3 -m unittest discover -s source/0.4.32/tests -q
+          curl --fail --location --silent --show-error \
+            https://github.com/Pesicp/XStreamPro/releases/download/1.1.2/plugin.video.xstream-pro-1.1.2.zip \
+            --output "$RUNNER_TEMP/xstream-upstream-1.1.2.zip"
+          echo '915f45708670d07e789bb73b7390a7b5cf30175f818ef5da8ea18c9f13f537fe  '"$RUNNER_TEMP/xstream-upstream-1.1.2.zip" | shasum -a 256 -c -
+      - name: Regression tests, mandatory release checks and security contract
+        env:
+          ACTWEETER_XSTREAM_LIVE_ZIP: ${{ github.workspace }}/docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.28~beta14.zip
+          ACTWEETER_XSTREAM_TEST_ZIP: ${{ github.workspace }}/docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.28~beta14.zip
+          ACTWEETER_XSTREAM_UPSTREAM_ZIP: ${{ runner.temp }}/xstream-upstream-1.1.2.zip
+        run: python3 -m pytest -q -rs source/0.4.32/tests
       - name: Verify immutable historical Stable 2026-10-20 release
         run: |
           set -eu
