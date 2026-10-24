@@ -200,22 +200,26 @@ def validate_trakt_sync_contract(archive, service_queue: bytes) -> None:
         raise ValueError("Service/XStream Trakt queue protocol differs")
 
 
-def validate_trakt_pkce_contract(archive) -> None:
-    """Ensure the reproducible package includes the staged PKCE auth flow."""
+def validate_trakt_device_auth_contract(archive) -> None:
+    """Ensure packaging preserves the native Device Code authorization flow."""
     root = UPSTREAM_ROOT + "/resources/lib/"
     required = {
-        "trakt_pkce.py": (b"def begin(", b"def exchange_payload(", b"def exchange("),
-        "trakt.py": (b"def pkce_exchange_callback(", b"trakt_pkce.exchange("),
+        "trakt.py": (b"def device_code(", b"def poll_device_token(",),
         "tmdb_routes.py": (b"def trakt_authorize_route(params):",
-                           b"trakt_pkce.begin(",
-                           b"FULL redirected URL from your browser"),
+                           b"trakt.device_code()",
+                           b"trakt.poll_device_token(device_code)",
+                           b"from lib.trakt_sync_consent import grant",
+                           b"provider_scope=scope"),
     }
     names = set(archive.namelist())
     for relative, markers in required.items():
         member = root + relative
         if member not in names or any(marker not in archive.read(member)
                                       for marker in markers):
-            raise ValueError("Trakt PKCE integration incomplete in ZIP: " + relative)
+            raise ValueError("Trakt Device Code integration incomplete in ZIP: " + relative)
+    route = archive.read(root + "tmdb_routes.py")
+    if b"trakt_pkce.begin(" in route or b"redirected URL from your browser" in route:
+        raise ValueError("legacy Trakt PKCE route replaced the Device Code flow")
 
 
 def validate_series_changes_contract(archive) -> None:
@@ -574,7 +578,7 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
     with zipfile.ZipFile(output) as archive:
         if archive.testzip() is not None:
             raise ValueError("built XStream ZIP CRC failed")
-        validate_trakt_pkce_contract(archive)
+        validate_trakt_device_auth_contract(archive)
         for relative, expected_hash in data.get("local_runtime_sha256", {}).items():
             if relative in ("addon.xml", "resources/lib/trakt.py", "resources/lib/tmdb_routes.py"):
                 continue  # Versioning and the hash-locked Trakt patches intentionally transform these.

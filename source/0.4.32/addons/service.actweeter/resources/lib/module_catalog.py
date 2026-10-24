@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 
 
-CATALOG_VERSION = 15
+CATALOG_VERSION = 16
 ALL_TARGET_PLATFORMS = ("macos", "windows", "linux", "android", "tvos")
 
 MODULES = (
@@ -137,7 +137,24 @@ MODULES = (
              "recovery": "Enable compatible platform package through Kodi"},
         ),
     },
-    {"id": "extensions", "name": "Extensions", "required": True, "addons": ()},
+    {
+        "id": "extensions",
+        "name": "Extensions",
+        "required": True,
+        "addons": (
+            {"id": "repository.rivulet", "minimum": "1.0.2", "source": "official Rivulet repository package, pinned bootstrap from AcTweeteR Testing",
+             "license": "MIT", "platforms": ALL_TARGET_PLATFORMS,
+             "dependencies": (), "configuration": "Official repository metadata; no user data changed",
+             "update": "AcTweeteR Testing bootstrap; Rivulet add-on updates remain upstream",
+             "recovery": "Kodi native reinstall from AcTweeteR Testing"},
+            {"id": "plugin.video.rivulet", "minimum": "0.36.0", "source": "repository.rivulet",
+             "license": "MIT AND GPL-3.0-only", "platforms": ALL_TARGET_PLATFORMS,
+             "dependencies": ("repository.rivulet",),
+             "configuration": "Rivulet settings and Stremio account remain upstream-owned",
+             "update": "Kodi add-on repository automatic updates from repository.rivulet",
+             "recovery": "Kodi native reinstall; retain Rivulet add-on profile"},
+        ),
+    },
     {"id": "diagnostics", "name": "Diagnostics", "required": True,
      "minimum": "0.4.3", "source": "Bundled with service.actweeter",
      "license": "GPL-2.0-or-later", "platforms": ALL_TARGET_PLATFORMS,
@@ -201,6 +218,8 @@ _REPOSITORIES = {
     "plugin.video.youtube": ("repository.xbmc.org",),
     "script.trakt": ("repository.xbmc.org",),
     "inputstream.adaptive": ("repository.xbmc.org",),
+    "repository.rivulet": ("repository.actweeter",),
+    "plugin.video.rivulet": ("repository.rivulet",),
 }
 
 

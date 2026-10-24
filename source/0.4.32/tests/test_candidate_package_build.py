@@ -178,7 +178,7 @@ class CandidatePackageBuildTests(unittest.TestCase):
             profile_num=1)
         self.assertEqual(len(refreshes), 1)
 
-    def test_pkce_contract_rejects_missing_packaged_auth_route(self):
+    def test_device_code_contract_rejects_legacy_auth_route(self):
         sys.path.insert(0, str(ROOT / "tools"))
         import build_xstream_package
 
@@ -194,14 +194,15 @@ class CandidatePackageBuildTests(unittest.TestCase):
 
         prefix = "plugin.video.xstream-pro/resources/lib/"
         members = {
-            prefix + "trakt_pkce.py": b"def begin( def exchange_payload( def exchange(",
-            prefix + "trakt.py": b"def pkce_exchange_callback( trakt_pkce.exchange(",
-            prefix + "tmdb_routes.py": b"def trakt_authorize_route(params): trakt_pkce.begin( FULL redirected URL from your browser",
+            prefix + "trakt.py": b"def device_code( def poll_device_token(",
+            prefix + "tmdb_routes.py": (b"def trakt_authorize_route(params): "
+                b"trakt.device_code() trakt.poll_device_token(device_code) "
+                b"from lib.trakt_sync_consent import grant provider_scope=scope"),
         }
-        build_xstream_package.validate_trakt_pkce_contract(Archive(members))
-        del members[prefix + "trakt_pkce.py"]
-        with self.assertRaisesRegex(ValueError, "Trakt PKCE integration incomplete"):
-            build_xstream_package.validate_trakt_pkce_contract(Archive(members))
+        build_xstream_package.validate_trakt_device_auth_contract(Archive(members))
+        members[prefix + "tmdb_routes.py"] += b" trakt_pkce.begin("
+        with self.assertRaisesRegex(ValueError, "legacy Trakt PKCE route"):
+            build_xstream_package.validate_trakt_device_auth_contract(Archive(members))
 
     def test_series_change_package_contract_rejects_stale_or_unscoped_source(self):
         sys.path.insert(0, str(ROOT / "tools"))
@@ -234,8 +235,8 @@ class CandidatePackageBuildTests(unittest.TestCase):
             build_xstream_package.validate_series_changes_contract(Archive(members))
 
     @unittest.skipUnless(os.environ.get("ACTWEETER_XSTREAM_UPSTREAM_ZIP"),
-                         "set the pinned upstream ZIP to verify reproducible PKCE build")
-    def test_xstream_rebuild_keeps_pkce_in_exact_candidate_zip(self):
+                         "set the pinned upstream ZIP to verify reproducible Device Code build")
+    def test_xstream_rebuild_keeps_device_auth_in_exact_candidate_zip(self):
         sys.path.insert(0, str(ROOT / "tools"))
         import build_xstream_package
 
@@ -247,12 +248,12 @@ class CandidatePackageBuildTests(unittest.TestCase):
             self.assertEqual(hashlib.sha256(first.read_bytes()).hexdigest(),
                              hashlib.sha256(second.read_bytes()).hexdigest())
             with zipfile.ZipFile(first) as archive:
-                build_xstream_package.validate_trakt_pkce_contract(archive)
+                build_xstream_package.validate_trakt_device_auth_contract(archive)
                 self.assertIsNone(archive.testzip())
 
     def test_service_zip_is_reproducible_and_well_formed(self):
         with tempfile.TemporaryDirectory() as temp:
-            package = Path(temp) / "service.actweeter-0.4.81.zip"
+            package = Path(temp) / "service.actweeter-0.4.82.zip"
             subprocess.run([sys.executable, str(ROOT / "tools/build_service_package.py"),
                             "--output", str(package)], check=True,
                            cwd=ROOT, capture_output=True, text=True)
@@ -265,8 +266,8 @@ class CandidatePackageBuildTests(unittest.TestCase):
             with zipfile.ZipFile(package) as archive:
                 self.assertIsNone(archive.testzip())
                 addon = ET.fromstring(archive.read("service.actweeter/addon.xml"))
-                self.assertEqual(addon.get("version"), "0.4.81")
-                self.assertIn("service.actweeter/changelog-0.4.81.txt",
+                self.assertEqual(addon.get("version"), "0.4.82")
+                self.assertIn("service.actweeter/changelog-0.4.82.txt",
                               archive.namelist())
                 for relative in ("resources/lib/addon_update_policy.py",
                                  "resources/lib/trakt_sync.py",
@@ -326,11 +327,11 @@ class CandidatePackageBuildTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp:
             output = Path(temp)
-            service = output / "service.actweeter-0.4.81.zip"
+            service = output / "service.actweeter-0.4.82.zip"
             subprocess.run([sys.executable, str(ROOT / "tools/build_service_package.py"),
                             "--output", str(service)], check=True,
                            cwd=ROOT, capture_output=True, text=True)
-            skin = output / "skin.actweeter-1.2.32~beta6.zip"
+            skin = output / "skin.actweeter-1.2.32~beta8.zip"
             subprocess.run([sys.executable, str(ROOT / "tools/build_skin_package.py"),
                             "--output", str(skin)], check=True,
                            cwd=ROOT, capture_output=True, text=True)
@@ -340,22 +341,25 @@ class CandidatePackageBuildTests(unittest.TestCase):
                 for filename in ("Includes.xml", "IncludesBingie.xml", "IncludesBackgroundBuilding.xml"):
                     self.assertEqual(archive.read("skin.actweeter/1080i/" + filename),
                                      (ROOT / "addons/skin.actweeter/1080i" / filename).read_bytes())
-            xstream = output / "plugin.video.xstream-pro-1.1.2.28~beta17.zip"
-            self._write_addon_fixture(xstream, "plugin.video.xstream-pro", "1.1.2.28~beta17")
+            xstream = output / "plugin.video.xstream-pro-1.1.2.28~beta20.zip"
+            self._write_addon_fixture(xstream, "plugin.video.xstream-pro", "1.1.2.28~beta20")
+            rivulet_repository = ROOT / "third_party/rivulet/repository.rivulet-1.0.2.zip"
             index_path, md5_path = build_distribution_index.build(
                 REPOSITORY_ROOT / "docs/testing/repo/repository.actweeter.testing/repository.actweeter.testing-1.0.2.zip",
                 skin,
                 service,
                 xstream,
-                output / "index")
+                output / "index",
+                rivulet_repository)
             payload = index_path.read_bytes()
             versions = {node.get("id"): node.get("version")
                         for node in ET.fromstring(payload).findall("addon")}
             self.assertEqual(versions, {
                 "repository.actweeter.testing": "1.0.2",
-                "service.actweeter": "0.4.81",
-                "skin.actweeter": "1.2.32~beta6",
-                "plugin.video.xstream-pro": "1.1.2.28~beta17",
+                "service.actweeter": "0.4.82",
+                "skin.actweeter": "1.2.32~beta8",
+                "plugin.video.xstream-pro": "1.1.2.28~beta20",
+                "repository.rivulet": "1.0.2",
             })
             self.assertEqual(hashlib.md5(payload).hexdigest(),
                              md5_path.read_text(encoding="ascii").strip())
@@ -370,10 +374,10 @@ class CandidatePackageBuildTests(unittest.TestCase):
             self.assertEqual((channel / "repo/addons.xml").read_bytes(), payload)
             self.assertEqual((channel / "repo/addons.xml.md5").read_text().strip(),
                              md5_path.read_text().strip())
-            self.assertEqual((channel / "repo/service.actweeter/changelog-0.4.81.txt").read_bytes(),
-                             (ROOT / "addons/service.actweeter/changelog-0.4.81.txt").read_bytes())
-            self.assertEqual((channel / "repo/skin.actweeter/changelog-1.2.32~beta6.txt").read_bytes(),
-                             (ROOT / "addons/skin.actweeter/changelog-1.2.32~beta6.txt").read_bytes())
+            self.assertEqual((channel / "repo/service.actweeter/changelog-0.4.82.txt").read_bytes(),
+                             (ROOT / "addons/service.actweeter/changelog-0.4.82.txt").read_bytes())
+            self.assertEqual((channel / "repo/skin.actweeter/changelog-1.2.32~beta8.txt").read_bytes(),
+                             (ROOT / "addons/skin.actweeter/changelog-1.2.32~beta8.txt").read_bytes())
 
     @staticmethod
     def _write_addon_fixture(path, addon_id, version):

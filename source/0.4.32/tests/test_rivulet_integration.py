@@ -1,0 +1,95 @@
+"""Rivulet remains a required Kodi-managed extension, not a copied add-on."""
+import hashlib
+import sys
+import tempfile
+import unittest
+import zipfile
+from pathlib import Path
+from xml.etree import ElementTree as ET
+
+
+ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(ROOT / "tools"))
+sys.path.insert(0, str(ROOT / "source/0.4.32/addons/service.actweeter/resources/lib"))
+import build_test_channel
+import first_run
+import module_catalog
+
+
+class RivuletIntegrationTests(unittest.TestCase):
+    def test_rivulet_is_a_required_dependency_first_native_install_on_all_targets(self):
+        addons = module_catalog.all_addons()
+        self.assertTrue(addons["repository.rivulet"]["required"])
+        self.assertTrue(addons["plugin.video.rivulet"]["required"])
+        self.assertEqual(addons["repository.rivulet"]["repositories"],
+                         ("repository.actweeter",))
+        self.assertEqual(addons["plugin.video.rivulet"]["repositories"],
+                         ("repository.rivulet",))
+        self.assertEqual(first_run.REQUIRED_EXTERNAL_ADDON_MINIMUMS["plugin.video.rivulet"],
+                         "0.36.0")
+        for platform in module_catalog.ALL_TARGET_PLATFORMS:
+            plan = module_catalog.installation_plan(platform)
+            ids = [row["id"] for row in plan]
+            self.assertLess(ids.index("repository.rivulet"),
+                            ids.index("plugin.video.rivulet"))
+            self.assertIn("plugin.video.rivulet", first_run.REQUIRED_ADDON_IDS)
+
+    def test_bootstrap_pins_upstream_repository_hash_and_identity(self):
+        self.assertEqual(build_test_channel.RIVULET_REPOSITORY_SHA256,
+                         "e4aabb495d6b49f39b8ec0c828ad9fa4562c387547739e0f38351ddabac9a815")
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            service = self._addon_zip(root / "service.actweeter-0.4.82.zip",
+                                      "service.actweeter", "0.4.82")
+            repository = ROOT / "source/0.4.32/third_party/rivulet/repository.rivulet-1.0.2.zip"
+            _, index, checksum = build_test_channel.build(
+                ROOT / "testing/repository.actweeter.testing", service,
+                root / "testing", rivulet_repository_zip=repository)
+            entry = ET.parse(index).getroot().find(
+                "addon[@id='repository.rivulet']")
+            self.assertEqual(entry.get("version"), "1.0.2")
+            published = index.parent / "repository.rivulet" / repository.name
+            self.assertEqual(published.read_bytes(), repository.read_bytes())
+            self.assertEqual(hashlib.md5(index.read_bytes()).hexdigest(),
+                             checksum.read_text().strip())
+
+    def test_required_service_candidate_cannot_omit_rivulet_seed(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            service = self._addon_zip(root / "service.actweeter-0.4.82.zip",
+                                      "service.actweeter", "0.4.82")
+            with self.assertRaisesRegex(ValueError, "pinned Rivulet repository"):
+                build_test_channel.build(
+                    ROOT / "testing/repository.actweeter.testing", service,
+                    root / "testing")
+            self.assertFalse((root / "testing").exists())
+
+    def test_candidate_rejects_a_changed_upstream_repository_package(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            service = self._addon_zip(root / "service.actweeter-0.4.82.zip",
+                                      "service.actweeter", "0.4.82")
+            repository = self._addon_zip(root / "repository.rivulet-1.0.2.zip",
+                                         "repository.rivulet", "1.0.2")
+            with self.assertRaisesRegex(ValueError, "pinned upstream SHA-256"):
+                build_test_channel.build(
+                    ROOT / "testing/repository.actweeter.testing", service,
+                    root / "testing", rivulet_repository_zip=repository)
+            self.assertFalse((root / "testing").exists())
+
+    def test_kodi_refreshes_repository_catalog_after_native_seed_install(self):
+        setup = (ROOT / "source/0.4.32/addons/service.actweeter/setup.py").read_text()
+        self.assertIn('addon_id in ("repository.slyguy", "repository.rivulet")', setup)
+        self.assertIn('"plugin.video.rivulet": "Rivulet"', setup)
+        self.assertNotIn('InstallAddon(plugin.video.rivulet)', setup)
+
+    @staticmethod
+    def _addon_zip(path, addon_id, version):
+        with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+            archive.writestr(f"{addon_id}/addon.xml",
+                             f'<addon id="{addon_id}" version="{version}"/>')
+        return path
+
+
+if __name__ == "__main__":
+    unittest.main()

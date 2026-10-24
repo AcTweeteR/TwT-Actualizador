@@ -61,7 +61,8 @@ class OfficialTestChannelTests(unittest.TestCase):
                                 "--output", str(package)], check=True, capture_output=True)
             _, index, checksum = build_test_channel.build(
                 ROOT / "testing/repository.actweeter.testing", service,
-                temp_root / "testing", skin)
+                temp_root / "testing", skin,
+                rivulet_repository_zip=(ROOT / "source/0.4.32/third_party/rivulet/repository.rivulet-1.0.2.zip"))
             versions = {n.get("id"): n.get("version") for n in ET.parse(index).getroot()}
             self.assertEqual(versions["skin.actweeter"], skin_version)
             copied = index.parent / "skin.actweeter" / skin.name
@@ -83,13 +84,15 @@ class OfficialTestChannelTests(unittest.TestCase):
             ], check=True, capture_output=True, text=True)
             output = temp_root / "testing"
             bootstrap, index, checksum = build_test_channel.build(
-                ROOT / "testing" / "repository.actweeter.testing", candidate_service, output
+                ROOT / "testing" / "repository.actweeter.testing", candidate_service, output,
+                rivulet_repository_zip=(ROOT / "source/0.4.32/third_party/rivulet/repository.rivulet-1.0.2.zip"),
             )
             root = ET.parse(index).getroot()
             versions = {node.get("id"): node.get("version") for node in root.findall("addon")}
             self.assertEqual(versions, {
                 "repository.actweeter.testing": "1.0.2",
                 "service.actweeter": build_test_channel.SERVICE_VERSION,
+                "repository.rivulet": "1.0.2",
             })
             feed_addon = ET.parse(ROOT / "testing" / "repository.actweeter.testing" / "addon.xml").getroot()
             endpoints = [node.findtext("info", "") for node in feed_addon.findall(
@@ -102,7 +105,9 @@ class OfficialTestChannelTests(unittest.TestCase):
                 "https://slyguy.uk/.repo/repository.slyguy/addons.xml",
             ])
             self.assertEqual(checksum.read_text().strip(), hashlib.md5(index.read_bytes()).hexdigest())
-            self.assertEqual(ET.parse(ROOT / "repo" / "addons.xml").getroot().find("addon[@id='service.actweeter']").get("version"), "0.4.52")
+            # The committed Stable feed was separately promoted to 0.4.81;
+            # byte-for-byte comparison below remains the no-mutation guard.
+            self.assertEqual(ET.parse(ROOT / "repo" / "addons.xml").getroot().find("addon[@id='service.actweeter']").get("version"), "0.4.81")
             self.assertEqual((ROOT / "repo" / "addons.xml").read_bytes(), stable_index)
             with zipfile.ZipFile(bootstrap) as archive:
                 self.assertIsNone(archive.testzip())

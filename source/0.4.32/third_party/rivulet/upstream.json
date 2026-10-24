@@ -1,0 +1,9 @@
+{
+  "addon_id": "repository.rivulet",
+  "version": "1.0.2",
+  "release": "https://github.com/rivulet-kodi/plugin.video.rivulet/releases/tag/v0.36.0",
+  "asset": "https://github.com/rivulet-kodi/plugin.video.rivulet/releases/download/v0.36.0/repository.rivulet-1.0.2.zip",
+  "sha256": "e4aabb495d6b49f39b8ec0c828ad9fa4562c387547739e0f38351ddabac9a815",
+  "license": "MIT",
+  "redistributed": "repository bootstrap only; plugin.video.rivulet remains served and updated by repository.rivulet"
+}

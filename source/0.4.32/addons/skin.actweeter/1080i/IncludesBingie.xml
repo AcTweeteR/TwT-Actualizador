@@ -1645,6 +1645,16 @@
     </variable>
 	
 	<!-- BINGIE MENU -->
+	<include name="RivuletMenuSeparator">
+		<control type="image">
+			<left>80</left>
+			<top>0</top>
+			<width>220</width>
+			<height>1</height>
+			<texture colordiffuse="AA888888">shortcuts/rivulet-separator.png</texture>
+			<visible>String.IsEqual(ListItem.Label,RIVULET)</visible>
+		</control>
+	</include>
 
     <!-- Menu -->
     <include name="BingieSideBladeMainMenu">
@@ -1735,7 +1745,7 @@
 
 			<!--Main Menu Items 900-->
             <control type="list" id="900">
-                <top>205</top>
+                <top>150</top>
 				<animation effect="slide" end="0,41" condition="Integer.IsEqual(Container(900).NumItems,7)">Conditional</animation>
 				<animation effect="slide" end="0,82" condition="Integer.IsEqual(Container(900).NumItems,6)">Conditional</animation>
 				<animation effect="slide" end="0,123" condition="Integer.IsEqual(Container(900).NumItems,5)">Conditional</animation>
@@ -1770,6 +1780,7 @@
 				<onback condition="Window.IsActive(1109) + !String.IsEmpty(Window.Property(KeepSuggestions))">1007</onback>
 				<!-- Keep native vertical list navigation; profile/power controls are not menu neighbors. -->
 				<itemlayout height="82" width="bingie_menu_width" condition="![Control.HasFocus(900) | Control.HasFocus(4444) | Control.HasFocus(40000) | Control.HasFocus(40003)]">
+					<include>RivuletMenuSeparator</include>
                     <!--this red line just for slim menu-->
                     <include content="Bingie_Menu_Current_Indicator"> 
                          <param name="visibility" value="$EXP[IsMenuEntryActive] + !$EXP[IsMainMenuOpened]" />
@@ -1789,6 +1800,7 @@
                     </include>
                 </itemlayout>
                 <focusedlayout height="82" width="bingie_menu_width" condition="[Control.HasFocus(900) | Control.HasFocus(4444)]">
+					<include>RivuletMenuSeparator</include>
                     <include content="Bingie_Menu_IconFOCUS">
                         <param name="includeAnimCond" value="false" />
                     </include>

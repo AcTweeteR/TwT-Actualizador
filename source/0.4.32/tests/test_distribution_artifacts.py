@@ -18,12 +18,18 @@ class DistributionArtifactTests(unittest.TestCase):
         self.assertEqual(hashlib.md5(payload).hexdigest(), expected_md5)
         root = ET.fromstring(payload)
         versions = {node.get("id"): node.get("version") for node in root.findall("addon")}
-        self.assertEqual(versions, {
-            "repository.actweeter": "1.0.3",
-            "skin.actweeter": "1.2.31",
-            "service.actweeter": "0.4.52",
-            "plugin.video.xstream-pro": "1.1.2.15",
+        self.assertEqual(set(versions), {
+            "repository.actweeter", "skin.actweeter", "service.actweeter",
+            "plugin.video.xstream-pro",
         })
+        for addon_id, version in versions.items():
+            package = REPO / "repo" / addon_id / f"{addon_id}-{version}.zip"
+            self.assertTrue(package.is_file(), package)
+            with zipfile.ZipFile(package) as archive:
+                self.assertIsNone(archive.testzip())
+                metadata = ET.fromstring(archive.read(f"{addon_id}/addon.xml"))
+            self.assertEqual((metadata.get("id"), metadata.get("version")),
+                             (addon_id, version))
 
     def test_existing_stable_and_rollback_packages_have_valid_crc_and_hashes(self):
         for addon in STABLE_MANIFEST["addons"]:

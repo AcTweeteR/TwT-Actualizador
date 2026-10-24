@@ -26,7 +26,7 @@ def shortcuts(filename):
 
 
 class MenuContractTests(unittest.TestCase):
-    def test_main_menu_has_exactly_the_five_requested_destinations(self):
+    def test_main_menu_has_five_core_destinations_then_rivulet(self):
         self.assertEqual(
             shortcuts("mainmenu.DATA.xml"),
             [
@@ -35,8 +35,16 @@ class MenuContractTests(unittest.TestCase):
                 ("PELÍCULAS", "ActivateWindow(1111,return)", "movies", "shortcuts/clapperboard.png"),
                 ("SERIES", "ActivateWindow(1110,return)", "shows", "shortcuts/tv.png"),
                 ("BUSCAR", "ActivateWindow(1109,return)", "search", "shortcuts/search.png"),
+                ("RIVULET", "ActivateWindow(Videos,plugin://plugin.video.rivulet/,return)",
+                 "rivulet", "shortcuts/rivulet.png"),
             ],
         )
+
+    def test_rivulet_has_its_own_icon_and_visual_separator(self):
+        self.assertTrue((ADDON / "shortcuts/rivulet.png").is_file())
+        xml = (ADDON / "1080i/IncludesBingie.xml").read_text()
+        self.assertIn("String.IsEqual(ListItem.Label,RIVULET)", xml)
+        self.assertIn("shortcuts/rivulet-separator.png", xml)
 
     def test_bottom_menu_has_exactly_settings_catalog_refresh_and_skin_reload(self):
         self.assertEqual(

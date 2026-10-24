@@ -1412,6 +1412,8 @@ def _install_components_once(dialog, *, consent_granted=False, quiet=False,
         "plugin.video.tmdb.bingie.helper": "BINGIE metadata helper",
         "plugin.program.autocompletion": "Search keyboard support",
         "plugin.video.youtube": "YouTube search and trailer fallback",
+        "repository.rivulet": "Rivulet Repository",
+        "plugin.video.rivulet": "Rivulet",
     }
     outcomes = []
     dependency_rows = {item["id"]: item for item in _installed_dependency_graph()}
@@ -1450,7 +1452,7 @@ def _install_components_once(dialog, *, consent_granted=False, quiet=False,
             dialog, addon_id, ", ".join(enabled_sources) or "instalación existente de Kodi",
             required=True, consent_granted=True,
             minimum_version=row.get("minimum") or None)
-        if addon_id == "repository.slyguy" and result == "INSTALLED":
+        if addon_id in ("repository.slyguy", "repository.rivulet") and result == "INSTALLED":
             xbmc.executebuiltin("UpdateAddonRepos", True)
         on_component(addon_id)
         outcomes.append("%s: %s." % (

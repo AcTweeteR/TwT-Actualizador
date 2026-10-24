@@ -350,8 +350,9 @@ class TraktLiveQueueRuntimeTests(unittest.TestCase):
                 'plugin.video.xstream-pro/resources/lib/addon.py'))
             self.assertIn(b'trakt_sync_once_route', archive.read(
                 'plugin.video.xstream-pro/resources/lib/tmdb_routes.py'))
-            self.assertIn(b'trakt_pkce.begin(', archive.read(
-                'plugin.video.xstream-pro/resources/lib/tmdb_routes.py'))
+            routes = archive.read('plugin.video.xstream-pro/resources/lib/tmdb_routes.py')
+            self.assertIn(b'trakt.device_code()', routes)
+            self.assertIn(b'trakt.poll_device_token(device_code)', routes)
             self.assertIn(b'tmdb_watch_key', archive.read(
                 'plugin.video.xstream-pro/resources/lib/tmdb_routes.py'))
             self.assertIn(b'tmdb:movie:', archive.read(

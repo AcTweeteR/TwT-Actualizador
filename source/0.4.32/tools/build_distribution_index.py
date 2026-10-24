@@ -18,10 +18,12 @@ from xml.etree import ElementTree as ET
 
 EXPECTED = {
     "repository": ("repository.actweeter.testing", "1.0.2"),
-    "skin": ("skin.actweeter", "1.2.32~beta6"),
-    "service": ("service.actweeter", "0.4.81"),
-    "xstream": ("plugin.video.xstream-pro", "1.1.2.28~beta17"),
+    "skin": ("skin.actweeter", "1.2.32~beta8"),
+    "service": ("service.actweeter", "0.4.82"),
+    "xstream": ("plugin.video.xstream-pro", "1.1.2.28~beta20"),
+    "rivulet_repository": ("repository.rivulet", "1.0.2"),
 }
+RIVULET_REPOSITORY_SHA256 = "e4aabb495d6b49f39b8ec0c828ad9fa4562c387547739e0f38351ddabac9a815"
 
 
 def addon_from_zip(path: Path, expected_id: str, expected_version: str) -> ET.Element:
@@ -69,16 +71,22 @@ def validate_service_xstream_pair(service: ET.Element, xstream: ET.Element) -> N
 
 
 def build(repository_zip: Path, skin_zip: Path, service_zip: Path,
-          xstream_zip: Path, output_dir: Path) -> tuple[Path, Path]:
+          xstream_zip: Path, output_dir: Path,
+          rivulet_repository_zip: Path | None = None) -> tuple[Path, Path]:
     repository = addon_from_zip(repository_zip, *EXPECTED["repository"])
     skin = addon_from_zip(skin_zip, *EXPECTED["skin"])
     service = addon_from_zip(service_zip, *EXPECTED["service"])
     xstream = addon_from_zip(xstream_zip, *EXPECTED["xstream"])
     validate_service_xstream_pair(service, xstream)
-    set_news(skin, "changelog-1.2.32~beta6.txt")
-    set_news(service, "changelog-0.4.81.txt")
+    if rivulet_repository_zip is None:
+        raise ValueError("Rivulet repository seed ZIP is required for this candidate")
+    if hashlib.sha256(rivulet_repository_zip.read_bytes()).hexdigest() != RIVULET_REPOSITORY_SHA256:
+        raise ValueError("Rivulet repository ZIP does not match the pinned upstream SHA-256")
+    rivulet = addon_from_zip(rivulet_repository_zip, *EXPECTED["rivulet_repository"])
+    set_news(skin, "changelog-1.2.32~beta8.txt")
+    set_news(service, "changelog-0.4.82.txt")
     root = ET.Element("addons")
-    for addon in (repository, skin, service, xstream):
+    for addon in (repository, skin, service, xstream, rivulet):
         root.append(addon)
     payload = ET.tostring(root, encoding="utf-8", xml_declaration=True) + b"\n"
     # This builder is intentionally create-only: never replace a live index,
@@ -116,10 +124,12 @@ def main() -> None:
     parser.add_argument("--skin-zip", required=True, type=Path)
     parser.add_argument("--service-zip", required=True, type=Path)
     parser.add_argument("--xstream-zip", required=True, type=Path)
+    parser.add_argument("--rivulet-repository-zip", required=True, type=Path)
     parser.add_argument("--output-dir", required=True, type=Path)
     args = parser.parse_args()
     index, checksum = build(args.repository_zip, args.skin_zip, args.service_zip,
-                            args.xstream_zip, args.output_dir)
+                            args.xstream_zip, args.output_dir,
+                            args.rivulet_repository_zip)
     print(f"Kodi repository index: {index}")
     print(f"Kodi repository index checksum: {checksum}")
 

@@ -22,14 +22,15 @@ class StableOctober21ReleaseTests(unittest.TestCase):
     def setUpClass(cls):
         cls.m = json.loads((ROOT / 'manifests/actweeter-stable-20261021.json').read_text())
 
-    def test_current_stable_index_versions_and_hashes(self):
-        stable = ROOT / 'repo'
-        payload = (stable / 'addons.xml').read_bytes()
-        self.assertEqual(hashlib.sha256(payload).hexdigest(), self.m['index_sha256'])
-        self.assertEqual(hashlib.md5(payload).hexdigest(), self.m['index_md5'])
-        self.assertEqual((stable / 'addons.xml.md5').read_text().strip(), self.m['index_md5'])
-        self.assertEqual([(x.get('id'), x.get('version')) for x in ET.fromstring(payload)],
-                         [(a['id'], a['version']) for a in self.m['addons']])
+    def test_20261021_manifest_and_retained_packages(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _skin, index, md5 = build(Path(tmp) / 'candidate')
+            payload = index.read_bytes()
+            self.assertEqual(hashlib.sha256(payload).hexdigest(), self.m['index_sha256'])
+            self.assertEqual(hashlib.md5(payload).hexdigest(), self.m['index_md5'])
+            self.assertEqual(md5.read_text().strip(), self.m['index_md5'])
+            self.assertEqual([(x.get('id'), x.get('version')) for x in ET.fromstring(payload)],
+                             [(a['id'], a['version']) for a in self.m['addons']])
         for addon in self.m['addons']:
             package = ROOT / addon['path']
             self.assertEqual(_sha(package), addon['sha256'])
@@ -43,10 +44,10 @@ class StableOctober21ReleaseTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / 'candidate'
             skin, index, md5 = build(target)
-            self.assertEqual(skin.read_bytes(),
-                             (ROOT / 'repo/skin.actweeter/skin.actweeter-1.2.31.zip').read_bytes())
-            self.assertEqual(index.read_bytes(), (ROOT / 'repo/addons.xml').read_bytes())
-            self.assertEqual(md5.read_bytes(), (ROOT / 'repo/addons.xml.md5').read_bytes())
+            expected_skin = next(a for a in self.m['addons'] if a['id'] == 'skin.actweeter')
+            self.assertEqual(_sha(skin), expected_skin['sha256'])
+            self.assertEqual(hashlib.sha256(index.read_bytes()).hexdigest(), self.m['index_sha256'])
+            self.assertEqual(md5.read_text().strip(), self.m['index_md5'])
             with self.assertRaisesRegex(ValueError, 'refusing to overwrite'):
                 build(target)
 

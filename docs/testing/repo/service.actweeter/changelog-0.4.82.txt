@@ -1,0 +1,1 @@
+* Add required Kodi-native Rivulet repository and add-on installation, with upstream-managed plugin updates.

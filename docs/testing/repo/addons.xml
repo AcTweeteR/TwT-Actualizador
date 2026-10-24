@@ -29,7 +29,7 @@
 		<license>MIT</license>
 		<news>changelog-1.0.2.txt</news>
 	</extension>
-</addon><addon id="skin.actweeter" version="1.2.32~beta7" name="AcTweeteR" provider-name="AcTweeteR maintainers">
+</addon><addon id="skin.actweeter" version="1.2.32~beta8" name="AcTweeteR" provider-name="AcTweeteR maintainers">
 	<requires>
 		<import version="5.17.0" addon="xbmc.gui" />
 		<import addon="script.bingie.helper" version="1.1.2" />
@@ -58,7 +58,7 @@
 		<description lang="es_MX">AcTweeteR - tu espacio de películas, series y televisión.</description>
 		<platform>all</platform>
 		<license>GPL v2.0</license>
-        <news>changelog-1.2.32~beta6.txt</news>
+        <news>changelog-1.2.32~beta8.txt</news>
 		<forum />
 		<source />
 		<assets>
@@ -66,10 +66,10 @@
 			<fanart>extras/media/backgrounds/settings_interface.jpg</fanart>
 		</assets>
 	</extension>
-</addon><addon id="service.actweeter" name="AcTweeteR Service" version="0.4.81" provider-name="AcTweeteR maintainers">
+</addon><addon id="service.actweeter" name="AcTweeteR Service" version="0.4.82" provider-name="AcTweeteR maintainers">
   <requires>
     <import addon="xbmc.python" version="3.0.0" />
-    <import addon="plugin.video.xstream-pro" version="1.1.2.28~beta17" />
+    <import addon="plugin.video.xstream-pro" version="1.1.2.28~beta20" />
     <import addon="pvr.iptvsimple" version="21.4.0" />
     <import addon="slyguy.trailers" version="0.2.1" optional="true" />
     <import addon="plugin.video.youtube" />
@@ -90,9 +90,9 @@
     <description lang="es_ES">Búsqueda visual inteligente de películas, series, programas y personas. Consulta el índice local de XStream, la guía EPG y los metadatos del helper TMDb existente. Coordina la configuración reanudable y las actualizaciones del catálogo. Las credenciales permanecen en los ajustes oficiales de cada complemento.</description>
     <platform>all</platform>
     <license>GPL-2.0-or-later</license>
-    <news>changelog-0.4.81.txt</news>
+    <news>changelog-0.4.82.txt</news>
   </extension>
-</addon><addon id="plugin.video.xstream-pro" name="Xstream Pro" version="1.1.2.28~beta19" provider-name="PesicP">
+</addon><addon id="plugin.video.xstream-pro" name="Xstream Pro" version="1.1.2.28~beta20" provider-name="PesicP">
     <requires>
         <import addon="xbmc.python" version="3.0.1" />
         <import addon="script.module.requests" version="2.22.0" />
@@ -115,4 +115,26 @@
             <fanart>resources/background/background.png</fanart>
         </assets>
     </extension>
+</addon><addon id="repository.rivulet" name="Rivulet Repository" version="1.0.2" provider-name="M0Rf30">
+  <extension point="xbmc.addon.repository" name="Rivulet Repository">
+    <dir>
+      <info compressed="false">https://rivulet-kodi.github.io/plugin.video.rivulet/addons.xml</info>
+      <checksum>https://rivulet-kodi.github.io/plugin.video.rivulet/addons.xml.md5</checksum>
+      <datadir zip="true">https://rivulet-kodi.github.io/plugin.video.rivulet/</datadir>
+    </dir>
+  </extension>
+  <extension point="xbmc.addon.metadata">
+    <summary lang="en_GB">Rivulet Repository</summary>
+    <description lang="en_GB">Add this repository to Kodi to install Rivulet and receive automatic updates.</description>
+    <news>v1.0.2:
+- Changed: the new Rivulet ripple logo. The artwork shipped with 0.16.0's rebrand, but a repository addon only refetches its icon when its own version changes - this release exists to carry that change to installed copies.</news>
+    <platform>all</platform>
+    <license>MIT</license>
+    <website>https://github.com/rivulet-kodi/plugin.video.rivulet</website>
+    <source>https://github.com/rivulet-kodi/plugin.video.rivulet</source>
+    <assets>
+      <icon>icon.png</icon>
+      <fanart>fanart.jpg</fanart>
+    </assets>
+  </extension>
 </addon></addons>
