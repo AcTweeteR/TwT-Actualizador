@@ -1,0 +1,2 @@
+0.4.79: Dependencia de XStream Beta 17 para recuperar marcas de visto sin fecha conocida.
+Corrige la identificación segura del vídeo de introducción mediante Player.Filenameandpath, validada en Kodi real.

@@ -1,0 +1,1 @@
+Actualiza la dependencia a XStream Beta 17 para recuperar marcas de episodios vistos con fecha desconocida y conservar la cola Trakt sin pérdida de datos.

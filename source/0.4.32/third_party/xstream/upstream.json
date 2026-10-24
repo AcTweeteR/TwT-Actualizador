@@ -2,7 +2,7 @@
   "addon_id": "plugin.video.xstream-pro",
   "upstream_project": "https://github.com/Pesicp/XStreamPro",
   "upstream_version": "1.1.2",
-  "distribution_version": "1.1.2.28~beta16",
+  "distribution_version": "1.1.2.28~beta17",
   "upstream_ref": "1.1.2",
   "upstream_commit": "1aa3e67da7c03c6acc3ec7e1ca579a7f645220f4",
   "upstream_release_url": "https://github.com/Pesicp/XStreamPro/releases/download/1.1.2/plugin.video.xstream-pro-1.1.2.zip",
@@ -108,7 +108,7 @@
     "trakt_snapshot.py": "14157a25e194efec8f64d6b2f71142aabb97aa0d44fa8d15839c8103a4fbee0f",
     "history_store_coordinator.py": "377a6443f1d6312a9f9fa86c10292857889129a90e04fbaeb0925197b8713869",
     "trakt_live_queue.py": "17d0b1e75f42bb5c9f5aba86b7369015934a7863f2f7f8708cf603be1a86cdf3",
-    "trakt_live_consumer.py": "5e7b07e6d4d344394adc988624b4fccba0907f7b53492898455a93dd33e2b3fe",
+    "trakt_live_consumer.py": "fbe818b4a481e39b3e82f8c8d357d237e4393b5dce7face338b958a735ccc554",
     "trakt_provider_index.py": "b0c0b0e9ddec5db71aa959309c3025375c7394f3cbc18fb9614d68e8b3fcaefe",
     "trakt_series_index.py": "5faf171deddd134155f035df0a0106dbd4e73a7f7a3539b558746410a16c85fa",
     "trakt_episode_index.py": "7eedd8071d359f233f45bad027c351c92fd4e1bbeb51d2a9b5617ed0ee8daeee"
