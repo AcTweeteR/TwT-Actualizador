@@ -104,7 +104,15 @@ def _run_cycle(service_root, xstream_root, *, account, profile, provider_scope,
         return {'status': 'suspended', 'reason': 'live_binding_or_playback_changed'}
     pending = sorted(queue.glob('*.json')) if queue.is_dir() else []
     if pending:
-        batch_path = pending[0]
+        # Advance fairly past unresolved batches without deleting them or
+        # advancing the remote cursor. A later catalog refresh can retry them.
+        rotation_path = state_root / 'cycle_rotation.json'
+        rotation = _checkpoint(rotation_path, account=account, profile=profile,
+                               provider_scope=provider_scope) or {}
+        last = rotation.get('last_batch', '')
+        if not isinstance(last, str):
+            last = ''
+        batch_path = next((path for path in pending if path.name > last), pending[0])
         batch = verify_batch(json.loads(batch_path.read_text('utf-8')),
                              profile=profile, account=account,
                              provider_scope=provider_scope)
@@ -116,8 +124,12 @@ def _run_cycle(service_root, xstream_root, *, account, profile, provider_scope,
                           catalog_root=xstream_root, playing_file=playing_file)
         if confirm_batch(_ServiceAddon(root), _VFS(), batch) is None:
             return {'status': 'deferred', 'reason': 'operations_unconfirmed'}
+        _write(rotation_path, {'account': account, 'profile': profile,
+                               'provider_scope': provider_scope,
+                               'last_batch': batch_path.name})
         if any(row.get('status') == 'deferred' for row in ack['results']):
-            return {'status': 'deferred', 'reason': 'operations_deferred'}
+            return {'status': 'deferred', 'reason': 'operations_deferred',
+                    'remaining_batches': len(pending)}
         batch_path.unlink()
         remaining = sorted(queue.glob('*.json')) if queue.is_dir() else []
         if remaining:

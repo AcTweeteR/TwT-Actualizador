@@ -1,0 +1,1 @@
+Evita que un lote Trakt aplazado bloquee el resto: rotación persistente de lotes, conservando operaciones pendientes y cursor remoto.

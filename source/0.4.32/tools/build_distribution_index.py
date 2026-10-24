@@ -19,7 +19,7 @@ from xml.etree import ElementTree as ET
 EXPECTED = {
     "repository": ("repository.actweeter.testing", "1.0.2"),
     "skin": ("skin.actweeter", "1.2.32~beta6"),
-    "service": ("service.actweeter", "0.4.79"),
+    "service": ("service.actweeter", "0.4.80"),
     "xstream": ("plugin.video.xstream-pro", "1.1.2.28~beta17"),
 }
 
@@ -76,7 +76,7 @@ def build(repository_zip: Path, skin_zip: Path, service_zip: Path,
     xstream = addon_from_zip(xstream_zip, *EXPECTED["xstream"])
     validate_service_xstream_pair(service, xstream)
     set_news(skin, "changelog-1.2.32~beta6.txt")
-    set_news(service, "changelog-0.4.79.txt")
+    set_news(service, "changelog-0.4.80.txt")
     root = ET.Element("addons")
     for addon in (repository, skin, service, xstream):
         root.append(addon)
