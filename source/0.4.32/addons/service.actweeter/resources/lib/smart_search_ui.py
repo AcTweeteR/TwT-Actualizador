@@ -33,6 +33,7 @@ def listitem(row, watch_badge=""):
             tag.setSeason(row["season"])
             tag.setEpisode(row["episode"])
         tag.setPlot(row.get("plot", ""))
+        tag.setPlaycount(1 if watch_badge == "VISTO" else 0)
         genre, directors = row.get("genre") or [], row.get("director") or []
         tag.setGenres([genre] if isinstance(genre, str) else genre)
         tag.setDirectors([directors] if isinstance(directors, str) else directors)

@@ -2173,6 +2173,9 @@ def main():
         # Leaving a skin surface cancels its own preview work; it does not
         # imply that an unrelated/external player has taken ownership.
         _preview_notify("exit", {})
+    elif action == "startup_intro":
+        # Claim and open the intro from Kodi's startup window before Home loads.
+        _play_intro()
     elif action in ("first_run", "firstrun", "first_run_resume"):
         resume = action == "first_run_resume"
         window = xbmcgui.Window(10000)

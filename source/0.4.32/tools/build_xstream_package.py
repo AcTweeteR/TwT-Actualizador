@@ -101,6 +101,48 @@ def validate_python_archive(archive: zipfile.ZipFile) -> int:
     return len(members)
 
 
+def add_season_playcount(root: Path) -> None:
+    """Derive IPTV season PlayCount from the same verified TMDb inventory as series."""
+    target = root / "resources/lib/addon.py"
+    source = target.read_bytes()
+    newline = b"\r\n" if b"\r\n" in source else b"\n"
+    before_loop = newline.join((
+        b'    show_counts = addon.getSetting("show_content_counts").lower() == "true"',
+        b"    ctx = []",
+        b"    for season_num in sorted(",
+    ))
+    after_loop = newline.join((
+        b"    season_inventory_record = series_changes.inventory_map(addon, pnum).get(str(series_id))",
+        b'    season_tmdb_id = str((info.get("info") or {}).get("tmdb_id") or (info.get("info") or {}).get("tmdb") or "")',
+        b"    season_watched_store = WatchedEpisodes(addon, profile_num=pnum)",
+        b"    season_tmdb_watched_store = WatchedMovies(addon, profile_num=pnum)",
+        b"    for season_num in sorted(",
+    ))
+    before_tag = newline.join((
+        b"        li = _new_listitem(label)",
+        b"        info_tag = li.getVideoInfoTag()",
+    ))
+    after_tag = newline.join((
+        b"        li = _new_listitem(label)",
+        b"        if season_inventory_record and season_tmdb_id:",
+        b"            season_record = dict(season_inventory_record)",
+        b'            season_record["episodes"] = [row for row in season_inventory_record.get("episodes", [])',
+        b'                                         if str(row.get("season")) == str(season_num)]',
+        b"            state = series_changes.series_state.derive_series_state(",
+        b"                season_tmdb_id, series_id, season_record, season_watched_store,",
+        b"                tmdb_watched_store=season_tmdb_watched_store)",
+        b"            series_changes.series_state.apply_to_listitem(li, state)",
+        b"        info_tag = li.getVideoInfoTag()",
+    ))
+    start = source.index(b"def xtream_series(")
+    end = source.index(b"def xtream_season(", start)
+    series = source[start:end]
+    if series.count(before_loop) != 1 or series.count(before_tag) != 1:
+        raise ValueError("season state insertion point missing or ambiguous")
+    series = series.replace(before_loop, after_loop, 1).replace(before_tag, after_tag, 1)
+    target.write_bytes(source[:start] + series + source[end:])
+
+
 def validate_trakt_sync_contract(archive, service_queue: bytes) -> None:
     """Fail closed if a ZIP lacks a complete, generation-matched Trakt path."""
     root = UPSTREAM_ROOT + "/resources/lib/"
@@ -384,6 +426,8 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             if result.returncode:
                 detail = (result.stdout + result.stderr).strip()
                 raise ValueError(f"patch application failed for {patch_path.name}: {detail}")
+
+        add_season_playcount(root)
 
         if sha256(DIAGNOSTICS_SOURCE) != data["performance_diagnostics_sha256"]:
             raise ValueError("performance diagnostics source SHA-256 mismatch")

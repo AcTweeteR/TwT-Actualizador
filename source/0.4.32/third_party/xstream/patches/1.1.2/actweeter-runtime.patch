@@ -201,7 +201,7 @@ index 880518dd074153f6ea3bee426318512d309a0896..3c4c4ad961a0a486c2d5c35ec6636f90
      hidden_items = _get_hidden_items(stype, profile_num)
      if hidden_items:
          streams = [
-@@ -11089,7 +11124,17 @@ def xtream_streams(stype, cat_id, page=1, adult="0", profile_num=None):
+@@ -11089,7 +11124,19 @@ def xtream_streams(stype, cat_id, page=1, adult="0", profile_num=None):
              target_name_key="name",
              log_prefix="Live TV EPG",
          )
@@ -209,11 +209,13 @@ index 880518dd074153f6ea3bee426318512d309a0896..3c4c4ad961a0a486c2d5c35ec6636f90
 +    epg_aliases = _build_same_group_epg_aliases(streams, epg, str(cat_id or "")) if show_epg else {}
 +    series_inventory_map = {}
 +    series_watched_store = None
++    series_tmdb_watched_store = None
 +    series_resume_entries = []
 +    if stype == "series":
 +        try:
 +            series_inventory_map = series_changes.inventory_map(addon, pnum)
 +            series_watched_store = WatchedEpisodes(addon, profile_num=pnum)
++            series_tmdb_watched_store = WatchedMovies(addon, profile_num=pnum)
 +            series_resume_entries = ResumePoints(addon, profile_num=pnum).get_all()
 +        except Exception:
 +            _log("Series progress adapter unavailable; leaving progress unknown")
@@ -291,7 +293,7 @@ index 880518dd074153f6ea3bee426318512d309a0896..3c4c4ad961a0a486c2d5c35ec6636f90
 +                try:
 +                    state = series_changes.series_state.derive_series_state(
 +                        tmdb_id, sid, inventory_record, series_watched_store,
-+                        series_resume_entries
++                        series_resume_entries, tmdb_watched_store=series_tmdb_watched_store
 +                    )
 +                    series_changes.series_state.apply_to_listitem(li, state)
 +                except Exception:
@@ -447,7 +449,7 @@ new file mode 100644
 index 0000000000000000000000000000000000000000..88befca768166634db06d3349ed70ed202f139f9
 --- /dev/null
 +++ b/resources/lib/content_state.py
-@@ -0,0 +1,94 @@
+@@ -0,0 +1,105 @@
 +"""Read-only bridge from XStream stores to standard Kodi VideoInfoTag state."""
 +
 +
@@ -458,18 +460,28 @@ index 0000000000000000000000000000000000000000..88befca768166634db06d3349ed70ed2
 +        return 0.0
 +
 +
-+def watched_state(g, stype, tmdb_id, season='', episode='', profile_num=1):
-+    """Return True/False only for an exact supported identity; otherwise None."""
++def watched_state(g, stype, tmdb_id, season='', episode='', profile_num=1,
++                  provider_id='', series_id=''):
++    """Read namespaced TMDb state first, then exact provider identity."""
 +    identity = str(tmdb_id or '').strip()
 +    if not identity:
 +        return None
 +    try:
++        movies = g['WatchedMovies'](g['addon'], profile_num=profile_num)
 +        if stype == 'movie':
-+            store = g['WatchedMovies'](g['addon'], profile_num=profile_num)
-+            return bool(store.is_watched(identity))
++            value = movies._data.get('tmdb:movie:' + identity)
++            if type(value) is bool:
++                return value
++            value = movies._data.get(str(provider_id or ''))
++            return value if type(value) is bool else None
 +        if stype == 'episode' and season != '' and episode != '':
-+            store = g['WatchedEpisodes'](g['addon'], profile_num=profile_num)
-+            return bool(store.is_watched(identity, season, episode))
++            key = 'tmdb:episode:{0}:s{1}:e{2}'.format(identity, int(season), int(episode))
++            value = movies._data.get(key)
++            if type(value) is bool:
++                return value
++            if provider_id and series_id:
++                store = g['WatchedEpisodes'](g['addon'], profile_num=profile_num)
++                return bool(store.is_watched(series_id, season, provider_id))
 +    except Exception:
 +        return None
 +    return None
@@ -508,7 +520,8 @@ index 0000000000000000000000000000000000000000..88befca768166634db06d3349ed70ed2
 +                      episode='', provider_id='', series_id='', play_url=''):
 +    """Translate existing state only; never writes, guesses, or logs identities."""
 +    tag = listitem.getVideoInfoTag()
-+    watched = watched_state(g, stype, tmdb_id, season, episode, profile_num)
++    watched = watched_state(g, stype, tmdb_id, season, episode, profile_num,
++                            provider_id, series_id)
 +    if watched is not None:
 +        tag.setPlaycount(1 if watched else 0)
 +    resume = resume_entry(g, profile_num, provider_id, series_id, season,
@@ -547,7 +560,7 @@ new file mode 100644
 index 0000000000000000000000000000000000000000..2378def6da51b39fa5a39c801638c817aa2db943
 --- /dev/null
 +++ b/resources/lib/premium_routes.py
-@@ -0,0 +1,1036 @@
+@@ -0,0 +1,1038 @@
 +"""Provider-first, bounded widget endpoints. Never returns a discovery item.
 +
 +Called with the existing addon's environment; playback/profile/history remain
@@ -788,6 +801,7 @@ index 0000000000000000000000000000000000000000..2378def6da51b39fa5a39c801638c817
 +        return {
 +            'inventory': changes.inventory_map(g['addon'], profile_num),
 +            'watched': g['WatchedEpisodes'](g['addon'], profile_num=profile_num),
++            'tmdb_watched': g['WatchedMovies'](g['addon'], profile_num=profile_num),
 +            'resume': g['ResumePoints'](g['addon'], profile_num=profile_num).get_all(),
 +        }
 +    except Exception:
@@ -853,7 +867,8 @@ index 0000000000000000000000000000000000000000..2378def6da51b39fa5a39c801638c817
 +            state_api = g['series_changes'].series_state
 +            tmdb_id = state_api.resolve_tmdb_id(record, item, data.get('tmdb_id', ''))
 +            state = state_api.derive_series_state(
-+                tmdb_id, sid, record, series_context['watched'], series_context['resume'])
++                tmdb_id, sid, record, series_context['watched'], series_context['resume'],
++                tmdb_watched_store=series_context['tmdb_watched'])
 +            state_api.apply_to_listitem(li, state)
 +        except Exception:
 +            g['_log']('Premium series progress unavailable; leaving progress unknown')
@@ -2018,7 +2033,7 @@ new file mode 100644
 index 0000000000000000000000000000000000000000..6031feb5a7fb33cba429c00b746fb5302adbf987
 --- /dev/null
 +++ b/resources/lib/series_state.py
-@@ -0,0 +1,215 @@
+@@ -0,0 +1,227 @@
 +"""Fail-closed, read-only series progress derived from XStream state."""
 +
 +import time
@@ -2130,7 +2145,7 @@ index 0000000000000000000000000000000000000000..6031feb5a7fb33cba429c00b746fb530
 +
 +
 +def derive_series_state(tmdb_id, series_id, inventory_record, watched_store,
-+                        resume_entries=None, now=None):
++                        resume_entries=None, now=None, tmdb_watched_store=None):
 +    """Derive state without writes; unknown identity/inventory never means complete."""
 +    result = {"known": False, "total": 0, "watched": 0, "unwatched": 0,
 +              "complete": None, "next": None, "progress_label": ""}
@@ -2149,8 +2164,17 @@ index 0000000000000000000000000000000000000000..6031feb5a7fb33cba429c00b746fb530
 +    watched_rows = []
 +    try:
 +        for row in inventory:
-+            watched_rows.append(bool(watched_store.is_watched(
-+                str(tmdb_id), str(row["season"]), str(row["episode"]))))
++            value = None
++            if tmdb_watched_store is not None:
++                key = 'tmdb:episode:{0}:s{1}:e{2}'.format(
++                    tmdb_id, int(row["season"]), int(row["episode"]))
++                candidate = tmdb_watched_store._data.get(key)
++                if type(candidate) is bool:
++                    value = candidate
++            if value is None:
++                value = watched_store.is_watched(
++                    str(series_id), str(row["season"]), str(row["provider_id"]))
++            watched_rows.append(bool(value))
 +    except Exception:
 +        return result
 +
@@ -2192,6 +2216,9 @@ index 0000000000000000000000000000000000000000..6031feb5a7fb33cba429c00b746fb530
 +        listitem.setProperty("XStream.SeriesNextEpisode", str(next_row["episode"]))
 +    if state.get("complete") is True:
 +        listitem.setProperty("XStream.SeriesComplete", "true")
++        listitem.getVideoInfoTag().setPlaycount(1)
++    elif state.get("complete") is False:
++        listitem.getVideoInfoTag().setPlaycount(0)
 +    return True
 +
 +

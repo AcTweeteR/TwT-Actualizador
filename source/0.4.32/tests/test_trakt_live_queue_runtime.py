@@ -105,6 +105,68 @@ assert watched[tmdb_watch_key('movie','101')] is True
 assert watched['101'] is True  # provider state is untouched by the equal TMDb ID
 assert watched[tmdb_watch_key('episode','55',1,2)] is True
 assert history.WatchedEpisodes(addon,2)._data['55']['1']==['202']
+# The packaged bridge must project namespaced Trakt state onto native Kodi tags.
+import content_state, series_state
+class VideoTag:
+    def __init__(self): self.playcount=None
+    def setPlaycount(self,value): self.playcount=value
+class ListItem:
+    def __init__(self): self.tag=VideoTag(); self.properties={}
+    def getVideoInfoTag(self): return self.tag
+    def setProperty(self,key,value): self.properties[key]=value
+g={'WatchedMovies':history.WatchedMovies,'WatchedEpisodes':history.WatchedEpisodes,
+   'ResumePoints':history.ResumePoints,'addon':addon}
+def set_watch(key,value):
+    store=history.WatchedMovies(addon,2); store._data[key]=value; store._save()
+movie_item=ListItem()
+state=content_state.apply_to_listitem(g,movie_item,'movie',2,'101',provider_id='303')
+assert state['watched'] is True and movie_item.tag.playcount==1
+set_watch(tmdb_watch_key('movie','101'),False)
+movie_item=ListItem()
+state=content_state.apply_to_listitem(g,movie_item,'movie',2,'101',provider_id='303')
+assert state['watched'] is False and movie_item.tag.playcount==0
+set_watch(tmdb_watch_key('movie','101'),True)
+record={'complete':True,'checked_at':__import__('time').time(),
+        'episodes':[{'season':1,'episode':2,'provider_id':'202'}]}
+series=series_state.derive_series_state('55','55',record,history.WatchedEpisodes(addon,2),
+    tmdb_watched_store=history.WatchedMovies(addon,2))
+series_item=ListItem(); series_state.apply_to_listitem(series_item,series)
+assert series['complete'] is True and series_item.tag.playcount==1
+set_watch(tmdb_watch_key('episode','55',1,2),False)
+series=series_state.derive_series_state('55','55',record,history.WatchedEpisodes(addon,2),
+    tmdb_watched_store=history.WatchedMovies(addon,2))
+series_item=ListItem(); series_state.apply_to_listitem(series_item,series)
+assert series['complete'] is False and series_item.tag.playcount==0
+set_watch(tmdb_watch_key('movie','101'),True)
+set_watch(tmdb_watch_key('episode','55',1,2),True)
+# Season PlayCount follows only its current, complete, exact episode inventory.
+season_store=history.WatchedMovies(addon,2)
+season_rows=[{'season':2,'episode':n,'provider_id':str(n)} for n in range(1,11)]
+season_record={'complete':True,'checked_at':__import__('time').time(),'episodes':season_rows}
+def season_playcount(rows,complete=True):
+    record=dict(season_record,complete=complete,episodes=rows)
+    state=series_state.derive_series_state('777','77',record,
+        history.WatchedEpisodes(addon,2),tmdb_watched_store=season_store)
+    item=ListItem(); series_state.apply_to_listitem(item,state)
+    return state,item.tag.playcount
+for row in season_rows:
+    season_store._data['tmdb:episode:777:s2:e%d' % row['episode']]=True
+state,count=season_playcount(season_rows)
+assert state['complete'] is True and count==1  # 10/10
+season_store._data['tmdb:episode:777:s2:e10']=False
+state,count=season_playcount(season_rows)
+assert state['complete'] is False and count==0  # 9/10
+season_store._data['tmdb:episode:777:s2:e10']=True
+new_rows=season_rows+[{'season':2,'episode':11,'provider_id':'11'}]
+state,count=season_playcount(new_rows)
+assert state['complete'] is False and count==0  # 10/11 after catalogue change
+season_store._data['tmdb:episode:777:s2:e11']=True
+state,count=season_playcount(new_rows)
+assert state['complete'] is True and count==1  # 11/11
+state,count=season_playcount([],True)
+assert state['complete'] is None and count is None  # Empty is unknown
+state,count=season_playcount(season_rows,False)
+assert state['complete'] is None and count is None  # Incomplete inventory is unknown
 # Exercise the actual TMDb UI predicate from the ZIP: namespaced state wins
 # and equal numeric provider IDs never become TMDb states.
 import ast
@@ -294,6 +356,9 @@ class TraktLiveQueueRuntimeTests(unittest.TestCase):
                 'plugin.video.xstream-pro/resources/lib/tmdb_routes.py'))
             self.assertIn(b'tmdb:movie:', archive.read(
                 'plugin.video.xstream-pro/resources/lib/watched_actions.py'))
+            addon_source=archive.read('plugin.video.xstream-pro/resources/lib/addon.py')
+            self.assertIn(b'season_inventory_record = series_changes.inventory_map',addon_source)
+            self.assertIn(b'series_changes.series_state.apply_to_listitem(li, state)',addon_source)
         result = subprocess.run([sys.executable, '-c', SCRIPT,
             os.environ['ACTWEETER_XSTREAM_LIVE_ZIP'],
             str(ROOT / 'addons/service.actweeter/resources/lib')],

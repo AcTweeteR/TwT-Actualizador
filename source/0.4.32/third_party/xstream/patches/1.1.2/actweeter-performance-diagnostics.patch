@@ -160,15 +160,17 @@
          raw = g['_cache_load']('series_info_' + sid) or {}
      cached = raw.get('info') or {}
      if not isinstance(cached, dict):
-@@ -235,9 +248,9 @@
+@@ -235,10 +248,10 @@
      try:
          changes = g['series_changes']
          return {
 -            'inventory': changes.inventory_map(g['addon'], profile_num),
 -            'watched': g['WatchedEpisodes'](g['addon'], profile_num=profile_num),
+-            'tmdb_watched': g['WatchedMovies'](g['addon'], profile_num=profile_num),
 -            'resume': g['ResumePoints'](g['addon'], profile_num=profile_num).get_all(),
 +            'inventory': _performance_call(g, 'storage.series_inventory_read', changes.inventory_map, g['addon'], profile_num),
 +            'watched': _performance_call(g, 'storage.watched_read', g['WatchedEpisodes'], g['addon'], profile_num=profile_num),
++            'tmdb_watched': _performance_call(g, 'storage.watched_tmdb_read', g['WatchedMovies'], g['addon'], profile_num=profile_num),
 +            'resume': _performance_call(g, 'storage.resume_read', g['ResumePoints'], g['addon'], profile_num=profile_num).get_all(),
          }
      except Exception:

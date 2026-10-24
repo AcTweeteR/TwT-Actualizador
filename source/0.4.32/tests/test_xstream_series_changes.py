@@ -285,6 +285,14 @@ class SeriesChangesTests(unittest.TestCase):
         self.assertEqual(len(actions), 1)
         self.assertEqual(actions[0].get("condition"),
                          "String.IsEmpty(Skin.String(splash_screen))")
+        intro = [node for node in startup.findall("onload")
+                 if "RunScript(service.actweeter,startup_intro)" in (node.text or "")]
+        self.assertEqual(len(intro), 1)
+        self.assertEqual(intro[0].get("condition"),
+                         "String.IsEqual(Skin.String(splash_screen),actweeter_video) + !Player.HasMedia")
+        setup = (ROOT / "addons/service.actweeter/setup.py").read_text(encoding="utf-8")
+        self.assertIn('elif action == "startup_intro":', setup)
+        self.assertIn("_play_intro()", setup)
 
     def test_five_thousand_series_catalog_has_bounded_processing_cost(self):
         rows = [{"series_id": str(i), "name": "Series %d" % i} for i in range(5000)]

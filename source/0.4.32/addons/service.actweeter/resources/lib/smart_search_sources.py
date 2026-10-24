@@ -239,6 +239,7 @@ class WatchedState:
     """Read XStream's profile-scoped TMDb watch keys without changing them."""
     def __init__(self):
         self.path, self.signature, self.data = None, None, {}
+        self.inventory_path, self.inventory_signature, self.inventory = None, None, {}
 
     def _load(self, scope):
         root, profile = scope or ("", 0)
@@ -259,6 +260,58 @@ class WatchedState:
             self.path, self.signature = path, signature
         return self.data
 
+    def _load_inventory(self, scope):
+        root, profile = scope or ("", 0)
+        if not root or not str(profile).isdigit():
+            return {}
+        path = Path(root) / ("series_changes_p%d.json" % int(profile))
+        try:
+            stat = path.stat()
+            signature = (stat.st_mtime_ns, stat.st_size)
+        except OSError:
+            return {}
+        if path != self.inventory_path or signature != self.inventory_signature:
+            try:
+                payload = json.loads(path.read_text(encoding="utf-8"))
+                inventory = payload.get("episode_inventory", {})
+                self.inventory = inventory if isinstance(inventory, dict) else {}
+            except (OSError, ValueError, AttributeError):
+                self.inventory = {}
+            self.inventory_path, self.inventory_signature = path, signature
+        return self.inventory
+
+    @staticmethod
+    def _fresh_inventory(record):
+        try:
+            checked = float(record.get("checked_at", 0) or 0)
+        except (AttributeError, TypeError, ValueError, OverflowError):
+            return False
+        return 0 <= time.time() - checked <= 14 * 86400
+
+    def _complete(self, scope, row, watched):
+        identity = str(row.get("tmdb_show_id") or row.get("tmdb_id") or "")
+        provider_id = str(row.get("id") or "")
+        if not identity.isdigit() or not provider_id:
+            return False
+        record = self._load_inventory(scope).get(provider_id)
+        if (not isinstance(record, dict) or record.get("complete") is not True
+                or str(record.get("tmdb_id") or "") != identity):
+            return False
+        if not self._fresh_inventory(record):
+            return False
+        episodes = record.get("episodes")
+        if not isinstance(episodes, list) or not episodes:
+            return False
+        return all(watched.get("tmdb:episode:%s:s%d:e%d" % (
+            identity, int(episode["season"]), int(episode["episode"]))) is True
+            for episode in episodes if isinstance(episode, dict)
+            and str(episode.get("season", "")).isdigit()
+            and str(episode.get("episode", "")).isdigit()) and all(
+                isinstance(episode, dict)
+                and str(episode.get("season", "")).isdigit()
+                and str(episode.get("episode", "")).isdigit()
+                for episode in episodes)
+
     def badge(self, scope, row):
         kind = row.get("kind")
         identity = str(row.get("tmdb_show_id") or row.get("tmdb_id") or "")
@@ -271,12 +324,23 @@ class WatchedState:
         elif not identity.isdigit() or int(identity) < 1:
             return ""
         elif kind == "series":
-            watched = data.get("tvshow:" + identity) is True
-            if not watched and any(key.startswith("tmdb:episode:" + identity + ":") and value is True
-                                   for key, value in data.items() if isinstance(key, str)):
-                return "EPISODIOS VISTOS"
+            watched = self._complete(scope, row, data)
         elif kind == "season" and str(row.get("season", "")).isdigit():
-            watched = data.get("season:%s:%s" % (identity, int(row["season"]))) is True
+            provider_id = str(row.get("id") or "")
+            record = self._load_inventory(scope).get(provider_id)
+            try:
+                if (not isinstance(record, dict) or record.get("complete") is not True
+                        or str(record.get("tmdb_id") or "") != identity
+                        or not self._fresh_inventory(record)):
+                    return ""
+                episodes = [episode for episode in record.get("episodes", [])
+                            if int(episode["season"]) == int(row["season"])]
+                watched = bool(episodes and all(
+                    data.get("tmdb:episode:%s:s%d:e%d" % (identity,
+                        int(episode["season"]), int(episode["episode"]))) is True
+                    for episode in episodes))
+            except (AttributeError, TypeError, ValueError, OverflowError):
+                watched = False
         elif kind == "episode" and str(row.get("season", "")).isdigit() and str(row.get("episode", "")).isdigit():
             key = "tmdb:episode:%s:s%d:e%d" % (identity, int(row["season"]), int(row["episode"]))
             watched = data.get(key) is True

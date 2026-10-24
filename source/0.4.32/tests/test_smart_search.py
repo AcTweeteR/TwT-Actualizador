@@ -7,6 +7,7 @@ import sqlite3
 import sys
 import tempfile
 import threading
+import time
 import types
 import unittest
 from unittest.mock import Mock, patch
@@ -158,16 +159,43 @@ class WatchedStateTests(unittest.TestCase):
                     "season:77:1": True, "tvshow:88": True})
         scope = (str(self.root), 2)
         for row in (dict(kind="movie", tmdb_id="42"),
-                    dict(kind="episode", tmdb_show_id="77", season=1, episode=2),
-                    dict(kind="season", tmdb_show_id="77", season=1),
-                    dict(kind="series", tmdb_id="88")):
+                    dict(kind="episode", tmdb_show_id="77", season=1, episode=2)):
             with self.subTest(row=row):
                 self.assertEqual(self.watched.badge(scope, row), "VISTO")
 
-    def test_series_badge_distinguishes_partial_episode_marks(self):
-        self.write({"tmdb:episode:77:s1:e2": True})
+    def test_series_and_season_badges_require_complete_fresh_inventory(self):
+        self.write({"tmdb:episode:77:s1:e1": True, "tmdb:episode:77:s1:e2": True})
+        inventory = self.root / "series_changes_p2.json"
+        inventory.write_text(json.dumps({"episode_inventory": {"900": {
+            "complete": True, "checked_at": time.time(), "tmdb_id": "77",
+            "episodes": [{"season": 1, "episode": 1, "provider_id": "a"},
+                         {"season": 1, "episode": 2, "provider_id": "b"}]}}}))
+        scope = (str(self.root), 2)
+        self.assertEqual(self.watched.badge(scope,
+            dict(kind="series", id="900", tmdb_id="77")), "VISTO")
+        self.assertEqual(self.watched.badge(scope,
+            dict(kind="season", id="900", tmdb_show_id="77", season=1)), "VISTO")
+        payload = json.loads(inventory.read_text())
+        payload["episode_inventory"]["900"]["episodes"].append(
+            {"season": 1, "episode": 3, "provider_id": "c"})
+        payload["episode_inventory"]["900"]["checked_at"] = time.time()
+        inventory.write_text(json.dumps(payload))
+        self.assertEqual(self.watched.badge(scope,
+            dict(kind="series", id="900", tmdb_id="77")), "")
+        self.assertEqual(self.watched.badge(scope,
+            dict(kind="season", id="900", tmdb_show_id="77", season=1)), "")
+        payload["episode_inventory"]["900"]["episodes"].pop()
+        payload["episode_inventory"]["900"]["checked_at"] = time.time() - 15 * 86400
+        inventory.write_text(json.dumps(payload))
+        self.assertEqual(self.watched.badge(scope,
+            dict(kind="series", id="900", tmdb_id="77")), "")
+        self.assertEqual(self.watched.badge(scope,
+            dict(kind="season", id="900", tmdb_show_id="77", season=1)), "")
+
+    def test_series_level_marker_never_marks_future_episodes_complete(self):
+        self.write({"tvshow:88": True, "tmdb:episode:77:s1:e2": True})
         self.assertEqual(self.watched.badge((str(self.root), 2),
-                         dict(kind="series", tmdb_id="77")), "EPISODIOS VISTOS")
+                         dict(kind="series", id="900", tmdb_id="88")), "")
 
     def test_provider_movie_uses_only_its_exact_available_provider_id(self):
         self.write({"123": True})
@@ -487,6 +515,7 @@ class WindowBehaviourTests(unittest.TestCase):
         properties = {call.args[0]: call.args[1] for call in item.setProperty.call_args_list}
         self.assertEqual(properties["search.watched"], "true")
         self.assertEqual(properties["search.badge"], "TMDb · VISTO")
+        item.getVideoInfoTag.return_value.setPlaycount.assert_called_once_with(1)
 
     def test_episode_parent_tmdb_id_is_not_misreported_as_episode_identity(self):
         item = Mock()
