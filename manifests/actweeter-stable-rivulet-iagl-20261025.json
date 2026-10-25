@@ -1,0 +1,46 @@
+{
+  "release": "actweeter-stable-rivulet-iagl-20261025",
+  "source_commit": "bcca210",
+  "index_sha256": "7ce09e4d820d8c52ec697d7a2bac5451a1076eec5d89e2234072be490efe54ee",
+  "addons": [
+    {
+      "id": "repository.actweeter",
+      "version": "1.0.3",
+      "path": "repo/repository.actweeter/repository.actweeter-1.0.3.zip",
+      "sha256": "74620e81ff9a161bb7b0650f01e94406ccc9fa9366210ebb36e58872bb4995e8"
+    },
+    {
+      "id": "skin.actweeter",
+      "version": "1.2.35",
+      "path": "repo/skin.actweeter/skin.actweeter-1.2.35.zip",
+      "sha256": "c81a8fb6482171da6ffb12e419925d9f6bc526b5f29a2004ed8ba096bee3990a"
+    },
+    {
+      "id": "service.actweeter",
+      "version": "0.4.93",
+      "path": "repo/service.actweeter/service.actweeter-0.4.93.zip",
+      "sha256": "93ae9fcdfd4c7b26fea10530c5a7606b4c06c225b39714d9051873d1cdac6fa8"
+    },
+    {
+      "id": "plugin.video.xstream-pro",
+      "version": "1.1.2.35",
+      "path": "repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.35.zip",
+      "sha256": "b95fdbec53c0eacc35b6a3a090e940a7988a3cfe29c8fd7d78b356a425d2c213"
+    },
+    {
+      "id": "repository.rivulet",
+      "version": "1.0.2",
+      "path": "repo/repository.rivulet/repository.rivulet-1.0.2.zip",
+      "sha256": "e4aabb495d6b49f39b8ec0c828ad9fa4562c387547739e0f38351ddabac9a815"
+    },
+    {
+      "id": "repository.zachmorris",
+      "version": "1.0.4",
+      "path": "repo/repository.zachmorris/repository.zachmorris-1.0.4.zip",
+      "sha256": "3dde8f37dcd64f122cf1e897e139e5b8b7a3cd0ec15db6a1f5c7b59852cb661b"
+    }
+  ],
+  "automated_tests": "696 passed, 1 skipped, 4 deselected, 96 subtests passed",
+  "runtime_validation": "not yet verified on fresh Lenovo or Apple TV installation",
+  "changes": "Official Rivulet and Zach Morris repositories included in Stable; Kodi native installer no longer gates on unreliable JSON-RPC available-addons query; Beta Service 0.4.92, Stable Service 0.4.93"
+}

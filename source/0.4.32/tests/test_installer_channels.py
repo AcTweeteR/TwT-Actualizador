@@ -154,17 +154,19 @@ class InstallerChannelTests(unittest.TestCase):
             call("UpdateAddonRepos", True),
             call("InstallAddon(plugin.video.rivulet)", True),
         ])
-        self.ns["_wait_for_installable_addon"].assert_called_once_with(
-            "plugin.video.rivulet", "0.36.0")
+        self.ns["_wait_for_installable_addon"].assert_not_called()
 
-    def test_rivulet_catalog_timeout_does_not_issue_install_command(self):
+    def test_rivulet_catalog_timeout_still_uses_native_resolver(self):
         self.ns["_wait_for_installable_addon"] = Mock(return_value=False)
-        self.ns["_wait_for_addon_ready"] = Mock()
+        self.ns["_wait_for_addon_ready"] = Mock(return_value=True)
         self.assertEqual(self.native_install(
             self.dialog, "plugin.video.rivulet", "repository.rivulet",
-            consent_granted=True, minimum_version="0.36.0"), "FAILED")
-        self.kodi.executebuiltin.assert_called_once_with("UpdateAddonRepos", True)
-        self.ns["_wait_for_addon_ready"].assert_not_called()
+            consent_granted=True, minimum_version="0.36.0"), "INSTALLED")
+        self.assertEqual(self.kodi.executebuiltin.call_args_list, [
+            call("UpdateAddonRepos", True),
+            call("InstallAddon(plugin.video.rivulet)", True),
+        ])
+        self.ns["_wait_for_installable_addon"].assert_not_called()
 
     def test_rivulet_catalog_wait_uses_kodis_installable_addon_api(self):
         self.ns["_jsonrpc"] = Mock(return_value={"addons": [{

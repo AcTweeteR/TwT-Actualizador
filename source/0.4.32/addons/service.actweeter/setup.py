@@ -594,10 +594,12 @@ def _request_native_addon_install(dialog, addon_id, source_id, *, required=True,
         try:
             # Kodi's native installer handles dependency resolution, licenses,
             # platform packages, and its own confirmation UI.
-            if addon_id in ("plugin.video.rivulet", "plugin.program.iagl") and not _addon_installed(addon_id):
+            if addon_id in ("repository.rivulet", "repository.zachmorris",
+                            "plugin.video.rivulet", "plugin.program.iagl") and not _addon_installed(addon_id):
+                # The Kodi JSON-RPC GetAddons(installed=False) query does not
+                # reliably expose add-ons from freshly refreshed repositories.
+                # Never block the native resolver on this advisory query.
                 xbmc.executebuiltin("UpdateAddonRepos", True)
-                if not _wait_for_installable_addon(addon_id, minimum):
-                    return "FAILED"
             update_needed = (_addon_installed(addon_id)
                              and minimum is not None
                              and not addon_version_satisfies(_addon_version(addon_id), minimum))
@@ -1479,7 +1481,8 @@ def _install_components_once(dialog, *, consent_granted=False, quiet=False,
             dialog, addon_id, ", ".join(enabled_sources) or "instalación existente de Kodi",
             required=True, consent_granted=True,
             minimum_version=row.get("minimum") or None)
-        if addon_id == "repository.slyguy" and result == "INSTALLED":
+        if addon_id in ("repository.slyguy", "repository.rivulet",
+                        "repository.zachmorris") and result == "INSTALLED":
             xbmc.executebuiltin("UpdateAddonRepos", True)
         on_component(addon_id)
         outcomes.append("%s: %s." % (

@@ -1,0 +1,1 @@
+0.4.92 — Repair Rivulet and IAGL native installation in Beta and Stable. Refresh newly installed upstream repositories and avoid unreliable JSON-RPC installable lookup.

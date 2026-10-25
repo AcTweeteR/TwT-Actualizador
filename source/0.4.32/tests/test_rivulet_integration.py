@@ -115,8 +115,9 @@ class RivuletIntegrationTests(unittest.TestCase):
 
     def test_kodi_refreshes_repository_catalog_after_native_seed_install(self):
         setup = (ROOT / "source/0.4.32/addons/service.actweeter/setup.py").read_text()
-        self.assertIn('addon_id in ("plugin.video.rivulet", "plugin.program.iagl") and not _addon_installed(addon_id)', setup)
-        self.assertIn('_wait_for_installable_addon(addon_id, minimum)', setup)
+        self.assertIn('"repository.rivulet", "repository.zachmorris"', setup)
+        self.assertIn('"plugin.video.rivulet", "plugin.program.iagl"', setup)
+        self.assertIn('xbmc.executebuiltin("UpdateAddonRepos", True)', setup)
         self.assertIn('"installed": False', setup)
         self.assertIn('"plugin.video.rivulet": "Rivulet"', setup)
         self.assertNotIn('InstallAddon(plugin.video.rivulet)', setup)

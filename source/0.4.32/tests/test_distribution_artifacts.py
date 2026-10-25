@@ -20,7 +20,7 @@ class DistributionArtifactTests(unittest.TestCase):
         versions = {node.get("id"): node.get("version") for node in root.findall("addon")}
         self.assertEqual(set(versions), {
             "repository.actweeter", "skin.actweeter", "service.actweeter",
-            "plugin.video.xstream-pro",
+            "plugin.video.xstream-pro", "repository.rivulet", "repository.zachmorris",
         })
         for addon_id, version in versions.items():
             package = REPO / "repo" / addon_id / f"{addon_id}-{version}.zip"
