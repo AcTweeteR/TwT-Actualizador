@@ -128,3 +128,11 @@ El workflow de instalador Beta `40235908856` también terminó con éxito. En la
 - Despliegue Pages e instalador Beta: `PASS_RUNTIME` en los jobs publicados; verificación histórica de Stable: `FAIL` por discrepancia preexistente del manifiesto/índice, sin cambios en Stable.
 - Suite Beta canónica: `PASS_AUTOMATED` con las omisiones y exclusiones enumeradas.
 - Resultado global: **PARTIAL**; no se afirma cierre visual ni bidireccionalidad remota.
+
+### Smart Search — comprobación visual del estado visto
+
+En Kodi Mac Master se buscó `Chappie` desde la ventana real de Smart Search. La interfaz mostró un resultado IPTV `Chappie (2015)` y no mostró el check de visto. El ajuste visual de la skin está activado; su plantilla de Smart Search muestra el check cuando `search.watched=true` y el código del Service proyecta ese valor también a `VideoInfoTag.playcount`.
+
+La inspección de solo lectura del perfil confirmó que existe el estado exacto `tmdb:movie:198663=true`, pero el índice de proveedor no contiene una identidad TMDb para su fila de Chappie y no existe un archivo de metadatos de esa fila que asocie su ID de proveedor con `198663`. La búsqueda de metadatos exactos por ese ID tampoco encontró una asociación de proveedor. Por diseño, el buscador no convierte una coincidencia de título/año en identidad: en estas condiciones omite el check para no marcar una película equivocada. La evidencia demuestra un límite de asociación de datos en este elemento, no un fallo de configuración de la skin; no permite afirmar que el estado visto esté visualmente correcto para esta fila.
+
+`source/0.4.32/tests/test_smart_search.py` pasó de nuevo: **93 pruebas, 0 fallos**. La captura visual fue inspeccionada en la sesión de CUA; macOS no permitió exportarla a PNG (`screencapture`: “could not create image from display”), por lo que no se adjunta un archivo de captura persistente. No se abrió ninguna acción de marcar/desmarcar, no se modificó Kodi ni se escribió en Trakt. El resultado de checks reales sigue `PARTIAL`; no se publica una revisión sobre esta evidencia porque no hay una asociación de identidad exacta que pueda repararse de forma segura desde el dato disponible.
