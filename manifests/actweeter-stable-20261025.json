@@ -1,0 +1,37 @@
+{
+  "release": "actweeter-stable-20261025",
+  "source_commit": "24e30f2",
+  "source_skin_beta": "1.2.32~beta13",
+  "channel": "repository.actweeter",
+  "index_sha256": "f3e93065d92f89af16995d1060fc5650326e28052c4db046712f1294a7da28f5",
+  "addons": [
+    {
+      "id": "repository.actweeter",
+      "version": "1.0.3",
+      "path": "repo/repository.actweeter/repository.actweeter-1.0.3.zip",
+      "sha256": "74620e81ff9a161bb7b0650f01e94406ccc9fa9366210ebb36e58872bb4995e8"
+    },
+    {
+      "id": "skin.actweeter",
+      "version": "1.2.34",
+      "path": "repo/skin.actweeter/skin.actweeter-1.2.34.zip",
+      "sha256": "e5f436df7d842f6c12e13f4f3dbedf6c934b97cdd9a5429d23d22e667a1ea274"
+    },
+    {
+      "id": "service.actweeter",
+      "version": "0.4.86",
+      "path": "repo/service.actweeter/service.actweeter-0.4.86.zip",
+      "sha256": "f677e085ea74829f3a630cecc233d35029d2d611f70286965e75f5799e0319de"
+    },
+    {
+      "id": "plugin.video.xstream-pro",
+      "version": "1.1.2.32",
+      "path": "repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.32.zip",
+      "sha256": "a88d2ff9a65cd9653a3a8cfa46260e741cf24dc20e1f9fcc2a4f46ae7f41d11b"
+    }
+  ],
+  "automated_tests": "662 passed, 2 skipped, 4 deselected",
+  "runtime_validation": "not completed; promotion explicitly requested",
+  "historic_stable_checks": "known failing",
+  "promotion_note": "XStream version 1.1.2.32 exceeds previous Stable 1.1.2.31; Service dependency adjusted to exact stable generation."
+}
