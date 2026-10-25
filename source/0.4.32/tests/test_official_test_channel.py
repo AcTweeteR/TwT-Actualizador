@@ -16,6 +16,26 @@ import build_test_channel  # noqa: E402
 
 
 class OfficialTestChannelTests(unittest.TestCase):
+    def assert_metadata_assets_published(self, index):
+        for addon in ET.parse(index).getroot().findall("addon"):
+            addon_id, version = addon.get("id"), addon.get("version")
+            package = index.parent / addon_id / f"{addon_id}-{version}.zip"
+            if not package.is_file():
+                continue
+            with zipfile.ZipFile(package) as archive:
+                metadata = ET.fromstring(archive.read(f"{addon_id}/addon.xml")).find(
+                    "extension[@point='xbmc.addon.metadata']")
+                assets = metadata.find("assets") if metadata is not None else None
+                if assets is None:
+                    continue
+                for asset in assets:
+                    reference = (asset.text or "").strip()
+                    if not reference or "://" in reference or reference.startswith("//"):
+                        continue
+                    published = index.parent / addon_id / Path(reference)
+                    self.assertTrue(published.is_file(), f"missing published asset: {addon_id}/{reference}")
+                    self.assertEqual(published.read_bytes(), archive.read(f"{addon_id}/{reference}"))
+
     def assert_published_xstream_matches_immutable_zip(self, index):
         # An unpublished candidate may legitimately be ahead of the public feed.
         node = ET.parse(index).getroot().find("addon[@id='plugin.video.xstream-pro']")
@@ -69,6 +89,7 @@ class OfficialTestChannelTests(unittest.TestCase):
             copied = index.parent / "skin.actweeter" / skin.name
             self.assertEqual(copied.read_bytes(), skin.read_bytes())
             self.assertEqual(checksum.read_text().strip(), hashlib.md5(index.read_bytes()).hexdigest())
+            self.assert_metadata_assets_published(index)
             self.assertEqual((ROOT / "repo/addons.xml").read_bytes(), stable)
 
     def test_test_feed_is_separate_and_stable_index_remains_stable(self) -> None:
@@ -108,6 +129,7 @@ class OfficialTestChannelTests(unittest.TestCase):
                 "https://slyguy.uk/.repo/repository.slyguy/addons.xml",
             ])
             self.assertEqual(checksum.read_text().strip(), hashlib.md5(index.read_bytes()).hexdigest())
+            self.assert_metadata_assets_published(index)
             # The committed Stable feed was separately promoted to 0.4.92;
             # byte-for-byte comparison below remains the no-mutation guard.
             self.assertEqual(ET.parse(ROOT / "repo" / "addons.xml").getroot().find("addon[@id='service.actweeter']").get("version"), "0.4.93")
@@ -128,8 +150,10 @@ class OfficialTestChannelTests(unittest.TestCase):
             with zipfile.ZipFile(candidate_xstream, "w") as archive:
                 archive.writestr(
                     "plugin.video.xstream-pro/addon.xml",
-                    '<addon id="plugin.video.xstream-pro" version="1.1.2.8" name="XStream" provider-name="AcTweeteR"/>',
+                    '<addon id="plugin.video.xstream-pro" version="1.1.2.8" name="XStream" provider-name="AcTweeteR"><extension point="xbmc.addon.metadata"><assets><icon>icon.png</icon><fanart>media/fanart.png</fanart></assets></extension></addon>',
                 )
+                archive.writestr("plugin.video.xstream-pro/icon.png", b"icon")
+                archive.writestr("plugin.video.xstream-pro/media/fanart.png", b"fanart")
             service = temp_root / "service.actweeter-0.4.37.zip"
             with zipfile.ZipFile(service, "w") as archive:
                 archive.writestr(
@@ -144,6 +168,8 @@ class OfficialTestChannelTests(unittest.TestCase):
             self.assertEqual(versions["plugin.video.xstream-pro"], "1.1.2.8")
             copied = index.parent / "plugin.video.xstream-pro" / candidate_xstream.name
             self.assertEqual(copied.read_bytes(), candidate_xstream.read_bytes())
+            self.assertEqual((index.parent / "plugin.video.xstream-pro/icon.png").read_bytes(), b"icon")
+            self.assertEqual((index.parent / "plugin.video.xstream-pro/media/fanart.png").read_bytes(), b"fanart")
             self.assertEqual(checksum.read_text().strip(),
                              hashlib.md5(index.read_bytes()).hexdigest())
             self.assertEqual((ROOT / "repo" / "addons.xml").read_bytes(), stable_index)
@@ -166,6 +192,18 @@ class OfficialTestChannelTests(unittest.TestCase):
                 archive.writestr('foreign/unsafe','x')
             output=root/'testing'
             with self.assertRaisesRegex(ValueError,'unsafe ZIP paths'):
+                build_test_channel.build(ROOT/'testing/repository.actweeter.testing',
+                                        service,output)
+            self.assertFalse(output.exists())
+
+    def test_unsafe_metadata_asset_path_leaves_no_partial_feed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);service=root/'service.actweeter-0.4.37.zip'
+            with zipfile.ZipFile(service,'w') as archive:
+                archive.writestr('service.actweeter/addon.xml',
+                    '<addon id="service.actweeter" version="0.4.37"><extension point="xbmc.addon.metadata"><assets><icon>../secret.png</icon></assets></extension></addon>')
+            output=root/'testing'
+            with self.assertRaisesRegex(ValueError,'unsafe add-on metadata asset path'):
                 build_test_channel.build(ROOT/'testing/repository.actweeter.testing',
                                         service,output)
             self.assertFalse(output.exists())

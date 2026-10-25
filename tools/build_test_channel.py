@@ -14,6 +14,7 @@ import stat
 import re
 import zipfile
 from pathlib import Path
+from urllib.parse import urlsplit
 from xml.etree import ElementTree as ET
 
 
@@ -195,6 +196,33 @@ def _copy_changelog(package: Path, addon: ET.Element, addon_id: str,
     target.write_bytes(content)
 
 
+def _copy_metadata_assets(package: Path, addon: ET.Element, addon_id: str,
+                          output: Path) -> None:
+    metadata = addon.find("./extension[@point='xbmc.addon.metadata']")
+    assets = metadata.find("assets") if metadata is not None else None
+    if assets is None:
+        return
+    with zipfile.ZipFile(package) as archive:
+        for asset in assets:
+            reference = (asset.text or "").strip()
+            if not reference or urlsplit(reference).scheme or reference.startswith("//"):
+                continue
+            if "\\" in reference:
+                raise ValueError("unsafe add-on metadata asset path")
+            relative = Path(reference)
+            if (relative.is_absolute() or not relative.parts
+                    or any(part in ("", ".", "..") for part in relative.parts)):
+                raise ValueError("unsafe add-on metadata asset path")
+            member = f"{addon_id}/{relative.as_posix()}"
+            try:
+                content = archive.read(member)
+            except KeyError as error:
+                raise ValueError(f"missing packaged metadata asset: {member}") from error
+            target = output / "repo" / addon_id / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(content)
+
+
 def bootstrap_index_html(current_zip_name: str) -> str:
     """Kodi-compatible browse page: current installer and archived versions only."""
     if not re.fullmatch(r"repository[.]actweeter[.]testing-[0-9]+[.][0-9]+[.][0-9]+[.]zip",
@@ -227,28 +255,36 @@ def _write_test_channel(output: Path, repository_source: Path, repo_addon: ET.El
     repo_package = output / "repo" / TEST_REPOSITORY_ID / repo_zip.name
     repo_package.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(repo_zip, repo_package)
+    _copy_metadata_assets(repo_zip, repo_addon, TEST_REPOSITORY_ID, output)
     service_package = output / "repo" / SERVICE_ID / service_zip.name
     service_package.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(service_zip, service_package)
     _copy_changelog(service_zip, service, SERVICE_ID, output)
+    _copy_metadata_assets(service_zip, service, SERVICE_ID, output)
     if skin is not None:
         skin_package = output / "repo" / "skin.actweeter" / skin_zip.name
         skin_package.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(skin_zip, skin_package)
         _copy_changelog(skin_zip, skin, "skin.actweeter", output)
+        _copy_metadata_assets(skin_zip, skin, "skin.actweeter", output)
     if xstream is not None:
         xstream_package = output / "repo" / XSTREAM_ID / xstream_zip.name
         xstream_package.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(xstream_zip, xstream_package)
+        _copy_metadata_assets(xstream_zip, xstream, XSTREAM_ID, output)
     if rivulet_repository is not None:
         rivulet_package = (output / "repo" / RIVULET_REPOSITORY_ID /
                            rivulet_repository_zip.name)
         rivulet_package.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(rivulet_repository_zip, rivulet_package)
+        _copy_metadata_assets(rivulet_repository_zip, rivulet_repository,
+                              RIVULET_REPOSITORY_ID, output)
     if iagl_repository is not None:
         package = output / "repo" / IAGL_REPOSITORY_ID / iagl_repository_zip.name
         package.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(iagl_repository_zip, package)
+        _copy_metadata_assets(iagl_repository_zip, iagl_repository,
+                              IAGL_REPOSITORY_ID, output)
 
     index_root = ET.Element("addons")
     index_root.append(repo_addon)
