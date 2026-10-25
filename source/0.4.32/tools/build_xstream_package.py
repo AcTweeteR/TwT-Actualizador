@@ -165,6 +165,7 @@ def validate_trakt_sync_contract(archive, service_queue: bytes) -> None:
             b"def trakt_sync_once_route(params):",
             b"return sync_once_route(",
             b'trakt.snapshot_request("/users/settings", {})',
+            b"def _is_watched(", b"tmdb_watched_state",
         ),
         "trakt_auto_routes.py": (
             b"def consent_route(", b"def cycle_route(", b"run_cycle(",
@@ -178,7 +179,6 @@ def validate_trakt_sync_contract(archive, service_queue: bytes) -> None:
                                 b"target='provider'", b"target not in ('provider', 'tmdb')"),
         "watched_actions.py": (b"def tmdb_watch_key(", b"tmdb:movie:",
                                b"tmdb:episode:"),
-        "tmdb_routes.py": (b"def _is_watched(", b"tmdb_watch_key"),
         "trakt_sync.py": (b"def validate_export(", b"pagination headers required",),
         "trakt_snapshot.py": (b"require_page_metadata=True", b"'contract_version': 2",),
         "trakt.py": (b"def snapshot_request(", b'Unsupported snapshot endpoint',),
@@ -501,6 +501,11 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             if sha256(source) != data["shared_state_sources_sha256"][name]:
                 raise ValueError("Shared state source hash mismatch: " + name)
             (root / "resources/lib" / name).write_bytes(source.read_bytes())
+
+        integrity_patch = ROOT / data["watched_integrity_patch"]
+        if sha256(integrity_patch) != data["watched_integrity_patch_sha256"]:
+            raise ValueError("Watched identity integrity patch hash mismatch")
+        apply_contextual_unified_patch(root, integrity_patch)
 
         validate_python_sources(root)
 

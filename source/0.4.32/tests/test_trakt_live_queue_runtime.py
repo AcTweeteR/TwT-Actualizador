@@ -175,7 +175,7 @@ with zipfile.ZipFile(sys.argv[1]) as built:
 tree=ast.parse(route_source)
 predicate=next(node for node in tree.body if isinstance(node,ast.FunctionDef)
                and node.name=='_is_watched')
-namespace={}
+namespace={'_CTX': {}}
 exec(compile(ast.Module(body=[predicate],type_ignores=[]),'<tmdb-ui-predicate>','exec'),namespace)
 wm=history.WatchedMovies(addon,2); we=history.WatchedEpisodes(addon,2)
 assert namespace['_is_watched']({'tmdb_type':'movie','tmdb_id':'101'},wm,we) is True
@@ -353,7 +353,7 @@ class TraktLiveQueueRuntimeTests(unittest.TestCase):
             routes = archive.read('plugin.video.xstream-pro/resources/lib/tmdb_routes.py')
             self.assertIn(b'trakt.device_code()', routes)
             self.assertIn(b'trakt.poll_device_token(device_code)', routes)
-            self.assertIn(b'tmdb_watch_key', archive.read(
+            self.assertIn(b'tmdb_watched_state', archive.read(
                 'plugin.video.xstream-pro/resources/lib/tmdb_routes.py'))
             self.assertIn(b'tmdb:movie:', archive.read(
                 'plugin.video.xstream-pro/resources/lib/watched_actions.py'))

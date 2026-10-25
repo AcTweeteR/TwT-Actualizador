@@ -109,15 +109,15 @@ class TerminalTests(unittest.TestCase):
 
 
 class StateTests(unittest.TestCase):
-    def test_cached_tmdb_identity_is_offline_and_profile_scoped(self):
+    def test_title_metadata_cache_cannot_authorize_watched_identity(self):
         calls = []
         def cached(name, profile_num):
             calls.append((name, profile_num))
             return {'expires': time.time()+60, 'data': {'tmdb_id': '42'}}
         g = {'_cache_load': cached, 'addon': None,
              'WatchedMovies': lambda *a, **k: SimpleNamespace(_data={'tmdb:movie:42': True})}
-        self.assertTrue(content_state.watched_state(g, 'movie', '', profile_num=2, provider_id='12'))
-        self.assertEqual(calls, [('premium_meta_movie_12_es', 2)])
+        self.assertIsNone(content_state.watched_state(g, 'movie', '', profile_num=2, provider_id='12'))
+        self.assertEqual(calls, [('vod_info_12', 2)])
 
     def test_exact_provider_state_does_not_require_tmdb_and_false_wins(self):
         movies = SimpleNamespace(_data={"12": True, "tmdb:movie:42": False})

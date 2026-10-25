@@ -1,0 +1,1 @@
+Beta26: show verified Trakt remote progress without inventing a playback seek reference.

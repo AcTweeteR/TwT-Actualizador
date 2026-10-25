@@ -58,6 +58,73 @@ class MenuContractTests(unittest.TestCase):
         self.assertEqual(merged.find("shortcut[defaultID='arcade']/action").text,
                          "RunAddon(plugin.program.iagl)")
 
+    def test_shipped_launcher_upgrade_preserves_custom_rows_and_is_idempotent(self):
+        defaults = (ADDON / "shortcuts/mainmenu.DATA.xml").read_bytes()
+        old = ET.fromstring(defaults)
+        old.find("shortcut[defaultID='rivulet']/action").text = (
+            "ActivateWindow(Videos,plugin://plugin.video.rivulet/,return)")
+        arcade = old.find("shortcut[defaultID='arcade']")
+        arcade.find('action').text = "ActivateWindow(Programs,plugin://plugin.program.iagl/,return)"
+        arcade.find('icon').text = 'shortcuts/rivulet.png'
+        custom = ET.SubElement(old, 'shortcut')
+        ET.SubElement(custom, 'defaultID').text = 'user-item'
+        ET.SubElement(custom, 'label').text = 'Mi acceso'
+        ET.SubElement(custom, 'action').text = 'ActivateWindow(Settings)'
+        old.remove(arcade)
+        old.insert(0, arcade)
+        original = ET.tostring(old)
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            profile, service = base / 'profile', base / 'service'
+            profile.mkdir(); service.mkdir()
+            path = profile / 'skin.actweeter-mainmenu.DATA.xml'
+            path.write_bytes(original)
+            (service / 'interface_layout_state.json').write_text(json.dumps({
+                'layout_version': 15, 'files': {}, 'settings': interface_layout.SETTINGS,
+            }))
+            result = interface_layout.apply_layout(profile, service, ADDON, interface_layout.SETTINGS)
+            self.assertEqual(result['status'], 'APPLIED')
+            after = ET.parse(path).getroot()
+            ids = [node.findtext('defaultID') for node in after.findall('shortcut')]
+            self.assertEqual(ids.index('arcade'), ids.index('rivulet') + 1)
+            self.assertEqual(after.find("shortcut[defaultID='rivulet']/action").text,
+                             'RunAddon(plugin.video.rivulet)')
+            self.assertEqual(after.find("shortcut[defaultID='arcade']/action").text,
+                             'RunAddon(plugin.program.iagl)')
+            self.assertEqual(after.find("shortcut[defaultID='arcade']/icon").text,
+                             'shortcuts/arcade.png')
+            self.assertEqual(ET.tostring(after.find("shortcut[defaultID='user-item']")),
+                             ET.tostring(custom))
+            backup = service / 'interface_backups' / result['backup'] / path.name
+            self.assertEqual(backup.read_bytes(), original)
+            self.assertEqual(interface_layout.apply_layout(
+                profile, service, ADDON, interface_layout.SETTINGS)['status'], 'CURRENT')
+
+    def test_custom_launcher_actions_labels_and_icons_are_preserved(self):
+        defaults = (ADDON / "shortcuts/mainmenu.DATA.xml").read_bytes()
+        root = ET.fromstring(defaults)
+        root.find("shortcut[defaultID='rivulet']/action").text = 'RunScript(user.rivulet)'
+        arcade = root.find("shortcut[defaultID='arcade']")
+        arcade.find('action').text = 'RunScript(user.games)'
+        arcade.find('label').text = 'Mis juegos'
+        arcade.find('icon').text = '/custom/gamepad.png'
+        root.remove(arcade)
+        root.insert(0, arcade)
+        current = ET.tostring(root)
+        self.assertEqual(interface_layout.merge_arcade_shortcut(current, defaults), current)
+
+    def test_custom_arcade_icon_survives_shipped_action_repair(self):
+        defaults = (ADDON / "shortcuts/mainmenu.DATA.xml").read_bytes()
+        root = ET.fromstring(defaults)
+        arcade = root.find("shortcut[defaultID='arcade']")
+        arcade.find('action').text = 'ActivateWindow(Programs,plugin://plugin.program.iagl/,return)'
+        arcade.find('icon').text = '/custom/gamepad.png'
+        after = ET.fromstring(interface_layout.merge_arcade_shortcut(ET.tostring(root), defaults))
+        self.assertEqual(after.find("shortcut[defaultID='arcade']/icon").text,
+                         '/custom/gamepad.png')
+        self.assertEqual(after.find("shortcut[defaultID='arcade']/action").text,
+                         'RunAddon(plugin.program.iagl)')
+
     def test_bottom_menu_has_exactly_settings_catalog_refresh_and_skin_reload(self):
         self.assertEqual(
             shortcuts("powermenu.DATA.xml"),
@@ -181,7 +248,7 @@ class MenuContractTests(unittest.TestCase):
                 result = interface_layout.apply_layout(
                     shortcuts, service, ADDON, interface_layout.SETTINGS)
                 self.assertEqual(result["status"], "APPLIED")
-                self.assertEqual(interface_layout.LAYOUT_VERSION, 15)
+                self.assertEqual(interface_layout.LAYOUT_VERSION, 16)
                 expected_main = interface_layout.merge_arcade_shortcut(
                     previous_main, (ADDON / "shortcuts/mainmenu.DATA.xml").read_bytes())
                 for name, wanted in (("skin.actweeter-mainmenu.DATA.xml", expected_main),

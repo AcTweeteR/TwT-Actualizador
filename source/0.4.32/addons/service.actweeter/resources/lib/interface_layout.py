@@ -15,8 +15,8 @@ import urllib.parse
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-LAYOUT_VERSION = 15
-LAYOUT_MIGRATION_ID = 'interface-layout-v15-arcade-menu'
+LAYOUT_VERSION = 16
+LAYOUT_MIGRATION_ID = 'interface-layout-v16-addon-launchers'
 GROUPS = ('mainmenu', 'powermenu', 'inicio-1', '10000-1', 'moviehub', 'tvshowhub')
 # Exact profile copies shipped as defaults in Beta 8. They may be updated when
 # older state files do not yet track ownership; any byte-level customization
@@ -248,25 +248,50 @@ def source_documents(skin_root, *, recommendations_enabled=True):
 
 
 def merge_arcade_shortcut(current, defaults):
-    """Add the mandatory Arcade destination without replacing profile choices."""
+    """Repair shipped launchers and add Arcade while preserving custom rows."""
     current_root = ET.fromstring(current)
     default_root = ET.fromstring(defaults)
     arcade = next((node for node in default_root.findall('shortcut')
                    if node.findtext('defaultID') == 'arcade'), None)
     if arcade is None:
         raise ValueError('default Arcade shortcut missing')
-    existing = next((node for node in current_root.findall('shortcut')
-                     if node.findtext('defaultID') == 'arcade'), None)
-    if existing is not None:
-        if (existing.findtext('label') != 'ARCADE'
-                or existing.findtext('action') != arcade.findtext('action')):
-            raise ValueError('conflicting customized Arcade shortcut')
-        return current
+    changed = False
+    owned_arcade = False
+    for default_id, previous_action in (
+            ('rivulet', 'ActivateWindow(Videos,plugin://plugin.video.rivulet/,return)'),
+            ('arcade', 'ActivateWindow(Programs,plugin://plugin.program.iagl/,return)')):
+        node = current_root.find("shortcut[defaultID='%s']" % default_id)
+        wanted = default_root.find("shortcut[defaultID='%s']" % default_id)
+        if node is None or wanted is None:
+            continue
+        action = node.find('action')
+        if action is None or action.text not in (previous_action, wanted.findtext('action')):
+            continue
+        if action.text == previous_action:
+            action.text = wanted.findtext('action')
+            changed = True
+        if default_id == 'arcade':
+            owned_arcade = node.findtext('label') == 'ARCADE'
+            icon = node.find('icon')
+            if owned_arcade and node.findtext('icon') in (None, '', 'shortcuts/rivulet.png'):
+                if icon is None:
+                    icon = ET.SubElement(node, 'icon')
+                icon.text = wanted.findtext('icon')
+                changed = True
+    existing = current_root.find("shortcut[defaultID='arcade']")
     rivulet = next((node for node in current_root.findall('shortcut')
                     if node.findtext('defaultID') == 'rivulet'), None)
-    position = list(current_root).index(rivulet) + 1 if rivulet is not None else len(current_root)
-    current_root.insert(position, arcade)
-    return ET.tostring(current_root, encoding='utf-8', xml_declaration=True) + b'\n'
+    if existing is None:
+        position = list(current_root).index(rivulet) + 1 if rivulet is not None else len(current_root)
+        current_root.insert(position, arcade)
+        changed = True
+    elif owned_arcade and rivulet is not None:
+        if list(current_root).index(existing) != list(current_root).index(rivulet) + 1:
+            current_root.remove(existing)
+            current_root.insert(list(current_root).index(rivulet) + 1, existing)
+            changed = True
+    return (ET.tostring(current_root, encoding='utf-8', xml_declaration=True) + b'\n'
+            if changed else current)
 
 
 def expandable_shortcut_ids(documents):

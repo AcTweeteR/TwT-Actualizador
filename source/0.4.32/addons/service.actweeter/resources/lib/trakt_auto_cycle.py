@@ -98,11 +98,13 @@ def _run_cycle(service_root, xstream_root, *, account, profile, provider_scope,
     queue = state_root / 'queue'
     ack_root = state_root / 'acks'
     cursor_path = state_root / 'remote' / ('profile_%s.json' % profile)
+    planned_path = state_root / 'planned' / ('profile_%s.json' % profile)
     if state_root.is_symlink() or queue.is_symlink():
         return {'status': 'failed', 'reason': 'unsafe_sync_state_path'}
     if not binding_valid():
         return {'status': 'suspended', 'reason': 'live_binding_or_playback_changed'}
     pending = sorted(queue.glob('*.json')) if queue.is_dir() else []
+    deferred = None
     if pending:
         # Advance fairly past unresolved batches without deleting them or
         # advancing the remote cursor. A later catalog refresh can retry them.
@@ -117,48 +119,52 @@ def _run_cycle(service_root, xstream_root, *, account, profile, provider_scope,
                              profile=profile, account=account,
                              provider_scope=provider_scope)
         if batch.get('activity_fingerprint') is None:
-            return {'status': 'deferred', 'reason': 'legacy_batch_without_remote_cursor'}
-        ack = apply_batch(str(batch_path), ack_root, profile=profile,
+            deferred = {'status': 'deferred', 'reason': 'legacy_batch_without_remote_cursor'}
+            rows = []
+        else:
+            ack = apply_batch(str(batch_path), ack_root, profile=profile,
                           account=account, provider_scope=provider_scope,
                           addon=addon, history=history,
                           catalog_root=xstream_root, playing_file=playing_file)
-        # A deferred ACK is valid evidence of an attempted batch, but must
-        # never advance the durable applied checkpoint or remote cursor.
-        rows = verify_ack(ack, batch)
-        if any(row['status'] == 'deferred' for row in rows):
-            _write(rotation_path, {'account': account, 'profile': profile,
-                                   'provider_scope': provider_scope,
-                                   'last_batch': batch_path.name})
-            return {'status': 'deferred', 'reason': 'operations_deferred',
-                    'remaining_batches': len(pending)}
-        if confirm_batch(_ServiceAddon(root), _VFS(), batch) is None:
-            return {'status': 'deferred', 'reason': 'operations_unconfirmed'}
+            rows = verify_ack(ack, batch)
+            if any(row['status'] == 'deferred' for row in rows):
+                deferred = {'status': 'deferred', 'reason': 'operations_deferred',
+                            'remaining_batches': len(pending)}
+            elif confirm_batch(_ServiceAddon(root), _VFS(), batch) is None:
+                deferred = {'status': 'deferred', 'reason': 'operations_unconfirmed'}
         _write(rotation_path, {'account': account, 'profile': profile,
                                'provider_scope': provider_scope,
                                'last_batch': batch_path.name})
-        batch_path.unlink()
-        remaining = sorted(queue.glob('*.json')) if queue.is_dir() else []
-        if remaining:
-            return {'status': 'pending', 'remaining_batches': len(remaining)}
-        cursor = {'schema': 1, 'account': account, 'profile': profile,
-                  'provider_scope': provider_scope,
-                  'activity_fingerprint': batch['activity_fingerprint'],
-                  'catalog_generation': batch.get('catalog_generation'), 'planner_contract': 2,
-                  'source_export': batch.get('source_export')}
-        _write(cursor_path, cursor)
-        return {'status': 'applied', 'operations': len(batch['operations'])}
+        if deferred is None:
+            batch_path.unlink()
+            remaining = sorted(queue.glob('*.json')) if queue.is_dir() else []
+            if remaining:
+                return {'status': 'pending', 'remaining_batches': len(remaining)}
+            cursor = _checkpoint(planned_path, account=account, profile=profile,
+                                 provider_scope=provider_scope) or {
+                'schema': 1, 'account': account, 'profile': profile,
+                'provider_scope': provider_scope,
+                'activity_fingerprint': batch['activity_fingerprint'],
+                'catalog_generation': batch.get('catalog_generation'), 'planner_contract': 2,
+                'source_export': batch.get('source_export')}
+            _write(cursor_path, cursor)
+            return {'status': 'applied', 'operations': len(batch['operations'])}
 
     remote_account, activity = activity_get()
     if remote_account != account or not isinstance(activity, dict):
         return {'status': 'suspended', 'reason': 'account_or_activity_changed'}
     fingerprint = _digest(activity)
-    previous = _checkpoint(cursor_path, account=account, profile=profile,
-                           provider_scope=provider_scope)
+    # A durable plan is distinct from an applied cursor: unresolved identities
+    # must neither block new remote activity nor cause the same export repeatedly.
+    previous = (_checkpoint(planned_path, account=account, profile=profile,
+                            provider_scope=provider_scope)
+                or _checkpoint(cursor_path, account=account, profile=profile,
+                               provider_scope=provider_scope))
     generation = catalog_generation(xstream_root, profile)
     if (previous and previous.get('activity_fingerprint') == fingerprint
             and previous.get('catalog_generation') == generation
             and previous.get('planner_contract') == 2):
-        return {'status': 'unchanged'}
+        return deferred or {'status': 'unchanged'}
     export_directory = None
     if previous and previous.get('activity_fingerprint') == fingerprint:
         relative = previous.get('source_export')
@@ -189,9 +195,35 @@ def _run_cycle(service_root, xstream_root, *, account, profile, provider_scope,
             if not binding_valid():
                 return {'status': 'suspended', 'reason': 'binding_changed_during_export'}
     queue.mkdir(mode=0o700, parents=True, exist_ok=True)
-    targets = [write_batch(queue, batch) for batch in batches]
+    pending_ids = set()
+    for path in pending:
+        existing = verify_batch(json.loads(path.read_text('utf-8')), account=account,
+                                profile=profile, provider_scope=provider_scope)
+        pending_ids.update(op['id'] for op in existing['operations'])
+    targets, operations = [], 0
+    for batch in batches:
+        if pending_ids:
+            batch = dict(batch)
+            batch['operations'] = [op for op in batch['operations']
+                                   if op['id'] not in pending_ids]
+            if not batch['operations']:
+                continue
+            batch.pop('sha256')
+            batch['sha256'] = _digest(batch)
+        targets.append(write_batch(queue, batch))
+        operations += len(batch['operations'])
+        pending_ids.update(op['id'] for op in batch['operations'])
+    cursor = {'schema': 1, 'account': account, 'profile': profile,
+              'provider_scope': provider_scope, 'activity_fingerprint': fingerprint,
+              'catalog_generation': generation, 'planner_contract': 2,
+              'source_export': source_export}
+    _write(planned_path, cursor)
+    if not targets:
+        if not pending:
+            _write(cursor_path, cursor)
+        return deferred or {'status': 'unchanged'}
     return {'status': 'queued', 'batches': len(targets),
-            'operations': sum(len(batch['operations']) for batch in batches)}
+            'operations': operations}
 
 
 def run_cycle(service_root, xstream_root, **kwargs):

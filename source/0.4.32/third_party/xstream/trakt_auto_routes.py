@@ -115,10 +115,19 @@ def cycle_route(context, guard, trakt, xbmcaddon, xbmc, xbmcplugin, xbmcvfs,
         return (current_account.get('user', {}).get('ids', {}).get('slug') == account
                 and local_binding_valid())
 
+    applied_count = 0
+
+    def apply_batch(*args, **kwargs):
+        nonlocal applied_count
+        ack = trakt_live_consumer.apply_batch(*args, **kwargs)
+        applied_count += sum(row.get('status') == 'applied'
+                             for row in ack.get('results', []))
+        return ack
+
     try:
         result = run_cycle(service_root, xstream_root, account=account, profile=profile,
             provider_scope=scope, activity_get=activity_get,
-            export_snapshot=export_snapshot, apply_batch=trakt_live_consumer.apply_batch,
+            export_snapshot=export_snapshot, apply_batch=apply_batch,
             addon=addon, history=history, playing_file=playing, consent_path=consent_path,
             one_shot=one_shot, binding_valid=binding_valid)
         # One-shot restoration must drain its bounded, durable queue; the
@@ -133,16 +142,13 @@ def cycle_route(context, guard, trakt, xbmcaddon, xbmc, xbmcplugin, xbmcvfs,
             result = run_cycle(service_root, xstream_root, account=account, profile=profile,
                 provider_scope=scope, activity_get=activity_get,
                 export_snapshot=export_snapshot,
-                apply_batch=trakt_live_consumer.apply_batch, addon=addon,
+                apply_batch=apply_batch, addon=addon,
                 history=history, playing_file=playing, consent_path=consent_path,
                 one_shot=one_shot, binding_valid=binding_valid)
         if not one_shot:
             record_result(service_root / 'trakt_live' / 'scheduler.json',
                           success=result.get('status') in ('applied', 'unchanged', 'deferred', 'busy', 'pending'),
                           now=__import__('time').time())
-        if result.get('status') == 'applied' and result.get('operations', 0):
-            xbmc.executebuiltin(
-                'RunPlugin(plugin://service.actweeter/?action=trakt_continue_refresh)', False)
     except Exception as exc:
         if not one_shot:
             record_result(service_root / 'trakt_live' / 'scheduler.json',
@@ -151,6 +157,10 @@ def cycle_route(context, guard, trakt, xbmcaddon, xbmc, xbmcplugin, xbmcvfs,
         xbmc.log('[AcTweeteR] TRAKT_SYNC_CYCLE failed error_type=%s' %
                  type(exc).__name__, xbmc.LOGWARNING)
         result = {'status': 'failed', 'error_type': type(exc).__name__}
+    # A later deferred batch or failed GET must not hide earlier durable writes.
+    if applied_count:
+        xbmc.executebuiltin(
+            'RunPlugin(plugin://service.actweeter/?action=trakt_continue_refresh)', False)
     item = context('_new_listitem')('AcTweeteR Trakt sync: ' + result['status'])
     item.setProperty('actweeter.trakt.sync', json.dumps(result, sort_keys=True))
     xbmcplugin.addDirectoryItem(context('addon_handle'), '', item, isFolder=False)

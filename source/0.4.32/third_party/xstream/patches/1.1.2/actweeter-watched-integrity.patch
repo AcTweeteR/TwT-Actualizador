@@ -1,0 +1,142 @@
+diff --git a/resources/lib/tmdb_routes.py b/resources/lib/tmdb_routes.py
+--- a/resources/lib/tmdb_routes.py
++++ b/resources/lib/tmdb_routes.py
+@@ -350,28 +350,8 @@
+ 
+ 
+ def _is_watched(item, wm, we):
+-    tmdb_type = item.get("tmdb_type") or "movie"
+-    tmdb_id = str(item.get("tmdb_id") or "")
+-    season_value = item.get("season")
+-    season = str(season_value) if season_value is not None else ""
+-    episode = str(item.get("episode") or "")
+-    kind = item.get("kind") or ("episode" if episode else ("season" if season else ("tvshow" if tmdb_type == "tv" else "movie")))
+-    if not tmdb_id:
+-        return False
+-    if tmdb_type == "movie":
+-        from watched_actions import tmdb_watch_key
+-        key = tmdb_watch_key("movie", tmdb_id)
+-        return bool(wm._data.get(key, False))
+-    if episode and season:
+-        from watched_actions import tmdb_watch_key
+-        key = tmdb_watch_key("episode", tmdb_id, season, episode)
+-        if key in wm._data:
+-            return bool(wm._data[key])
+-        return (wm.is_watched("tvshow:{0}".format(tmdb_id))
+-                or wm.is_watched("season:{0}:{1}".format(tmdb_id, season)))
+-    if kind == "season" and season:
+-        return wm.is_watched("season:{0}:{1}".format(tmdb_id, season))
+-    return wm.is_watched("tvshow:{0}".format(tmdb_id))
++    from content_state import tmdb_watched_state
++    return tmdb_watched_state(_CTX, item, wm, we)
+ 
+ 
+ def _source_auto_play_first_enabled():
+@@ -1,3 +1,5 @@
+         item.get("fanart", ""),
+     )
++    from content_state import apply_remote_progress
++    apply_remote_progress(li, item)
+     if watched:
+diff --git a/resources/lib/premium_routes.py b/resources/lib/premium_routes.py
+--- a/resources/lib/premium_routes.py
++++ b/resources/lib/premium_routes.py
+@@ -334,6 +334,14 @@
+ def listitem(g, item, stype, data, label=None, profile_num=None, play_url='',
+              series_context=None):
+     li = g['_new_listitem'](label or data['title'])
++    data['_verified_tmdb_id'] = content_state.provider_tmdb_id(
++        g, stype, provider_id(item, stype), profile_num,
++        item.get('tmdb_id') or item.get('tmdb'))
++    if stype == 'series' and profile_num is not None and series_context is None:
++        contexts = g.setdefault('_actweeter_series_state_context', {})
++        if profile_num not in contexts:
++            contexts[profile_num] = prepare_series_state_context(g, profile_num)
++        series_context = contexts[profile_num]
+     tag = li.getVideoInfoTag()
+     tag.setMediaType('tvshow' if stype == 'series' else 'movie')
+     tag.setTitle(data['title'])
+@@ -362,7 +370,9 @@
+               for i, a in enumerate(data.get('cast') or []) if a.get('name')]
+     if actors:
+         tag.setCast(actors[:10])
+-    ids = {k: str(data[k + '_id']) for k in ('tmdb', 'imdb') if data.get(k + '_id')}
++    ids = {'tmdb': data['_verified_tmdb_id']} if data['_verified_tmdb_id'] else {}
++    if item.get('imdb_id'):
++        ids['imdb'] = str(item['imdb_id'])
+     if ids:
+         tag.setUniqueIDs(ids, 'tmdb' if 'tmdb' in ids else 'imdb')
+         for key, value in ids.items():
+@@ -382,13 +392,13 @@
+     li.setProperty('IsPlayable', 'false' if stype == 'series' else 'true')
+     if stype == 'movie' and profile_num is not None:
+         content_state.apply_to_listitem(g, li, 'movie', profile_num,
+-            data.get('tmdb_id'), provider_id=provider_id(item, stype), play_url=play_url)
++            data.get('_verified_tmdb_id'), provider_id=provider_id(item, stype), play_url=play_url)
+     elif stype == 'series' and profile_num is not None and series_context:
+         try:
+             sid = provider_id(item, stype)
+             record = series_context['inventory'].get(sid)
+             state_api = g['series_changes'].series_state
+-            tmdb_id = state_api.resolve_tmdb_id(record, item, data.get('tmdb_id', ''))
++            tmdb_id = state_api.resolve_tmdb_id(record, item, data.get('_verified_tmdb_id', ''))
+             state = state_api.derive_series_state(
+                 tmdb_id, sid, record, series_context['watched'], series_context['resume'],
+                 tmdb_watched_store=series_context['tmdb_watched'])
+@@ -408,7 +418,7 @@
+     sid = provider_id(item, stype)
+     if reconcile_pending and pending is not None:
+         complete = (content_state.watched_state(
+-            g, 'movie', data.get('tmdb_id'), profile_num=pnum) is True
++            g, 'movie', data.get('_verified_tmdb_id'), profile_num=pnum) is True
+             if stype == 'movie' else
+             li.getProperty('XStream.SeriesComplete') == 'true')
+         if complete:
+@@ -424,7 +434,7 @@
+         sid, item['name'], stype, data.get('poster_url', ''), favorite_path,
+         profile_num=pnum, include_download=False)
+     watched_actions = (content_state.watched_context(
+-        g, 'movie', data.get('tmdb_id'), profile_num=pnum) if stype == 'movie' else [])
++        g, 'movie', data.get('_verified_tmdb_id'), profile_num=pnum) if stype == 'movie' else [])
+     content_state.add_context_actions(li, favorite_actions, watched_actions)
+     if stype == 'series':
+         status = g['_series_change_status'](sid)
+@@ -749,7 +759,7 @@
+     favorite_actions = g['_build_favorite_ctx'](
+         sid, title, stype, poster, path, profile_num=pnum, include_download=False)
+     watched_actions = (content_state.watched_context(
+-        g, 'movie', data.get('tmdb_id'), profile_num=pnum) if stype == 'movie' else [])
++        g, 'movie', data.get('_verified_tmdb_id'), profile_num=pnum) if stype == 'movie' else [])
+     content_state.add_context_actions(li, favorite_actions, watched_actions)
+     _performance_call(g, 'kodi.add_directory_item', g['xbmcplugin'].addDirectoryItem,
+                       g['addon_handle'], path, li, stype == 'series')
+@@ -1075,7 +1085,7 @@
+                 'RunPlugin(%s)' % build({'mode':'premium', 'view':'remove_resume',
+                     'stype':stype, 'key':resume_key(entry), 'profile_num':pnum}))]
+             watched_actions = (content_state.watched_context(
+-                g, 'movie', data.get('tmdb_id'), profile_num=pnum)
++                g, 'movie', data.get('_verified_tmdb_id'), profile_num=pnum)
+                 if kind == 'movie' else [])
+             content_state.add_context_actions(li, context_actions, watched_actions)
+             plugin.addDirectoryItem(handle, build({'mode':'premium', 'view':'resume',
+diff --git a/resources/lib/addon.py b/resources/lib/addon.py
+--- a/resources/lib/addon.py
++++ b/resources/lib/addon.py
+@@ -11540,16 +11540,7 @@
+                 li.setProperty("XStream.ChangeStatus", change_status)
+             if series_watched_store is not None:
+                 inventory_record = series_inventory_map.get(sid)
+-                cached_tmdb_id = ""
+-                if not ((inventory_record or {}).get("tmdb_id") or s.get("tmdb_id") or s.get("tmdb")):
+-                    try:
+-                        premium_cache = _cache_load("premium_meta_series_{0}_es".format(sid)) or {}
+-                        if premium_cache.get("expires", 0) > time.time():
+-                            cached_tmdb_id = str((premium_cache.get("data") or {}).get("tmdb_id") or "")
+-                    except Exception:
+-                        pass
+-                tmdb_id = series_changes.series_state.resolve_tmdb_id(
+-                    inventory_record, s, cached_tmdb_id)
++                tmdb_id = series_changes.series_state.resolve_tmdb_id(inventory_record, s)
+                 try:
+                     state = series_changes.series_state.derive_series_state(
+                         tmdb_id, sid, inventory_record, series_watched_store,

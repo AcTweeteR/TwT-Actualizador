@@ -50,7 +50,7 @@ class CandidatePackageBuildTests(unittest.TestCase):
             prefix + "history_store_coordinator.py": b"def install(history):",
             prefix + "history.py": b"_install_history_store_coordinator(__import__(__name__))",
         }
-        members[prefix + 'tmdb_routes.py'] += b' trakt.snapshot_request("/users/settings", {}) def _is_watched( tmdb_watch_key'
+        members[prefix + 'tmdb_routes.py'] += b' trakt.snapshot_request("/users/settings", {}) def _is_watched( tmdb_watched_state'
         for module in ('trakt_sync.py', 'trakt_provider_index.py', 'trakt_series_index.py', 'trakt_episode_index.py'):
             members[prefix + module] = (ROOT / 'addons/service.actweeter/resources/lib' / module).read_bytes()
         members[prefix + 'trakt_snapshot.py'] = (ROOT / 'third_party/xstream/trakt_snapshot.py').read_bytes()
@@ -253,7 +253,7 @@ class CandidatePackageBuildTests(unittest.TestCase):
 
     def test_service_zip_is_reproducible_and_well_formed(self):
         with tempfile.TemporaryDirectory() as temp:
-            package = Path(temp) / "service.actweeter-0.4.85.zip"
+            package = Path(temp) / "service.actweeter-0.4.86.zip"
             subprocess.run([sys.executable, str(ROOT / "tools/build_service_package.py"),
                             "--output", str(package)], check=True,
                            cwd=ROOT, capture_output=True, text=True)
@@ -266,8 +266,8 @@ class CandidatePackageBuildTests(unittest.TestCase):
             with zipfile.ZipFile(package) as archive:
                 self.assertIsNone(archive.testzip())
                 addon = ET.fromstring(archive.read("service.actweeter/addon.xml"))
-                self.assertEqual(addon.get("version"), "0.4.85")
-                self.assertIn("service.actweeter/changelog-0.4.85.txt",
+                self.assertEqual(addon.get("version"), "0.4.86")
+                self.assertIn("service.actweeter/changelog-0.4.86.txt",
                               archive.namelist())
                 for relative in ("resources/lib/addon_update_policy.py",
                                  "resources/lib/trakt_sync.py",
@@ -327,11 +327,11 @@ class CandidatePackageBuildTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp:
             output = Path(temp)
-            service = output / "service.actweeter-0.4.85.zip"
+            service = output / "service.actweeter-0.4.86.zip"
             subprocess.run([sys.executable, str(ROOT / "tools/build_service_package.py"),
                             "--output", str(service)], check=True,
                            cwd=ROOT, capture_output=True, text=True)
-            skin = output / "skin.actweeter-1.2.32~beta11.zip"
+            skin = output / "skin.actweeter-1.2.32~beta12.zip"
             subprocess.run([sys.executable, str(ROOT / "tools/build_skin_package.py"),
                             "--output", str(skin)], check=True,
                            cwd=ROOT, capture_output=True, text=True)
@@ -345,8 +345,8 @@ class CandidatePackageBuildTests(unittest.TestCase):
                 for filename in ("Includes.xml", "IncludesBingie.xml", "IncludesBackgroundBuilding.xml"):
                     self.assertEqual(archive.read("skin.actweeter/1080i/" + filename),
                                      (ROOT / "addons/skin.actweeter/1080i" / filename).read_bytes())
-            xstream = output / "plugin.video.xstream-pro-1.1.2.28~beta20.zip"
-            self._write_addon_fixture(xstream, "plugin.video.xstream-pro", "1.1.2.28~beta20")
+            xstream = output / "plugin.video.xstream-pro-1.1.2.28~beta21.zip"
+            self._write_addon_fixture(xstream, "plugin.video.xstream-pro", "1.1.2.28~beta21")
             rivulet_repository = ROOT / "third_party/rivulet/repository.rivulet-1.0.2.zip"
             iagl_repository = ROOT / "third_party/iagl/repository.zachmorris-1.0.4.zip"
             index_path, md5_path = build_distribution_index.build(
@@ -361,9 +361,9 @@ class CandidatePackageBuildTests(unittest.TestCase):
                         for node in ET.fromstring(payload).findall("addon")}
             self.assertEqual(versions, {
                 "repository.actweeter.testing": "1.0.2",
-                "service.actweeter": "0.4.85",
-                "skin.actweeter": "1.2.32~beta11",
-                "plugin.video.xstream-pro": "1.1.2.28~beta20",
+                "service.actweeter": "0.4.86",
+                "skin.actweeter": "1.2.32~beta12",
+                "plugin.video.xstream-pro": "1.1.2.28~beta21",
                 "repository.rivulet": "1.0.2",
                 "repository.zachmorris": "1.0.4",
             })
@@ -380,10 +380,10 @@ class CandidatePackageBuildTests(unittest.TestCase):
             self.assertEqual((channel / "repo/addons.xml").read_bytes(), payload)
             self.assertEqual((channel / "repo/addons.xml.md5").read_text().strip(),
                              md5_path.read_text().strip())
-            self.assertEqual((channel / "repo/service.actweeter/changelog-0.4.85.txt").read_bytes(),
-                             (ROOT / "addons/service.actweeter/changelog-0.4.85.txt").read_bytes())
-            self.assertEqual((channel / "repo/skin.actweeter/changelog-1.2.32~beta11.txt").read_bytes(),
-                             (ROOT / "addons/skin.actweeter/changelog-1.2.32~beta11.txt").read_bytes())
+            self.assertEqual((channel / "repo/service.actweeter/changelog-0.4.86.txt").read_bytes(),
+                             (ROOT / "addons/service.actweeter/changelog-0.4.86.txt").read_bytes())
+            self.assertEqual((channel / "repo/skin.actweeter/changelog-1.2.32~beta12.txt").read_bytes(),
+                             (ROOT / "addons/skin.actweeter/changelog-1.2.32~beta12.txt").read_bytes())
 
     @staticmethod
     def _write_addon_fixture(path, addon_id, version):

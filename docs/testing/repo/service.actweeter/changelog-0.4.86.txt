@@ -1,0 +1,1 @@
+Beta26: keep Trakt imports and widget refresh working with unresolved operations; migrate historical ARCADE/RIVULET launchers while preserving customization.

@@ -967,6 +967,7 @@
             <top>0</top>
             <control type="group">
                 <description>Watched Overlay</description>
+                <visible>!Integer.IsEqual(ListItem$PARAM[listitem].PercentPlayed,0) | String.IsEmpty(ListItem$PARAM[listitem].Property(XStream.RemoteProgress))</visible>
                 <visible>![!Integer.IsEqual(ListItem$PARAM[listitem].PercentPlayed,0) + !Integer.IsEqual(ListItem$PARAM[listitem].PercentPlayed,100)] + Integer.IsGreater(ListItem$PARAM[listitem].PlayCount,0) + Skin.HasSetting(WatchedIndicator.Watched) + !ListItem$PARAM[listitem].IsResumable</visible>
                 <visible>!ListItem$PARAM[listitem].IsPlaying + !ListItem$PARAM[listitem].IsRecording</visible>
                 <visible>$EXP[IsMovieDBType] | $EXP[IsTvShowDBType] | $EXP[IsSeasonDBType] | $EXP[IsEpisodeDBType]</visible>
@@ -982,6 +983,7 @@
             </control>
             <control type="group">
                 <description>Unwatched Overlay</description>
+                <visible>!Integer.IsEqual(ListItem$PARAM[listitem].PercentPlayed,0) | String.IsEmpty(ListItem$PARAM[listitem].Property(XStream.RemoteProgress))</visible>
                 <visible>!ListItem$PARAM[listitem].IsPlaying + !ListItem$PARAM[listitem].IsRecording</visible>
                 <visible>String.IsEqual(ListItem$PARAM[listitem].Overlay,OverlayUnWatched.png) + Skin.HasSetting(WatchedIndicator.UnWatched) + !ListItem$PARAM[listitem].IsResumable</visible>
 				<visible>![!Integer.IsEqual(ListItem$PARAM[listitem].Property(UnWatchedEpisodes),0) + !Integer.IsEqual(ListItem$PARAM[listitem].Property(WatchedEpisodes),0)]</visible>
@@ -997,7 +999,7 @@
             </control>
             <control type="group">
                 <description>In progress Overlay</description>
-                <visible>!Integer.IsEqual(ListItem$PARAM[listitem].PercentPlayed,0) + !Integer.IsEqual(ListItem$PARAM[listitem].PercentPlayed,100) + Skin.HasSetting(WatchedIndicator.Progress)</visible>
+                <visible>[[!Integer.IsEqual(ListItem$PARAM[listitem].PercentPlayed,0) + !Integer.IsEqual(ListItem$PARAM[listitem].PercentPlayed,100)] | [Integer.IsEqual(ListItem$PARAM[listitem].PercentPlayed,0) + !String.IsEmpty(ListItem$PARAM[listitem].Property(XStream.RemoteProgress))]] + Skin.HasSetting(WatchedIndicator.Progress)</visible>
                 <visible>!ListItem$PARAM[listitem].IsPlaying + !ListItem$PARAM[listitem].IsRecording</visible>
 				<visible>!$EXP[IsTvShowDBType]</visible>
                 <control type="image">
@@ -1011,7 +1013,20 @@
                     <font>$PARAM[font]</font>
                     <width>65%</width>
                     <height>45%</height>
+                    <visible>!Integer.IsEqual(ListItem$PARAM[listitem].PercentPlayed,0)</visible>
                     <label>$INFO[ListItem$PARAM[listitem].PercentPlayed]%</label>
+                    <textcolor>$INFO[Skin.String(WatchedIndicator.Progress.TextColor)]</textcolor>
+					<shadowcolor>ff4d4d4d</shadowcolor>
+                </control>
+                <control type="label">
+                    <right>0</right>
+                    <top>0</top>
+                    <align>center</align>
+                    <font>$PARAM[font]</font>
+                    <width>65%</width>
+                    <height>45%</height>
+                    <visible>Integer.IsEqual(ListItem$PARAM[listitem].PercentPlayed,0)</visible>
+                    <label>$INFO[ListItem$PARAM[listitem].Property(XStream.RemoteProgress)]%</label>
                     <textcolor>$INFO[Skin.String(WatchedIndicator.Progress.TextColor)]</textcolor>
 					<shadowcolor>ff4d4d4d</shadowcolor>
                 </control>
@@ -1151,6 +1166,7 @@
             <top>0</top>
             <control type="group">
                 <description>Watched Overlay</description>
+                <visible>!Integer.IsEqual(ListItem$PARAM[listitem].PercentPlayed,0) | String.IsEmpty(ListItem$PARAM[listitem].Property(XStream.RemoteProgress))</visible>
                 <visible>![!Integer.IsEqual(ListItem$PARAM[listitem].PercentPlayed,0) + !Integer.IsEqual(ListItem$PARAM[listitem].PercentPlayed,100)] + Integer.IsGreater(ListItem$PARAM[listitem].PlayCount,0) + Skin.HasSetting(WatchedIndicator.Watched) + !ListItem$PARAM[listitem].IsResumable</visible>
                 <visible>!ListItem$PARAM[listitem].IsPlaying + !ListItem$PARAM[listitem].IsRecording</visible>
                 <visible>$EXP[IsMovieDBType] | $EXP[IsTvShowDBType] | $EXP[IsSeasonDBType] | $EXP[IsEpisodeDBType]</visible>
@@ -1166,6 +1182,7 @@
             </control>
             <control type="group">
                 <description>Unwatched Overlay</description>
+                <visible>!Integer.IsEqual(ListItem$PARAM[listitem].PercentPlayed,0) | String.IsEmpty(ListItem$PARAM[listitem].Property(XStream.RemoteProgress))</visible>
                 <visible>!ListItem$PARAM[listitem].IsPlaying + !ListItem$PARAM[listitem].IsRecording</visible>
                 <visible>String.IsEqual(ListItem$PARAM[listitem].Overlay,OverlayUnWatched.png) + Skin.HasSetting(WatchedIndicator.UnWatched) + !ListItem$PARAM[listitem].IsResumable</visible>
 				<visible>![!Integer.IsEqual(ListItem$PARAM[listitem].Property(UnWatchedEpisodes),0) + !Integer.IsEqual(ListItem$PARAM[listitem].Property(WatchedEpisodes),0)]</visible>
@@ -1182,7 +1199,7 @@
             <control type="group">
                 <description>In progress Overlay</description>
 				<visible>!Skin.HasSetting(MovieDetailsHome)</visible>
-                <visible>!Integer.IsEqual(ListItem$PARAM[listitem].PercentPlayed,0) + !Integer.IsEqual(ListItem$PARAM[listitem].PercentPlayed,100) + Skin.HasSetting(WatchedIndicator.Progress)</visible>
+                <visible>[[!Integer.IsEqual(ListItem$PARAM[listitem].PercentPlayed,0) + !Integer.IsEqual(ListItem$PARAM[listitem].PercentPlayed,100)] | [Integer.IsEqual(ListItem$PARAM[listitem].PercentPlayed,0) + !String.IsEmpty(ListItem$PARAM[listitem].Property(XStream.RemoteProgress))]] + Skin.HasSetting(WatchedIndicator.Progress)</visible>
                 <visible>!ListItem$PARAM[listitem].IsPlaying + !ListItem$PARAM[listitem].IsRecording</visible>
 				<visible>!$EXP[IsTvShowDBType]</visible>
                 <control type="image">
@@ -1196,7 +1213,20 @@
                     <font>$PARAM[font]</font>
                     <width>65%</width>
                     <height>45%</height>
+                    <visible>!Integer.IsEqual(ListItem$PARAM[listitem].PercentPlayed,0)</visible>
                     <label>$INFO[ListItem$PARAM[listitem].PercentPlayed]%</label>
+                    <textcolor>$INFO[Skin.String(WatchedIndicator.Progress.TextColor)]</textcolor>
+					<shadowcolor>ff4d4d4d</shadowcolor>
+                </control>
+                <control type="label">
+                    <right>0</right>
+                    <top>0</top>
+                    <align>center</align>
+                    <font>$PARAM[font]</font>
+                    <width>65%</width>
+                    <height>45%</height>
+                    <visible>Integer.IsEqual(ListItem$PARAM[listitem].PercentPlayed,0)</visible>
+                    <label>$INFO[ListItem$PARAM[listitem].Property(XStream.RemoteProgress)]%</label>
                     <textcolor>$INFO[Skin.String(WatchedIndicator.Progress.TextColor)]</textcolor>
 					<shadowcolor>ff4d4d4d</shadowcolor>
                 </control>
