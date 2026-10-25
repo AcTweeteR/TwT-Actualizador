@@ -42,6 +42,13 @@ class MenuContractTests(unittest.TestCase):
             ],
         )
 
+    def test_menu_icons_are_in_kodi_texture_search_path(self):
+        # Kodi resolves shortcut textures against media/, not shortcuts/.
+        for name in ('rivulet', 'arcade'):
+            icon = ADDON / 'media' / 'shortcuts' / (name + '.png')
+            self.assertTrue(icon.is_file(), name)
+            self.assertEqual(icon.read_bytes()[:8], b'\x89PNG\r\n\x1a\n')
+
     def test_rivulet_has_its_own_icon_and_visual_separator(self):
         self.assertTrue((ADDON / "shortcuts/rivulet.png").is_file())
         xml = (ADDON / "1080i/IncludesBingie.xml").read_text()

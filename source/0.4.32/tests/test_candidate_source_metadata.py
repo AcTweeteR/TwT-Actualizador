@@ -18,7 +18,7 @@ class CandidateSourceMetadataTests(unittest.TestCase):
         self.assertEqual((service.get("id"), service.get("version")),
                          ("service.actweeter", "0.4.86"))
         self.assertEqual((skin.get("id"), skin.get("version")),
-                         ("skin.actweeter", "1.2.32~beta12"))
+                         ("skin.actweeter", "1.2.32~beta13"))
         self.assertEqual((repository.get("id"), repository.get("version")),
                          ("repository.actweeter", "1.0.3"))
         self.assertEqual(xstream["distribution_version"], "1.1.2.28~beta21")

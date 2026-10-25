@@ -1,0 +1,1 @@
+Beta13: iconos visibles del menú lateral: logo de Rivulet y máquina recreativa de Arcade. Recursos instalados en media/shortcuts para resolución correcta de texturas Kodi.
