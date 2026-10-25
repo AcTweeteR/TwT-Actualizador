@@ -1,0 +1,1 @@
+Reconciled Beta: native SlyGuy resolved previews, exact Trakt state, preserved unknown completion and compatible integration guards.

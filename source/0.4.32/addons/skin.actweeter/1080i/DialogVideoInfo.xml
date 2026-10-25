@@ -32,8 +32,12 @@
 	<onload condition="![String.IsEqual(ListItem.Path,plugin://plugin.video.tmdb.bingie.helper/) | !String.IsEmpty(ListItem.DBID)]">SetProperty(SetCustomAddon,1,Home)</onload>
     <controls>
 		<include>Defs_TMDbBingieHelper_Loader</include>
-        <include condition="Skin.HasSetting(UseBingieInfoDialog)">BingieInfo</include>
-        <include condition="!Skin.HasSetting(UseBingieInfoDialog)">BingieAltInfo</include>
+        <!-- Playback changes after this dialog loads; visibility must be evaluated dynamically. -->
+        <control type="group">
+            <visible>!Player.HasVideo | String.IsEmpty(Window(Home).Property(SLYGUY_TRAILER_RETURN_PENDING))</visible>
+            <include condition="Skin.HasSetting(UseBingieInfoDialog)">BingieInfo</include>
+            <include condition="!Skin.HasSetting(UseBingieInfoDialog)">BingieAltInfo</include>
+        </control>
 		<include condition="String.IsEqual(ListItem.Property(tmdb_type),person)">TMDB_Helper_Cast</include>
 		<include condition="Skin.HasSetting(DebugGrid) | Skin.HasSetting(DebugInfo)">DebugInfo</include>
         <include>AcTweeteR_TouchDiagnosticsOverlay</include>

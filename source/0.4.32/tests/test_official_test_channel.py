@@ -108,9 +108,9 @@ class OfficialTestChannelTests(unittest.TestCase):
                 "https://slyguy.uk/.repo/repository.slyguy/addons.xml",
             ])
             self.assertEqual(checksum.read_text().strip(), hashlib.md5(index.read_bytes()).hexdigest())
-            # The committed Stable feed was separately promoted to 0.4.81;
+            # The committed Stable feed was separately promoted to 0.4.86;
             # byte-for-byte comparison below remains the no-mutation guard.
-            self.assertEqual(ET.parse(ROOT / "repo" / "addons.xml").getroot().find("addon[@id='service.actweeter']").get("version"), "0.4.81")
+            self.assertEqual(ET.parse(ROOT / "repo" / "addons.xml").getroot().find("addon[@id='service.actweeter']").get("version"), "0.4.86")
             self.assertEqual((ROOT / "repo" / "addons.xml").read_bytes(), stable_index)
             with zipfile.ZipFile(bootstrap) as archive:
                 self.assertIsNone(archive.testzip())

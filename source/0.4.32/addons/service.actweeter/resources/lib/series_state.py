@@ -170,10 +170,12 @@ def derive_series_state(tmdb_id, series_id, inventory_record, watched_store,
 
 def apply_to_listitem(listitem, state):
     """Expose only derived display fields; do not mutate any source state."""
-    listitem.getVideoInfoTag().setPlaycount(0)
-    listitem.setProperty("XStream.SeriesComplete", "false")
+    # Unknown inventory must not erase a previously known watched overlay.
     if not state or not state.get("known"):
         return False
+    # Incomplete inventory is not evidence that a series was unwatched.
+    if state.get("complete") is not None:
+        listitem.setProperty("XStream.SeriesComplete", "false")
     label = str(state.get("progress_label") or "")
     if label:
         listitem.setProperty("XStream.SeriesProgressLabel", label)

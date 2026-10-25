@@ -1,0 +1,1 @@
+Beta27: manual SlyGuy trailers hide video information overlays during playback; preserve normal detail navigation.

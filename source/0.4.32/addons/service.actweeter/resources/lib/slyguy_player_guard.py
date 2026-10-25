@@ -31,8 +31,8 @@ def install(kodi, addon_factory, vfs):
     if kodi.getCondVisibility("Player.HasMedia"):
         return "PLAYER_ACTIVE"
     addon = addon_factory("script.module.slyguy")
-    if addon.getAddonInfo("version") != "0.87.3":
-        return "UNSUPPORTED_VERSION"
+    addon_version = addon.getAddonInfo("version")
+    # Validate the actual source signature, not a frozen release number.
     target = Path(vfs.translatePath(addon.getAddonInfo("path"))) / "resources/lib/player.py"
     if target.is_symlink():
         return "USER_CHANGES_PRESERVED"
@@ -58,7 +58,7 @@ def install(kodi, addon_factory, vfs):
         atomic_write(target, backup.read_bytes())
         raise OSError("SlyGuy guard verification failed")
     atomic_write(manifest, json.dumps({
-        "version": "0.87.3", "original_sha256": ORIGINAL_HASH,
+        "version": addon_version, "original_sha256": ORIGINAL_HASH,
         "patched_sha256": hashlib.sha256(expected).hexdigest(),
         "status": "RESTART_REQUIRED",
     }, sort_keys=True).encode())

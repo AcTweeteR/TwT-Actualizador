@@ -1,0 +1,1 @@
+Beta27 preview controls fix: restore Spotlight and widget automatic trailer toggles and conditional delay setting; retain fullscreen information-dialog guard from beta14.

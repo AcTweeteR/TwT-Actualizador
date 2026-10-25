@@ -94,10 +94,33 @@ def preview_target(path, get_youtube_id):
         if parsed.path.rstrip("/").endswith("/play") and _VIDEO_ID.fullmatch(identifier):
             return "youtube", identifier
         return "", ""
-    if parsed.hostname in ("youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be", "plugin.video.youtube"):
-        identifier = get_youtube_id(path) or ""
+    if parsed.hostname in ("youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be", "plugin.video.youtube", "plugin.video.tubed"):
+        query = parse_qs(parsed.query)
+        identifier = (get_youtube_id(path) or
+                      next((v for key in ("video_id", "videoid", "v")
+                            for v in query.get(key, []) if v), ""))
+        if parsed.hostname == "youtu.be" and not identifier:
+            identifier = parsed.path.strip("/").split("/")[0]
         if _VIDEO_ID.fullmatch(identifier):
             return "youtube", identifier
+    return "", ""
+
+
+def resolved_preview_target(path):
+    """Recognize native SlyGuy output, never arbitrary URLs from list items."""
+    if path == "special://temp/yt.mpd":
+        return "youtube", ".mpd"
+    if path == "special://temp/imdb.m3u8":
+        return "imdb", ".m3u8"
+    parsed = urlparse(path)
+    if parsed.scheme != "https" or parsed.username or parsed.password or parsed.port not in (None, 443):
+        return "", ""
+    host = (parsed.hostname or "").lower()
+    # These are the native providers' media hosts, not generic HTTP output.
+    for provider, domains in (("youtube_stream", ("googlevideo.com",)),
+                              ("imdb", ("imdb.com", "media-amazon.com"))):
+        if any(host == domain or host.endswith("." + domain) for domain in domains):
+            return provider, ""
     return "", ""
 
 
@@ -169,6 +192,9 @@ class SlyGuyPreviewService:
                               (sender, method), getattr(self.xbmc, "LOGINFO", 1))
             return False
         request = _decode(data)
+        if isinstance(request, dict) and request.get("action") in ("focus", "exit"):
+            # These valid announcements belong to the coordinator, not this worker.
+            return False
         if not isinstance(request, dict) or request.get("action") != "resolve":
             try:
                 parsed = json.loads(data) if isinstance(data, str) else data
@@ -220,17 +246,27 @@ class SlyGuyPreviewService:
                               generation, getattr(self.xbmc, "LOGINFO", 1))
                 return "no_results"
             provider, video_id = preview_target(item.path, self.get_youtube_id)
-            if not provider:
-                self.xbmc.log("[SlyGuy] ACTWEETER_PREVIEW_RESOLUTION status=no_video_id generation=%d" %
-                              generation, getattr(self.xbmc, "LOGINFO", 1))
-                return "no_results"
             if not self._is_current(request):
                 return "stale"
-
-            if provider == "imdb":
-                resolved = self.resolve_imdb(video_id) if self.resolve_imdb else None
+            if provider:
+                if provider == "imdb":
+                    resolved = self.resolve_imdb(video_id) if self.resolve_imdb else None
+                else:
+                    resolved = self.play_yt_dlp(video_id, manifest_path=manifest)
             else:
-                resolved = self.play_yt_dlp(video_id, manifest_path=manifest)
+                # SlyGuy 0.2.2 resolves inside _build_item. Reuse that Item so
+                # inputstream, headers, subtitles and proxy metadata survive.
+                provider, suffix = resolved_preview_target(item.path)
+                if not provider:
+                    self.xbmc.log("[SlyGuy] ACTWEETER_PREVIEW_RESOLUTION status=untrusted_stream generation=%d" %
+                                  generation, getattr(self.xbmc, "LOGINFO", 1))
+                    return "no_results"
+                resolved = item
+                if suffix:
+                    manifest = "special://temp/actweeter_preview_%s%s" % (request_id, suffix)
+                    if not xbmcvfs.copy(item.path, manifest):
+                        raise OSError("preview manifest copy failed")
+                    resolved.path = manifest
             if not resolved or not resolved.path:
                 self.xbmc.log("[SlyGuy] ACTWEETER_PREVIEW_RESOLUTION status=no_stream generation=%d" %
                               generation, getattr(self.xbmc, "LOGINFO", 1))
@@ -268,6 +304,7 @@ class SlyGuyPreviewService:
                 "generation=%d scheme=%s provider=%s loopback=%s manifest_match=%s" %
                 (generation, parsed_playback.scheme, provider, local_proxy,
                  manifest_match), getattr(self.xbmc, "LOGINFO", 1))
+            listitem.setProperty("script.trakt.exclude", "true")
             listitem.setProperty("AcTweeteR.PreviewOwner", "AUTO_PREVIEW")
             listitem.setProperty("AcTweeteR.PreviewGeneration", str(generation))
             listitem.setProperty("AcTweeteR.PreviewIdentity", request["identity"])

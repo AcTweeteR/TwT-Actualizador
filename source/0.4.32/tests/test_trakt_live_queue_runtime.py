@@ -164,9 +164,9 @@ season_store._data['tmdb:episode:777:s2:e11']=True
 state,count=season_playcount(new_rows)
 assert state['complete'] is True and count==1  # 11/11
 state,count=season_playcount([],True)
-assert state['complete'] is None and count == 0  # Empty is unknown
+assert state['complete'] is None and count is None  # Empty is unknown; preserve any existing check
 state,count=season_playcount(season_rows,False)
-assert state['complete'] is None and count == 0  # Incomplete inventory is unknown
+assert state['complete'] is None and count is None  # Incomplete inventory cannot erase a check
 # Exercise the actual TMDb UI predicate from the ZIP: namespaced state wins
 # and equal numeric provider IDs never become TMDb states.
 import ast

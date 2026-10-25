@@ -487,7 +487,7 @@
 			<onclick condition="!System.HasAddon(plugin.video.imdb.trailers) + String.IsEqual(Skin.String(trailersource),imdb) + String.IsEqual(Skin.String(AutoYoutubeTrailer),true)">InstallAddon(plugin.video.imdb.trailers)</onclick>
             <onclick condition="String.IsEqual(Skin.String(AutoYoutubeTrailer),false) | System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) | System.HasAddon(plugin.video.imdb.trailers) + System.HasAddon(plugin.video.imdb.trailers)">Skin.ToggleSetting(SpotLightTrailers)</onclick>
             <selected>Skin.HasSetting(SpotLightTrailers)</selected>
-            <visible>false</visible>
+            <visible>System.HasAddon(slyguy.trailers) + System.HasAddon(plugin.video.youtube)</visible>
         </control>
        	<!-- Auto Play Trailers in Home & Hubs -->
         <control type="radiobutton" id="31173">
@@ -497,14 +497,14 @@
 			<onclick condition="!System.HasAddon(plugin.video.imdb.trailers) + String.IsEqual(Skin.String(trailersource),imdb) + String.IsEqual(Skin.String(AutoYoutubeTrailer),true)">InstallAddon(plugin.video.imdb.trailers)</onclick>
             <onclick condition="String.IsEqual(Skin.String(AutoYoutubeTrailer),false) | System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) | String.IsEqual(Skin.String(trailersource),imdb) + System.HasAddon(plugin.video.imdb.trailers)">Skin.ToggleSetting(BingieAutoTrailer)</onclick>
             <selected>Skin.HasSetting(BingieAutoTrailer)</selected>
-            <visible>false</visible>
+            <visible>System.HasAddon(slyguy.trailers) + System.HasAddon(plugin.video.youtube)</visible>
         </control>	
         <!-- Select Delay Interval for Auto-Trailers -->
         <control type="button" id="31213">
             <include>SkinSettings_Button</include>
             <label>$LOCALIZE[31213]</label>
             <label2>$INFO[Skin.String(main_auto_trailer_interval.label)]</label2>
-            <visible>false</visible>
+            <visible>Skin.HasSetting(BingieAutoTrailer) + System.HasAddon(slyguy.trailers)</visible>
             <onclick>RunScript(script.bingie.toolbox,action=setskinsetting,setting=main_auto_trailer_interval,header=$LOCALIZE[31213])</onclick>
         </control>		
 	</include>

@@ -376,6 +376,8 @@ class KodiAutoPreviewCoordinator:
         identity = stable_identity(payload)
         pending = self.scheduler.latest or self.scheduler.resolving
         request = pending or self.scheduler.active
+        if request == self.scheduler.active and self._owned_fullscreen(request):
+            return False
         if request is None:
             # An on-unfocus can arrive after a trailer has already ended.
             # Forget the row even without a pending request; otherwise the
@@ -453,6 +455,14 @@ class KodiAutoPreviewCoordinator:
         self._stop_owned(request, require_active=False)
         return True
 
+    def _owned_fullscreen(self, request):
+        if request is None or not self.kodi.getCondVisibility(
+                "Window.IsActive(fullscreenvideo) | Window.Next(fullscreenvideo)"):
+            return False
+        return self._owned_item() == (
+            str(request.generation), request.identity,
+            self.request_ids.get(request.generation))
+
     def _exit_home(self):
         """Invalidate Home preview work without claiming an external player.
 
@@ -462,6 +472,9 @@ class KodiAutoPreviewCoordinator:
         its ownership-tagged Stop/terminal cleanup; pending and resolving work
         is invalidated by generation and cannot replace later playback.
         """
+        if self._owned_fullscreen(self.scheduler.active):
+            self._log("HOME_EXIT", active="yes", owned_stop="no", fullscreen="yes")
+            return True
         with self.wake:
             self.focus_context = None
             self.refocus_after_stop = None
@@ -780,6 +793,8 @@ class KodiAutoPreviewCoordinator:
         the previously selected poster. Only an owned preview may be stopped.
         """
         try:
+            if self._owned_fullscreen(request):
+                return True
             if not self.kodi.getCondVisibility("Window.IsActive(%d)" % request.window):
                 return False
             if int(self.kodi.getInfoLabel("System.CurrentControlId") or "-1") != request.focus:

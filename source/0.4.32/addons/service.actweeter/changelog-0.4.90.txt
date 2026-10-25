@@ -1,0 +1,5 @@
+AcTweeteR Service 0.4.90 (Beta27)
+
+Conserva el tráiler automático propio al pasar a pantalla completa.
+Excluye las previsualizaciones automáticas de script.trakt.
+Incluye reconciliación SlyGuy, checks y bloqueo multiproceso de Trakt.

@@ -366,6 +366,33 @@ class CatalogIndex:
                                  provider_id, browse, page, limit)
         return self._read_items(rows), has_more
 
+    def search(self, query, blocked_categories=(), hidden_ids=(), limit=48):
+        """Find visible catalog items using the shared SQLite catalog index.
+
+        Uses bounded SQLite substring matching in original catalog order;
+        never loads the full provider JSON catalog.
+        """
+        term = _norm(query)
+        if not term:
+            return []
+        limit = min(100, max(1, int(limit)))
+        with closing(_connect(self.path)) as db:
+            db.execute('CREATE TEMP TABLE blocked(value TEXT PRIMARY KEY)')
+            db.execute('CREATE TEMP TABLE hidden(value TEXT PRIMARY KEY)')
+            db.executemany('INSERT OR IGNORE INTO blocked VALUES (?)',
+                           [(str(value),) for value in blocked_categories])
+            db.executemany('INSERT OR IGNORE INTO hidden VALUES (?)',
+                           [(str(value),) for value in hidden_ids])
+            visible = ('NOT EXISTS (SELECT 1 FROM blocked b WHERE b.value=i.category) '
+                       'AND NOT EXISTS (SELECT 1 FROM hidden h WHERE h.value=i.id)')
+            # Preserve catalog ordinal ordering for substring searches.
+            # Prefix-first ranking would silently change Smart Search results.
+            escaped = term.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
+            rows = db.execute('SELECT i.id,i.start,i.length FROM items i WHERE '
+                + visible + " AND i.norm LIKE ? ESCAPE '\\' ORDER BY i.ordinal LIMIT ?",
+                ('%' + escaped + '%', limit)).fetchall()
+        return self._read_items(rows)
+
     def ranked(self, ranks, blocked_categories=(), hidden_ids=(), category='',
                provider_id='', browse=False, page=1, limit=24):
         """Resolve cached Trakt ranks to visible provider items, as the old path did."""

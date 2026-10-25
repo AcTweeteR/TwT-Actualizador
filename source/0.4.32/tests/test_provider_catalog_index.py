@@ -78,6 +78,35 @@ class ProviderCatalogIndexTests(unittest.TestCase):
         self.assertEqual([item['stream_id'] for item in items], ['unicode', 'visible-edition'])
         self.assertFalse(more)
 
+    def test_indexed_search_matches_accents_substrings_and_visibility(self):
+        index = self.index()
+        self.assertEqual([x['stream_id'] for x in index.search('Cafe', blocked_categories=('1',))], ['visible-edition'])
+        self.assertEqual([x['stream_id'] for x in index.search('afe', blocked_categories=('1',))], ['visible-edition'])
+        self.assertEqual(index.search('Cafe', blocked_categories=('1',), hidden_ids=('visible-edition',)), [])
+        self.assertEqual([x['stream_id'] for x in index.search('東京')], ['unicode'])
+
+    def test_search_preserves_catalog_order_for_prefix_and_substring(self):
+        self.write_catalog(items=[
+            {'stream_id': 'first', 'name': 'The Matrix', 'category_id': '2'},
+            {'stream_id': 'second', 'name': 'Matrix Reloaded', 'category_id': '2'},
+            {'stream_id': 'third', 'name': 'Matrix Revolutions', 'category_id': '2'},
+        ])
+        index = self.index()
+        self.assertEqual([x['stream_id'] for x in index.search('matrix', limit=2)],
+                         ['first', 'second'])
+        self.assertEqual([x['stream_id'] for x in index.search('matrix', limit=100)],
+                         ['first', 'second', 'third'])
+
+    def test_search_index_rejects_stale_source_and_is_profile_isolated(self):
+        original = self.index()
+        self.assertEqual(len(original.search('cafe')), 2)
+        self.write_catalog(items=[{'stream_id': 'new', 'name': 'New Film', 'category_id': '2'}])
+        with self.assertRaises(INDEX.IndexUnavailable):
+            INDEX.CatalogIndex(str(self.path), self.source, 1, 'movie')
+        rebuilt = self.index()
+        self.assertEqual(rebuilt.search('cafe'), [])
+        self.assertEqual([x['stream_id'] for x in rebuilt.search('new')], ['new'])
+
     def test_source_and_profile_are_isolated_and_no_source_is_written_to_index(self):
         first = self.index(profile=1)
         second = self.index(profile=2)

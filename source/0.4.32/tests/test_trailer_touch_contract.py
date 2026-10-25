@@ -57,6 +57,19 @@ class TrailerTouchContractTests(unittest.TestCase):
         self.assertEqual(includes["BingieAltInfo"],
                          "!Skin.HasSetting(UseBingieInfoDialog)")
 
+    def test_playback_visibility_is_dynamic_for_both_layouts(self):
+        dialog = ET.parse(XML / "DialogVideoInfo.xml").getroot()
+        groups = dialog.findall("controls/control[@type='group']")
+        group = next(node for node in groups
+                     if any(child.text == "BingieInfo" for child in node.findall("include")))
+        self.assertEqual({node.text for node in group.findall("include")},
+                         {"BingieInfo", "BingieAltInfo"})
+        self.assertEqual(group.findtext("visible"),
+                         "!Player.HasVideo | String.IsEmpty(Window(Home).Property(SLYGUY_TRAILER_RETURN_PENDING))")
+        # A wrapper must not translate, resize, or intercept the existing controls.
+        self.assertEqual(set(node.tag for node in group), {"visible", "include"})
+        self.assertEqual(group.attrib, {"type": "group"})
+
 
 if __name__ == "__main__":
     unittest.main()

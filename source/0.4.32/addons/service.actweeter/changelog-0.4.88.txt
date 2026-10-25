@@ -1,0 +1,1 @@
+Beta27: compatible SlyGuy bridge signature checks, automatic preview recovery and watched overlay integrity. Trakt recommendation route fixes and cross-platform installer verification.

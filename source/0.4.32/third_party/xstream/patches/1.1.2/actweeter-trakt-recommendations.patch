@@ -2,33 +2,126 @@ diff --git a/resources/lib/addon.py b/resources/lib/addon.py
 index 880518dd074153f6ea3bee426318512d309a0896..f5e2363f3fe0e4c34174a6a5b800f8a58d8408b 100644
 --- a/resources/lib/addon.py
 +++ b/resources/lib/addon.py
-@@ -2270,3 +2270,21 @@
+@@ -2270,3 +2270,38 @@
      if not cache:
          return []
      return [item for item in (items or []) if _provider_availability_item_available(item, cache)]
 +
++_PROVIDER_MATCH_MEMO = {"cache": None, "matches": {}}
++
++def _provider_match_cached(item, cache, strict_title_year=False):
++    """Shared constant-time repeated identity checks for provider widgets."""
++    memo = _PROVIDER_MATCH_MEMO
++    if memo["cache"] is not cache:
++        memo["cache"], memo["matches"] = cache, {}
++    media = item.get("tmdb_type")
++    title = item.get("showtitle") or item.get("tvshowtitle") or item.get("title") or item.get("name")
++    year = _provider_year(item.get("year"), item.get("release_date"), item.get("first_air_date"), item.get("premiered"))
++    key = (media, str(item.get("tmdb_id") or ""), _provider_title_key(title), year, strict_title_year)
++    matches = memo["matches"]
++    if len(matches) >= 8192:
++        matches.clear()
++    if key not in matches:
++        matches[key] = _provider_availability_item_available(item, cache, strict_title_year=strict_title_year)
++    return matches[key]
++
 +def _filter_provider_trakt_recommendations(items):
-+    """Fail closed: require an exact TMDb ID in the provider inventory."""
++    """Use the same provider identity/title-year matcher as TMDb routes."""
 +    # Never fetch or rebuild the provider inventory inside a widget directory
 +    # request: catalogue refresh owns that work and updates this cache.
 +    cache = _load_provider_availability_cache()
-+    if not cache:
++    if not cache or not any((cache.get(kind) or {}).get("titles") for kind in ("movie", "tv")):
 +        return []
 +    filtered = []
 +    for item in items or []:
 +        media_type = item.get("tmdb_type")
 +        if media_type not in ("movie", "tv"):
 +            continue
-+        tmdb_id = str(item.get("tmdb_id") or "").strip()
-+        if tmdb_id and tmdb_id in _provider_tmdb_id_set(cache, media_type):
++        if _provider_match_cached(item, cache, strict_title_year=True):
 +            filtered.append(item)
 +    return filtered
 +
-@@ -9432,3 +9432,4 @@
+@@ -2383,3 +2383,3 @@
+     if not cache:
+         return []
+-    return [item for item in (items or []) if _provider_availability_item_available(item, cache)]
++    return [item for item in (items or []) if _provider_match_cached(item, cache)]
+@@ -2414,5 +2414,5 @@
+     return [
+         item
+         for item in (items or [])
+-        if _provider_availability_item_available(item, cache, strict_title_year=True)
++        if _provider_match_cached(item, cache, strict_title_year=True)
+     ]
+@@ -9432,3 +9432,5 @@
          "_filter_provider_available_items": _filter_provider_available_items,
          "_filter_provider_available_items_strict": _filter_provider_available_items_strict,
++        "_provider_match_cached": _provider_match_cached,
 +        "_filter_provider_trakt_recommendations": _filter_provider_trakt_recommendations,
          "_provider_item_available_for_tmdb": _provider_item_available_for_tmdb,
+@@ -12492,4 +12492,36 @@
+ def unified_search(query, stype=None):
++    # Reuse the catalog index already maintained by premium browsing.
++    # Missing/stale indices deliberately fall back to the existing search.
++    def indexed_search(media):
++        # Legacy substring matching includes punctuation and accents. Only
++        # use normalized SQLite keys for plain ASCII alphanumeric queries.
++        if not query or not query.isascii() or not query.isalnum():
++            return None
++        try:
++            from provider_catalog_index import CatalogIndex, IndexUnavailable, schedule_rebuild
++            pnum = int(pm.active)
++            cache_key = "xtream_streams_" + media
++            if not _cache_valid(cache_key, profile_num=pnum):
++                return None
++            source = _catalog_provider_source(pnum)
++            if not all(source.split("|", 2)):
++                return None
++            path = _cache_path(cache_key, pnum)
++            try:
++                index = CatalogIndex(path, source, pnum, media, build=False)
++            except IndexUnavailable:
++                schedule_rebuild(path, source, pnum, media)
++                return None
++            # Keep original search visibility semantics: hide adult titles,
++            # not whole categories, and preserve the provider's item order.
++            matches = index.search(query, limit=101)
++            # A capped index response cannot replace the complete legacy
++            # search; retain all results when the query is too broad.
++            return None if len(matches) >= 100 else matches
++        except Exception as exc:
++            _log("Indexed search fallback (%s): %s" % (media, type(exc).__name__))
++            return None
++
+     creds = _get_credentials()
+     url = creds.get("xtream_url", "")
+     user = creds.get("xtream_username", "")
+@@ -12522,6 +12550,8 @@
+ 
+     if stype is None or stype == "movie":
+-        movie_streams = _get_cached_xtream_streams(url, user, pwd, "movie")
++        movie_streams = indexed_search("movie")
++        if movie_streams is None:
++            movie_streams = _get_cached_xtream_streams(url, user, pwd, "movie")
+         movie_results = [
+             s for s in movie_streams if qlower in s.get("name", "").lower()
+         ]
+@@ -12535,6 +12564,8 @@
+ 
+     if stype is None or stype == "series":
+-        series_streams = _get_cached_xtream_streams(url, user, pwd, "series")
++        series_streams = indexed_search("series")
++        if series_streams is None:
++            series_streams = _get_cached_xtream_streams(url, user, pwd, "series")
+         series_results = [
+             s for s in series_streams if qlower in s.get("name", "").lower()
+         ]
+@@ -16800,4 +16800,4 @@
+ elif mode == "xstream_trakt_recommendations":
+     if _setup_tmdb_routes():
+-        _tmdb_routes.trakt_recommendations_route(args)
++        _tmdb_routes.trakt_list_route(dict(args, section=["recommendations"]))
+ elif mode == "xstream_trakt_random_public":
 diff --git a/resources/lib/tmdb_routes.py b/resources/lib/tmdb_routes.py
 index c41dcb201962d2f1e90e9342eb915e1f8e4a0da9..c1c6f3ec74db60f8e8769cd35e29d27613562722 100644
 --- a/resources/lib/tmdb_routes.py

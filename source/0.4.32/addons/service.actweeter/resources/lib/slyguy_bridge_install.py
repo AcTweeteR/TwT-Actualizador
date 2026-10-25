@@ -51,7 +51,9 @@ def install(kodi,addon_factory,vfs,dialog,*,consent=False,allow_prompt=False,wri
     root=Path(vfs.translatePath(service.getAddonInfo('profile')))
     state_path=root/'slyguy_bridge_integration.json';state=load_state(state_path)
     addon=addon_factory('slyguy.trailers')
-    if addon.getAddonInfo('version')!='0.2.1':return 'UNSUPPORTED_SLYGUY_VERSION'
+    # Compatibility is established by recognized source signatures, not a
+    # pinned add-on version. Unknown layouts remain fail-closed.
+    addon_version = addon.getAddonInfo('version')
     source=Path(vfs.translatePath(addon.getAddonInfo('path')))
     originals={name:(source/name).read_bytes() for name in ORIGINAL_HASHES}
     current={name:digest(data) for name,data in originals.items()}
@@ -60,7 +62,7 @@ def install(kodi,addon_factory,vfs,dialog,*,consent=False,allow_prompt=False,wri
     if not (consent or state.get('consent')):
         if not allow_prompt:return 'CONSENT_REQUIRED'
         consent=dialog.yesno('Previews de AcTweeteR',
-            'Para los previews automáticos, AcTweeteR necesita conectar su bridge al servicio oficial de SlyGuy 0.2.1. Se guardará una copia y no se cambiarán tus preferencias. ¿Autorizar esta integración local?',
+            'Para los previews automáticos, AcTweeteR necesita conectar su bridge al servicio instalado de SlyGuy. Se guardará una copia y no se cambiarán tus preferencias. ¿Autorizar esta integración local?',
             nolabel='Ahora no',yeslabel='Autorizar')
         if not consent:return 'DECLINED'
     patched=payloads(originals)
@@ -71,7 +73,7 @@ def install(kodi,addon_factory,vfs,dialog,*,consent=False,allow_prompt=False,wri
         target=backup/name;atomic_write(target,data)
         if target.read_bytes()!=data:raise OSError('SlyGuy backup readback failed')
     atomic_write(backup/'MANIFEST.json',json.dumps({'schema':1,'status':'BACKUP_VERIFIED',
-                 'original_hashes':current,'version':'0.2.1'},sort_keys=True).encode())
+                 'original_hashes':current,'version':addon_version},sort_keys=True).encode())
     rpc=lambda enabled:json.loads(kodi.executeJSONRPC(json.dumps({'jsonrpc':'2.0','id':1,
         'method':'Addons.SetAddonEnabled','params':{'addonid':'slyguy.trailers','enabled':enabled}})))
     try:
@@ -80,7 +82,7 @@ def install(kodi,addon_factory,vfs,dialog,*,consent=False,allow_prompt=False,wri
             if (source/name).read_bytes()!=data:raise OSError('SlyGuy integration readback failed')
         if rpc(False).get('result')!='OK':raise OSError('SlyGuy native restart refused')
         if rpc(True).get('result')!='OK':raise OSError('SlyGuy native enable refused')
-        report={'schema':1,'version':'0.2.1','status':'INSTALLED_NOT_RUNTIME_VERIFIED','consent':True,
+        report={'schema':1,'version':addon_version,'status':'INSTALLED_NOT_RUNTIME_VERIFIED','consent':True,
                 'backup':backup.name,'original_hashes':current,
                 'patched_hashes':{name:digest(data) for name,data in patched.items()}}
         atomic_write(backup/'MANIFEST.json',json.dumps(report,sort_keys=True).encode())

@@ -153,8 +153,14 @@ class StateTests(unittest.TestCase):
                         _t=lambda *a: "Season", _log=lambda *a: None)
                     exec(compile(ast.Module(body=[function], type_ignores=[]), "season-route", "exec"), env)
                     env["xtream_series"]("77", 1)
-                    expected = 1 if total and total == watched_count and complete else 0
-                    self.assertEqual(items[0].getVideoInfoTag().setPlaycount.call_args.args, (expected,))
+                    # An absent/partial inventory is unknown: do not overwrite an
+                    # existing check on the native Kodi ListItem.
+                    call = items[0].getVideoInfoTag().setPlaycount.call_args
+                    if not total or not complete:
+                        self.assertIsNone(call)
+                    else:
+                        expected = 1 if total == watched_count else 0
+                        self.assertEqual(call.args, (expected,))
 
 
 class UpdateTests(unittest.TestCase):
@@ -189,7 +195,7 @@ class UpdateTests(unittest.TestCase):
                 self.assertLessEqual(kodi.executebuiltin.call_count, 1)
 
     def test_beta_numeric_order_and_stable_precedence(self):
-        values = ["1.2.31", "1.2.32~beta4", "1.2.32~beta5", "1.2.32~beta15", "1.2.32"]
+        values = ["1.2.31", "1.2.32~beta4", "1.2.32~beta5", "1.2.32~beta16", "1.2.32"]
         self.assertEqual(sorted(reversed(values), key=testing_updates.version_key), values)
         with self.assertRaises(ValueError): testing_updates.version_key("unknown")
 

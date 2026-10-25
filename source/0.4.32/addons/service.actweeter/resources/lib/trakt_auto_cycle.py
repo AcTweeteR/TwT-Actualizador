@@ -227,7 +227,10 @@ def _run_cycle(service_root, xstream_root, *, account, profile, provider_scope,
 
 
 def run_cycle(service_root, xstream_root, **kwargs):
-    """Exclude overlapping cycles and recover a lock left by a dead Kodi process."""
+    """Exclude processes using a stable inode; the kernel releases crashed owners."""
+    import errno
+    import stat
+
     root = Path(service_root) / 'trakt_live'
     if root.is_symlink():
         return {'status': 'failed', 'reason': 'unsafe_cycle_state_path'}
@@ -238,42 +241,33 @@ def run_cycle(service_root, xstream_root, **kwargs):
     if lock.is_symlink():
         return {'status': 'failed', 'reason': 'unsafe_cycle_lock'}
     try:
-        fd = os.open(str(lock), os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-    except FileExistsError:
-        try:
-            owner = int(lock.read_text('ascii')[:20])
-            if owner <= 0:
-                return {'status': 'busy'}
-            try:
-                os.kill(owner, 0)
-            except ProcessLookupError:
-                lock.unlink()
-                fd = os.open(str(lock), os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-            except (PermissionError, OSError):
-                return {'status': 'busy'}
-            else:
-                return {'status': 'busy'}
-        except (OSError, FileExistsError, ValueError):
-            try:
-                if os.path.getmtime(lock) < __import__('time').time() - 60:
-                    lock.unlink()
-                    fd = os.open(str(lock), os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-                else:
-                    return {'status': 'busy'}
-            except (OSError, FileExistsError):
-                return {'status': 'busy'}
+        fd = os.open(str(lock), os.O_RDWR | os.O_CREAT | getattr(os, 'O_NOFOLLOW', 0), 0o600)
+    except OSError:
+        return {'status': 'failed', 'reason': 'unsafe_cycle_lock'}
     try:
-        with os.fdopen(fd, 'w', encoding='ascii') as stream:
-            stream.write(str(os.getpid()))
-            stream.flush()
-            os.fsync(stream.fileno())
+        details = os.fstat(fd)
+        if not stat.S_ISREG(details.st_mode) or details.st_nlink != 1:
+            return {'status': 'failed', 'reason': 'unsafe_cycle_lock'}
+        try:
+            if os.name == 'nt':
+                import msvcrt
+                # Windows byte-range locks need one byte; never replace this file.
+                if details.st_size == 0:
+                    os.write(fd, b'0')
+                os.lseek(fd, 0, os.SEEK_SET)
+                msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
+            else:
+                import fcntl
+                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError as exc:
+            if exc.errno in (errno.EACCES, errno.EAGAIN, errno.EDEADLK):
+                return {'status': 'busy'}
+            return {'status': 'failed', 'reason': 'cycle_lock_unavailable'}
         return _run_cycle(service_root, xstream_root, **kwargs)
     finally:
-        try:
-            if lock.read_text('ascii').strip() == str(os.getpid()):
-                lock.unlink()
-        except OSError:
-            pass
+        # Closing releases both flock and Windows byte-range locks, including errors.
+        # Unlinking would let a waiter lock a different inode and overlap this owner.
+        os.close(fd)
 
 
 class _ServiceAddon:
