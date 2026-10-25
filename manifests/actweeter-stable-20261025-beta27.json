@@ -1,0 +1,28 @@
+{
+  "release": "actweeter-stable-20261025-beta27",
+  "source_commit": "7479930",
+  "channel": "repository.actweeter",
+  "index_sha256": "3995c578ec01016858172b61fe7c3511ace15c2b61028ce314c2018dab4a1cd7",
+  "addons": [
+    {
+      "id": "skin.actweeter",
+      "version": "1.2.35",
+      "path": "repo/skin.actweeter/skin.actweeter-1.2.35.zip",
+      "sha256": "c81a8fb6482171da6ffb12e419925d9f6bc526b5f29a2004ed8ba096bee3990a"
+    },
+    {
+      "id": "service.actweeter",
+      "version": "0.4.91",
+      "path": "repo/service.actweeter/service.actweeter-0.4.91.zip",
+      "sha256": "d45f4851549171a85fd7ab6473f9723b4a9b537f465afe047cabca232dae386f"
+    },
+    {
+      "id": "plugin.video.xstream-pro",
+      "version": "1.1.2.35",
+      "path": "repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.35.zip",
+      "sha256": "b95fdbec53c0eacc35b6a3a090e940a7988a3cfe29c8fd7d78b356a425d2c213"
+    }
+  ],
+  "runtime_validation": "Mac Beta runtime partial; Lenovo Beta27 not yet validated",
+  "automated_tests": "693 passed, 1 skipped, 4 deselected, 96 subtests passed"
+}

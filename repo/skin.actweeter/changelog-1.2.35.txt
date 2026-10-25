@@ -1,0 +1,1 @@
+Reconciled Beta: dynamic fullscreen trailer info visibility and accessible automatic preview controls.
