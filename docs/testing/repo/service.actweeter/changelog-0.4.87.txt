@@ -1,0 +1,1 @@
+Compatibility update for XStream 1.1.2.33; no service runtime changes.
