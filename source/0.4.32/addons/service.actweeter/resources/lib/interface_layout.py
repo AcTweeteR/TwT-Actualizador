@@ -15,8 +15,8 @@ import urllib.parse
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-LAYOUT_VERSION = 16
-LAYOUT_MIGRATION_ID = 'interface-layout-v16-addon-launchers'
+LAYOUT_VERSION = 17
+LAYOUT_MIGRATION_ID = 'interface-layout-v17-trakt-menu'
 GROUPS = ('mainmenu', 'powermenu', 'inicio-1', '10000-1', 'moviehub', 'tvshowhub')
 # Exact profile copies shipped as defaults in Beta 8. They may be updated when
 # older state files do not yet track ownership; any byte-level customization
@@ -248,13 +248,15 @@ def source_documents(skin_root, *, recommendations_enabled=True):
 
 
 def merge_arcade_shortcut(current, defaults):
-    """Repair shipped launchers and add Arcade while preserving custom rows."""
+    """Restore Trakt access and keep the shipped Rivulet/Arcade launchers adjacent."""
     current_root = ET.fromstring(current)
     default_root = ET.fromstring(defaults)
     arcade = next((node for node in default_root.findall('shortcut')
                    if node.findtext('defaultID') == 'arcade'), None)
-    if arcade is None:
-        raise ValueError('default Arcade shortcut missing')
+    trakt = next((node for node in default_root.findall('shortcut')
+                  if node.findtext('defaultID') == 'trakt'), None)
+    if arcade is None or trakt is None:
+        raise ValueError('default Trakt or Arcade shortcut missing')
     changed = False
     owned_arcade = False
     for default_id, previous_action in (
@@ -290,6 +292,13 @@ def merge_arcade_shortcut(current, defaults):
             current_root.remove(existing)
             current_root.insert(list(current_root).index(rivulet) + 1, existing)
             changed = True
+    if current_root.find("shortcut[defaultID='trakt']") is None:
+        rivulet = current_root.find("shortcut[defaultID='rivulet']")
+        arcade = current_root.find("shortcut[defaultID='arcade']")
+        anchor = rivulet if rivulet is not None else arcade
+        position = list(current_root).index(anchor) if anchor is not None else len(current_root)
+        current_root.insert(position, trakt)
+        changed = True
     return (ET.tostring(current_root, encoding='utf-8', xml_declaration=True) + b'\n'
             if changed else current)
 

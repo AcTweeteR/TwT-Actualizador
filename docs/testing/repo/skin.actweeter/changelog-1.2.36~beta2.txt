@@ -1,0 +1,1 @@
+1.2.36~beta2: Restore the always-available Trakt entry in the main sidebar.

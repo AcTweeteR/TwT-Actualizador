@@ -44,21 +44,23 @@ def tmdb_watched_state(g, item, movies, episodes):
     kind = item.get('tmdb_type') or 'movie'
     season, episode = item.get('season'), item.get('episode')
     if not tmdb_id.isdigit() or int(tmdb_id) <= 0:
-        return False
+        return None
     if kind == 'movie':
-        return movies._data.get('tmdb:movie:' + tmdb_id) is True
+        value = movies._data.get('tmdb:movie:' + tmdb_id)
+        return value if type(value) is bool else None
     exact_episode = (episode is not None and str(episode) != ''
                      and season is not None and str(season) != '')
     if exact_episode:
         if not (str(season).isdigit() and str(episode).isdigit() and int(episode) > 0):
-            return False
+            return None
         key = 'tmdb:episode:{0}:s{1}:e{2}'.format(tmdb_id, int(season), int(episode))
-        if key in movies._data:
-            return movies._data[key] is True
+        value = movies._data.get(key)
+        if type(value) is bool:
+            return value
         # A show/season mark cannot authorize an episode added afterwards.
     changes = g.get('series_changes')
     if changes is None or not g.get('addon'):
-        return False
+        return None
     profile = str(getattr(g.get('pm'), 'active', '1'))
     cached = g.get('_actweeter_watched_inventory')
     if cached is None or cached[0] is not movies or cached[1] != profile:
@@ -66,23 +68,30 @@ def tmdb_watched_state(g, item, movies, episodes):
         g['_actweeter_watched_inventory'] = cached
     from series_state import derive_series_state
     states = []
+    episode_known = False
     for provider_id, record in cached[2].items():
         if not isinstance(record, dict) or str(record.get('tmdb_id') or '') != tmdb_id:
             continue
         if exact_episode:
             for row in record.get('episodes', []):
                 if (isinstance(row, dict) and str(row.get('season')) == str(season)
-                        and str(row.get('episode')) == str(episode)
-                        and episodes.is_watched(provider_id, season, row.get('provider_id'))):
-                    return True
+                        and str(row.get('episode')) == str(episode)):
+                    episode_known = True
+                    if episodes.is_watched(provider_id, season, row.get('provider_id')):
+                        return True
             continue
         if season is not None and str(season) != '':
             record = dict(record, episodes=[row for row in record.get('episodes', [])
                 if isinstance(row, dict) and str(row.get('season')) == str(season)])
         state = derive_series_state(tmdb_id, provider_id, record, episodes,
                                     tmdb_watched_store=movies)
-        states.append(state.get('complete') is True)
-    return bool(states) and all(states)
+        complete = state.get('complete')
+        states.append(complete if type(complete) is bool else None)
+    if exact_episode:
+        return False if episode_known else None
+    if not states or any(state is None for state in states):
+        return None
+    return all(states)
 
 
 def watched_state(g, stype, tmdb_id, season='', episode='', profile_num=1,

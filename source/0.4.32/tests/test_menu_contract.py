@@ -1,9 +1,12 @@
 """Default AcTweeteR navigation contract for clean profiles."""
+import ast
 import unittest
 import hashlib
 import json
+import os
 import sys
 import tempfile
+import zipfile
 from pathlib import Path
 from xml.etree import ElementTree as ET
 from unittest.mock import patch
@@ -26,7 +29,7 @@ def shortcuts(filename):
 
 
 class MenuContractTests(unittest.TestCase):
-    def test_main_menu_has_arcade_below_rivulet(self):
+    def test_main_menu_has_trakt_and_keeps_arcade_below_rivulet(self):
         self.assertEqual(
             shortcuts("mainmenu.DATA.xml"),
             [
@@ -35,6 +38,8 @@ class MenuContractTests(unittest.TestCase):
                 ("PELÍCULAS", "ActivateWindow(1111,return)", "movies", "shortcuts/clapperboard.png"),
                 ("SERIES", "ActivateWindow(1110,return)", "shows", "shortcuts/tv.png"),
                 ("BUSCAR", "ActivateWindow(1109,return)", "search", "shortcuts/search.png"),
+                ("TRAKT", "ActivateWindow(Videos,plugin://plugin.video.xstream-pro/?mode=xstream_tmdb_trakt_menu,return)",
+                 "trakt", "special://home/addons/plugin.video.xstream-pro/resources/icons/trakt.png"),
                 ("RIVULET", "RunAddon(plugin.video.rivulet)",
                  "rivulet", "shortcuts/rivulet.png"),
                 ("ARCADE", "RunAddon(plugin.program.iagl)",
@@ -61,9 +66,78 @@ class MenuContractTests(unittest.TestCase):
         merged = ET.fromstring(interface_layout.merge_arcade_shortcut(
             custom, (ADDON / "shortcuts/mainmenu.DATA.xml").read_bytes()))
         self.assertEqual([node.findtext("defaultID") for node in merged.findall("shortcut")],
-                         ["rivulet", "arcade", "user-item"])
+                         ["trakt", "rivulet", "arcade", "user-item"])
         self.assertEqual(merged.find("shortcut[defaultID='arcade']/action").text,
                          "RunAddon(plugin.program.iagl)")
+
+    def test_trakt_migrates_into_existing_profile_and_preserves_custom_rows(self):
+        defaults = (ADDON / "shortcuts/mainmenu.DATA.xml").read_bytes()
+        old = ET.fromstring(defaults)
+        trakt = old.find("shortcut[defaultID='trakt']")
+        if trakt is not None:
+            old.remove(trakt)
+        custom = ET.SubElement(old, "shortcut")
+        ET.SubElement(custom, "label").text = "Mi acceso"
+        ET.SubElement(custom, "defaultID").text = "user-item"
+        ET.SubElement(custom, "action").text = "ActivateWindow(Settings)"
+        original = ET.tostring(old, encoding="utf-8", xml_declaration=True) + b"\n"
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            profile, service = base / "profile", base / "service"
+            profile.mkdir(); service.mkdir()
+            path = profile / "skin.actweeter-mainmenu.DATA.xml"
+            path.write_bytes(original)
+            (service / "interface_layout_state.json").write_text(json.dumps({
+                "layout_version": 16,
+                "files": {path.name: interface_layout.digest(original)},
+                "settings": interface_layout.SETTINGS,
+                "build_status": "GENERATED",
+            }))
+            result = interface_layout.apply_layout(
+                profile, service, ADDON, interface_layout.SETTINGS)
+            self.assertEqual(result["status"], "APPLIED")
+            after = ET.parse(path).getroot()
+            ids = [node.findtext("defaultID") for node in after.findall("shortcut")]
+            self.assertLess(ids.index("search"), ids.index("trakt"))
+            self.assertEqual(ids.index("trakt"), ids.index("rivulet") - 1)
+            self.assertEqual(ET.tostring(after.find("shortcut[defaultID='user-item']")),
+                             ET.tostring(custom))
+            backup = service / "interface_backups" / result["backup"] / path.name
+            self.assertEqual(backup.read_bytes(), original)
+            self.assertEqual(interface_layout.apply_layout(
+                profile, service, ADDON, interface_layout.SETTINGS)["status"], "CURRENT")
+
+    @unittest.skipUnless(all(os.environ.get(name) for name in (
+            "ACTWEETER_SKIN_LIVE_ZIP", "ACTWEETER_SERVICE_LIVE_ZIP",
+            "ACTWEETER_XSTREAM_LIVE_ZIP")),
+        "requires exact candidate ZIPs for the full Trakt menu contract")
+    def test_candidate_zips_keep_trakt_menu_migration_and_route_connected(self):
+        with zipfile.ZipFile(os.environ["ACTWEETER_SKIN_LIVE_ZIP"]) as archive:
+            menu = ET.fromstring(archive.read("skin.actweeter/shortcuts/mainmenu.DATA.xml"))
+            trakt = menu.find("shortcut[defaultID='trakt']")
+            self.assertIsNotNone(trakt)
+            self.assertEqual(trakt.findtext("label"), "TRAKT")
+            self.assertEqual(trakt.findtext("action"),
+                "ActivateWindow(Videos,plugin://plugin.video.xstream-pro/?mode=xstream_tmdb_trakt_menu,return)")
+        with zipfile.ZipFile(os.environ["ACTWEETER_SERVICE_LIVE_ZIP"]) as archive:
+            layout = archive.read(
+                "service.actweeter/resources/lib/interface_layout.py").decode()
+            self.assertIn("interface-layout-v17-trakt-menu", layout)
+            self.assertIn("current_root.find(\"shortcut[defaultID='trakt']\")", layout)
+        with zipfile.ZipFile(os.environ["ACTWEETER_XSTREAM_LIVE_ZIP"]) as archive:
+            addon = archive.read(
+                "plugin.video.xstream-pro/resources/lib/addon.py").decode()
+            routes = archive.read(
+                "plugin.video.xstream-pro/resources/lib/tmdb_routes.py").decode()
+            self.assertIn('mode == "xstream_tmdb_trakt_menu"', addon)
+            trakt_menu = next(node for node in ast.parse(routes).body
+                              if isinstance(node, ast.FunctionDef)
+                              and node.name == "trakt_menu")
+            self.assertFalse(any(isinstance(node, ast.Call)
+                                and isinstance(node.func, ast.Name)
+                                and node.func.id == "_trakt_guard"
+                                for node in ast.walk(trakt_menu)))
+            self.assertIn("Authorize Trakt", ast.get_source_segment(routes, trakt_menu))
 
     def test_shipped_launcher_upgrade_preserves_custom_rows_and_is_idempotent(self):
         defaults = (ADDON / "shortcuts/mainmenu.DATA.xml").read_bytes()
@@ -255,7 +329,7 @@ class MenuContractTests(unittest.TestCase):
                 result = interface_layout.apply_layout(
                     shortcuts, service, ADDON, interface_layout.SETTINGS)
                 self.assertEqual(result["status"], "APPLIED")
-                self.assertEqual(interface_layout.LAYOUT_VERSION, 16)
+                self.assertEqual(interface_layout.LAYOUT_VERSION, 17)
                 expected_main = interface_layout.merge_arcade_shortcut(
                     previous_main, (ADDON / "shortcuts/mainmenu.DATA.xml").read_bytes())
                 for name, wanted in (("skin.actweeter-mainmenu.DATA.xml", expected_main),

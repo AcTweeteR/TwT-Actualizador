@@ -44,7 +44,7 @@ class WatchedIntegrityTests(unittest.TestCase):
             [{'season': 1, 'episode': 1, 'provider_id': '10'}],
             {'tvshow:42': True, 'season:42:1': True})
         item = {'tmdb_type': 'tv', 'tmdb_id': '42', 'season': 1, 'episode': 2}
-        self.assertFalse(content_state.tmdb_watched_state(g, item, movies, episodes))
+        self.assertIsNone(content_state.tmdb_watched_state(g, item, movies, episodes))
         movies._data['tmdb:episode:42:s1:e2'] = True
         self.assertTrue(content_state.tmdb_watched_state(g, item, movies, episodes))
 
@@ -80,10 +80,24 @@ class WatchedIntegrityTests(unittest.TestCase):
             [{'season': 1, 'episode': 1, 'provider_id': '10'}], provider_seen=True)
         item = {'tmdb_type': 'tv', 'tmdb_id': '42'}
         record['complete'] = False
-        self.assertFalse(content_state.tmdb_watched_state(g, item, movies, episodes))
+        self.assertIsNone(content_state.tmdb_watched_state(g, item, movies, episodes))
         record['complete'] = True
         record['checked_at'] = 1
-        self.assertFalse(content_state.tmdb_watched_state(g, item, movies, episodes))
+        self.assertIsNone(content_state.tmdb_watched_state(g, item, movies, episodes))
+
+    def test_missing_movie_mark_and_series_inventory_remain_unknown(self):
+        g, movies, episodes, record, _ = self.context([], {})
+        movie = {'tmdb_type': 'movie', 'tmdb_id': '42'}
+        show = {'tmdb_type': 'tv', 'tmdb_id': '42'}
+        self.assertIsNone(content_state.tmdb_watched_state(g, movie, movies, episodes))
+        self.assertIsNone(content_state.tmdb_watched_state(g, show, movies, episodes))
+        g['series_changes'] = None
+        self.assertIsNone(content_state.tmdb_watched_state(g, show, movies, episodes))
+
+    def test_malformed_namespaced_episode_mark_remains_unknown(self):
+        g, movies, episodes, _, _ = self.context([], {'tmdb:episode:42:s1:e2': 'true'})
+        episode = {'tmdb_type': 'tv', 'tmdb_id': '42', 'season': 1, 'episode': 2}
+        self.assertIsNone(content_state.tmdb_watched_state(g, episode, movies, episodes))
 
     def test_resume_adapter_reuses_real_episode_fields_and_exact_movie_url_id(self):
         records = [

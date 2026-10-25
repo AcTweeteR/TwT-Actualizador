@@ -11,6 +11,14 @@ diff --git a/resources/lib/addon.py b/resources/lib/addon.py
 diff --git a/resources/lib/tmdb_routes.py b/resources/lib/tmdb_routes.py
 --- a/resources/lib/tmdb_routes.py
 +++ b/resources/lib/tmdb_routes.py
+@@ -2454,7 +2454,5 @@
+ def trakt_menu():
+-    if not _trakt_guard():
+-        return
+     if not trakt.enabled():
+         li = c("_new_listitem")("Direct Trakt menus are disabled")
+         _add_items([("", li, False)])
+         return
 @@ -2524,2 +2524,32 @@
 -def trakt_list_route(params):
 +def trakt_snapshot_route(params):

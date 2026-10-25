@@ -16,12 +16,12 @@ class CandidateSourceMetadataTests(unittest.TestCase):
         repository = ET.parse(ROOT / "addons/repository.actweeter/addon.xml").getroot()
         xstream = json.loads((ROOT / "third_party/xstream/upstream.json").read_text())
         self.assertEqual((service.get("id"), service.get("version")),
-                         ("service.actweeter", "0.4.94~beta1"))
+                         ("service.actweeter", "0.4.94~beta2"))
         self.assertEqual((skin.get("id"), skin.get("version")),
-                         ("skin.actweeter", "1.2.36~beta1"))
+                         ("skin.actweeter", "1.2.36~beta2"))
         self.assertEqual((repository.get("id"), repository.get("version")),
                          ("repository.actweeter", "1.0.3"))
-        self.assertEqual(xstream["distribution_version"], "1.1.2.36~beta1")
+        self.assertEqual(xstream["distribution_version"], "1.1.2.36~beta2")
         rivulet = json.loads((ROOT / "third_party/rivulet/upstream.json").read_text())
         self.assertEqual(rivulet["version"], "1.0.2")
         self.assertEqual(rivulet["sha256"],
@@ -52,9 +52,9 @@ class CandidateSourceMetadataTests(unittest.TestCase):
         import sys
         sys.path.insert(0, str(sys_path))
         import interface_layout
-        self.assertEqual(interface_layout.LAYOUT_VERSION, 16)
+        self.assertEqual(interface_layout.LAYOUT_VERSION, 17)
         self.assertEqual(interface_layout.LAYOUT_MIGRATION_ID,
-                         "interface-layout-v16-addon-launchers")
+                         "interface-layout-v17-trakt-menu")
         self.assertTrue(interface_layout.interface_migration_due({"layout_version": 12}))
 
     def test_candidate_manifest_does_not_claim_runtime_or_publication(self):

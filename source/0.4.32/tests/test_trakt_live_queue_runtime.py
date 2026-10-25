@@ -185,8 +185,8 @@ wm._data[tmdb_watch_key('episode','55',1,2)]=False
 assert namespace['_is_watched']({'tmdb_type':'tv','tmdb_id':'55','season':1,'episode':2},wm,we) is False
 wm._data['777']=True
 we._data.setdefault('66',{}).setdefault('1',[]).append('2')
-assert namespace['_is_watched']({'tmdb_type':'movie','tmdb_id':'777'},wm,we) is False
-assert namespace['_is_watched']({'tmdb_type':'tv','tmdb_id':'66','season':1,'episode':2},wm,we) is False
+assert namespace['_is_watched']({'tmdb_type':'movie','tmdb_id':'777'},wm,we) is None
+assert namespace['_is_watched']({'tmdb_type':'tv','tmdb_id':'66','season':1,'episode':2},wm,we) is None
 wm._data[tmdb_watch_key('episode','77',0,1)]=True
 assert namespace['_is_watched']({'tmdb_type':'tv','tmdb_id':'77','season':0,'episode':1},wm,we) is True
 again=apply_batch(tmdb_path,profile_root/'trakt_live'/'acks',profile='2',
