@@ -55,8 +55,8 @@ class RivuletIntegrationTests(unittest.TestCase):
                          "3dde8f37dcd64f122cf1e897e139e5b8b7a3cd0ec15db6a1f5c7b59852cb661b")
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
-            service = self._addon_zip(root / "service.actweeter-0.4.84.zip",
-                                      "service.actweeter", "0.4.84")
+            service = self._addon_zip(root / "service.actweeter-0.4.85.zip",
+                                      "service.actweeter", "0.4.85")
             rivulet = ROOT / "source/0.4.32/third_party/rivulet/repository.rivulet-1.0.2.zip"
             iagl = ROOT / "source/0.4.32/third_party/iagl/repository.zachmorris-1.0.4.zip"
             _, index, checksum = build_test_channel.build(

@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 
 
-CATALOG_VERSION = 16
+CATALOG_VERSION = 17
 ALL_TARGET_PLATFORMS = ("macos", "windows", "linux", "android", "tvos")
 
 MODULES = (

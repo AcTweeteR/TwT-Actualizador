@@ -1,0 +1,4 @@
+0.4.85 — IAGL component-catalog repair prompt
+
+- Bumps the mandatory component catalog so existing configured profiles are offered the native Kodi repair/install flow for IAGL.
+- Retains all Beta22 Arcade and Skin Shortcuts changes.

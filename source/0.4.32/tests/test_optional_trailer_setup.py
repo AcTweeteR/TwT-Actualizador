@@ -31,6 +31,18 @@ class OptionalTrailerSetupTests(unittest.TestCase):
             if item.get("required", True)
         })
 
+    def test_new_required_addon_reopens_component_offer_for_existing_profile(self):
+        state = {
+            "completed": True,
+            "prompted": True,
+            "component_catalog_offer_version": module_catalog.CATALOG_VERSION - 1,
+        }
+        self.assertTrue(first_run.should_offer_component_completion(
+            state, ["plugin.program.iagl"], core_configured=True))
+        state = first_run.mark_component_offer_seen(state)
+        self.assertFalse(first_run.should_offer_component_completion(
+            state, ["plugin.program.iagl"], core_configured=True))
+
     def test_trailers_are_not_a_core_setup_gate(self):
         self.assertNotIn("trailer_addon_ready", first_run.MANDATORY_SETUP_CHECKS)
         self.assertIn("trailer_addon_ready", first_run.OPTIONAL_SETUP_CHECKS)
