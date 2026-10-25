@@ -8,6 +8,32 @@ def _number(value):
         return 0.0
 
 
+def _remembered_tmdb_id(g, stype, provider_id, profile_num):
+    """Read visual-only associations from XStream's current provider index."""
+    if not str(provider_id or '').isdigit() or not str(profile_num).isdigit():
+        return ''
+    import sqlite3
+    from pathlib import Path
+    try:
+        root = Path(g['xbmcvfs'].translatePath(g['addon'].getAddonInfo('profile')))
+        path = root / ('provider_search_%s.sqlite' % profile_num)
+        cache = g.setdefault('_actweeter_identity_matches', {})
+        key = str(profile_num), stype
+        if key not in cache:
+            with sqlite3.connect(path.resolve().as_uri() + '?mode=ro', uri=True, timeout=.1) as db:
+                exists = db.execute("SELECT 1 FROM sqlite_master WHERE type='table' "
+                                    "AND name='identity_matches'").fetchone()
+                cache[key] = {str(identifier): str(tmdb_id) for identifier, tmdb_id in
+                              db.execute("SELECT m.provider_id,m.tmdb_id FROM identity_matches m "
+                                         "JOIN items i ON m.stype=i.stype AND "
+                                         "m.provider_id=i.provider_id AND m.title_key=i.norm "
+                                         "AND m.year=i.year WHERE m.stype=?", (stype,))
+                              if str(tmdb_id).isdigit() and int(tmdb_id) > 0} if exists else {}
+        return cache[key].get(str(provider_id), '')
+    except (KeyError, AttributeError, OSError, sqlite3.Error, ValueError):
+        return ''
+
+
 def provider_tmdb_id(g, stype, provider_id, profile_num, supplied=''):
     """Read provider IDs only; title-derived artwork is never identity evidence."""
     values = {str(supplied or '').strip()} - {''}
@@ -26,8 +52,10 @@ def provider_tmdb_id(g, stype, provider_id, profile_num, supplied=''):
             if isinstance(info, dict):
                 values.update(str(info.get(key) or '').strip() for key in ('tmdb_id', 'tmdb'))
                 values.discard('')
-    return (next(iter(values)) if len(values) == 1 and all(
-        value.isdigit() and int(value) > 0 for value in values) else '')
+    if values:
+        return (next(iter(values)) if len(values) == 1 and all(
+            value.isdigit() and int(value) > 0 for value in values) else '')
+    return _remembered_tmdb_id(g, stype, provider_id, profile_num)
 
 
 def local_tmdb_id(g, stype, supplied, provider_id, profile_num):

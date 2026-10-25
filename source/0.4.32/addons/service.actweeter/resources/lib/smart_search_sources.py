@@ -12,7 +12,7 @@ from types import SimpleNamespace
 from series_state import derive_series_state
 from content_state import local_tmdb_id
 
-from smart_search_engine import CatalogSearch, normalize, readonly, unique_rows, words
+from smart_search_engine import CatalogSearch, normalize, readonly, title_words, unique_rows, words
 from search_background import xstream_profile_number
 
 TMDB_HELPER = "plugin.video.tmdb.bingie.helper"
@@ -148,8 +148,11 @@ class Metadata:
         return [dict(row) for row in rows]
 
 
-    def search(self, query):
-        return self._directory({"info": "search", "tmdb_type": "both", "query": query})
+    def search(self, query, tmdb_type="both", year=""):
+        params = {"info": "search", "tmdb_type": tmdb_type, "query": query}
+        if year:
+            params["year"] = str(year)
+        return self._directory(params)
 
     def details(self, item):
         identity, kind = str(item.get("tmdb_id", "")), item.get("kind")
@@ -238,6 +241,50 @@ class Metadata:
                     result.append(row)
                     seen.add(key)
         return result
+
+
+def match_catalog_metadata(engine, metadata, query, rows, current=lambda: True):
+    """Use a unique provider title/year to request a typed TMDb fallback."""
+    rows = list(rows)
+    matched = engine.match_metadata(rows)
+    if current():
+        candidates = engine.search(query)
+        for kind, tmdb_type in (("movie", "movie"), ("series", "tv")):
+            if not current():
+                continue
+            available = [row for row in candidates if row.get("kind") == kind]
+            if len(available) != 1:
+                continue
+            candidate = available[0]
+            existing = next((row for row in matched
+                             if row["kind"] == kind and row["id"] == candidate["id"]), None)
+            if existing:
+                if not candidate.get("tmdb_id"):
+                    engine.remember_tmdb(existing)
+                continue
+            if candidate.get("tmdb_id"):
+                matched.append(candidate)
+                continue
+            year = str(candidate.get("year") or "").strip()
+            if not re.fullmatch(r"\d{4}", year):
+                continue
+            fallback = metadata.search(candidate["title"], tmdb_type, year)
+            rows.extend(fallback)
+            tokens = set(title_words(candidate["title"], year))
+            identities = {str(row.get("tmdb_id")) for row in fallback
+                          if row.get("kind") == kind and str(row.get("year") or "")[:4] == year
+                          and str(row.get("tmdb_id") or "").isdigit()
+                          and any(set(words(name)) == tokens for name in
+                                  (row.get("title"), row.get("originaltitle"), *(row.get("aliases") or ())))}
+            if len(identities) != 1:
+                continue
+            extra = [row for row in engine.match_metadata(fallback)
+                     if row["kind"] == kind and row["id"] == candidate["id"]
+                     and row.get("tmdb_id") in identities]
+            if len(extra) == 1:
+                engine.remember_tmdb(extra[0])
+                matched.extend(extra)
+    return matched, rows
 
 
 class WatchedState:

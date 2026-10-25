@@ -1,0 +1,1 @@
+0.4.94~beta3: Remember profile-scoped TMDb matches in the existing provider search index so watched checks survive restarts and offline navigation. Resolve a unique title/year candidate with common prepositions omitted; preserve exact IDs and reject ambiguous matches.

@@ -2,7 +2,9 @@
 import ast
 import os
 from pathlib import Path
+import sqlite3
 import sys
+import tempfile
 import time
 from types import SimpleNamespace
 import unittest
@@ -38,6 +40,24 @@ class WatchedIntegrityTests(unittest.TestCase):
         self.assertEqual(calls, [('vod_info_7', 2)])
         self.assertEqual(content_state.provider_tmdb_id(g, 'movie', '7', 2, '99'), '')
         self.assertEqual(content_state.provider_tmdb_id(g, 'movie', '8', 2), '')
+
+    def test_remembered_identity_projects_to_catalog_without_overriding_exact_ids(self):
+        with tempfile.TemporaryDirectory() as root:
+            path = Path(root) / 'provider_search_2.sqlite'
+            with sqlite3.connect(path) as db:
+                db.execute('CREATE TABLE items (stype TEXT,provider_id TEXT,norm TEXT,year TEXT)')
+                db.execute('CREATE TABLE identity_matches (stype TEXT,provider_id TEXT,'
+                           'title_key TEXT,year TEXT,tmdb_id TEXT)')
+                db.execute("INSERT INTO items VALUES ('movie','7','chappie','2015')")
+                db.execute("INSERT INTO identity_matches VALUES ('movie','7','chappie','2015','198663')")
+            def context():
+                return {'addon': SimpleNamespace(getAddonInfo=lambda _: root),
+                        'xbmcvfs': SimpleNamespace(translatePath=lambda value: value)}
+            self.assertEqual(content_state.provider_tmdb_id(context(), 'movie', '7', 2), '198663')
+            self.assertEqual(content_state.provider_tmdb_id(context(), 'movie', '7', 2, '99'), '99')
+            with sqlite3.connect(path) as db:
+                db.execute("UPDATE items SET norm='different' WHERE provider_id='7'")
+            self.assertEqual(content_state.provider_tmdb_id(context(), 'movie', '7', 2), '')
 
     def test_legacy_complete_marks_never_mark_a_new_episode_seen(self):
         g, movies, episodes, _, _ = self.context(

@@ -16,7 +16,8 @@ import xml.etree.ElementTree as ET
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "addons/service.actweeter/resources/lib"))
 from smart_search_engine import CatalogSearch, LatestRequest, normalize, provider_path, unique_rows
-from smart_search_sources import Metadata, WatchedState, context, metadata_row, programmes, provider_children
+from smart_search_sources import (Metadata, WatchedState, context, match_catalog_metadata,
+                                  metadata_row, programmes, provider_children)
 
 
 def store(path, rows):
@@ -47,6 +48,13 @@ class CatalogueTests(unittest.TestCase):
 
     def test_canonical_title_finds_provider_missing_articles(self):
         self.assertEqual(self.engine.search("maquina de guerra")[0]["id"], "1")
+
+    def test_metadata_matches_provider_title_missing_a_common_preposition(self):
+        with closing(sqlite3.connect(self.path)) as db, db:
+            db.execute("INSERT INTO items VALUES ('movie','10','Gone Wind','gone wind','1939','','','','','')")
+        rows = self.engine.match_metadata([dict(kind="movie", title="Gone with the Wind",
+            tmdb_id="770", year="1939")])
+        self.assertEqual([row["id"] for row in rows], ["10"])
 
     def test_accents_case_and_word_order(self):
         for query in ("MÁQUINA GUERRA", "guerra máquina", "maquina guerra"):
@@ -203,6 +211,77 @@ class WatchedStateTests(unittest.TestCase):
         self.assertEqual(self.watched.badge(scope, dict(kind="movie", id="123", available=True)), "VISTO")
         self.assertEqual(self.watched.badge(scope, dict(kind="movie", tmdb_id="42",
                          id="123", available=False)), "")
+
+    def test_unique_exact_catalog_candidate_can_receive_tmdb_watch_badge(self):
+        path = self.root / "provider_search_2.sqlite"
+        store(path, [("movie", 123, "Chappie", "2015")])
+        engine = CatalogSearch(path, 2)
+        metadata = Mock()
+        metadata.search.return_value = [dict(kind="movie", tmdb_id="198663", title="Chappie",
+                                             year="2015")]
+        matched, _ = match_catalog_metadata(engine, metadata, "Chappie", [])
+        self.assertEqual(len(matched), 1)
+        self.assertEqual(matched[0]["id"], "123")
+        self.assertEqual(matched[0]["tmdb_id"], "198663")
+        self.write({"tmdb:movie:198663": True})
+        self.assertEqual(self.watched.badge((str(self.root), 2), matched[0]), "VISTO")
+        metadata.search.assert_called_once_with("Chappie", "movie", "2015")
+        metadata.search.reset_mock()
+        cached, _ = match_catalog_metadata(CatalogSearch(path, 2), metadata, "Chappie", [])
+        self.assertEqual(self.watched.badge((str(self.root), 2), cached[0]), "VISTO")
+        metadata.search.assert_not_called()
+        with closing(sqlite3.connect(path)) as db, db:
+            self.assertEqual(db.execute("PRAGMA integrity_check").fetchone()[0], "ok")
+            db.execute("UPDATE items SET title='Different Film',year='2016' WHERE provider_id='123'")
+        self.assertNotIn("tmdb_id", CatalogSearch(path, 2).search("Different Film")[0])
+
+    def test_title_year_fallback_handles_a_missing_provider_preposition(self):
+        path = self.root / "provider_search_2.sqlite"
+        store(path, [("movie", 123, "Gone Wind", "1939")])
+        engine = CatalogSearch(path, 2)
+        metadata = Mock()
+        metadata.search.return_value = [dict(kind="movie", tmdb_id="770",
+            title="Gone with the Wind", year="1939")]
+        matched, _ = match_catalog_metadata(engine, metadata, "Gone Wind", [])
+        self.assertEqual([(row["id"], row["tmdb_id"]) for row in matched], [("123", "770")])
+        metadata.search.assert_called_once_with("Gone Wind", "movie", "1939")
+
+    def test_initial_tmdb_result_is_remembered_for_offline_catalog_checks(self):
+        path = self.root / "provider_search_2.sqlite"
+        store(path, [("movie", 123, "Chappie", "2015")])
+        metadata = Mock()
+        matched, _ = match_catalog_metadata(CatalogSearch(path, 2), metadata, "Chappie",
+            [dict(kind="movie", tmdb_id="198663", title="Chappie", year="2015")])
+        self.assertEqual(matched[0]["tmdb_id"], "198663")
+        metadata.search.assert_not_called()
+        self.assertEqual(CatalogSearch(path, 2).search("Chappie")[0]["tmdb_id"], "198663")
+
+    def test_catalog_fallback_does_not_query_without_a_four_digit_year(self):
+        path = self.root / "provider_search_2.sqlite"
+        store(path, [("movie", 123, "Chappie", "")])
+        metadata = Mock()
+        matched, _ = match_catalog_metadata(CatalogSearch(path, 2), metadata, "Chappie", [])
+        self.assertEqual(matched, [])
+        metadata.search.assert_not_called()
+
+    def test_catalog_fallback_skips_ambiguous_remakes_and_cancelled_searches(self):
+        path = self.root / "provider_search_2.sqlite"
+        store(path, [("movie", 1, "Dune", "1984"), ("movie", 2, "Dune", "2021")])
+        metadata = Mock()
+        engine = CatalogSearch(path, 2)
+        self.assertEqual(match_catalog_metadata(engine, metadata, "Dune", [])[0], [])
+        self.assertEqual(match_catalog_metadata(engine, metadata, "Dune", [], lambda: False)[0], [])
+        metadata.search.assert_not_called()
+
+    def test_catalog_fallback_rejects_two_tmdb_ids_for_same_title_and_year(self):
+        path = self.root / "provider_search_2.sqlite"
+        store(path, [("movie", 123, "Chappie", "2015")])
+        metadata = Mock()
+        metadata.search.return_value = [dict(kind="movie", tmdb_id=tmdb_id,
+            title="Chappie", year="2015") for tmdb_id in ("198663", "999999")]
+        matched, _ = match_catalog_metadata(CatalogSearch(path, 2), metadata, "Chappie", [])
+        self.assertEqual(matched, [])
+        self.assertNotIn("tmdb_id", CatalogSearch(path, 2).search("Chappie")[0])
 
     def test_profile_scope_and_unverified_ids_fail_closed(self):
         self.write({"tmdb:movie:42": True})
@@ -364,6 +443,13 @@ class MetadataTests(unittest.TestCase):
         source.search("Tom Cruise & más")
         self.assertEqual(len(kodi.calls), 1)
         self.assertEqual(kodi.calls[0]["method"], "Files.GetDirectory")
+
+    def test_targeted_search_passes_media_type_and_year(self):
+        source = Metadata(Mock())
+        source._directory = Mock(return_value=[dict(kind="movie", tmdb_id="198663", year="2015")])
+        self.assertEqual(source.search("Chappie", "movie", "2015")[0]["tmdb_id"], "198663")
+        source._directory.assert_called_once_with({"info": "search", "tmdb_type": "movie",
+                                                   "query": "Chappie", "year": "2015"})
 
     def test_untrusted_metadata_destination_is_rejected(self):
         self.assertIsNone(metadata_row({"file": "https://elsewhere/movie"}))

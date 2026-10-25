@@ -15,7 +15,10 @@ import unicodedata
 from pathlib import Path
 
 
-STOP_WORDS = frozenset("a al de del el en la las lo los un una unos unas y the of a an and".split())
+STOP_WORDS = frozenset(
+    "a al ante bajo con contra de del desde durante en entre hacia hasta la las lo los "
+    "mediante para por sin sobre tras un una unos unas y the of a an and with in on at to by for from".split()
+)
 MAX_QUERY = 160
 
 
@@ -198,14 +201,53 @@ class CatalogSearch:
             details = {(row[0], str(row[1])): row[2:] for row in db.execute(
                 "SELECT stype,provider_id,poster,fanart,plot,genre,rating FROM items WHERE "
                 + clauses, params)}
+            identities = {}
+            if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' "
+                          "AND name='identity_matches'").fetchone():
+                identities = {(kind, str(identifier)): tmdb_id
+                              for kind, identifier, tmdb_id in db.execute(
+                                  "SELECT m.stype,m.provider_id,m.tmdb_id "
+                                  "FROM identity_matches m JOIN items i ON "
+                                  "m.stype=i.stype AND m.provider_id=i.provider_id "
+                                  "AND m.title_key=i.norm AND m.year=i.year "
+                                  "WHERE " + clauses.replace("stype=?", "m.stype=?").replace(
+                                      "provider_id=?", "m.provider_id=?"), params)}
             for kind, identity, title, year, _tokens in selected:
                 row = details.get((kind, str(identity)))
                 if row is not None:
-                    output.append(dict(kind=kind, id=str(identity), title=title, year=year,
+                    item = dict(kind=kind, id=str(identity), title=title, year=year,
                         poster=row[0] or "", fanart=row[1] or "", plot=row[2] or "",
                         genre=row[3] or "", rating=row[4] or "", available=True,
-                        path=provider_path(kind, identity, self.profile)))
+                        path=provider_path(kind, identity, self.profile))
+                    cached = identities.get((kind, str(identity)))
+                    if cached and str(cached).isdigit():
+                        item["tmdb_id"] = str(cached)
+                    output.append(item)
         return output
+
+    def remember_tmdb(self, item):
+        """Keep a profile-local visual identity in the existing provider index."""
+        kind, identifier = item.get("kind"), str(item.get("id") or "")
+        tmdb_id, year = str(item.get("tmdb_id") or ""), str(item.get("year") or "")
+        if (kind not in ("movie", "series") or not identifier.isdigit()
+                or not tmdb_id.isdigit() or not re.fullmatch(r"\d{4}", year)
+                or not normalize(item.get("title"))):
+            return False
+        try:
+            with sqlite3.connect(self.path, timeout=1) as db:
+                current = db.execute("SELECT title,norm,year FROM items "
+                                     "WHERE stype=? AND provider_id=?", (kind, identifier)).fetchone()
+                if not current or current[0] != item["title"] or str(current[2]) != year:
+                    return False
+                db.execute("CREATE TABLE IF NOT EXISTS identity_matches ("
+                           "stype TEXT NOT NULL, provider_id TEXT NOT NULL, "
+                           "title_key TEXT NOT NULL, year TEXT NOT NULL, tmdb_id TEXT NOT NULL, "
+                           "PRIMARY KEY(stype,provider_id,title_key,year))")
+                db.execute("INSERT OR IGNORE INTO identity_matches VALUES (?,?,?,?,?)",
+                           (kind, identifier, current[1], year, tmdb_id))
+            return True
+        except sqlite3.OperationalError:
+            return False
 
     def match_metadata(self, items):
         """Match canonical metadata to provider titles without inventing availability.
@@ -242,7 +284,7 @@ class CatalogSearch:
         for row in result:
             extra = metadata[row["kind"], row["id"]]
             row["canonical_title"] = extra.get("title") or row["title"]
-            row["tmdb_id"] = extra.get("tmdb_id", "")
+            row["tmdb_id"] = row.get("tmdb_id") or extra.get("tmdb_id", "")
             for key in ("poster", "fanart", "plot"):
                 if extra.get(key):
                     row[key] = extra[key]

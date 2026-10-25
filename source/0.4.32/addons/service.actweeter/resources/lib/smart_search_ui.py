@@ -13,7 +13,8 @@ import xbmcgui
 import xbmcvfs
 
 from smart_search_engine import LatestRequest, MAX_QUERY, normalize, unique_rows, words
-from smart_search_sources import Metadata, WatchedState, catalogue, context, programmes, provider_children, rpc
+from smart_search_sources import (Metadata, WatchedState, catalogue, context,
+    match_catalog_metadata, programmes, provider_children, rpc)
 
 ROWS = {5101: "movie", 5102: "series", 5103: "programme", 5104: "person", 5105: "discovery"}
 KEYS = list("QWERTYUIOPASDFGHJKLÑZXCVBNM") + ["ESPACIO", "BORRAR", "LISTO"]
@@ -200,7 +201,7 @@ class SearchWindow(xbmcgui.WindowXMLDialog):
                     shared = self.shared_index
                     if shared and shared.path == engine.path and shared.profile == engine.profile:
                         engine = shared.fork()
-                    matched = engine.match_metadata(rows)
+                    matched, rows = match_catalog_metadata(engine, self.metadata, query, rows, current)
                     matched_ids = {(row["kind"], row.get("tmdb_id")) for row in matched}
                     unmatched = [row for row in rows if row["kind"] in ("movie", "series") and
                                  (row["kind"], row.get("tmdb_id")) not in matched_ids]
