@@ -35,7 +35,7 @@ class MenuContractTests(unittest.TestCase):
                 ("PELÍCULAS", "ActivateWindow(1111,return)", "movies", "shortcuts/clapperboard.png"),
                 ("SERIES", "ActivateWindow(1110,return)", "shows", "shortcuts/tv.png"),
                 ("BUSCAR", "ActivateWindow(1109,return)", "search", "shortcuts/search.png"),
-                ("RIVULET", "ActivateWindow(Videos,plugin://plugin.video.rivulet/,return)",
+                ("RIVULET", "RunAddon(plugin.video.rivulet)",
                  "rivulet", "shortcuts/rivulet.png"),
                 ("ARCADE", "RunAddon(plugin.program.iagl)",
                  "arcade", "shortcuts/arcade.png"),

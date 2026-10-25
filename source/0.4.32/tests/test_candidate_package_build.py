@@ -331,11 +331,15 @@ class CandidatePackageBuildTests(unittest.TestCase):
             subprocess.run([sys.executable, str(ROOT / "tools/build_service_package.py"),
                             "--output", str(service)], check=True,
                            cwd=ROOT, capture_output=True, text=True)
-            skin = output / "skin.actweeter-1.2.32~beta10.zip"
+            skin = output / "skin.actweeter-1.2.32~beta11.zip"
             subprocess.run([sys.executable, str(ROOT / "tools/build_skin_package.py"),
                             "--output", str(skin)], check=True,
                            cwd=ROOT, capture_output=True, text=True)
             with zipfile.ZipFile(skin) as archive:
+                menu = ET.fromstring(archive.read(
+                    "skin.actweeter/shortcuts/mainmenu.DATA.xml"))
+                rivulet = menu.find("shortcut[defaultID='rivulet']/action")
+                self.assertEqual(rivulet.text, "RunAddon(plugin.video.rivulet)")
                 self.assertIn(b"RunScript(service.actweeter,smart_search)", archive.read(
                     "skin.actweeter/1080i/Custom_1109_BingieSearch.xml"))
                 for filename in ("Includes.xml", "IncludesBingie.xml", "IncludesBackgroundBuilding.xml"):
@@ -358,7 +362,7 @@ class CandidatePackageBuildTests(unittest.TestCase):
             self.assertEqual(versions, {
                 "repository.actweeter.testing": "1.0.2",
                 "service.actweeter": "0.4.85",
-                "skin.actweeter": "1.2.32~beta10",
+                "skin.actweeter": "1.2.32~beta11",
                 "plugin.video.xstream-pro": "1.1.2.28~beta20",
                 "repository.rivulet": "1.0.2",
                 "repository.zachmorris": "1.0.4",
@@ -378,8 +382,8 @@ class CandidatePackageBuildTests(unittest.TestCase):
                              md5_path.read_text().strip())
             self.assertEqual((channel / "repo/service.actweeter/changelog-0.4.85.txt").read_bytes(),
                              (ROOT / "addons/service.actweeter/changelog-0.4.85.txt").read_bytes())
-            self.assertEqual((channel / "repo/skin.actweeter/changelog-1.2.32~beta10.txt").read_bytes(),
-                             (ROOT / "addons/skin.actweeter/changelog-1.2.32~beta10.txt").read_bytes())
+            self.assertEqual((channel / "repo/skin.actweeter/changelog-1.2.32~beta11.txt").read_bytes(),
+                             (ROOT / "addons/skin.actweeter/changelog-1.2.32~beta11.txt").read_bytes())
 
     @staticmethod
     def _write_addon_fixture(path, addon_id, version):

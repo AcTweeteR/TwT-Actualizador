@@ -1,0 +1,1 @@
+RIVULET now launches through Kodi's add-on runner.

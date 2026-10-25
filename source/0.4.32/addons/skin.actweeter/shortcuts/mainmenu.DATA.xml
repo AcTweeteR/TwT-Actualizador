@@ -6,6 +6,6 @@
     <shortcut><label>SERIES</label><label2 /><defaultID>shows</defaultID><icon>shortcuts/tv.png</icon><action>ActivateWindow(1110,return)</action></shortcut>
     <shortcut><label>BUSCAR</label><label2 /><defaultID>search</defaultID><icon>shortcuts/search.png</icon><action>ActivateWindow(1109,return)</action></shortcut>
 
-    <shortcut><label>RIVULET</label><label2 /><defaultID>rivulet</defaultID><icon>shortcuts/rivulet.png</icon><action>ActivateWindow(Videos,plugin://plugin.video.rivulet/,return)</action></shortcut>
+    <shortcut><label>RIVULET</label><label2 /><defaultID>rivulet</defaultID><icon>shortcuts/rivulet.png</icon><action>RunAddon(plugin.video.rivulet)</action></shortcut>
     <shortcut><label>ARCADE</label><label2 /><defaultID>arcade</defaultID><icon>shortcuts/arcade.png</icon><action>RunAddon(plugin.program.iagl)</action></shortcut>
 </shortcuts>
