@@ -153,6 +153,18 @@ MODULES = (
              "configuration": "Rivulet settings and Stremio account remain upstream-owned",
              "update": "Kodi add-on repository automatic updates from repository.rivulet",
              "recovery": "Kodi native reinstall; retain Rivulet add-on profile"},
+            {"id": "repository.zachmorris", "minimum": "1.0.4", "source": "official Zach Morris repository bootstrap, SHA-256 pinned in Beta",
+             "license": "GPL-3.0", "platforms": ALL_TARGET_PLATFORMS,
+             "dependencies": (), "configuration": "Official repository metadata; no user data changed",
+             "update": "AcTweeteR Testing bootstrap; upstream IAGL packages remain served by repository.zachmorris",
+             "recovery": "Kodi native reinstall from AcTweeteR Testing"},
+            {"id": "plugin.program.iagl", "minimum": "4.0.6", "source": "repository.zachmorris",
+             "license": "GPL-3.0-only; supplementary game-list databases are CC BY-NC 4.0",
+             "platforms": ALL_TARGET_PLATFORMS,
+             "dependencies": ("repository.zachmorris",),
+             "configuration": "IAGL first-run configuration remains user-owned; no ROMs or games are downloaded by setup",
+             "update": "Kodi add-on repository automatic updates from repository.zachmorris",
+             "recovery": "Kodi native reinstall; retain IAGL add-on profile"},
         ),
     },
     {"id": "diagnostics", "name": "Diagnostics", "required": True,
@@ -220,6 +232,8 @@ _REPOSITORIES = {
     "inputstream.adaptive": ("repository.xbmc.org",),
     "repository.rivulet": ("repository.actweeter",),
     "plugin.video.rivulet": ("repository.rivulet",),
+    "repository.zachmorris": ("repository.actweeter",),
+    "plugin.program.iagl": ("repository.zachmorris",),
 }
 
 

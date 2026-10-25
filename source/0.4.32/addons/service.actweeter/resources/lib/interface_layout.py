@@ -15,8 +15,8 @@ import urllib.parse
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-LAYOUT_VERSION = 14
-LAYOUT_MIGRATION_ID = 'interface-layout-v14-collections-widgets'
+LAYOUT_VERSION = 15
+LAYOUT_MIGRATION_ID = 'interface-layout-v15-arcade-menu'
 GROUPS = ('mainmenu', 'powermenu', 'inicio-1', '10000-1', 'moviehub', 'tvshowhub')
 # Exact profile copies shipped as defaults in Beta 8. They may be updated when
 # older state files do not yet track ownership; any byte-level customization
@@ -247,6 +247,28 @@ def source_documents(skin_root, *, recommendations_enabled=True):
     return output
 
 
+def merge_arcade_shortcut(current, defaults):
+    """Add the mandatory Arcade destination without replacing profile choices."""
+    current_root = ET.fromstring(current)
+    default_root = ET.fromstring(defaults)
+    arcade = next((node for node in default_root.findall('shortcut')
+                   if node.findtext('defaultID') == 'arcade'), None)
+    if arcade is None:
+        raise ValueError('default Arcade shortcut missing')
+    existing = next((node for node in current_root.findall('shortcut')
+                     if node.findtext('defaultID') == 'arcade'), None)
+    if existing is not None:
+        if (existing.findtext('label') != 'ARCADE'
+                or existing.findtext('action') != arcade.findtext('action')):
+            raise ValueError('conflicting customized Arcade shortcut')
+        return current
+    rivulet = next((node for node in current_root.findall('shortcut')
+                    if node.findtext('defaultID') == 'rivulet'), None)
+    position = list(current_root).index(rivulet) + 1 if rivulet is not None else len(current_root)
+    current_root.insert(position, arcade)
+    return ET.tostring(current_root, encoding='utf-8', xml_declaration=True) + b'\n'
+
+
 def expandable_shortcut_ids(documents):
     """Map AcTweeteR-owned default IDs to their source DATA group."""
     result = {}
@@ -385,6 +407,16 @@ def apply_layout(shortcuts_root, service_root, skin_root, current_settings,
     state = load_state(state_path)
     documents = source_documents(skin_root,
                                  recommendations_enabled=recommendations_enabled)
+    mainmenu_name = 'skin.actweeter-mainmenu.DATA.xml'
+    mainmenu_path = shortcuts_root/mainmenu_name
+    merged_mainmenu = False
+    if mainmenu_path.is_file():
+        try:
+            documents[mainmenu_name] = merge_arcade_shortcut(
+                mainmenu_path.read_bytes(), documents[mainmenu_name])
+            merged_mainmenu = True
+        except ET.ParseError as exc:
+            raise ValueError('invalid customized main menu XML') from exc
     conflicts, changes = [], {}
     for name, wanted in documents.items():
         path = shortcuts_root/name
@@ -394,7 +426,7 @@ def apply_layout(shortcuts_root, service_root, skin_root, current_settings,
         old = path.read_bytes() if path.is_file() else None
         if old == wanted: continue
         if old is not None and digest(old) != state.get('files',{}).get(name):
-            if digest(old) not in LEGACY_DEFAULT_DIGESTS.get(name, ()):
+            if not (name == mainmenu_name and merged_mainmenu) and digest(old) not in LEGACY_DEFAULT_DIGESTS.get(name, ()):
                 conflicts.append(name)
         changes[name] = wanted
     properties = shortcuts_root/'skin.actweeter.properties'

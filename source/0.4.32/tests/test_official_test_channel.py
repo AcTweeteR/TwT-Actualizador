@@ -62,7 +62,8 @@ class OfficialTestChannelTests(unittest.TestCase):
             _, index, checksum = build_test_channel.build(
                 ROOT / "testing/repository.actweeter.testing", service,
                 temp_root / "testing", skin,
-                rivulet_repository_zip=(ROOT / "source/0.4.32/third_party/rivulet/repository.rivulet-1.0.2.zip"))
+                rivulet_repository_zip=(ROOT / "source/0.4.32/third_party/rivulet/repository.rivulet-1.0.2.zip"),
+                iagl_repository_zip=(ROOT / "source/0.4.32/third_party/iagl/repository.zachmorris-1.0.4.zip"))
             versions = {n.get("id"): n.get("version") for n in ET.parse(index).getroot()}
             self.assertEqual(versions["skin.actweeter"], skin_version)
             copied = index.parent / "skin.actweeter" / skin.name
@@ -86,6 +87,7 @@ class OfficialTestChannelTests(unittest.TestCase):
             bootstrap, index, checksum = build_test_channel.build(
                 ROOT / "testing" / "repository.actweeter.testing", candidate_service, output,
                 rivulet_repository_zip=(ROOT / "source/0.4.32/third_party/rivulet/repository.rivulet-1.0.2.zip"),
+                iagl_repository_zip=(ROOT / "source/0.4.32/third_party/iagl/repository.zachmorris-1.0.4.zip"),
             )
             root = ET.parse(index).getroot()
             versions = {node.get("id"): node.get("version") for node in root.findall("addon")}
@@ -93,6 +95,7 @@ class OfficialTestChannelTests(unittest.TestCase):
                 "repository.actweeter.testing": "1.0.2",
                 "service.actweeter": build_test_channel.SERVICE_VERSION,
                 "repository.rivulet": "1.0.2",
+                "repository.zachmorris": "1.0.4",
             })
             feed_addon = ET.parse(ROOT / "testing" / "repository.actweeter.testing" / "addon.xml").getroot()
             endpoints = [node.findtext("info", "") for node in feed_addon.findall(

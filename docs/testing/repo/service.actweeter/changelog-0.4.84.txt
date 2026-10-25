@@ -1,0 +1,1 @@
+Beta 22: install Internet Archive Game Launcher through its official Kodi repository and preserve custom Skin Shortcuts entries while adding ARCADE.

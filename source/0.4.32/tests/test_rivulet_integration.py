@@ -34,6 +34,42 @@ class RivuletIntegrationTests(unittest.TestCase):
                             ids.index("plugin.video.rivulet"))
             self.assertIn("plugin.video.rivulet", first_run.REQUIRED_ADDON_IDS)
 
+    def test_iagl_is_mandatory_native_install_and_official_repository_is_pinned(self):
+        addons = module_catalog.all_addons()
+        self.assertTrue(addons["repository.zachmorris"]["required"])
+        self.assertTrue(addons["plugin.program.iagl"]["required"])
+        self.assertEqual(addons["repository.zachmorris"]["repositories"],
+                         ("repository.actweeter",))
+        self.assertEqual(addons["plugin.program.iagl"]["repositories"],
+                         ("repository.zachmorris",))
+        self.assertEqual(first_run.REQUIRED_EXTERNAL_ADDON_MINIMUMS["plugin.program.iagl"],
+                         "4.0.6")
+        for platform in module_catalog.ALL_TARGET_PLATFORMS:
+            ids = [row["id"] for row in module_catalog.installation_plan(platform)]
+            self.assertLess(ids.index("repository.zachmorris"),
+                            ids.index("plugin.program.iagl"))
+            self.assertIn("plugin.program.iagl", first_run.REQUIRED_ADDON_IDS)
+
+    def test_iagl_bootstrap_hash_identity_and_published_package(self):
+        self.assertEqual(build_test_channel.IAGL_REPOSITORY_SHA256,
+                         "3dde8f37dcd64f122cf1e897e139e5b8b7a3cd0ec15db6a1f5c7b59852cb661b")
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            service = self._addon_zip(root / "service.actweeter-0.4.84.zip",
+                                      "service.actweeter", "0.4.84")
+            rivulet = ROOT / "source/0.4.32/third_party/rivulet/repository.rivulet-1.0.2.zip"
+            iagl = ROOT / "source/0.4.32/third_party/iagl/repository.zachmorris-1.0.4.zip"
+            _, index, checksum = build_test_channel.build(
+                ROOT / "testing/repository.actweeter.testing", service,
+                root / "testing", rivulet_repository_zip=rivulet,
+                iagl_repository_zip=iagl)
+            entry = ET.parse(index).getroot().find("addon[@id='repository.zachmorris']")
+            self.assertEqual(entry.get("version"), "1.0.4")
+            published = index.parent / "repository.zachmorris" / iagl.name
+            self.assertEqual(published.read_bytes(), iagl.read_bytes())
+            self.assertEqual(hashlib.md5(index.read_bytes()).hexdigest(),
+                             checksum.read_text().strip())
+
     def test_bootstrap_pins_upstream_repository_hash_and_identity(self):
         self.assertEqual(build_test_channel.RIVULET_REPOSITORY_SHA256,
                          "e4aabb495d6b49f39b8ec0c828ad9fa4562c387547739e0f38351ddabac9a815")
@@ -79,7 +115,7 @@ class RivuletIntegrationTests(unittest.TestCase):
 
     def test_kodi_refreshes_repository_catalog_after_native_seed_install(self):
         setup = (ROOT / "source/0.4.32/addons/service.actweeter/setup.py").read_text()
-        self.assertIn('addon_id == "plugin.video.rivulet" and not _addon_installed(addon_id)', setup)
+        self.assertIn('addon_id in ("plugin.video.rivulet", "plugin.program.iagl") and not _addon_installed(addon_id)', setup)
         self.assertIn('_wait_for_installable_addon(addon_id, minimum)', setup)
         self.assertIn('"installed": False', setup)
         self.assertIn('"plugin.video.rivulet": "Rivulet"', setup)

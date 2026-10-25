@@ -18,12 +18,14 @@ from xml.etree import ElementTree as ET
 
 EXPECTED = {
     "repository": ("repository.actweeter.testing", "1.0.2"),
-    "skin": ("skin.actweeter", "1.2.32~beta8"),
-    "service": ("service.actweeter", "0.4.83"),
+    "skin": ("skin.actweeter", "1.2.32~beta9"),
+    "service": ("service.actweeter", "0.4.84"),
     "xstream": ("plugin.video.xstream-pro", "1.1.2.28~beta20"),
     "rivulet_repository": ("repository.rivulet", "1.0.2"),
+    "iagl_repository": ("repository.zachmorris", "1.0.4"),
 }
 RIVULET_REPOSITORY_SHA256 = "e4aabb495d6b49f39b8ec0c828ad9fa4562c387547739e0f38351ddabac9a815"
+IAGL_REPOSITORY_SHA256 = "3dde8f37dcd64f122cf1e897e139e5b8b7a3cd0ec15db6a1f5c7b59852cb661b"
 
 
 def addon_from_zip(path: Path, expected_id: str, expected_version: str) -> ET.Element:
@@ -72,7 +74,8 @@ def validate_service_xstream_pair(service: ET.Element, xstream: ET.Element) -> N
 
 def build(repository_zip: Path, skin_zip: Path, service_zip: Path,
           xstream_zip: Path, output_dir: Path,
-          rivulet_repository_zip: Path | None = None) -> tuple[Path, Path]:
+          rivulet_repository_zip: Path | None = None,
+          iagl_repository_zip: Path | None = None) -> tuple[Path, Path]:
     repository = addon_from_zip(repository_zip, *EXPECTED["repository"])
     skin = addon_from_zip(skin_zip, *EXPECTED["skin"])
     service = addon_from_zip(service_zip, *EXPECTED["service"])
@@ -83,10 +86,15 @@ def build(repository_zip: Path, skin_zip: Path, service_zip: Path,
     if hashlib.sha256(rivulet_repository_zip.read_bytes()).hexdigest() != RIVULET_REPOSITORY_SHA256:
         raise ValueError("Rivulet repository ZIP does not match the pinned upstream SHA-256")
     rivulet = addon_from_zip(rivulet_repository_zip, *EXPECTED["rivulet_repository"])
-    set_news(skin, "changelog-1.2.32~beta8.txt")
-    set_news(service, "changelog-0.4.83.txt")
+    if iagl_repository_zip is None:
+        raise ValueError("IAGL repository seed ZIP is required for this candidate")
+    if hashlib.sha256(iagl_repository_zip.read_bytes()).hexdigest() != IAGL_REPOSITORY_SHA256:
+        raise ValueError("IAGL repository ZIP does not match the pinned upstream SHA-256")
+    iagl = addon_from_zip(iagl_repository_zip, *EXPECTED["iagl_repository"])
+    set_news(skin, "changelog-1.2.32~beta9.txt")
+    set_news(service, "changelog-0.4.84.txt")
     root = ET.Element("addons")
-    for addon in (repository, skin, service, xstream, rivulet):
+    for addon in (repository, skin, service, xstream, rivulet, iagl):
         root.append(addon)
     payload = ET.tostring(root, encoding="utf-8", xml_declaration=True) + b"\n"
     # This builder is intentionally create-only: never replace a live index,
@@ -125,11 +133,13 @@ def main() -> None:
     parser.add_argument("--service-zip", required=True, type=Path)
     parser.add_argument("--xstream-zip", required=True, type=Path)
     parser.add_argument("--rivulet-repository-zip", required=True, type=Path)
+    parser.add_argument("--iagl-repository-zip", required=True, type=Path)
     parser.add_argument("--output-dir", required=True, type=Path)
     args = parser.parse_args()
     index, checksum = build(args.repository_zip, args.skin_zip, args.service_zip,
                             args.xstream_zip, args.output_dir,
-                            args.rivulet_repository_zip)
+                            args.rivulet_repository_zip,
+                            args.iagl_repository_zip)
     print(f"Kodi repository index: {index}")
     print(f"Kodi repository index checksum: {checksum}")
 

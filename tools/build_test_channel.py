@@ -21,12 +21,16 @@ ROOT = Path(__file__).resolve().parents[1]
 TEST_REPOSITORY_ID = "repository.actweeter.testing"
 TEST_REPOSITORY_VERSION = "1.0.2"
 SERVICE_ID = "service.actweeter"
-SERVICE_VERSION = "0.4.83"
+SERVICE_VERSION = "0.4.84"
 XSTREAM_ID = "plugin.video.xstream-pro"
 RIVULET_REPOSITORY_ID = "repository.rivulet"
 RIVULET_REPOSITORY_VERSION = "1.0.2"
 RIVULET_REPOSITORY_SHA256 = "e4aabb495d6b49f39b8ec0c828ad9fa4562c387547739e0f38351ddabac9a815"
 RIVULET_REQUIRED_FROM_SERVICE_VERSION = (0, 4, 82)
+IAGL_REPOSITORY_ID = "repository.zachmorris"
+IAGL_REPOSITORY_VERSION = "1.0.4"
+IAGL_REPOSITORY_SHA256 = "3dde8f37dcd64f122cf1e897e139e5b8b7a3cd0ec15db6a1f5c7b59852cb661b"
+IAGL_REQUIRED_FROM_SERVICE_VERSION = (0, 4, 84)
 FIXED_TIME = (2026, 10, 3, 0, 0, 0)
 
 
@@ -89,7 +93,8 @@ def addon_from_zip(path: Path, addon_id: str, version: str) -> ET.Element:
 def build(repository_source: Path, service_zip: Path, output: Path,
           skin_zip: Path | None = None,
           xstream_zip: Path | None = None,
-          rivulet_repository_zip: Path | None = None) -> tuple[Path, Path, Path]:
+          rivulet_repository_zip: Path | None = None,
+          iagl_repository_zip: Path | None = None) -> tuple[Path, Path, Path]:
     # Never overwrite an existing feed or expose half-copied artifacts.
     if output.exists() or output.is_symlink():
         raise ValueError("refusing to overwrite an existing test channel")
@@ -113,6 +118,8 @@ def build(repository_source: Path, service_zip: Path, output: Path,
     service_version = tuple(int(part) for part in service.get("version", "0").split(".")[:3])
     if service_version >= RIVULET_REQUIRED_FROM_SERVICE_VERSION and rivulet_repository_zip is None:
         raise ValueError("service requires the pinned Rivulet repository bootstrap package")
+    if service_version >= IAGL_REQUIRED_FROM_SERVICE_VERSION and iagl_repository_zip is None:
+        raise ValueError("service requires the pinned IAGL repository bootstrap package")
     rivulet_repository = None
     if rivulet_repository_zip is not None:
         if hashlib.sha256(rivulet_repository_zip.read_bytes()).hexdigest() != RIVULET_REPOSITORY_SHA256:
@@ -121,6 +128,14 @@ def build(repository_source: Path, service_zip: Path, output: Path,
             raise ValueError("unexpected Rivulet repository ZIP filename")
         rivulet_repository = addon_from_zip(
             rivulet_repository_zip, RIVULET_REPOSITORY_ID, RIVULET_REPOSITORY_VERSION)
+    iagl_repository = None
+    if iagl_repository_zip is not None:
+        if hashlib.sha256(iagl_repository_zip.read_bytes()).hexdigest() != IAGL_REPOSITORY_SHA256:
+            raise ValueError("IAGL repository ZIP does not match the pinned upstream SHA-256")
+        if iagl_repository_zip.name != f"{IAGL_REPOSITORY_ID}-{IAGL_REPOSITORY_VERSION}.zip":
+            raise ValueError("unexpected IAGL repository ZIP filename")
+        iagl_repository = addon_from_zip(
+            iagl_repository_zip, IAGL_REPOSITORY_ID, IAGL_REPOSITORY_VERSION)
     skin = None
     if skin_zip is not None:
         with zipfile.ZipFile(skin_zip) as archive:
@@ -155,7 +170,8 @@ def build(repository_source: Path, service_zip: Path, output: Path,
         result = _write_test_channel(stage, repository_source, repo_addon,
                                      service_zip, service, skin_zip, skin,
                                      xstream_zip, xstream, rivulet_repository_zip,
-                                     rivulet_repository, repo_news_name)
+                                     rivulet_repository, iagl_repository_zip,
+                                     iagl_repository, repo_news_name)
         publish_directory_no_replace(stage, output)
     return tuple(output / path.relative_to(stage) for path in result)
 
@@ -199,6 +215,8 @@ def _write_test_channel(output: Path, repository_source: Path, repo_addon: ET.El
                         skin: ET.Element | None, xstream_zip: Path | None,
                         xstream: ET.Element | None, rivulet_repository_zip: Path | None,
                         rivulet_repository: ET.Element | None,
+                        iagl_repository_zip: Path | None,
+                        iagl_repository: ET.Element | None,
                         repo_news_name: str) -> tuple[Path, Path, Path]:
     repo_zip = output / "bootstrap" / f"{TEST_REPOSITORY_ID}-{TEST_REPOSITORY_VERSION}.zip"
     zip_tree(repository_source, repo_zip, TEST_REPOSITORY_ID)
@@ -227,6 +245,10 @@ def _write_test_channel(output: Path, repository_source: Path, repo_addon: ET.El
                            rivulet_repository_zip.name)
         rivulet_package.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(rivulet_repository_zip, rivulet_package)
+    if iagl_repository is not None:
+        package = output / "repo" / IAGL_REPOSITORY_ID / iagl_repository_zip.name
+        package.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(iagl_repository_zip, package)
 
     index_root = ET.Element("addons")
     index_root.append(repo_addon)
@@ -237,6 +259,8 @@ def _write_test_channel(output: Path, repository_source: Path, repo_addon: ET.El
         index_root.append(xstream)
     if rivulet_repository is not None:
         index_root.append(rivulet_repository)
+    if iagl_repository is not None:
+        index_root.append(iagl_repository)
     payload = ET.tostring(index_root, encoding="utf-8", xml_declaration=True) + b"\n"
     index = output / "repo" / "addons.xml"
     checksum = output / "repo" / "addons.xml.md5"
@@ -263,11 +287,15 @@ def main() -> None:
     parser.add_argument("--rivulet-repository-zip", type=Path)
     parser.set_defaults(rivulet_repository_zip=(
         ROOT / "source/0.4.32/third_party/rivulet/repository.rivulet-1.0.2.zip"))
+    parser.add_argument("--iagl-repository-zip", type=Path)
+    parser.set_defaults(iagl_repository_zip=(
+        ROOT / "source/0.4.32/third_party/iagl/repository.zachmorris-1.0.4.zip"))
     parser.add_argument("--output", type=Path, default=ROOT / "docs" / "testing")
     args = parser.parse_args()
     repo_zip, index, checksum = build(args.repository_source, args.service_zip, args.output,
                                      args.skin_zip, args.xstream_zip,
-                                     args.rivulet_repository_zip)
+                                     args.rivulet_repository_zip,
+                                     args.iagl_repository_zip)
     print(f"test repository bootstrap: {repo_zip}")
     print(f"test feed: {index}")
     print(f"test feed md5: {checksum}")
@@ -280,6 +308,9 @@ def main() -> None:
     if args.rivulet_repository_zip is not None:
         packages.append(args.output / "repo" / RIVULET_REPOSITORY_ID /
                         args.rivulet_repository_zip.name)
+    if args.iagl_repository_zip is not None:
+        packages.append(args.output / "repo" / IAGL_REPOSITORY_ID /
+                        args.iagl_repository_zip.name)
     for path in packages:
         print(f"SHA-256 {hashlib.sha256(path.read_bytes()).hexdigest()}  {path}")
 

@@ -101,6 +101,7 @@ SLYGUY_INSTALL_SEQUENCE = (
 )
 
 
+
 def repository_candidates(sources):
     """Accept either installed AcTweeteR channel; never install/switch channels."""
     result = []

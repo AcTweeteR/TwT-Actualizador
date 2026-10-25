@@ -26,7 +26,7 @@ def shortcuts(filename):
 
 
 class MenuContractTests(unittest.TestCase):
-    def test_main_menu_has_five_core_destinations_then_rivulet(self):
+    def test_main_menu_has_arcade_below_rivulet(self):
         self.assertEqual(
             shortcuts("mainmenu.DATA.xml"),
             [
@@ -37,6 +37,8 @@ class MenuContractTests(unittest.TestCase):
                 ("BUSCAR", "ActivateWindow(1109,return)", "search", "shortcuts/search.png"),
                 ("RIVULET", "ActivateWindow(Videos,plugin://plugin.video.rivulet/,return)",
                  "rivulet", "shortcuts/rivulet.png"),
+                ("ARCADE", "ActivateWindow(Programs,plugin://plugin.program.iagl/,return)",
+                 "arcade", "shortcuts/arcade.png"),
             ],
         )
 
@@ -45,6 +47,16 @@ class MenuContractTests(unittest.TestCase):
         xml = (ADDON / "1080i/IncludesBingie.xml").read_text()
         self.assertIn("String.IsEqual(ListItem.Label,RIVULET)", xml)
         self.assertIn("shortcuts/rivulet-separator.png", xml)
+
+    def test_arcade_icon_and_profile_merge_preserve_custom_menu_rows(self):
+        self.assertTrue((ADDON / "shortcuts/arcade.png").is_file())
+        custom = b'<shortcuts><shortcut><label>RIVULET</label><defaultID>rivulet</defaultID></shortcut><shortcut><label>Mi acceso</label><defaultID>user-item</defaultID></shortcut></shortcuts>'
+        merged = ET.fromstring(interface_layout.merge_arcade_shortcut(
+            custom, (ADDON / "shortcuts/mainmenu.DATA.xml").read_bytes()))
+        self.assertEqual([node.findtext("defaultID") for node in merged.findall("shortcut")],
+                         ["rivulet", "arcade", "user-item"])
+        self.assertEqual(merged.find("shortcut[defaultID='arcade']/action").text,
+                         "ActivateWindow(Programs,plugin://plugin.program.iagl/,return)")
 
     def test_bottom_menu_has_exactly_settings_catalog_refresh_and_skin_reload(self):
         self.assertEqual(
@@ -169,9 +181,10 @@ class MenuContractTests(unittest.TestCase):
                 result = interface_layout.apply_layout(
                     shortcuts, service, ADDON, interface_layout.SETTINGS)
                 self.assertEqual(result["status"], "APPLIED")
-                self.assertEqual(interface_layout.LAYOUT_VERSION, 14)
-                for name, wanted in (("skin.actweeter-mainmenu.DATA.xml",
-                                      (ADDON / "shortcuts/mainmenu.DATA.xml").read_bytes()),
+                self.assertEqual(interface_layout.LAYOUT_VERSION, 15)
+                expected_main = interface_layout.merge_arcade_shortcut(
+                    previous_main, (ADDON / "shortcuts/mainmenu.DATA.xml").read_bytes())
+                for name, wanted in (("skin.actweeter-mainmenu.DATA.xml", expected_main),
                                      ("skin.actweeter-powermenu.DATA.xml",
                                       (ADDON / "shortcuts/powermenu.DATA.xml").read_bytes())):
                     self.assertEqual((shortcuts / name).read_bytes(), wanted)
@@ -210,6 +223,37 @@ class MenuContractTests(unittest.TestCase):
             self.assertEqual(result["status"], "CONSENT_REQUIRED")
             self.assertIn(name, result["conflicts"])
             self.assertEqual(target.read_bytes(), original)
+
+    def test_arcade_migration_appends_to_customized_main_menu_without_consent(self):
+        original = (ADDON / "shortcuts/mainmenu.DATA.xml").read_bytes()
+        root_xml = ET.fromstring(original)
+        custom = ET.SubElement(root_xml, "shortcut")
+        ET.SubElement(custom, "label").text = "Mi acceso"
+        ET.SubElement(custom, "label2")
+        ET.SubElement(custom, "defaultID").text = "user-item"
+        ET.SubElement(custom, "icon").text = "shortcuts/search.png"
+        ET.SubElement(custom, "action").text = "ActivateWindow(Settings)"
+        profile_bytes = ET.tostring(root_xml, encoding="utf-8", xml_declaration=True)
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            shortcuts, service = base / "profile", base / "service"
+            shortcuts.mkdir(); service.mkdir()
+            path = shortcuts / "skin.actweeter-mainmenu.DATA.xml"
+            path.write_bytes(profile_bytes)
+            (service / "interface_layout_state.json").write_text(json.dumps({
+                "layout_version": 14, "files": {}, "settings": interface_layout.SETTINGS,
+            }))
+            result = interface_layout.apply_layout(
+                shortcuts, service, ADDON, interface_layout.SETTINGS)
+            self.assertEqual(result["status"], "APPLIED")
+            after = ET.parse(path).getroot()
+            ids = [node.findtext("defaultID") for node in after.findall("shortcut")]
+            self.assertLess(ids.index("rivulet"), ids.index("arcade"))
+            self.assertEqual(ids[-1], "user-item")
+            self.assertEqual(after.find("shortcut[defaultID='arcade']/action").text,
+                             "ActivateWindow(Programs,plugin://plugin.program.iagl/,return)")
+            backup = service / "interface_backups" / result["backup"]
+            self.assertEqual((backup / path.name).read_bytes(), profile_bytes)
 
     def test_migration_write_failure_restores_original_menu_files(self):
         original = b"<shortcuts><shortcut><label>legacy</label></shortcut></shortcuts>"

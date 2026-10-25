@@ -594,7 +594,7 @@ def _request_native_addon_install(dialog, addon_id, source_id, *, required=True,
         try:
             # Kodi's native installer handles dependency resolution, licenses,
             # platform packages, and its own confirmation UI.
-            if addon_id == "plugin.video.rivulet" and not _addon_installed(addon_id):
+            if addon_id in ("plugin.video.rivulet", "plugin.program.iagl") and not _addon_installed(addon_id):
                 xbmc.executebuiltin("UpdateAddonRepos", True)
                 if not _wait_for_installable_addon(addon_id, minimum):
                     return "FAILED"
@@ -1439,6 +1439,8 @@ def _install_components_once(dialog, *, consent_granted=False, quiet=False,
         "plugin.video.youtube": "YouTube search and trailer fallback",
         "repository.rivulet": "Rivulet Repository",
         "plugin.video.rivulet": "Rivulet",
+        "repository.zachmorris": "Internet Archive Game Launcher Repository",
+        "plugin.program.iagl": "Internet Archive Game Launcher",
     }
     outcomes = []
     dependency_rows = {item["id"]: item for item in _installed_dependency_graph()}

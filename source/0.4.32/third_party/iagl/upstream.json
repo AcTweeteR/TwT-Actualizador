@@ -1,0 +1,9 @@
+{
+  "addon_id": "repository.zachmorris",
+  "version": "1.0.4",
+  "release": "https://github.com/zach-morris/repository.zachmorris",
+  "asset": "https://github.com/zach-morris/repository.zachmorris/raw/master/repository.zachmorris-1.0.4.zip",
+  "sha256": "3dde8f37dcd64f122cf1e897e139e5b8b7a3cd0ec15db6a1f5c7b59852cb661b",
+  "license": "GPL-3.0",
+  "redistributed": "official repository bootstrap only; plugin.program.iagl remains served and updated by repository.zachmorris"
+}
