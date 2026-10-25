@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TEST_REPOSITORY_ID = "repository.actweeter.testing"
 TEST_REPOSITORY_VERSION = "1.0.2"
 SERVICE_ID = "service.actweeter"
-SERVICE_VERSION = "0.4.92"
+SERVICE_VERSION = "0.4.94~beta1"
 XSTREAM_ID = "plugin.video.xstream-pro"
 RIVULET_REPOSITORY_ID = "repository.rivulet"
 RIVULET_REPOSITORY_VERSION = "1.0.2"
@@ -98,7 +98,7 @@ def build(repository_source: Path, service_zip: Path, output: Path,
     # Never overwrite an existing feed or expose half-copied artifacts.
     if output.exists() or output.is_symlink():
         raise ValueError("refusing to overwrite an existing test channel")
-    if not re.fullmatch(r"service\.actweeter-\d+\.\d+\.\d+\.zip", service_zip.name):
+    if not re.fullmatch(r"service\.actweeter-\d+\.\d+\.\d+(?:~beta\d+)?\.zip", service_zip.name):
         raise ValueError("candidate service ZIP filename does not match its Kodi identity/version")
     repo_addon = ET.parse(repository_source / "addon.xml").getroot()
     if repo_addon.get("id") != TEST_REPOSITORY_ID or repo_addon.get("version") != TEST_REPOSITORY_VERSION:
@@ -115,7 +115,7 @@ def build(repository_source: Path, service_zip: Path, output: Path,
         raise ValueError("test repository feed endpoints are not isolated as expected")
 
     service = addon_from_zip(service_zip, SERVICE_ID, service_zip.name[len(SERVICE_ID) + 1:-4])
-    service_version = tuple(int(part) for part in service.get("version", "0").split(".")[:3])
+    service_version = tuple(int(part) for part in re.match(r"^(\d+)\.(\d+)\.(\d+)", service.get("version", "")).groups())
     if service_version >= RIVULET_REQUIRED_FROM_SERVICE_VERSION and rivulet_repository_zip is None:
         raise ValueError("service requires the pinned Rivulet repository bootstrap package")
     if service_version >= IAGL_REQUIRED_FROM_SERVICE_VERSION and iagl_repository_zip is None:

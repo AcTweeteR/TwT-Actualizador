@@ -321,7 +321,8 @@ class KodiAutoPreviewCoordinator:
             self._preempt({"owner": "OTHER"})
             return False
         if not identity or position < 0 or focus in (40000, 40003):
-            self.focus_context = None
+            # A delayed focus callback may describe an empty placeholder.
+            # Preserve the last valid row until the observer verifies focus.
             self._log("FOCUS_REJECT", reason="identity_or_target")
             return False
         # Store only validated rows; invalid placeholders must not be

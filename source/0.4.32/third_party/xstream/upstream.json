@@ -2,7 +2,7 @@
   "addon_id": "plugin.video.xstream-pro",
   "upstream_project": "https://github.com/Pesicp/XStreamPro",
   "upstream_version": "1.1.2",
-  "distribution_version": "1.1.2.34~beta2",
+  "distribution_version": "1.1.2.36~beta1",
   "upstream_ref": "1.1.2",
   "upstream_commit": "1aa3e67da7c03c6acc3ec7e1ca579a7f645220f4",
   "upstream_release_url": "https://github.com/Pesicp/XStreamPro/releases/download/1.1.2/plugin.video.xstream-pro-1.1.2.zip",
@@ -18,8 +18,8 @@
     "resources/lib/addon.py": "cb9fe49737a822fe6d76b043467a6cd09ea5f131809abdc95aee76e16a86031d",
     "resources/lib/premium_routes.py": "f0d4bd20230c057bbf60d19c940a92a68262a2246961ccf6448c8329ae42808c",
     "resources/lib/pending_adapter.py": "757bec5807fd0410025e1a9a7cf1cc31f5371056b027464eeb2ad213c4dfcff4",
-    "resources/lib/content_state.py": "35ffaca2a13d422d0d393db95664c4a01738cce3ad85ffd60d8a9130694f55f3",
-    "resources/lib/watched_actions.py": "14ed36ddd5017dd43821f412d942fe59a78c35edf7d988960aff74727883d767",
+    "resources/lib/content_state.py": "2813a0e3e4e541754996346b429386bad0a26a1a12dfa7ecc2590b0e96fba3a3",
+    "resources/lib/watched_actions.py": "5fa63d0f945be321350759c35cd3abe61310f7ec517efe75e3c12a85f3bceca8",
     "resources/lib/recent_tv_native.py": "18326e9261d6df27c4700cc04ce895840e044f760b687f263b1dd816ea600b7f",
     "resources/lib/recent_tv_ui.py": "8c3e372914c816335b35acc50f5aa6c59399122a2169af3bde81a2a933af7362",
     "resources/lib/series_changes.py": "1f37c2ea77167502a9502ff7c91bd4d5a1fcff5479385991b6f69669654c3b47",
@@ -33,7 +33,7 @@
     "resources/lib/catalog_cache.py": "82edcf452474a3aac84399453985ec98649f084b15829ef2de19e4fb15834cd8"
   },
   "patch": "third_party/xstream/patches/1.1.2/actweeter-runtime.patch",
-  "patch_sha256": "f05f60b7414c46c58d5061a6ecc435274e7df1978600e27da35c9b3ab51340e4",
+  "patch_sha256": "2cfff51616dff7ca8d1f201b43aaacc52b3495a6211ec26b28aba81e7d48cbed",
   "provider_series_lookup_patch": "third_party/xstream/patches/1.1.2/actweeter-provider-series-lookup.patch",
   "provider_series_lookup_patch_sha256": "f478ec96c1c2a98f7afaf80c983427eab5c278aa3037561f74610405be00bd83",
   "integration_patch": "third_party/xstream/patches/1.1.2/actweeter-setup-refresh.patch",
@@ -123,7 +123,7 @@
   "search_lifecycle_patch_sha256": "c37592dd93d6cab6fb7f4a00e78548edb3637afd954d52f17effbe638bb196f7",
   "listitem_state_patch_sha256": "421dff4af40737f8ca74626961e3ccc1bc13030838dea845b1e1eb4a1f5c4336",
   "shared_state_sources_sha256": {
-    "content_state.py": "35ffaca2a13d422d0d393db95664c4a01738cce3ad85ffd60d8a9130694f55f3",
+    "content_state.py": "2813a0e3e4e541754996346b429386bad0a26a1a12dfa7ecc2590b0e96fba3a3",
     "series_state.py": "76b9fbf54fc69d1a2102d97c074994f69ad1d8d6864029565ca6828444afee2f"
   },
   "watched_integrity_patch": "third_party/xstream/patches/1.1.2/actweeter-watched-integrity.patch",

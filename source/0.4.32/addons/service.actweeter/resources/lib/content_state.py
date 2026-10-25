@@ -172,7 +172,12 @@ def watched_context(g, stype, tmdb_id, season='', episode='', profile_num=1):
     """Expose XStream's existing explicit mark/unmark action where IDs are exact."""
     state = watched_state(g, stype, tmdb_id, season, episode, profile_num)
     if state is None:
-        return []
+        # Unknown is not unwatched: expose an explicit action only for an
+        # exact, valid TMDb identity; never guess from title or provider ID.
+        identity = str(tmdb_id or '').strip()
+        if not identity.isdigit() or int(identity) <= 0:
+            return []
+        state = False
     route = g['build_url']({'mode':'toggle_tmdb_watched', 'tmdb_id':str(tmdb_id),
         'tmdb_type':'movie' if stype == 'movie' else 'tv', 'season':str(season or ''),
         'episode':str(episode or ''), 'profile_num':str(profile_num or 1)})

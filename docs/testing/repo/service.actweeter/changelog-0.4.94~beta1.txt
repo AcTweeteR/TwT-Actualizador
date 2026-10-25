@@ -1,0 +1,1 @@
+Beta candidate: watched-state actions, trailer preview focus and fullscreen dialog regression fixes.

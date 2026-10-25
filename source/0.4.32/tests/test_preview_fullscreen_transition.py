@@ -36,6 +36,16 @@ class FullscreenTransitionTests(TestCase):
                 self.assertFalse(c._owned_fullscreen(c.scheduler.active))
                 self.assertFalse(c._active_focus_still_matches(c.scheduler.active))
 
+    def test_invalid_placeholder_does_not_erase_previous_valid_row(self):
+        c = self.coordinator()
+        c.focus_context = {"window": 10000, "container": 13003,
+                           "focus": 13003, "position": 2, "tmdb": "603"}
+        c.delay_parser = float
+        payload = {"window": 10000, "container": 13004, "focus": 13004,
+                   "position": 1, "media_type": "movie", "tmdb": ""}
+        self.assertFalse(c._focus(payload))
+        self.assertEqual(c.focus_context["tmdb"], "603")
+
     def test_other_windows_keep_normal_focus_validation(self):
         c = self.coordinator()
         c.kodi.getCondVisibility.side_effect = None

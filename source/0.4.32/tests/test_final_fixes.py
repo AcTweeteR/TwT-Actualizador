@@ -119,6 +119,23 @@ class StateTests(unittest.TestCase):
         self.assertIsNone(content_state.watched_state(g, 'movie', '', profile_num=2, provider_id='12'))
         self.assertEqual(calls, [('vod_info_12', 2)])
 
+    def test_candidate_series_toggle_does_not_write_legacy_only_marks(self):
+        source = (ROOT / "third_party/xstream/patches/1.1.2/actweeter-runtime.patch").read_text()
+        block = source.split("+++ b/resources/lib/watched_actions.py", 1)[1].split("diff --git", 1)[0]
+        self.assertNotIn('key = "season:{0}:{1}".format(tmdb_id, season)', block)
+        self.assertNotIn('key = "tvshow:{0}".format(tmdb_id)', block)
+        self.assertIn('from series_changes import inventory_map', block)
+
+    def test_unknown_exact_tmdb_identity_keeps_explicit_mark_action(self):
+        g = {"addon": None, "WatchedMovies": lambda *a, **k: SimpleNamespace(_data={}),
+             "build_url": lambda args: "plugin://xstream/?mode=" + args["mode"],
+             "_t": lambda number: str(number)}
+        actions = content_state.watched_context(g, "movie", "42")
+        self.assertEqual(len(actions), 1)
+        self.assertIn("toggle_tmdb_watched", actions[0][1])
+        self.assertEqual(content_state.watched_context(g, "movie", ""), [])
+        self.assertEqual(content_state.watched_context(g, "movie", "bad"), [])
+
     def test_exact_provider_state_does_not_require_tmdb_and_false_wins(self):
         movies = SimpleNamespace(_data={"12": True, "tmdb:movie:42": False})
         g = {"addon": None, "WatchedMovies": lambda *a, **k: movies,
@@ -220,3 +237,43 @@ class UpdateTests(unittest.TestCase):
             with patch.object(testing_updates, "installation_state", return_value=origins), patch.object(testing_updates, "_rpc", side_effect=rpc), patch.object(testing_updates, "local_metadata", side_effect=[("old", {}), ("new", expected)]):
                 self.assertEqual(testing_updates.check(kodi, addon, vfs, fetch=lambda: ("new", expected), clock=lambda: now[0]), "INSTALLED")
             kodi.executebuiltin.assert_called_once_with("UpdateAddonRepos", False)
+
+class BulkWatchedRuntimeTests(unittest.TestCase):
+    @unittest.skipUnless(os.environ.get('ACTWEETER_XSTREAM_LIVE_ZIP'), 'candidate ZIP required')
+    def test_series_season_bulk_marks_are_exact_and_safe(self):
+        with zipfile.ZipFile(os.environ['ACTWEETER_XSTREAM_LIVE_ZIP']) as archive:
+            source = archive.read('plugin.video.xstream-pro/resources/lib/watched_actions.py')
+        namespace = {}
+        exec(compile(source, 'watched_actions.py', 'exec'), namespace)
+        import types
+        changes = types.ModuleType('series_changes')
+        records = {'provider-7': {'tmdb_id': '42', 'checked_at': time.time(), 'complete': True,
+                    'episodes': [{'season': 1, 'episode': 1, 'provider_id': '11'},
+                                 {'season': 1, 'episode': 2, 'provider_id': '12'},
+                                 {'season': 2, 'episode': 1, 'provider_id': '21'}]}}
+        changes.inventory_map = lambda addon, profile: records
+        store = SimpleNamespace(_data={}, _save=Mock())
+        g = {'addon': object(), 'pm': SimpleNamespace(active='2'),
+             'WatchedMovies': lambda *a, **k: store,
+             'xbmc': SimpleNamespace(executebuiltin=Mock()),
+             'xbmcgui': SimpleNamespace(Dialog=lambda: SimpleNamespace(notification=Mock())),
+             '_t': str}
+        def toggle(season=''):
+            return namespace['toggle_tmdb_watched'](g, {'tmdb_id': ['42'], 'tmdb_type': ['tv'],
+                                                         'season': [season], 'episode': ['']})
+        with patch.dict(sys.modules, {'series_changes': changes}):
+            self.assertTrue(toggle('1'))
+            self.assertEqual(store._data, {'tmdb:episode:42:s1:e1': True,
+                                           'tmdb:episode:42:s1:e2': True})
+            self.assertTrue(toggle())
+            self.assertTrue(store._data['tmdb:episode:42:s2:e1'])
+            self.assertFalse(toggle())
+            self.assertEqual(set(store._data.values()), {False})
+            saves = store._save.call_count
+            records['provider-7']['complete'] = False
+            self.assertIsNone(toggle())
+            self.assertEqual(store._save.call_count, saves)
+            records['provider-7']['complete'] = True
+            records['provider-7']['checked_at'] = time.time() - 16 * 86400
+            self.assertIsNone(toggle())
+            self.assertEqual(store._save.call_count, saves)

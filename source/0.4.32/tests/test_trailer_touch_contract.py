@@ -57,6 +57,17 @@ class TrailerTouchContractTests(unittest.TestCase):
         self.assertEqual(includes["BingieAltInfo"],
                          "!Skin.HasSetting(UseBingieInfoDialog)")
 
+    def test_dialog_reload_does_not_erase_active_manual_trailer_markers(self):
+        dialog = ET.parse(XML / "DialogVideoInfo.xml").getroot()
+        names = ("SLYGUY_TRAILER_RETURN_PENDING", "SLYGUY_TRAILER_RETURN_ID",
+                 "SLYGUY_TRAILER_RETURN_REQUEST", "SLYGUY_TRAILER_RETURN_PLAYBACK_STARTED")
+        for name in names:
+            matches = [node for node in dialog.findall("onload")
+                       if node.text == "ClearProperty(%s,Home)" % name]
+            self.assertEqual(len(matches), 1, name)
+            self.assertIn("![Player.HasVideo + !String.IsEmpty(Window(Home).Property(SLYGUY_TRAILER_RETURN_PLAYBACK_STARTED))]",
+                          matches[0].get("condition"))
+
     def test_playback_visibility_is_dynamic_for_both_layouts(self):
         dialog = ET.parse(XML / "DialogVideoInfo.xml").getroot()
         groups = dialog.findall("controls/control[@type='group']")

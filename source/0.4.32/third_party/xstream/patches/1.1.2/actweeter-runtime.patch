@@ -2330,7 +2330,7 @@ new file mode 100644
 index 0000000000000000000000000000000000000000..eab1cfb01d6ffd9a86304d2b63035e85a2562c89
 --- /dev/null
 +++ b/resources/lib/watched_actions.py
-@@ -0,0 +1,66 @@
+@@ -0,0 +1,71 @@
 +"""Thin testable dispatch for XStream's existing watched toggle."""
 +
 +def tmdb_watch_key(kind, tmdb_id, season=None, episode=None):
@@ -2372,28 +2372,33 @@ index 0000000000000000000000000000000000000000..eab1cfb01d6ffd9a86304d2b63035e85
 +            store._data[key] = state
 +            store._save()
 +            g["xbmcgui"].Dialog().notification("Xstream Pro", g["_t"](31120 if state else 31121))
-+    elif tmdb_id and tmdb_type == "tv" and season:
-+        store = g["WatchedMovies"](g["addon"], profile_num=profile_num)
-+        key = "season:{0}:{1}".format(tmdb_id, season)
-+        if store.is_watched(key):
-+            store.mark_unwatched(key)
-+            g["xbmcgui"].Dialog().notification("Xstream Pro", g["_t"](31121))
-+            state = False
-+        else:
-+            store.mark_watched(key)
-+            g["xbmcgui"].Dialog().notification("Xstream Pro", g["_t"](31120))
-+            state = True
 +    elif tmdb_id and tmdb_type == "tv":
-+        store = g["WatchedMovies"](g["addon"], profile_num=profile_num)
-+        key = "tvshow:{0}".format(tmdb_id)
-+        if store.is_watched(key):
-+            store.mark_unwatched(key)
-+            g["xbmcgui"].Dialog().notification("Xstream Pro", g["_t"](31121))
-+            state = False
-+        else:
-+            store.mark_watched(key)
-+            g["xbmcgui"].Dialog().notification("Xstream Pro", g["_t"](31120))
-+            state = True
++        # Bulk updates require a unique, complete provider inventory for this
++        # exact TMDb series. Never treat an absent/partial inventory as watched.
++        from series_changes import inventory_map
++        from series_state import _valid_stored_inventory
++        import time
++        snapshots = inventory_map(g["addon"], profile_num)
++        candidates = []
++        for record in snapshots.values():
++            if not isinstance(record, dict) or str(record.get("tmdb_id") or "") != str(tmdb_id):
++                continue
++            rows, valid = _valid_stored_inventory(record.get("episodes"))
++            fresh = 0 <= time.time() - float(record.get("checked_at") or 0) <= 14 * 86400
++            if valid and record.get("complete") is True and fresh:
++                candidates.append(rows)
++        if len(candidates) == 1 and str(tmdb_id).isdigit() and int(tmdb_id) > 0:
++            selected = [row for row in candidates[0]
++                        if not season or str(row["season"]) == str(season)]
++            store = g["WatchedMovies"](g["addon"], profile_num=profile_num)
++            keys = [tmdb_watch_key("episode", tmdb_id, row["season"], row["episode"])
++                    for row in selected]
++            if keys and all(keys):
++                state = not all(store._data.get(key) is True for key in keys)
++                for key in keys:
++                    store._data[key] = state
++                store._save()
++                g["xbmcgui"].Dialog().notification("Xstream Pro", g["_t"](31120 if state else 31121))
 +
 +    g["xbmc"].executebuiltin("Container.Refresh")
 +    return state

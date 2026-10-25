@@ -6,10 +6,10 @@
 	<onload condition="String.IsEqual(ListItem.Property(tmdb_type),person)">SetFocus(2999,0)</onload>
 	<onload condition="!String.IsEmpty(Window.Property(AdditionalInfo))">ClearProperty(AdditionalInfo)</onload>
 	<onload condition="!String.IsEmpty(Window(Home).Property(VOD_RETURN_PENDING))">ClearProperty(VOD_RETURN_PENDING,Home)</onload>
-	<onload condition="!String.IsEmpty(Window(Home).Property(SLYGUY_TRAILER_RETURN_PENDING))">ClearProperty(SLYGUY_TRAILER_RETURN_PENDING,Home)</onload>
-	<onload condition="!String.IsEmpty(Window(Home).Property(SLYGUY_TRAILER_RETURN_ID))">ClearProperty(SLYGUY_TRAILER_RETURN_ID,Home)</onload>
-	<onload condition="!String.IsEmpty(Window(Home).Property(SLYGUY_TRAILER_RETURN_REQUEST))">ClearProperty(SLYGUY_TRAILER_RETURN_REQUEST,Home)</onload>
-	<onload condition="!String.IsEmpty(Window(Home).Property(SLYGUY_TRAILER_RETURN_PLAYBACK_STARTED))">ClearProperty(SLYGUY_TRAILER_RETURN_PLAYBACK_STARTED,Home)</onload>
+	<onload condition="![Player.HasVideo + !String.IsEmpty(Window(Home).Property(SLYGUY_TRAILER_RETURN_PLAYBACK_STARTED))] + !String.IsEmpty(Window(Home).Property(SLYGUY_TRAILER_RETURN_PENDING))">ClearProperty(SLYGUY_TRAILER_RETURN_PENDING,Home)</onload>
+	<onload condition="![Player.HasVideo + !String.IsEmpty(Window(Home).Property(SLYGUY_TRAILER_RETURN_PLAYBACK_STARTED))] + !String.IsEmpty(Window(Home).Property(SLYGUY_TRAILER_RETURN_ID))">ClearProperty(SLYGUY_TRAILER_RETURN_ID,Home)</onload>
+	<onload condition="![Player.HasVideo + !String.IsEmpty(Window(Home).Property(SLYGUY_TRAILER_RETURN_PLAYBACK_STARTED))] + !String.IsEmpty(Window(Home).Property(SLYGUY_TRAILER_RETURN_REQUEST))">ClearProperty(SLYGUY_TRAILER_RETURN_REQUEST,Home)</onload>
+	<onload condition="![Player.HasVideo + !String.IsEmpty(Window(Home).Property(SLYGUY_TRAILER_RETURN_PLAYBACK_STARTED))] + !String.IsEmpty(Window(Home).Property(SLYGUY_TRAILER_RETURN_PLAYBACK_STARTED))">ClearProperty(SLYGUY_TRAILER_RETURN_PLAYBACK_STARTED,Home)</onload>
 	<!-- If the user cancels before a player starts, discard the request. Active playback is handled by the service Player callbacks. -->
 	<onunload condition="!Player.HasVideo + String.IsEmpty(Window(Home).Property(SLYGUY_TRAILER_RETURN_PLAYBACK_STARTED)) + !String.IsEmpty(Window(Home).Property(SLYGUY_TRAILER_RETURN_PENDING))">ClearProperty(SLYGUY_TRAILER_RETURN_PENDING,Home)</onunload>
 	<onunload condition="!Player.HasVideo + String.IsEmpty(Window(Home).Property(SLYGUY_TRAILER_RETURN_PLAYBACK_STARTED)) + !String.IsEmpty(Window(Home).Property(SLYGUY_TRAILER_RETURN_ID))">ClearProperty(SLYGUY_TRAILER_RETURN_ID,Home)</onunload>
