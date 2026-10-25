@@ -37,7 +37,7 @@ class MenuContractTests(unittest.TestCase):
                 ("BUSCAR", "ActivateWindow(1109,return)", "search", "shortcuts/search.png"),
                 ("RIVULET", "ActivateWindow(Videos,plugin://plugin.video.rivulet/,return)",
                  "rivulet", "shortcuts/rivulet.png"),
-                ("ARCADE", "ActivateWindow(Programs,plugin://plugin.program.iagl/,return)",
+                ("ARCADE", "RunAddon(plugin.program.iagl)",
                  "arcade", "shortcuts/arcade.png"),
             ],
         )
@@ -56,7 +56,7 @@ class MenuContractTests(unittest.TestCase):
         self.assertEqual([node.findtext("defaultID") for node in merged.findall("shortcut")],
                          ["rivulet", "arcade", "user-item"])
         self.assertEqual(merged.find("shortcut[defaultID='arcade']/action").text,
-                         "ActivateWindow(Programs,plugin://plugin.program.iagl/,return)")
+                         "RunAddon(plugin.program.iagl)")
 
     def test_bottom_menu_has_exactly_settings_catalog_refresh_and_skin_reload(self):
         self.assertEqual(
@@ -251,7 +251,7 @@ class MenuContractTests(unittest.TestCase):
             self.assertLess(ids.index("rivulet"), ids.index("arcade"))
             self.assertEqual(ids[-1], "user-item")
             self.assertEqual(after.find("shortcut[defaultID='arcade']/action").text,
-                             "ActivateWindow(Programs,plugin://plugin.program.iagl/,return)")
+                             "RunAddon(plugin.program.iagl)")
             backup = service / "interface_backups" / result["backup"]
             self.assertEqual((backup / path.name).read_bytes(), profile_bytes)
 
