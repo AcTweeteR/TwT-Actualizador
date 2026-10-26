@@ -1,0 +1,1 @@
+1.2.36~beta3: Sustituye el check de visto por un ojo blanco con contorno azul y muestra COMPLETA en series y temporadas con inventario verificado.
