@@ -28,7 +28,7 @@ jobs:
           ACTWEETER_XSTREAM_TEST_ZIP: ${{ github.workspace }}/docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.36~beta3.zip
           ACTWEETER_XSTREAM_UPSTREAM_ZIP: ${{ runner.temp }}/xstream-upstream-1.1.2.zip
           ACTWEETER_SKIN_LIVE_ZIP: ${{ github.workspace }}/docs/testing/repo/skin.actweeter/skin.actweeter-1.2.36~beta2.zip
-          ACTWEETER_SERVICE_LIVE_ZIP: ${{ github.workspace }}/docs/testing/repo/service.actweeter/service.actweeter-0.4.94~beta3.zip
+          ACTWEETER_SERVICE_LIVE_ZIP: ${{ github.workspace }}/docs/testing/repo/service.actweeter/service.actweeter-0.4.94~beta4.zip
           ACTWEETER_BETA_INDEX: ${{ github.workspace }}/docs/testing/repo/addons.xml
           ACTWEETER_RELEASE_CHANNEL: beta
         # Beta26 must not reconstruct Stable, even in a temporary test directory.
@@ -41,7 +41,7 @@ jobs:
       - name: Verify isolated Beta feed and immutable dependencies
         run: |
           python3 tools/build_test_channel.py \
-            --service-zip docs/testing/repo/service.actweeter/service.actweeter-0.4.94~beta3.zip \
+            --service-zip docs/testing/repo/service.actweeter/service.actweeter-0.4.94~beta4.zip \
             --skin-zip docs/testing/repo/skin.actweeter/skin.actweeter-1.2.36~beta2.zip \
             --xstream-zip docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.36~beta3.zip \
             --rivulet-repository-zip source/0.4.32/third_party/rivulet/repository.rivulet-1.0.2.zip \

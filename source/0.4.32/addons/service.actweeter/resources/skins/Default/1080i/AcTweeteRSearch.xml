@@ -166,7 +166,7 @@
         <font>Reg28</font>
         <textcolor>FF9CA5B4</textcolor>
         <label>Películas, series, actores, directores y TV…</label>
-        <visible>String.IsEmpty(Window.Property(search.query))</visible>
+        <visible>System.Platform.Android + String.IsEmpty(Window.Property(search.query))</visible>
       </control>
       <control type="group">
         <visible>!String.IsEqual(Window.Property(search.keyboard),true)</visible>

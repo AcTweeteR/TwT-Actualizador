@@ -1,0 +1,1 @@
+Beta 31: corrige los checks de episodios y temporadas en Smart Search usando el historial local del perfil. Ajusta el texto de búsqueda en macOS.

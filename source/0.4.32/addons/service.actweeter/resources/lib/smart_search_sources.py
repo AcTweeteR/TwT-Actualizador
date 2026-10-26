@@ -341,15 +341,8 @@ class WatchedState:
             return False
         return 0 <= time.time() - checked <= 14 * 86400
 
-    def _complete(self, scope, row, watched):
+    def _load_episodes(self, scope):
         root, profile = scope or ("", 0)
-        provider_id = str(row.get("provider_series_id") or row.get("id") or "")
-        record = self._load_inventory(scope).get(provider_id)
-        if not isinstance(record, dict):
-            return False
-        identity = str(row.get("tmdb_show_id") or row.get("tmdb_id") or record.get("tmdb_id") or "")
-        if record.get("tmdb_id") and str(record["tmdb_id"]) != identity:
-            return False
         path = Path(root) / ("watched_episodes_p%s.json" % profile)
         try:
             stat = path.stat()
@@ -360,11 +353,22 @@ class WatchedState:
                 self.episode_signature = signature
         except (OSError, ValueError):
             self.episode_data, self.episode_signature = {}, None
+        return self.episode_data
+
+    def _complete(self, scope, row, watched):
+        provider_id = str(row.get("provider_series_id") or row.get("id") or "")
+        record = self._load_inventory(scope).get(provider_id)
+        if not isinstance(record, dict):
+            return False
+        identity = str(row.get("tmdb_show_id") or row.get("tmdb_id") or record.get("tmdb_id") or "")
+        if record.get("tmdb_id") and str(record["tmdb_id"]) != identity:
+            return False
+        episodes = self._load_episodes(scope)
         if row.get("kind") == "season":
             record = dict(record, episodes=[episode for episode in record.get("episodes", [])
                 if isinstance(episode, dict) and str(episode.get("season")) == str(row.get("season"))])
         provider_store = SimpleNamespace(is_watched=lambda sid, season, episode:
-            str(episode) in self.episode_data.get(str(sid), {}).get(str(season), []))
+            str(episode) in episodes.get(str(sid), {}).get(str(season), []))
         state = derive_series_state(identity, provider_id, record, provider_store,
                                     tmdb_watched_store=SimpleNamespace(_data=watched))
         return state.get("complete") is True
@@ -386,15 +390,24 @@ class WatchedState:
             if type(value) is not bool:
                 value = data.get(str(row.get("id"))) if row.get("available") else None
             watched = value is True
-        elif kind in ("season", "episode") and "playcount" in row:
-            watched = type(row["playcount"]) is int and row["playcount"] > 0
         elif kind in ("series", "season"):
             watched = self._complete(scope, row, data)
-        elif not identity.isdigit() or int(identity) < 1:
-            return ""
         elif kind == "episode" and str(row.get("season", "")).isdigit() and str(row.get("episode", "")).isdigit():
             key = "tmdb:episode:%s:s%d:e%d" % (identity, int(row["season"]), int(row["episode"]))
-            watched = data.get(key) is True
+            value = data.get(key) if identity.isdigit() and int(identity) > 0 else None
+            if type(value) is bool:
+                watched = value
+            else:
+                series_id = str(row.get("provider_series_id") or "")
+                record = self._load_inventory(scope).get(series_id)
+                if not isinstance(record, dict) or (record.get("tmdb_id") and
+                        str(record["tmdb_id"]) != identity):
+                    return ""
+                matches = [str(episode.get("provider_id")) for episode in record.get("episodes", [])
+                           if isinstance(episode, dict) and str(episode.get("season")) == str(row["season"])
+                           and str(episode.get("episode")) == str(row["episode"])]
+                watched = len(matches) == 1 and matches[0] in self._load_episodes(scope).get(
+                    series_id, {}).get(str(row["season"]), [])
         else:
             watched = False
         return "VISTO" if watched else ""

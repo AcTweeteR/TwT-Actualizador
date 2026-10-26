@@ -205,6 +205,24 @@ class WatchedStateTests(unittest.TestCase):
         self.assertEqual(self.watched.badge((str(self.root), 2),
                          dict(kind="series", id="900", tmdb_id="88")), "")
 
+    def test_provider_episode_badges_ignore_unreliable_kodi_playcount(self):
+        self.write({})
+        (self.root / "watched_episodes_p2.json").write_text(json.dumps({"900": {"1": ["a"]}}))
+        (self.root / "series_changes_p2.json").write_text(json.dumps({
+            "episode_inventory": {"900": {"complete": True, "checked_at": time.time(),
+                "episodes": [{"season": 1, "episode": 1, "provider_id": "a"},
+                             {"season": 1, "episode": 2, "provider_id": "b"}]}}}))
+        scope = (str(self.root), 2)
+        self.assertEqual(self.watched.badge(scope, dict(kind="season", provider_series_id="900",
+            season=1, playcount=1)), "")
+        self.assertEqual(self.watched.badge(scope, dict(kind="episode", provider_series_id="900",
+            season=1, episode=1, playcount=1)), "VISTO")
+        self.assertEqual(self.watched.badge(scope, dict(kind="episode", provider_series_id="900",
+            season=1, episode=2, playcount=1)), "")
+        self.write({"tmdb:episode:42:s1:e1": False})
+        self.assertEqual(self.watched.badge(scope, dict(kind="episode", provider_series_id="900",
+            tmdb_show_id="42", season=1, episode=1, playcount=1)), "")
+
     def test_provider_movie_uses_only_its_exact_available_provider_id(self):
         self.write({"123": True})
         scope = (str(self.root), 2)
@@ -533,6 +551,10 @@ class WindowContractTests(unittest.TestCase):
         self.assertEqual(controls["100"].findtext("visible"), "!System.Platform.Android")
         self.assertEqual(controls["106"].findtext("visible"), "System.Platform.Android")
         self.assertEqual(controls["106"].findtext("label"), "$INFO[Window.Property(search.query)]")
+        placeholders = [node for node in xml.iter("control")
+                        if node.findtext("label") == "Películas, series, actores, directores y TV…"]
+        self.assertEqual([node.findtext("visible") for node in placeholders],
+                         ["System.Platform.Android + String.IsEmpty(Window.Property(search.query))"])
         self.assertNotIn("Control.GetLabel(100)", path.read_text())
         self.assertIn("String.IsEmpty(Window.Property(search.query))", path.read_text())
         # The edit control must not receive initial focus on Android.
