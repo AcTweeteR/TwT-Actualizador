@@ -26,12 +26,13 @@ La instalación se hizo por la interfaz nativa de Kodi, sin copiar archivos al d
 |---|---|---|
 | Inicio y menú Trakt | `PASS_RUNTIME` | Home abrió; el acceso TRAKT y sus categorías Trending, Popular, Lists y Collections se mostraron. [Captura del menú](BETA30-trakt-menu.png). |
 | Smart Search | `PASS_RUNTIME` para búsqueda local de películas | La búsqueda “El corredor del laberinto” devolvió tres títulos IPTV en unos 210 ms; “Chappie” devolvió uno en 222 ms. |
-| Película vista / no vista | `PASS_RUNTIME` para esta muestra | El título de 2014 mostró check rojo y «VISTO»; las secuelas de 2015 y 2018 no. [Captura](BETA30-watched-maze-runner.png). |
+| Película vista / no vista | `PASS_RUNTIME` para esta muestra | El título de 2014 mostró check rojo y «VISTO»; las secuelas de 2015 y 2018 no. Tras reiniciar Kodi, el check seguía presente en la misma búsqueda (227 ms). [Captura](BETA30-watched-maze-runner.png). |
 | Chappie | `PASS_RUNTIME` para identidad correcta; criterio original no aplicable | El resultado IPTV quedó asociado a `198184` y sin check. El ID `198663` suministrado era de otra película. |
 | Estado local y SQLite | `PASS_STATIC` | `provider_search_1.sqlite`: `integrity_check=ok`; asociación Chappie guardada por perfil. Los JSON de vistos se conservaron. Copia preventiva de datos de perfil en `/private/tmp/actweeter-beta30-preinstall-20261026`. |
 | Trakt autenticado | `PASS_RUNTIME` para lectura | GET `/users/settings` HTTP 200 y cinco páginas de `/sync/watched/movies` HTTP 200: 1.028 películas TMDb únicas, con `198663` vista y `198184` ausente. No se imprimieron tokens ni cuenta. |
 | Trakt hacia Kodi | `PARTIAL` | Lectura remota y proyección visual de una película vista demostradas; no se comprobó renovación del token ni restauración en instalación nueva. |
 | Kodi hacia Trakt | `NO VERIFICADO` | No se hizo escritura real de prueba ni se comprobó scrobbling remoto, para preservar el historial. |
+| Reinicio y persistencia del menú | `PASS_RUNTIME` | Kodi mostró splash, introducción y Home; TRAKT siguió en el menú. La búsqueda y el check de la película vista persistieron. `kodi.log` registró `INTRO_PLAYBACK_TERMINAL event=ended` a las 04:58:57, sin la antigua excepción «Kodi is not playing» en ese arranque. |
 | Series, temporadas, episodios, widgets, colecciones, tráilers y reproducción | `NO VERIFICADO` en esta continuación | La suite cubre contratos relevantes, pero faltan muestras visuales y reproducción real posteriores a Beta30. |
 | PVR | `PARTIAL` | Kodi cargó 1.291 canales, 46 grupos, 777 canales EPG y 156.724 entradas EPG; no se reprodujo una emisión. |
 
@@ -46,7 +47,7 @@ Con los ZIP candidatos exactos en `ACTWEETER_XSTREAM_LIVE_ZIP`, `ACTWEETER_SERVI
 ## Pendientes concretos
 
 1. Validación real de checks de series, temporadas, episodios y otras superficies, con identidades verificadas.
-2. Pruebas reales de tráilers, IPTV/VOD/PVR y persistencia tras reinicio.
+2. Pruebas reales de tráilers e IPTV/VOD/PVR, y persistencia de estados de series tras reinicio.
 3. Demostrar renovación de token y escritura bidireccional segura sin alterar indebidamente el historial personal.
 4. Resolver por qué `update_rules=1` impide la actualización automática de Service en Kodi Master.
 5. Investigar los errores de TMDb Helper/ventana 1109 si se reproducen funcionalmente.
