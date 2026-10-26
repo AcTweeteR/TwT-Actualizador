@@ -58,6 +58,8 @@ def listitem(row, watch_badge=""):
         "PERSONA" if row["kind"] == "person" else "EN IPTV" if row.get("available") else "TMDb")
     item.setProperty("search.badge", badge + (" · " + watch_badge if watch_badge else ""))
     item.setProperty("search.watched", "true" if watch_badge == "VISTO" else "false")
+    item.setProperty("search.complete", "true" if row["kind"] in ("series", "season")
+                     and watch_badge == "VISTO" else "false")
     item.setProperty("path", row.get("path", ""))
     return item
 

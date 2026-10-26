@@ -200,6 +200,29 @@ class WatchedStateTests(unittest.TestCase):
         self.assertEqual(self.watched.badge(scope,
             dict(kind="season", id="900", tmdb_show_id="77", season=1)), "")
 
+    def test_complete_season_remains_tagged_while_series_and_new_season_are_partial(self):
+        self.write({"tmdb:episode:77:s1:e1": True, "tmdb:episode:77:s1:e2": True})
+        inventory = self.root / "series_changes_p2.json"
+        record = {"complete": True, "checked_at": time.time(), "tmdb_id": "77",
+                  "episodes": [{"season": 1, "episode": 1, "provider_id": "a"},
+                               {"season": 1, "episode": 2, "provider_id": "b"},
+                               {"season": 2, "episode": 1, "provider_id": "c"}]}
+        inventory.write_text(json.dumps({"episode_inventory": {"900": record}}))
+        scope = (str(self.root), 2)
+        show = dict(kind="series", id="900", tmdb_id="77")
+        first = dict(kind="season", id="900", tmdb_show_id="77", season=1)
+        second = dict(kind="season", id="900", tmdb_show_id="77", season=2)
+        self.assertEqual(self.watched.badge(scope, first), "VISTO")
+        self.assertEqual(self.watched.badge(scope, second), "")
+        self.assertEqual(self.watched.badge(scope, show), "")
+        self.write({**json.loads(self.path.read_text()), "tmdb:episode:77:s2:e1": True})
+        self.assertEqual(self.watched.badge(scope, show), "VISTO")
+        record["episodes"].append({"season": 2, "episode": 2, "provider_id": "d"})
+        inventory.write_text(json.dumps({"episode_inventory": {"900": record}}))
+        self.assertEqual(self.watched.badge(scope, first), "VISTO")
+        self.assertEqual(self.watched.badge(scope, second), "")
+        self.assertEqual(self.watched.badge(scope, show), "")
+
     def test_series_level_marker_never_marks_future_episodes_complete(self):
         self.write({"tvshow:88": True, "tmdb:episode:77:s1:e2": True})
         self.assertEqual(self.watched.badge((str(self.root), 2),
@@ -541,6 +564,23 @@ class ProgrammeTests(unittest.TestCase):
 
 
 class WindowContractTests(unittest.TestCase):
+    def test_watched_eye_and_complete_tag_cover_every_search_card(self):
+        path = ROOT / "addons/service.actweeter/resources/skins/Default/1080i/AcTweeteRSearch.xml"
+        text = path.read_text()
+        self.assertEqual(text.count("<texture>watched-eye.png</texture>"), 10)
+        self.assertEqual(text.count("<label>COMPLETA</label>"), 10)
+        self.assertEqual(text.count("String.IsEqual(ListItem.Property(search.complete),true)"), 10)
+        self.assertNotIn("<label>✓</label>", text)
+        self.assertTrue((path.parents[1] / "media/watched-eye.png").is_file())
+        skin = ROOT / "addons/skin.actweeter/1080i/IncludesViews.xml"
+        self.assertEqual(skin.read_text().count("<texture>actweeter/watched-eye.png</texture>"), 2)
+        poster = (ROOT / "addons/skin.actweeter/1080i/IncludesViewsLayoutPoster.xml").read_text()
+        self.assertIn('<include name="Poster_Complete_Tag">', poster)
+        self.assertIn('<texture colordiffuse="FFE50914">colors/color_white.png</texture>', poster)
+        self.assertIn('<textcolor>FFFFFFFF</textcolor>', poster)
+        square = (ROOT / "addons/skin.actweeter/1080i/IncludesViewsLayoutSquare.xml").read_text()
+        self.assertEqual(square.count("<include>Poster_Complete_Tag</include>"), 4)
+
     def test_native_rows_keyboard_and_no_autoplay(self):
         path = ROOT / "addons/service.actweeter/resources/skins/Default/1080i/AcTweeteRSearch.xml"
         xml = ET.parse(path).getroot()
@@ -624,8 +664,22 @@ class WindowBehaviourTests(unittest.TestCase):
             self.ui.listitem(dict(kind="movie", id="1", title="Film", tmdb_id="42"), "VISTO")
         properties = {call.args[0]: call.args[1] for call in item.setProperty.call_args_list}
         self.assertEqual(properties["search.watched"], "true")
+        self.assertEqual(properties["search.complete"], "false")
         self.assertEqual(properties["search.badge"], "TMDb · VISTO")
         item.getVideoInfoTag.return_value.setPlaycount.assert_called_once_with(1)
+
+    def test_complete_tag_is_exposed_only_for_complete_series_and_seasons(self):
+        with patch.object(self.ui.xbmcgui, "ListItem", side_effect=lambda *a, **k: Mock(), create=True):
+            for kind, badge, expected in (("series", "VISTO", "true"),
+                                          ("season", "VISTO", "true"),
+                                          ("series", "", "false"),
+                                          ("episode", "VISTO", "false")):
+                with self.subTest(kind=kind, badge=badge):
+                    item = self.ui.listitem(dict(kind=kind, id="900", title="Item",
+                                                season=1, episode=1), badge)
+                    properties = {call.args[0]: call.args[1]
+                                  for call in item.setProperty.call_args_list}
+                    self.assertEqual(properties["search.complete"], expected)
 
     def test_episode_parent_tmdb_id_is_not_misreported_as_episode_identity(self):
         item = Mock()

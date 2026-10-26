@@ -973,12 +973,7 @@
                 <visible>$EXP[IsMovieDBType] | $EXP[IsTvShowDBType] | $EXP[IsSeasonDBType] | $EXP[IsEpisodeDBType]</visible>
 				<visible>![[!String.IsEmpty(ListItem$PARAM[listitem].Set) | ListItem$PARAM[listitem].IsCollection | String.Contains(ListItem$PARAM[listitem].Path,videodb://movies/sets/)] + Skin.HasSetting(WatchedIndicator.Sets)]</visible>
                 <control type="image">
-                    <texture background="true">$PARAM[overlay_texture]</texture>
-                    <colordiffuse>$INFO[Skin.String(WatchedIndicator.Watched.Color)]</colordiffuse>
-                </control>
-                <control type="image">
-                    <texture>overlays/$PARAM[overlay]/watched.png</texture>
-                    <colordiffuse>$INFO[Skin.String(WatchedIndicator.Watched.TextColor)]</colordiffuse>
+                    <texture>actweeter/watched-eye.png</texture>
                 </control>
             </control>
             <control type="group">
@@ -1172,12 +1167,7 @@
                 <visible>$EXP[IsMovieDBType] | $EXP[IsTvShowDBType] | $EXP[IsSeasonDBType] | $EXP[IsEpisodeDBType]</visible>
 				<visible>![[!String.IsEmpty(ListItem$PARAM[listitem].Set) | ListItem$PARAM[listitem].IsCollection | String.Contains(ListItem$PARAM[listitem].Path,videodb://movies/sets/)] + Skin.HasSetting(WatchedIndicator.Sets)]</visible>
                 <control type="image">
-                    <texture background="true">$PARAM[overlay_texture]</texture>
-                    <colordiffuse>$INFO[Skin.String(WatchedIndicator.Watched.Color)]</colordiffuse>
-                </control>
-                <control type="image">
-                    <texture>overlays/$PARAM[overlay]/watched.png</texture>
-                    <colordiffuse>$INFO[Skin.String(WatchedIndicator.Watched.TextColor)]</colordiffuse>
+                    <texture>actweeter/watched-eye.png</texture>
                 </control>
             </control>
             <control type="group">

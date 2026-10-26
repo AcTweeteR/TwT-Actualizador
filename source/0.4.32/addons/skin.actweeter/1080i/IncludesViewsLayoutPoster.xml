@@ -27,6 +27,7 @@
             <bordersize>8</bordersize>
             <visible>String.IsEmpty(ListItem.Art(poster)) + String.IsEmpty(ListItem.Art(tvshow.poster))</visible>
         </control>
+        <include>Poster_Complete_Tag</include>
     </include>
 	
 	<include name="SmallPosterThumbLayout">
@@ -44,6 +45,7 @@
             <bordersize>8</bordersize>
             <visible>String.IsEmpty(ListItem.Art(poster)) + String.IsEmpty(ListItem.Art(tvshow.poster))</visible>
         </control>
+        <include>Poster_Complete_Tag</include>
     </include>
 
     <include name="PosterThumbFO">
@@ -411,8 +413,12 @@
                 <textcolor>$INFO[Skin.String(NewEpisodes.TextColor)]</textcolor>
             </control>
         </control>
+        <include>Poster_Complete_Tag</include>
+    </include>
+
+    <include name="Poster_Complete_Tag">
         <control type="group">
-            <visible>String.IsEqual(ListItem.Property(XStream.SeriesComplete),true)</visible>
+            <visible>String.IsEqual(ListItem.Property(XStream.SeriesComplete),true) + [$EXP[IsTvShowDBType] | $EXP[IsSeasonDBType]]</visible>
             <width>100%</width>
             <height>36</height>
             <left>45</left>
@@ -420,7 +426,7 @@
             <control type="image">
                 <width>150</width>
                 <height>36</height>
-                <texture colordiffuse="ffe50914" border="10">diffuse/panel3.png</texture>
+                <texture colordiffuse="FFE50914">colors/color_white.png</texture>
             </control>
             <control type="label">
                 <width>150</width>
@@ -429,7 +435,7 @@
                 <aligny>center</aligny>
                 <font>Reg19</font>
                 <label>[B]COMPLETA[/B]</label>
-                <textcolor>$INFO[Skin.String(NewEpisodes.TextColor)]</textcolor>
+                <textcolor>FFFFFFFF</textcolor>
             </control>
         </control>
     </include>

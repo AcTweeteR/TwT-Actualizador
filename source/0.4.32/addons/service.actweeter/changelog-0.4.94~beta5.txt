@@ -1,0 +1,1 @@
+0.4.94~beta5: Muestra el ojo de visto y el tag COMPLETA en Smart Search, preservando los estados locales durante desconexiones.

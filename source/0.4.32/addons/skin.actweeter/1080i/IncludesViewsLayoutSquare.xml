@@ -13,6 +13,7 @@
             <include>SquareThumbPVR</include>
             <visible>String.StartsWith(ListItem.FileNameAndPath, pvr://)</visible>
         </control>
+        <include>Poster_Complete_Tag</include>
         <control type="group">
             <!--Watched Overlay-->
             <right>8</right>
@@ -34,6 +35,7 @@
             <include>SquareThumbPVR</include>
             <visible>String.StartsWith(ListItem.FileNameAndPath, pvr://)</visible>
         </control>
+        <include>Poster_Complete_Tag</include>
         <control type="group">
             <!--Watched Overlay-->
             <right>8</right>
@@ -54,6 +56,7 @@
             <visible>String.StartsWith(ListItem.FileNameAndPath, pvr://)</visible>
         </control>
 		<include>Square_New_Episodes_Tag_Overlay</include>
+        <include>Poster_Complete_Tag</include>
         <control type="group">
             <!--Watched Overlay-->
             <right>8</right>
@@ -76,6 +79,7 @@
             <visible>String.StartsWith(ListItem.FileNameAndPath, pvr://)</visible>
         </control>
 		<include>Square_New_Episodes_Tag_Overlay</include>
+        <include>Poster_Complete_Tag</include>
         <control type="group">
             <!--Watched Overlay-->
             <right>8</right>
