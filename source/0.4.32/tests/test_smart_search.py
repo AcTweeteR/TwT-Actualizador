@@ -217,13 +217,15 @@ class WatchedStateTests(unittest.TestCase):
         store(path, [("movie", 123, "Chappie", "2015")])
         engine = CatalogSearch(path, 2)
         metadata = Mock()
-        metadata.search.return_value = [dict(kind="movie", tmdb_id="198663", title="Chappie",
+        metadata.search.return_value = [dict(kind="movie", tmdb_id="198184", title="Chappie",
                                              year="2015")]
         matched, _ = match_catalog_metadata(engine, metadata, "Chappie", [])
         self.assertEqual(len(matched), 1)
         self.assertEqual(matched[0]["id"], "123")
-        self.assertEqual(matched[0]["tmdb_id"], "198663")
+        self.assertEqual(matched[0]["tmdb_id"], "198184")
         self.write({"tmdb:movie:198663": True})
+        self.assertEqual(self.watched.badge((str(self.root), 2), matched[0]), "")
+        self.write({"tmdb:movie:198663": True, "tmdb:movie:198184": True})
         self.assertEqual(self.watched.badge((str(self.root), 2), matched[0]), "VISTO")
         metadata.search.assert_called_once_with("Chappie", "movie", "2015")
         metadata.search.reset_mock()
@@ -251,10 +253,10 @@ class WatchedStateTests(unittest.TestCase):
         store(path, [("movie", 123, "Chappie", "2015")])
         metadata = Mock()
         matched, _ = match_catalog_metadata(CatalogSearch(path, 2), metadata, "Chappie",
-            [dict(kind="movie", tmdb_id="198663", title="Chappie", year="2015")])
-        self.assertEqual(matched[0]["tmdb_id"], "198663")
+            [dict(kind="movie", tmdb_id="198184", title="Chappie", year="2015")])
+        self.assertEqual(matched[0]["tmdb_id"], "198184")
         metadata.search.assert_not_called()
-        self.assertEqual(CatalogSearch(path, 2).search("Chappie")[0]["tmdb_id"], "198663")
+        self.assertEqual(CatalogSearch(path, 2).search("Chappie")[0]["tmdb_id"], "198184")
 
     def test_catalog_fallback_does_not_query_without_a_four_digit_year(self):
         path = self.root / "provider_search_2.sqlite"
@@ -278,7 +280,7 @@ class WatchedStateTests(unittest.TestCase):
         store(path, [("movie", 123, "Chappie", "2015")])
         metadata = Mock()
         metadata.search.return_value = [dict(kind="movie", tmdb_id=tmdb_id,
-            title="Chappie", year="2015") for tmdb_id in ("198663", "999999")]
+            title="Chappie", year="2015") for tmdb_id in ("198184", "999999")]
         matched, _ = match_catalog_metadata(CatalogSearch(path, 2), metadata, "Chappie", [])
         self.assertEqual(matched, [])
         self.assertNotIn("tmdb_id", CatalogSearch(path, 2).search("Chappie")[0])
@@ -446,8 +448,8 @@ class MetadataTests(unittest.TestCase):
 
     def test_targeted_search_passes_media_type_and_year(self):
         source = Metadata(Mock())
-        source._directory = Mock(return_value=[dict(kind="movie", tmdb_id="198663", year="2015")])
-        self.assertEqual(source.search("Chappie", "movie", "2015")[0]["tmdb_id"], "198663")
+        source._directory = Mock(return_value=[dict(kind="movie", tmdb_id="198184", year="2015")])
+        self.assertEqual(source.search("Chappie", "movie", "2015")[0]["tmdb_id"], "198184")
         source._directory.assert_called_once_with({"info": "search", "tmdb_type": "movie",
                                                    "query": "Chappie", "year": "2015"})
 

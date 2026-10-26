@@ -49,11 +49,11 @@ class WatchedIntegrityTests(unittest.TestCase):
                 db.execute('CREATE TABLE identity_matches (stype TEXT,provider_id TEXT,'
                            'title_key TEXT,year TEXT,tmdb_id TEXT)')
                 db.execute("INSERT INTO items VALUES ('movie','7','chappie','2015')")
-                db.execute("INSERT INTO identity_matches VALUES ('movie','7','chappie','2015','198663')")
+                db.execute("INSERT INTO identity_matches VALUES ('movie','7','chappie','2015','198184')")
             def context():
                 return {'addon': SimpleNamespace(getAddonInfo=lambda _: root),
                         'xbmcvfs': SimpleNamespace(translatePath=lambda value: value)}
-            self.assertEqual(content_state.provider_tmdb_id(context(), 'movie', '7', 2), '198663')
+            self.assertEqual(content_state.provider_tmdb_id(context(), 'movie', '7', 2), '198184')
             self.assertEqual(content_state.provider_tmdb_id(context(), 'movie', '7', 2, '99'), '99')
             with sqlite3.connect(path) as db:
                 db.execute("UPDATE items SET norm='different' WHERE provider_id='7'")
