@@ -50,4 +50,6 @@ El registro tras el reinicio identifica las tres versiones nuevas, `AUTO_PREVIEW
 
 No se modificaron perfiles, cachés, credenciales ni historiales. No hubo escrituras remotas en Trakt. Para abrir Kodi después del cierre hubo que invocar Launch Services fuera del sandbox de la herramienta; el lanzamiento dentro del sandbox devolvía `-10827`, mientras el lanzamiento autorizado abrió Kodi con normalidad. No hay indicio de un defecto de la instalación de Kodi por ese episodio.
 
+Lectura directa y sin escritura de la caché IPTV: los cuatro JSON parsean correctamente y conservan 26.426 películas, 24 categorías de películas, 8.856 series y 27 categorías de series. `PRAGMA integrity_check` devolvió `ok` para `provider_search_1.sqlite` y el índice SQLite de películas. La base auxiliar `cache/xstream_cache.db` no se pudo abrir en modo lectura durante esta comprobación; no se modificó.
+
 La promoción Stable sigue bloqueada por la puerta acordada: autoplay real completo, regresión visual posterior a Beta33, Lenovo, Apple TV y validación segura de escritura Trakt. La suite y la integridad de paquetes no sustituyen esas pruebas de dispositivo. La versión Stable anterior permanece intacta.
