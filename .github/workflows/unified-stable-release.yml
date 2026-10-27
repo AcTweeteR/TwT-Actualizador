@@ -37,7 +37,7 @@ jobs:
           ACTWEETER_XSTREAM_LIVE_ZIP: ${{ github.workspace }}/docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.36~beta3.zip
           ACTWEETER_XSTREAM_TEST_ZIP: ${{ github.workspace }}/docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.36~beta3.zip
           ACTWEETER_SKIN_LIVE_ZIP: ${{ github.workspace }}/docs/testing/repo/skin.actweeter/skin.actweeter-1.2.36~beta4.zip
-          ACTWEETER_SERVICE_LIVE_ZIP: ${{ github.workspace }}/docs/testing/repo/service.actweeter/service.actweeter-0.4.94~beta7.zip
+          ACTWEETER_SERVICE_LIVE_ZIP: ${{ github.workspace }}/docs/testing/repo/service.actweeter/service.actweeter-0.4.94~beta8.zip
           ACTWEETER_BETA_INDEX: ${{ github.workspace }}/docs/testing/repo/addons.xml
           ACTWEETER_XSTREAM_UPSTREAM_ZIP: ${{ runner.temp }}/xstream-upstream-1.1.2.zip
         run: python3 -m pytest -q -rs source/0.4.32/tests
