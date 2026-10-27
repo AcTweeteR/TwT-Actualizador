@@ -18,8 +18,8 @@ from xml.etree import ElementTree as ET
 
 EXPECTED = {
     "repository": ("repository.actweeter.testing", "1.0.2"),
-    "skin": ("skin.actweeter", "1.2.36~beta3"),
-    "service": ("service.actweeter", "0.4.94~beta5"),
+    "skin": ("skin.actweeter", "1.2.36~beta4"),
+    "service": ("service.actweeter", "0.4.94~beta7"),
     "xstream": ("plugin.video.xstream-pro", "1.1.2.36~beta3"),
     "rivulet_repository": ("repository.rivulet", "1.0.2"),
     "iagl_repository": ("repository.zachmorris", "1.0.4"),
@@ -91,8 +91,8 @@ def build(repository_zip: Path, skin_zip: Path, service_zip: Path,
     if hashlib.sha256(iagl_repository_zip.read_bytes()).hexdigest() != IAGL_REPOSITORY_SHA256:
         raise ValueError("IAGL repository ZIP does not match the pinned upstream SHA-256")
     iagl = addon_from_zip(iagl_repository_zip, *EXPECTED["iagl_repository"])
-    set_news(skin, "changelog-1.2.36~beta3.txt")
-    set_news(service, "changelog-0.4.94~beta5.txt")
+    set_news(skin, "changelog-1.2.36~beta4.txt")
+    set_news(service, "changelog-0.4.94~beta7.txt")
     root = ET.Element("addons")
     for addon in (repository, skin, service, xstream, rivulet, iagl):
         root.append(addon)

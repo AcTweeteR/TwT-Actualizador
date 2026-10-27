@@ -70,7 +70,7 @@ from xstream_setup import (
     validate_xtream_credentials,
 )
 from module_catalog import all_addons, installation_plan
-from kodi_auto_preview import read_preview_metadata
+from kodi_auto_preview import read_preview_metadata, stable_identity
 from platform_support import detect_platform
 from dependency_graph import inspect_graph
 from pvr_binding import profile_is_bound
@@ -1615,7 +1615,7 @@ def _auto_preview_focus(args):
         }
         xbmc.log("[AcTweeteR] AUTO_PREVIEW_FOCUS status=captured window=%d container=%d focus=%d media=%s identity=%s trailer=%s" %
                  (window, container, focus, payload["media_type"],
-                  "present" if payload["imdb"] or payload["tmdb"] or payload["dbid"] else "missing",
+                  "present" if stable_identity(payload) else "missing",
                   "present" if trailer_id else "missing"), xbmc.LOGINFO)
         _preview_notify("focus", payload)
     except (KeyError, TypeError, ValueError):

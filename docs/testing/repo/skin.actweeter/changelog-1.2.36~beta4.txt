@@ -1,0 +1,1 @@
+1.2.36~beta4: Revisión Beta de distribución para comprobar la actualización automática individual de Skin desde Testing.

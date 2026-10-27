@@ -26,6 +26,12 @@ def stable_identity(payload):
         value = raw.strip() if isinstance(raw, str) else ""
         if value and value.isascii() and value.isalnum():
             return name + ":" + value
+    title = payload.get("title")
+    year = payload.get("year")
+    if (payload.get("media_type") in ("movie", "tvshow") and
+            isinstance(title, str) and title.strip()):
+        return "title:%s:%s" % (title.strip().casefold(),
+                                year if isinstance(year, str) and year.isdecimal() else "")
     return ""
 
 
@@ -558,11 +564,7 @@ class KodiAutoPreviewCoordinator:
         except (TypeError, ValueError):
             current_focus = current_position = -1
         labels = "Container(%d).ListItem." % request.container
-        actual_identity = stable_identity({
-            "imdb": self.kodi.getInfoLabel(labels + "UniqueID(imdb)"),
-            "tmdb": self.kodi.getInfoLabel(labels + "UniqueID(tmdb)"),
-            "dbid": self.kodi.getInfoLabel(labels + "DBID"),
-        })
+        actual_identity = stable_identity(read_preview_metadata(self.kodi, labels))
         valid = (request == current and request.identity == identity and
                  self.request_ids.get(generation) == request_id and
                  self.kodi.getInfoLabel(
@@ -804,11 +806,7 @@ class KodiAutoPreviewCoordinator:
                     "Container(%d).CurrentItem" % request.container) or "-1") != request.position:
                 return False
             prefix = "Container(%d).ListItem." % request.container
-            return stable_identity({
-                "imdb": self.kodi.getInfoLabel(prefix + "UniqueID(imdb)"),
-                "tmdb": self.kodi.getInfoLabel(prefix + "UniqueID(tmdb)"),
-                "dbid": self.kodi.getInfoLabel(prefix + "DBID"),
-            }) == request.identity
+            return stable_identity(read_preview_metadata(self.kodi, prefix)) == request.identity
         except (ValueError, TypeError):
             return False
 

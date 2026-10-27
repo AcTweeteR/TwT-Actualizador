@@ -1,0 +1,1 @@
+0.4.94~beta7: Permite tráilers automáticos en carátulas sin identificador externo cuando el título está disponible.

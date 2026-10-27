@@ -6,10 +6,35 @@ from unittest.mock import Mock
 
 LIB = Path(__file__).resolve().parents[1] / "addons/service.actweeter/resources/lib"
 sys.path.insert(0, str(LIB))
-from kodi_auto_preview import KodiAutoPreviewCoordinator
+from kodi_auto_preview import KodiAutoPreviewCoordinator, stable_identity
 
 
 class FullscreenTransitionTests(TestCase):
+    def test_title_and_year_identify_preview_when_external_ids_are_missing(self):
+        payload = {"media_type": "movie", "title": "Obsesión", "year": "2025", "tmdb": ""}
+        self.assertEqual(stable_identity(payload), "title:obsesión:2025")
+        self.assertEqual(stable_identity({**payload, "tmdb": "603"}), "tmdb:603")
+        self.assertEqual(stable_identity({**payload, "year": ""}), "title:obsesión:")
+        self.assertEqual(stable_identity({**payload, "media_type": "episode"}), "")
+        self.assertEqual(stable_identity({**payload, "title": ""}), "")
+
+    def test_focused_card_without_external_ids_keeps_preview_ownership(self):
+        c = self.coordinator()
+        request = SimpleNamespace(generation=7, identity="title:obsesión:2025",
+                                  window=10000, container=1508, focus=1508, position=0)
+        c.scheduler.active = request
+        c.kodi.getCondVisibility.side_effect = lambda expr: expr == "Window.IsActive(10000)"
+        c.kodi.getInfoLabel.side_effect = lambda label: {
+            "System.CurrentControlId": "1508",
+            "Container(1508).CurrentItem": "0",
+            "Container(1508).ListItem.DBType": "movie",
+            "Container(1508).ListItem.Title": "Obsesión",
+            "Container(1508).ListItem.Year": "2025",
+        }.get(label, "")
+        self.assertTrue(c._active_focus_still_matches(request))
+        request.position = 1
+        self.assertFalse(c._active_focus_still_matches(request))
+
     def coordinator(self):
         c = KodiAutoPreviewCoordinator.__new__(KodiAutoPreviewCoordinator)
         c.kodi = Mock()
