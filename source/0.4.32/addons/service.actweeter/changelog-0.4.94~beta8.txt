@@ -1,0 +1,1 @@
+0.4.94~beta8: Incluye Trakt, SlyGuy Trailers e InputStream Adaptive en la instalación obligatoria de AcTweeteR. Conserva la autorización independiente de cada cuenta y el instalador nativo de Kodi.

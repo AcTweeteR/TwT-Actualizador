@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 
 
-CATALOG_VERSION = 17
+CATALOG_VERSION = 18
 ALL_TARGET_PLATFORMS = ("macos", "windows", "linux", "android", "tvos")
 
 MODULES = (
@@ -29,7 +29,7 @@ MODULES = (
             {"id": "service.actweeter", "minimum": "0.4.23", "source": "repository.actweeter",
              "license": "GPL-2.0-or-later", "platforms": ALL_TARGET_PLATFORMS,
              "dependencies": ("plugin.video.xstream-pro", "pvr.iptvsimple", "plugin.video.youtube"),
-             "configuration": "Resumable setup state in add-on profile; Trakt is optional",
+             "configuration": "Resumable setup state in add-on profile; Trakt account authorization remains user-owned",
              "update": "Kodi add-on repository automatic updates",
              "recovery": "Rerun AcTweeteR setup/repair"},
             {"id": "xbmc.gui", "minimum": "5.17.0", "source": "Kodi application",
@@ -91,7 +91,7 @@ MODULES = (
     {
         "id": "trailers",
         "name": "Trailers (SlyGuy)",
-        "required": False,
+        "required": True,
         "addons": (
             {"id": "repository.slyguy", "minimum": "0.0.9", "source": "official SlyGuy repository package, bootstrapped from its live catalog",
              "license": "upstream metadata; no AcTweeteR redistribution", "platforms": ALL_TARGET_PLATFORMS,
@@ -126,11 +126,11 @@ MODULES = (
              "update": "Kodi official repository", "recovery": "Kodi native reinstall; retain add-on profile"},
             {"id": "script.trakt", "minimum": "3.9.0", "source": "Kodi official repository",
              "license": "GPL-2.0-only", "platforms": ALL_TARGET_PLATFORMS,
-             "required": False, "consent_required": True,
-             "dependencies": (), "configuration": "Optional official device-code authorization; account tokens stay in script.trakt",
+             "consent_required": True,
+             "dependencies": (), "configuration": "Official device-code authorization is user-owned; account tokens stay in script.trakt",
              "update": "Kodi official repository", "recovery": "Kodi native reinstall; retain add-on profile"},
             {"id": "inputstream.adaptive", "minimum": "21.0.0", "source": "Kodi official or platform-bundled",
-             "required": False, "consent_required": True,
+             "consent_required": True,
              "license": "GPL-2.0-or-later", "platforms": ALL_TARGET_PLATFORMS,
              "dependencies": (), "configuration": "Platform binary used by SlyGuy DASH playback",
              "update": "Kodi official/platform binary update channel",

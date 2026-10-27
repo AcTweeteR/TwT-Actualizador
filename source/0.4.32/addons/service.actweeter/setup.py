@@ -644,7 +644,7 @@ def _slyguy_stack_ready():
 
 
 def _offer_automatic_previews(dialog):
-    """Offer the optional bridge independently of layout rebuilds/customizations."""
+    """Prepare the preview bridge independently of layout rebuilds/customizations."""
     try:
         from slyguy_bridge_install import install
         status = install(xbmc, xbmcaddon.Addon, xbmcvfs, dialog, allow_prompt=True)
@@ -657,7 +657,7 @@ def _offer_automatic_previews(dialog):
                  xbmc.LOGINFO)
     if status not in ("CURRENT", "INSTALLED_NOT_RUNTIME_VERIFIED", "DECLINED"):
         dialog.ok("Previews automáticos pendientes",
-                  "La integración opcional no se ha confirmado (%s). Puedes continuar y reintentar desde Preparar tráilers y autorizaciones. No se modifican tus preferencias de reproducción; los tráilers manuales se comprueban por separado." % status)
+                  "La integración no se ha confirmado (%s). Puedes reintentar desde Preparar tráilers y autorizaciones. No se modifican tus preferencias de reproducción; los tráilers manuales se comprueban por separado." % status)
     return status
 
 
@@ -678,12 +678,12 @@ def _install_slyguy_stack(dialog, *, open_settings=False, consent_granted=False)
         sources = _enabled_install_sources(dialog, (source_id, "repository.actweeter"))
         if not sources and not _addon_installed(addon_id):
             dialog.ok("Fuente SlyGuy no disponible",
-                      "Habilita el repositorio AcTweeteR Stable o Testing ya instalado, o repository.slyguy. Los tráilers son opcionales; puedes continuar y reintentarlo después.")
+                      "Habilita el repositorio AcTweeteR Stable o Testing ya instalado, o repository.slyguy. La instalación de tráilers quedará pendiente hasta entonces.")
             return False
 
         outcome = _request_native_addon_install(
             dialog, addon_id, ", ".join(sources) or "instalación existente de Kodi",
-            required=False, consent_granted=True,
+            required=True, consent_granted=True,
             minimum_version=minimum)
         if outcome != "INSTALLED":
             dialog.ok(
@@ -1375,12 +1375,8 @@ def _configure_xstream_provider(dialog):
 def _missing_components():
     missing = [item["id"] for item in installation_plan(_platform())
                if not item["supported"] or not _addon_requirement_ready(item["id"])]
-    # Optional modules must never block core setup, even when the full
-    # diagnostic dependency graph includes their uninstalled subdependencies.
-    optional_ids = {addon_id for addon_id, item in all_addons().items()
-                    if not item.get("required", True)}
     for item in _installed_dependency_graph():
-        if (item["id"] not in optional_ids and item["status"] != "READY"
+        if (item["status"] != "READY"
                 and item["id"] not in missing):
             missing.append(item["id"])
     if (_addon_ready("plugin.video.xstream-pro") and not _xstream_refresh_supported()
@@ -1439,6 +1435,12 @@ def _install_components_once(dialog, *, consent_granted=False, quiet=False,
         "plugin.video.tmdb.bingie.helper": "BINGIE metadata helper",
         "plugin.program.autocompletion": "Search keyboard support",
         "plugin.video.youtube": "YouTube search and trailer fallback",
+        "script.trakt": "Trakt scrobbler",
+        "inputstream.adaptive": "InputStream Adaptive",
+        "repository.slyguy": "SlyGuy Repository",
+        "slyguy.dependencies": "SlyGuy Dependencies",
+        "script.module.slyguy": "SlyGuy Module",
+        "slyguy.trailers": "SlyGuy Trailers",
         "repository.rivulet": "Rivulet Repository",
         "plugin.video.rivulet": "Rivulet",
         "repository.zachmorris": "Internet Archive Game Launcher Repository",
@@ -1873,7 +1875,7 @@ def _connect_trakt(dialog):
             return status("AUTHORIZATION_UNVERIFIED")
     if not dialog.yesno(
             "Conectar Trakt",
-            "Trakt es opcional. La autorización se abrirá en el complemento oficial de Kodi. Si cancelas, puedes seguir usando AcTweeteR y conectarlo más tarde desde este asistente o desde los ajustes de Trakt.",
+            "El complemento Trakt forma parte de AcTweeteR. La autorización de tu cuenta se abrirá en el complemento oficial de Kodi. Si la pospones, el componente seguirá instalado y podrás conectarte más tarde.",
             nolabel="Ahora no", yeslabel="CONECTAR"):
         return status("DEFERRED")
     outcome = _request_native_addon_install(
@@ -2014,11 +2016,7 @@ def _run_onboarding(dialog, *, core_configured=False):
     _write_state(mark_step(_read_state(), "Autorizaciones externas", "IN_PROGRESS"))
     # Optional consent belongs to setup, never to a successful menu rebuild.
     _install_slyguy_stack(dialog)
-    if dialog.yesno(
-            "Trakt es opcional",
-            "Puedes autorizar el complemento oficial de Kodi ahora para scrobbling y sincronización de biblioteca. También puedes configurarlo después desde sus ajustes. IPTV, películas, series, TV y EPG no dependen de Trakt.",
-            nolabel="Ahora no", yeslabel="CONECTAR"):
-        _connect_trakt(dialog)
+    _connect_trakt(dialog)
     _connect_xstream_trakt(dialog)
     _write_state(mark_step(_read_state(), "Autorizaciones externas", "REVIEWED"))
     _write_state(mark_step(_read_state(), "Configurar y verificar servicios", "IN_PROGRESS"))
@@ -2038,7 +2036,7 @@ def _wizard(dialog, *, first_run=False, core_configured=False):
         "Reparar componentes",
         "Diagnosticar instalación",
         "Reparar interfaz de AcTweeteR",
-        "Conectar Trakt (opcional)",
+        "Autorizar cuenta de Trakt",
         "Vincular recomendaciones de XStream (opcional)",
         "Actualizar catálogo y recomendaciones de XStream",
         "Actualizaciones y canal",

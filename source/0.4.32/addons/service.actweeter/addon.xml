@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-  <addon id="service.actweeter" name="AcTweeteR Service" version="0.4.94~beta7" provider-name="AcTweeteR maintainers">
+  <addon id="service.actweeter" name="AcTweeteR Service" version="0.4.94~beta8" provider-name="AcTweeteR maintainers">
   <requires>
     <import addon="xbmc.python" version="3.0.0" />
         <import addon="plugin.video.xstream-pro" version="1.1.2.36~beta3" />
     <import addon="pvr.iptvsimple" version="21.4.0" />
     <import addon="slyguy.trailers" version="0.2.1" optional="true" />
     <import addon="plugin.video.youtube" />
-    <import addon="script.trakt" version="3.9.0" optional="true" />
+    <import addon="script.trakt" version="3.9.0" />
     <import addon="plugin.video.tmdb.bingie.helper" version="1.0.1" optional="true" />
   </requires>
   <extension point="xbmc.service" library="service.py" start="startup" />
@@ -23,6 +23,6 @@
     <description lang="es_ES">Búsqueda visual inteligente de películas, series, programas y personas. Consulta el índice local de XStream, la guía EPG y los metadatos del helper TMDb existente. Coordina la configuración reanudable y las actualizaciones del catálogo. Las credenciales permanecen en los ajustes oficiales de cada complemento.</description>
     <platform>all</platform>
     <license>GPL-2.0-or-later</license>
-    <news>changelog-0.4.94~beta7.txt</news>
+    <news>changelog-0.4.94~beta8.txt</news>
   </extension>
 </addon>

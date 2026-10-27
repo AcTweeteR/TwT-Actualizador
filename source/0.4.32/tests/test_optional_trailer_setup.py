@@ -16,7 +16,13 @@ import module_catalog  # noqa: E402
 
 
 class OptionalTrailerSetupTests(unittest.TestCase):
-    def test_slyguy_trailers_manifest_dependency_is_optional(self):
+    def test_every_declared_addon_is_required_on_every_supported_platform(self):
+        self.assertTrue(all(item["required"] for item in module_catalog.all_addons().values()))
+        expected = set(module_catalog.all_addons()) - {"xbmc.gui"}
+        for platform in module_catalog.ALL_TARGET_PLATFORMS:
+            self.assertEqual({item["id"] for item in module_catalog.installation_plan(platform)}, expected)
+
+    def test_slyguy_manifest_bootstraps_before_native_dependency_resolution(self):
         manifest = ROOT / "addons/service.actweeter/addon.xml"
         tree = ET.parse(manifest)
         imports = {
@@ -26,10 +32,11 @@ class OptionalTrailerSetupTests(unittest.TestCase):
 
         self.assertIn("slyguy.trailers", imports)
         self.assertEqual(imports["slyguy.trailers"].get("optional"), "true")
-        self.assertNotIn("slyguy.trailers", {
+        self.assertIn("slyguy.trailers", {
             addon_id for addon_id, item in module_catalog.all_addons().items()
             if item.get("required", True)
         })
+        self.assertIsNone(imports["script.trakt"].get("optional"))
 
     def test_new_required_addon_reopens_component_offer_for_existing_profile(self):
         state = {
@@ -38,26 +45,27 @@ class OptionalTrailerSetupTests(unittest.TestCase):
             "component_catalog_offer_version": module_catalog.CATALOG_VERSION - 1,
         }
         self.assertTrue(first_run.should_offer_component_completion(
-            state, ["plugin.program.iagl"], core_configured=True))
+            state, ["script.trakt"], core_configured=True))
         state = first_run.mark_component_offer_seen(state)
         self.assertFalse(first_run.should_offer_component_completion(
-            state, ["plugin.program.iagl"], core_configured=True))
+            state, ["script.trakt"], core_configured=True))
 
-    def test_trailers_are_not_a_core_setup_gate(self):
+    def test_trailers_and_trakt_are_installation_gates_but_account_authorization_is_separate(self):
         self.assertNotIn("trailer_addon_ready", first_run.MANDATORY_SETUP_CHECKS)
         self.assertIn("trailer_addon_ready", first_run.OPTIONAL_SETUP_CHECKS)
-        self.assertNotIn("slyguy.trailers", first_run.REQUIRED_EXTERNAL_ADDON_MINIMUMS)
+        self.assertEqual(first_run.REQUIRED_EXTERNAL_ADDON_MINIMUMS["slyguy.trailers"], "0.2.1")
+        self.assertEqual(first_run.REQUIRED_EXTERNAL_ADDON_MINIMUMS["script.trakt"], "3.9.0")
+        self.assertIn("script_trakt_authorization", first_run.OPTIONAL_SETUP_CHECKS)
         service = module_catalog.all_addons()["service.actweeter"]
         self.assertNotIn("slyguy.trailers", service["dependencies"])
 
-    def test_missing_slyguy_is_reported_as_optional_in_service_status(self):
+    def test_missing_slyguy_and_trakt_are_reported_as_required_in_service_status(self):
         rows = first_run.service_rows({"required": True, "slyguy": False})
         by_name = {row["service"]: row for row in rows}
 
-        self.assertTrue(by_name["SlyGuy Trailers"]["optional"])
-        self.assertEqual(by_name["SlyGuy Trailers"]["status"], "OPTIONAL_MISSING")
-        self.assertTrue(by_name["Previews automáticos"]["optional"])
-        self.assertEqual(by_name["Previews automáticos"]["status"], "OPTIONAL_MISSING")
+        for name in ("SlyGuy Trailers", "Previews automáticos", "Trakt"):
+            self.assertFalse(by_name[name]["optional"])
+            self.assertEqual(by_name[name]["status"], "MISSING")
 
     def test_installed_slyguy_is_not_reported_as_runtime_validated(self):
         rows = first_run.service_rows({"required": True, "slyguy": True})
@@ -121,26 +129,23 @@ class OptionalTrailerSetupTests(unittest.TestCase):
         self.assertIn("installation_plan", referenced_names)
         self.assertIn("_installed_dependency_graph", referenced_names)
 
-    def test_trailer_stack_requires_consent_and_is_not_in_default_install_plan(self):
+    def test_trailer_stack_requires_consent_and_is_in_default_install_plan(self):
         entries = module_catalog.all_addons()
         trailer_ids = {
             "repository.slyguy", "slyguy.dependencies",
             "script.module.slyguy", "slyguy.trailers",
         }
         for addon_id in trailer_ids:
-            self.assertFalse(entries[addon_id]["required"], addon_id)
+            self.assertTrue(entries[addon_id]["required"], addon_id)
             self.assertTrue(entries[addon_id]["consent_required"], addon_id)
 
         default_plan = module_catalog.installation_plan("macos")
         default_ids = {entry["id"] for entry in default_plan}
-        self.assertFalse(trailer_ids.intersection(default_ids))
+        self.assertTrue(trailer_ids.issubset(default_ids))
+        self.assertIn("script.trakt", default_ids)
+        self.assertIn("inputstream.adaptive", default_ids)
 
-        consented_plan = module_catalog.installation_plan(
-            "macos", selected_optional=trailer_ids)
-        consented_ids = {entry["id"] for entry in consented_plan}
-        self.assertTrue(trailer_ids.issubset(consented_ids))
-
-    def test_core_setup_can_complete_when_optional_trailer_check_is_pending(self):
+    def test_core_setup_can_complete_after_addon_install_when_trailer_runtime_check_is_pending(self):
         state = {}
         for key in first_run.MANDATORY_SETUP_CHECKS:
             state = first_run.mark_setup_check(state, key, "PASS_RUNTIME")

@@ -66,7 +66,7 @@ class InstallerChannelTests(unittest.TestCase):
                 self.assertTrue(self.ns["_install_slyguy_stack"](self.dialog))
                 self.assertEqual([x[0] for x in self.calls], [x[0] for x in first_run.SLYGUY_INSTALL_SEQUENCE])
                 self.assertTrue(any(repo in self.calls[0][1] for repo in repos))
-                self.assertTrue(all(not call[2]["required"] for call in self.calls))
+                self.assertTrue(all(call[2]["required"] for call in self.calls))
                 self.calls.clear()
                 self.dialog.yesno.reset_mock()
                 self.assertTrue(self.ns["_install_slyguy_stack"](self.dialog))
@@ -182,11 +182,11 @@ class InstallerChannelTests(unittest.TestCase):
         self.assertFalse(self.ns["_wait_for_installable_addon"](
             "plugin.video.rivulet", "0.36.0", timeout=0))
 
-    def test_optional_inputstream_is_not_a_core_install_gate(self):
+    def test_inputstream_and_trakt_are_core_install_gates(self):
         for platform in module_catalog.ALL_TARGET_PLATFORMS:
-            self.assertNotIn("inputstream.adaptive", {x["id"] for x in module_catalog.installation_plan(platform)})
-        selected = module_catalog.installation_plan("tvos", selected_optional={"slyguy.trailers"})
-        self.assertIn("inputstream.adaptive", {x["id"] for x in selected})
+            planned = {x["id"] for x in module_catalog.installation_plan(platform)}
+            self.assertIn("inputstream.adaptive", planned)
+            self.assertIn("script.trakt", planned)
 
     def test_038_state_survives_repeated_normalization_and_interruption(self):
         state = first_run.mark_started({})

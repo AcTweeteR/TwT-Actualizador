@@ -304,9 +304,9 @@ def service_rows(installed, pvr=None, xstream_configured=None):
     for key, label, optional in (
         ("xstream", "IPTV / XStream", False),
         ("pvr", "TV / PVR", False),
-        ("slyguy", "SlyGuy Trailers", True),
+        ("slyguy", "SlyGuy Trailers", False),
         ("youtube", "YouTube (fallback y búsqueda; autorización según uso)", False),
-        ("trakt", "Trakt", True),
+        ("trakt", "Trakt", False),
         ("metadata", "Metadatos (dependencia de skin)", False),
     ):
         present = bool(installed.get(key, False))
@@ -326,8 +326,8 @@ def service_rows(installed, pvr=None, xstream_configured=None):
     slyguy_present = bool(installed.get("slyguy", False))
     rows.append({
         "service": "Previews automáticos",
-        "status": "INTEGRATION_NOT_CHECKED_NOW" if slyguy_present else "OPTIONAL_MISSING",
-        "optional": True,
+        "status": "INTEGRATION_NOT_CHECKED_NOW" if slyguy_present else "MISSING",
+        "optional": False,
     })
     rows.append({
         "service": "OAuth Google",
