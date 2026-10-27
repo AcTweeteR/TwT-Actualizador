@@ -1,6 +1,7 @@
 """Hard gates for the exact local Beta; Stable promotion has its own explicit gate."""
 import ast
 import os
+import types
 from pathlib import Path
 import unittest
 import xml.etree.ElementTree as ET
@@ -39,10 +40,67 @@ class ReleaseRegressionContract(unittest.TestCase):
         with zipfile.ZipFile(candidate) as z:
             addon = z.read('plugin.video.xstream-pro/resources/lib/addon.py').decode()
             routes = z.read('plugin.video.xstream-pro/resources/lib/tmdb_routes.py').decode()
+            trakt = z.read('plugin.video.xstream-pro/resources/lib/trakt.py').decode()
         methods = {n.name for n in ast.parse(routes).body if isinstance(n, ast.FunctionDef)}
         self.assertFalse('_tmdb_routes.trakt_recommendations_route(' in addon, 'legacy Trakt route remains in packaged XStream')
         self.assertIn('trakt_list_route', methods)
         self.assertIn('trakt_recommendations', addon)
+        self.assertIn('section == "recommendations"', routes)
+        self.assertIn('AcTweeteR.Expand', routes)
+        self.assertIn('cached_request(_media_path(section, media)', trakt)
+
+    def test_recommendation_api_uses_authenticated_hourly_cache_only_for_recommendations(self):
+        candidate = os.environ.get('ACTWEETER_XSTREAM_LIVE_ZIP')
+        if not candidate:
+            self.skipTest('Requires exact staged XStream candidate')
+        with zipfile.ZipFile(candidate) as archive:
+            source = archive.read('plugin.video.xstream-pro/resources/lib/trakt.py').decode()
+        function = next(node for node in ast.parse(source).body
+                        if isinstance(node, ast.FunctionDef) and node.name == '_media_list_one')
+        calls = []
+        def cached(path, params, auth, ttl, timeout):
+            calls.append(('cache', path, params, auth, ttl, timeout))
+            return [], 1
+        def direct(path, params, auth):
+            calls.append(('direct', path, params, auth))
+            return [], 1
+        scope = {'_trakt_media_name': lambda kind: ('movies' if kind == 'movie' else 'shows', kind),
+                 '_media_path': lambda section, media: '/' + section + '/' + media,
+                 'cached_request': cached, 'request': direct,
+                 'normalize_entries': lambda rows, media: rows}
+        exec(compile(ast.Module(body=[function], type_ignores=[]), '<candidate trakt>', 'exec'), scope)
+        scope['_media_list_one']('recommendations', 'movie')
+        scope['_media_list_one']('watchlist', 'tv')
+        self.assertEqual(calls[0], ('cache', '/recommendations/movies',
+                                   {'extended': 'full', 'page': 1, 'limit': 100,
+                                    'ignore_collected': 'true'}, True, 3600, 5))
+        self.assertEqual(calls[1], ('direct', '/watchlist/shows',
+                                   {'extended': 'full', 'page': 1, 'limit': 20}, True))
+
+    def test_recommendation_cache_is_scoped_to_authenticated_account(self):
+        candidate = os.environ.get('ACTWEETER_XSTREAM_LIVE_ZIP')
+        if not candidate:
+            self.skipTest('Requires exact staged XStream candidate')
+        with zipfile.ZipFile(candidate) as archive:
+            source = archive.read('plugin.video.xstream-pro/resources/lib/trakt.py').decode()
+        function = next(node for node in ast.parse(source).body
+                        if isinstance(node, ast.FunctionDef) and node.name == 'cached_request')
+        state = {'token': 'account-one', 'calls': 0, 'cached': {}}
+        cache = types.SimpleNamespace(
+            make_key=lambda *parts: tuple(str(part) for part in parts),
+            get=lambda namespace, key: state['cached'].get((namespace, key)),
+            set=lambda namespace, key, result, ttl: state['cached'].update({(namespace, key): result}))
+        def request(path, params, auth, timeout):
+            state['calls'] += 1
+            return [state['token']], 1
+        scope = {'cache': cache, '_read_tokens': lambda: {'access_token': state['token']},
+                 'request': request}
+        exec(compile(ast.Module(body=[function], type_ignores=[]), '<candidate trakt>', 'exec'), scope)
+        self.assertEqual(scope['cached_request']('/recommendations/movies'), (['account-one'], 1))
+        self.assertEqual(scope['cached_request']('/recommendations/movies'), (['account-one'], 1))
+        state['token'] = 'account-two'
+        self.assertEqual(scope['cached_request']('/recommendations/movies'), (['account-two'], 1))
+        self.assertEqual(state['calls'], 2)
 
     def test_manual_trailer_hides_info_while_owned_player_runs(self):
         candidate = os.environ.get('ACTWEETER_SKIN_LIVE_ZIP')

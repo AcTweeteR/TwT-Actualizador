@@ -1,0 +1,120 @@
+diff --git a/resources/lib/trakt.py b/resources/lib/trakt.py
+--- a/resources/lib/trakt.py
++++ b/resources/lib/trakt.py
+@@ -279,1 +279,1 @@
+-def request(path, params=None, auth=True):
++def request(path, params=None, auth=True, timeout=20):
+@@ -283,4 +283,4 @@
+         BASE_URL + path,
+         params=params or {},
+         headers=_headers(auth),
+-        timeout=20,
++        timeout=timeout,
+@@ -293,4 +293,4 @@
+                 BASE_URL + path,
+                 params=params or {},
+                 headers=_headers(auth),
+-                timeout=20,
++                timeout=timeout,
+@@ -333,9 +333,9 @@
+-def cached_request(path, params=None, auth=True, ttl=300):
++def cached_request(path, params=None, auth=True, ttl=300, timeout=20):
+-    cache_key = cache.make_key(path, sorted((params or {}).items()), bool(auth))
++    cache_key = cache.make_key(path, sorted((params or {}).items()), bool(auth), _read_tokens().get("access_token") if auth else "")
+     namespace = "trakt_auth" if auth else "trakt_public"
+     cached = cache.get(namespace, cache_key)
+     if cached is not None:
+         return cached
+-    result = request(path, params, auth)
++    result = request(path, params, auth, timeout=timeout)
+     cache.set(namespace, cache_key, result, ttl)
+     return result
+@@ -446,10 +446,12 @@
+ def _media_list_one(section, tmdb_type="movie", page=1):
+     media, media_hint = _trakt_media_name(tmdb_type)
+-    payload, total_pages = request(
+-        _media_path(section, media),
+-        params={"extended": "full", "page": page, "limit": 20},
+-        auth=True,
+-    )
++    params = {"extended": "full", "page": page, "limit": 100 if section == "recommendations" else 20}
++    if section == "recommendations":
++        params["ignore_collected"] = "true"
++        payload, total_pages = cached_request(_media_path(section, media), params,
++                                              auth=True, ttl=3600, timeout=5)
++    else:
++        payload, total_pages = request(_media_path(section, media), params=params, auth=True)
+     return {
+         "page": page,
+         "total_pages": total_pages,
+diff --git a/resources/lib/tmdb_routes.py b/resources/lib/tmdb_routes.py
+--- a/resources/lib/tmdb_routes.py
++++ b/resources/lib/tmdb_routes.py
+@@ -883,1 +883,1 @@
+-def _render_media_page(page_data, params, tmdb_type=None, content=None, filter_provider=True):
++def _render_media_page(page_data, params, tmdb_type=None, content=None, filter_provider=True, extra_items=()):
+@@ -903,4 +903,5 @@
+         _media_item(item, wm, we, mark_unavailable=mark_unavailable)
+         for item in results
+     ]
++    items.extend(extra_items)
+ 
+@@ -2613,15 +2614,28 @@
+ def trakt_list_route(params):
+     if not _trakt_guard(auth=True):
+         return
++    section = _param(params, "section", "watchlist")
+     try:
+         if not trakt.authorized():
++            if section == "recommendations":
++                _add_items([_folder_item("Conecta Trakt para recomendaciones",
++                                         {"mode": "xstream_trakt_authorize"}, "recommended")], "videos")
++                return
+             xbmcgui.Dialog().notification("Xstream Pro", _label("Authorize Trakt first"))
+             xbmcplugin.endOfDirectory(c("addon_handle"), succeeded=False)
+             return
+-        section = _param(params, "section", "watchlist")
+         tmdb_type = _param(params, "tmdb_type", "movie")
+         page = _int_param(params, "page")
+         data = trakt.media_list(section, tmdb_type, page=page)
+         if section == "recommendations":
+-            data["results"] = _filter_provider_trakt_recommendations(data.get("results", []))
++            available = _filter_provider_trakt_recommendations(data.get("results", []))
++            seen = set()
++            unique = []
++            for item in available:
++                key = (item.get("tmdb_type"), item.get("tmdb_id") or item.get("imdb_id")
++                       or item.get("trakt_id") or (item.get("title"), item.get("year")))
++                if key not in seen:
++                    seen.add(key)
++                    unique.append(item)
++            data["results"] = unique
+             content = "tvshows" if tmdb_type == "tv" else ("videos" if tmdb_type == "both" else "movies")
+@@ -2633,5 +2644,14 @@
+             data["results"] = _hydrate_trakt_items(data.get("results", []), sync_limit=4)
++            extra_items = ()
++            if _param(params, "actweeter_expand", "") == "1":
++                data["results"] = data["results"][:19]
++                data["total_pages"] = 1
++                query = {key: value for key, value in params.items()
++                         if key not in ("actweeter_expand", "limit", "page")}
++                extra = _folder_item("[COLOR FFE50914]EXPANDIR[/COLOR]", query, "recommended")
++                extra[1].setProperty("AcTweeteR.Expand", "1")
++                extra_items = (extra,)
+             _render_media_page(data, params,
+                                None if tmdb_type == "both" else tmdb_type,
+-                               content, filter_provider=False)
++                               content, filter_provider=False, extra_items=extra_items)
+             return
+@@ -2641,6 +2665,11 @@
+         _render_media_page(data, params, None if tmdb_type == "both" else tmdb_type, content)
+     except Exception as exc:
++        if section == "recommendations":
++            c("_log")("Trakt recommendations unavailable: {0}".format(type(exc).__name__))
++            xbmcplugin.endOfDirectory(c("addon_handle"), succeeded=True,
++                                      updateListing=False, cacheToDisc=False)
++            return
+         _trakt_handle_error(exc)
+ 
+ 
+ def trakt_playback_route(params):

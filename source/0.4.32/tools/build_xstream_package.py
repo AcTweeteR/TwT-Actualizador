@@ -507,6 +507,11 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             raise ValueError("Watched identity integrity patch hash mismatch")
         apply_contextual_unified_patch(root, integrity_patch)
 
+        home_widget_patch = ROOT / data["trakt_home_widget_patch"]
+        if sha256(home_widget_patch) != data["trakt_home_widget_patch_sha256"]:
+            raise ValueError("Trakt Home widget patch hash mismatch")
+        apply_contextual_unified_patch(root, home_widget_patch)
+
         validate_python_sources(root)
 
         distribution_version = data["distribution_version"]

@@ -1,6 +1,7 @@
 """Regression coverage for Rivulet/IAGL installation in both release channels."""
 import ast
 import hashlib
+import os
 import sys
 import unittest
 import zipfile
@@ -13,7 +14,9 @@ class RivuletIaglReleaseFix(unittest.TestCase):
     def test_both_channels_expose_upstream_repository_bootstraps(self):
         for channel in ('repo', 'docs/testing/repo'):
             directory = ROOT/channel
-            index = (directory/'addons.xml').read_bytes()
+            index_path = Path(os.environ.get('ACTWEETER_BETA_INDEX', directory/'addons.xml')) if channel != 'repo' else directory/'addons.xml'
+            directory = index_path.parent
+            index = index_path.read_bytes()
             self.assertEqual((directory/'addons.xml.md5').read_text().strip(),hashlib.md5(index).hexdigest())
             addons = {x.get('id'):x for x in ET.fromstring(index)}
             for aid,version in [('repository.rivulet','1.0.2'),('repository.zachmorris','1.0.4')]:
@@ -22,7 +25,7 @@ class RivuletIaglReleaseFix(unittest.TestCase):
                     self.assertIsNone(z.testzip())
                     self.assertEqual(ET.fromstring(z.read(f'{aid}/addon.xml')).get('version'),version)
             self.assertEqual(addons['service.actweeter'].get('version'),
-                             '0.4.94' if channel == 'repo' else '0.4.94~beta8')
+                             '0.4.94' if channel == 'repo' else '0.4.94~beta9')
     def test_native_installer_does_not_gate_on_unreliable_installable_query(self):
         source=(ROOT/'source/0.4.32/addons/service.actweeter/setup.py').read_text()
         tree=ast.parse(source)

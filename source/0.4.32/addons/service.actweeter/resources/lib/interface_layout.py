@@ -15,8 +15,8 @@ import urllib.parse
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-LAYOUT_VERSION = 17
-LAYOUT_MIGRATION_ID = 'interface-layout-v17-trakt-menu'
+LAYOUT_VERSION = 18
+LAYOUT_MIGRATION_ID = 'interface-layout-v18-trakt-home-recommendations'
 GROUPS = ('mainmenu', 'powermenu', 'inicio-1', '10000-1', 'moviehub', 'tvshowhub')
 # Exact profile copies shipped as defaults in Beta 8. They may be updated when
 # older state files do not yet track ownership; any byte-level customization
@@ -63,10 +63,14 @@ def expandable_widget_action(action):
         query = dict(urllib.parse.parse_qsl(parsed.query, keep_blank_values=True))
     except (TypeError, ValueError):
         return action, False
+    premium = (query.get('mode') == 'premium'
+               and query.get('stype') in ('movie', 'series', 'both')
+               and query.get('view', '') in EXPANDABLE_PREMIUM_VIEWS)
+    trakt = (query.get('mode') == 'xstream_trakt_list'
+             and query.get('section') == 'recommendations'
+             and query.get('tmdb_type') in ('movie', 'tv', 'both'))
     if (parsed.scheme != 'plugin' or parsed.netloc != 'plugin.video.xstream-pro'
-            or query.get('mode') != 'premium'
-            or query.get('stype') not in ('movie', 'series', 'both')
-            or query.get('view', '') not in EXPANDABLE_PREMIUM_VIEWS):
+            or not (premium or trakt)):
         return action, False
     if any(key.lower() in {'username', 'password', 'token', 'auth', 'url', 'server', 'api_key'}
            for key in query):
@@ -689,8 +693,13 @@ def generated_layout_ready(path, shortcuts_root, documents, *, condition_visible
     metadata, and the matching four-field properties in Skin Shortcuts' store.
     """
     rows = generated_rows(path, condition_visible=condition_visible)
+    home_labels = [row['label'] for row in rows.get('Widgets', [])]
+    home_order_ready = any(home_labels[index:index + 3] ==
+                           ['Tendencias', 'Popular', 'Recomendaciones']
+                           for index in range(len(home_labels) - 2))
     if (not all(len(rows.get(group, [])) >= count for group, count in
-                (('Widgets', 5), ('moviehub', 10), ('tvshowhub', 10)))
+                (('Widgets', 7), ('moviehub', 10), ('tvshowhub', 10)))
+            or not home_order_ready
             or not all(row['provider_only'] and row['expansion_ready']
                        for group in rows.values() for row in group)):
         return False, rows

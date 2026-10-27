@@ -4,6 +4,8 @@
     <shortcut><label>Continuar viendo</label><label2 /><icon /><thumb /><action>plugin://plugin.video.xstream-pro/?mode=premium&amp;view=continue&amp;stype=both&amp;reload=$INFO[Window(Home).Property(Premium.ContinueRefresh)]</action></shortcut>
     <shortcut><label>Añadidas recientemente</label><label2 /><icon /><thumb /><action>plugin://plugin.video.xstream-pro/?mode=premium&amp;view=recent&amp;stype=movie</action></shortcut>
     <shortcut><label>Tendencias</label><label2 /><icon /><thumb /><action>plugin://plugin.video.xstream-pro/?mode=premium&amp;view=trending&amp;stype=movie</action></shortcut>
+    <shortcut><label>Popular</label><label2 /><icon /><thumb /><action>plugin://plugin.video.xstream-pro/?mode=premium&amp;view=popular&amp;stype=movie</action></shortcut>
+    <shortcut><label>Recomendaciones</label><label2 /><icon /><thumb /><action>plugin://plugin.video.xstream-pro/?mode=xstream_trakt_list&amp;section=recommendations&amp;tmdb_type=both</action></shortcut>
     <shortcut><label>Películas</label><label2 /><icon /><thumb /><action>plugin://plugin.video.xstream-pro/?mode=premium&amp;stype=movie</action></shortcut>
     <shortcut><label>Series</label><label2 /><icon /><thumb /><action>plugin://plugin.video.xstream-pro/?mode=premium&amp;stype=series</action></shortcut>
 </shortcuts>

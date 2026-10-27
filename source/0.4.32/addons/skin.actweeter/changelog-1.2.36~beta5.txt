@@ -1,0 +1,1 @@
+Beta 35: Home muestra Tendencias, Popular y Recomendaciones de Trakt en ese orden.

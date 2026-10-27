@@ -21,7 +21,7 @@ class LayoutProfileScopeTests(unittest.TestCase):
         self.documents = layout.source_documents(ROOT / 'addons/skin.actweeter')
         self.default_id = next(iter(layout.expandable_shortcut_ids(self.documents)))
         tree = ET.Element('includes')
-        for group, count in (('Widgets', 6), ('moviehub', 10), ('tvshowhub', 10)):
+        for group, count in (('Widgets', 7), ('moviehub', 10), ('tvshowhub', 10)):
             entry = ET.SubElement(tree, 'include', name='skinshortcuts-template-' + group)
             for profile in ('Active', 'Other'):
                 name = group + '-' + profile
@@ -32,6 +32,8 @@ class LayoutProfileScopeTests(unittest.TestCase):
                     values = {'widgetPath': 'plugin://plugin.video.xstream-pro/?mode=premium&'
                               'view=recent&stype=movie&actweeter_expand=1&limit=20',
                               'widgetExpandable': 'true' if profile == 'Active' else ''}
+                    if group == 'Widgets' and index in (2, 3, 4):
+                        values['widgetName'] = ('Tendencias', 'Popular', 'Recomendaciones')[index - 2]
                     for key, value in values.items():
                         ET.SubElement(widget, 'param', name=key, value=value)
         for profile in ('Active', 'Other'):
@@ -61,7 +63,7 @@ class LayoutProfileScopeTests(unittest.TestCase):
             self.generated, self.root, self.documents, condition_visible=self.visible)
         self.assertTrue(ready)
         self.assertEqual({group: len(values) for group, values in rows.items()},
-                         {'Widgets': 6, 'moviehub': 10, 'tvshowhub': 10})
+                         {'Widgets': 7, 'moviehub': 10, 'tvshowhub': 10})
 
     def test_foreign_identity_does_not_conflict_or_enter_current_property_store(self):
         before = self.properties.read_bytes()
@@ -89,7 +91,7 @@ class LayoutProfileScopeTests(unittest.TestCase):
             self.generated, self.root, self.documents,
             condition_visible=lambda condition: condition == self.selector('Other'))
         self.assertFalse(ready)
-        self.assertEqual(len(rows['Widgets']), 6)
+        self.assertEqual(len(rows['Widgets']), 7)
         self.assertTrue(all(not row['expansion_ready'] for row in rows['Widgets']))
 
 

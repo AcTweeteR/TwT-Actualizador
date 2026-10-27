@@ -2,7 +2,7 @@
   "addon_id": "plugin.video.xstream-pro",
   "upstream_project": "https://github.com/Pesicp/XStreamPro",
   "upstream_version": "1.1.2",
-  "distribution_version": "1.1.2.36~beta3",
+  "distribution_version": "1.1.2.36~beta4",
   "upstream_ref": "1.1.2",
   "upstream_commit": "1aa3e67da7c03c6acc3ec7e1ca579a7f645220f4",
   "upstream_release_url": "https://github.com/Pesicp/XStreamPro/releases/download/1.1.2/plugin.video.xstream-pro-1.1.2.zip",
@@ -127,5 +127,7 @@
     "series_state.py": "76b9fbf54fc69d1a2102d97c074994f69ad1d8d6864029565ca6828444afee2f"
   },
   "watched_integrity_patch": "third_party/xstream/patches/1.1.2/actweeter-watched-integrity.patch",
-  "watched_integrity_patch_sha256": "e26dffb66fae5a461f92fd17a3181a9532dc1759087591f4fa7ca732bb381bf1"
+  "watched_integrity_patch_sha256": "e26dffb66fae5a461f92fd17a3181a9532dc1759087591f4fa7ca732bb381bf1",
+  "trakt_home_widget_patch": "third_party/xstream/patches/1.1.2/actweeter-trakt-home-widget.patch",
+  "trakt_home_widget_patch_sha256": "89fc54a39d29bd66c5ed30d20951adf7de639d8d29fc48de41d5a78c6191874f"
 }

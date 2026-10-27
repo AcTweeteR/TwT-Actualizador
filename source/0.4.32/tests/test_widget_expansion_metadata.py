@@ -61,12 +61,33 @@ class ExpandableWidgetMetadataTests(unittest.TestCase):
         routes = (
             "plugin://plugin.video.xstream-pro/?mode=movies_menu",
             "plugin://plugin.video.xstream-pro/?mode=premium&view=collections_root&stype=movie",
-            "plugin://plugin.video.xstream-pro/?mode=xstream_trakt_list&section=recommendations&tmdb_type=movie",
+            "plugin://plugin.video.xstream-pro/?mode=xstream_trakt_list&section=watchlist&tmdb_type=movie",
             "plugin://plugin.video.youtube/?video_id=example",
         )
         for route in routes:
             with self.subTest(route=route):
                 self.assertEqual(interface_layout.expandable_widget_action(route), (route, False))
+
+    def test_trakt_recommendations_expand_without_replacing_trakt_source(self):
+        generated = interface_layout.source_documents(ROOT / 'addons/skin.actweeter')
+        for group in ('inicio-1', '10000-1'):
+            root = ET.parse(ROOT / 'addons/skin.actweeter/shortcuts' / (group + '.DATA.xml')).getroot()
+            shortcuts = root.findall('shortcut')
+            labels = [node.findtext('label') for node in shortcuts]
+            index = labels.index('Tendencias')
+            self.assertEqual(labels[index:index + 3], ['Tendencias', 'Popular', 'Recomendaciones'])
+            action = shortcuts[index + 2].findtext('action')
+            self.assertIn('section=recommendations', action)
+            self.assertIn('tmdb_type=both', action)
+            expanded, enabled = interface_layout.expandable_widget_action(action)
+            self.assertTrue(enabled)
+            self.assertIn('actweeter_expand=1&limit=19', expanded)
+            self.assertEqual(interface_layout.expandable_widget_action(expanded), (expanded, True))
+            migrated = ET.fromstring(generated['skin.actweeter-' + group + '.DATA.xml'])
+            recommendation = next(node for node in migrated.findall('shortcut')
+                                  if node.findtext('label') == 'Recomendaciones')
+            self.assertIn('actweeter_expand=1', recommendation.findtext('action'))
+            self.assertTrue(recommendation.findtext('defaultID').startswith('actweeter-expand-'))
 
     def test_source_documents_marks_only_supported_default_rows_and_is_idempotent(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -110,8 +131,8 @@ class ExpandableWidgetMetadataTests(unittest.TestCase):
             self.assertIsNone(popular.find("property[@name='widgetExpandable']"))
 
             series = ET.fromstring(output["skin.actweeter-tvshowhub.DATA.xml"])
-            self.assertNotIn("actweeter_expand=1", series.findtext("shortcut/action"))
-            self.assertIsNone(series.find("shortcut/defaultID"))
+            self.assertIn("actweeter_expand=1", series.findtext("shortcut/action"))
+            self.assertIsNotNone(series.find("shortcut/defaultID"))
 
             self.assertGreater(len(interface_layout.expandable_shortcut_ids(output)), 0)
             identities = {}
