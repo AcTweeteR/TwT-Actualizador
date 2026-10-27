@@ -1,0 +1,159 @@
+{
+  "release": "actweeter-beta33-20261027",
+  "channel": "testing",
+  "release_date": "2026-10-27",
+  "source_commit": "a3dbcab154786a14c71d9c2b4b2f10812425480b",
+  "index_sha256": "f46c4792a09fad451285d35531f6c4991333d2b7e47e7fd40b71dfcd74976629",
+  "addons": [
+    {
+      "id": "repository.actweeter.testing",
+      "version": "1.0.2",
+      "path": "docs/testing/repo/repository.actweeter.testing/repository.actweeter.testing-1.0.2.zip",
+      "sha256": "ce0f53ea95ece57f4ced0dd1085457084ad2a333b67bdee4e121ef340376b6e1",
+      "dependencies": []
+    },
+    {
+      "id": "skin.actweeter",
+      "version": "1.2.36~beta4",
+      "path": "docs/testing/repo/skin.actweeter/skin.actweeter-1.2.36~beta4.zip",
+      "sha256": "cbdd4ea4bc25f10120fbbc5f8bdecb2cb656f25e7398494412cbdf7fe095de5b",
+      "dependencies": [
+        {
+          "id": "xbmc.gui",
+          "version": "5.17.0",
+          "optional": false
+        },
+        {
+          "id": "script.bingie.helper",
+          "version": "1.1.2",
+          "optional": false
+        },
+        {
+          "id": "script.bingie.toolbox",
+          "version": "1.0.0",
+          "optional": false
+        },
+        {
+          "id": "script.bingie.widgets",
+          "version": "1.0.1",
+          "optional": false
+        },
+        {
+          "id": "script.skinshortcuts",
+          "version": "2.0.3",
+          "optional": false
+        },
+        {
+          "id": "service.actweeter",
+          "version": "0.4.53",
+          "optional": false
+        },
+        {
+          "id": "resource.language.es_es",
+          "version": "11.0.108",
+          "optional": false
+        },
+        {
+          "id": "resource.images.studios.coloured",
+          "version": "0.0.24",
+          "optional": false
+        },
+        {
+          "id": "plugin.video.tmdb.bingie.helper",
+          "version": "1.0.1",
+          "optional": false
+        },
+        {
+          "id": "plugin.program.autocompletion",
+          "version": "2.1.2",
+          "optional": false
+        }
+      ]
+    },
+    {
+      "id": "service.actweeter",
+      "version": "0.4.94~beta7",
+      "path": "docs/testing/repo/service.actweeter/service.actweeter-0.4.94~beta7.zip",
+      "sha256": "685f14a8dcf6d032bef5cda7d51edf8d34873fb7583c7145cf3715bb2e177855",
+      "dependencies": [
+        {
+          "id": "xbmc.python",
+          "version": "3.0.0",
+          "optional": false
+        },
+        {
+          "id": "plugin.video.xstream-pro",
+          "version": "1.1.2.36~beta3",
+          "optional": false
+        },
+        {
+          "id": "pvr.iptvsimple",
+          "version": "21.4.0",
+          "optional": false
+        },
+        {
+          "id": "slyguy.trailers",
+          "version": "0.2.1",
+          "optional": true
+        },
+        {
+          "id": "plugin.video.youtube",
+          "version": null,
+          "optional": false
+        },
+        {
+          "id": "script.trakt",
+          "version": "3.9.0",
+          "optional": true
+        },
+        {
+          "id": "plugin.video.tmdb.bingie.helper",
+          "version": "1.0.1",
+          "optional": true
+        }
+      ]
+    },
+    {
+      "id": "plugin.video.xstream-pro",
+      "version": "1.1.2.36~beta3",
+      "path": "docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.36~beta3.zip",
+      "sha256": "4c33c4cb52d671564e30c510edf92274f1c7ce5b27c8ea527aea2067806503b1",
+      "dependencies": [
+        {
+          "id": "xbmc.python",
+          "version": "3.0.1",
+          "optional": false
+        },
+        {
+          "id": "script.module.requests",
+          "version": "2.22.0",
+          "optional": false
+        },
+        {
+          "id": "pvr.iptvsimple",
+          "version": "21.4.0",
+          "optional": false
+        },
+        {
+          "id": "service.upnext",
+          "version": "1.1.0",
+          "optional": true
+        }
+      ]
+    },
+    {
+      "id": "repository.rivulet",
+      "version": "1.0.2",
+      "path": "docs/testing/repo/repository.rivulet/repository.rivulet-1.0.2.zip",
+      "sha256": "e4aabb495d6b49f39b8ec0c828ad9fa4562c387547739e0f38351ddabac9a815",
+      "dependencies": []
+    },
+    {
+      "id": "repository.zachmorris",
+      "version": "1.0.4",
+      "path": "docs/testing/repo/repository.zachmorris/repository.zachmorris-1.0.4.zip",
+      "sha256": "3dde8f37dcd64f122cf1e897e139e5b8b7a3cd0ec15db6a1f5c7b59852cb661b",
+      "dependencies": []
+    }
+  ]
+}
