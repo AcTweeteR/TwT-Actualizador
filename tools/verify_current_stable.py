@@ -10,7 +10,7 @@ from xml.etree import ElementTree as ET
 
 
 ROOT = Path(__file__).resolve().parents[1]
-MANIFEST = ROOT / "manifests/actweeter-stable-rivulet-iagl-20261025.json"
+MANIFEST = ROOT / "manifests/actweeter-stable-beta34-20261027.json"
 
 
 def verify(root=ROOT, manifest_path=MANIFEST):
@@ -45,6 +45,12 @@ def verify(root=ROOT, manifest_path=MANIFEST):
             addon = ET.fromstring(archive.read(f"{addon_id}/addon.xml"))
             if (addon.get("id"), addon.get("version")) != (addon_id, version):
                 raise ValueError(f"Stable package metadata differs: {addon_id}")
+    for asset in manifest.get("assets", []):
+        path = Path(asset["path"])
+        if path.parts[:1] != ("repo",) or ".." in path.parts:
+            raise ValueError("unsafe Stable metadata asset path")
+        if hashlib.sha256((root / path).read_bytes()).hexdigest() != asset["sha256"]:
+            raise ValueError("Stable metadata asset differs: " + str(path))
     return manifest["index_sha256"]
 
 

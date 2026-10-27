@@ -1,0 +1,1 @@
+0.4.94 Stable - identical Beta34 functionality; required add-ons remain required.

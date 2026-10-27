@@ -8,7 +8,9 @@ on:
       - 'tools/build_stable_20261021.py'
       - 'manifests/actweeter-stable-20261021.json'
       - 'manifests/actweeter-stable-rivulet-iagl-20261025.json'
+      - 'manifests/actweeter-stable-beta34-20261027.json'
       - 'tools/verify_current_stable.py'
+      - 'tools/promote_beta34_stable.py'
       - 'source/0.4.32/**'
       - 'manifests/unified-stable-20261020.json'
       - '.github/workflows/unified-stable-release.yml'
@@ -34,10 +36,11 @@ jobs:
           echo '915f45708670d07e789bb73b7390a7b5cf30175f818ef5da8ea18c9f13f537fe  '"$RUNNER_TEMP/xstream-upstream-1.1.2.zip" | shasum -a 256 -c -
       - name: Regression tests, mandatory release checks and security contract
         env:
-          ACTWEETER_XSTREAM_LIVE_ZIP: ${{ github.workspace }}/docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.36~beta3.zip
-          ACTWEETER_XSTREAM_TEST_ZIP: ${{ github.workspace }}/docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.36~beta3.zip
-          ACTWEETER_SKIN_LIVE_ZIP: ${{ github.workspace }}/docs/testing/repo/skin.actweeter/skin.actweeter-1.2.36~beta4.zip
-          ACTWEETER_SERVICE_LIVE_ZIP: ${{ github.workspace }}/docs/testing/repo/service.actweeter/service.actweeter-0.4.94~beta8.zip
+          ACTWEETER_RELEASE_CHANNEL: stable
+          ACTWEETER_XSTREAM_LIVE_ZIP: ${{ github.workspace }}/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.36.zip
+          ACTWEETER_XSTREAM_TEST_ZIP: ${{ github.workspace }}/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.36.zip
+          ACTWEETER_SKIN_LIVE_ZIP: ${{ github.workspace }}/repo/skin.actweeter/skin.actweeter-1.2.36.zip
+          ACTWEETER_SERVICE_LIVE_ZIP: ${{ github.workspace }}/repo/service.actweeter/service.actweeter-0.4.94.zip
           ACTWEETER_BETA_INDEX: ${{ github.workspace }}/docs/testing/repo/addons.xml
           ACTWEETER_XSTREAM_UPSTREAM_ZIP: ${{ runner.temp }}/xstream-upstream-1.1.2.zip
         run: python3 -m pytest -q -rs source/0.4.32/tests
@@ -62,3 +65,19 @@ jobs:
           set -eu
           python3 tools/verify_current_stable.py
           python3 -m unittest discover -s source/0.4.32/tests -p 'test_stable_20261021_release.py' -q
+      - name: Rebuild Beta34 Stable promotion without changing functional files
+        run: |
+          set -eu
+          python3 tools/promote_beta34_stable.py --output-dir "$RUNNER_TEMP/stable-beta34"
+          cmp "$RUNNER_TEMP/stable-beta34/repo/addons.xml" repo/addons.xml
+          cmp "$RUNNER_TEMP/stable-beta34/repo/addons.xml.md5" repo/addons.xml.md5
+          cmp "$RUNNER_TEMP/stable-beta34/manifest.json" manifests/actweeter-stable-beta34-20261027.json
+          cmp "$RUNNER_TEMP/stable-beta34/repo/skin.actweeter/skin.actweeter-1.2.36.zip" repo/skin.actweeter/skin.actweeter-1.2.36.zip
+          cmp "$RUNNER_TEMP/stable-beta34/repo/service.actweeter/service.actweeter-0.4.94.zip" repo/service.actweeter/service.actweeter-0.4.94.zip
+          cmp "$RUNNER_TEMP/stable-beta34/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.36.zip" repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.36.zip
+          cmp "$RUNNER_TEMP/stable-beta34/repo/skin.actweeter/resources/icon.png" repo/skin.actweeter/resources/icon.png
+          cmp "$RUNNER_TEMP/stable-beta34/repo/skin.actweeter/extras/media/backgrounds/settings_interface.jpg" repo/skin.actweeter/extras/media/backgrounds/settings_interface.jpg
+          cmp "$RUNNER_TEMP/stable-beta34/repo/skin.actweeter/changelog-1.2.36.txt" repo/skin.actweeter/changelog-1.2.36.txt
+          cmp "$RUNNER_TEMP/stable-beta34/repo/service.actweeter/changelog-0.4.94.txt" repo/service.actweeter/changelog-0.4.94.txt
+          cmp "$RUNNER_TEMP/stable-beta34/repo/plugin.video.xstream-pro/icon.png" repo/plugin.video.xstream-pro/icon.png
+          cmp "$RUNNER_TEMP/stable-beta34/repo/plugin.video.xstream-pro/resources/background/background.png" repo/plugin.video.xstream-pro/resources/background/background.png
