@@ -24,16 +24,18 @@ class DistributionArtifactTests(unittest.TestCase):
         previous = json.loads((REPO / "manifests/unified-stable-20261020.json").read_text())
         historical_release = json.loads((REPO / "manifests/actweeter-stable-20261021.json").read_text())
         release = json.loads((REPO / "manifests/actweeter-stable-rivulet-iagl-20261025.json").read_text())
+        current_release = json.loads((REPO / "manifests/actweeter-stable-beta34-20261027.json").read_text())
         self.assertEqual(historical_release["previous_stable_index_sha256"], previous["index_sha256"])
         self.assertNotEqual(release["index_sha256"], historical_release["index_sha256"])
+        self.assertEqual(current_release["previous_index_sha256"], release["index_sha256"])
         payload = (REPO / "repo/addons.xml").read_bytes()
-        self.assertEqual(hashlib.sha256(payload).hexdigest(), release["index_sha256"])
-        self.assertEqual(hashlib.md5(payload).hexdigest(), release["index_md5"])
+        self.assertEqual(hashlib.sha256(payload).hexdigest(), current_release["index_sha256"])
+        self.assertEqual(hashlib.md5(payload).hexdigest(), current_release["index_md5"])
         self.assertEqual(
             (REPO / "repo/addons.xml.md5").read_text(encoding="ascii").strip(),
-            release["index_md5"])
+            current_release["index_md5"])
         current = {a.get("id"): a.get("version") for a in ET.fromstring(payload)}
-        self.assertEqual(current, {a["id"]: a["version"] for a in release["addons"]})
+        self.assertEqual(current, {a["id"]: a["version"] for a in current_release["addons"]})
 
     def test_candidate_and_rollback_packages_have_valid_crc_and_manifest_hashes(self):
         for addon in MANIFEST["addons"]:
