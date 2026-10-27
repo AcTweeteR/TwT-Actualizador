@@ -22,7 +22,7 @@ class OptionalTrailerSetupTests(unittest.TestCase):
         for platform in module_catalog.ALL_TARGET_PLATFORMS:
             self.assertEqual({item["id"] for item in module_catalog.installation_plan(platform)}, expected)
 
-    def test_slyguy_manifest_bootstraps_before_native_dependency_resolution(self):
+    def test_service_manifest_requires_every_declared_addon(self):
         manifest = ROOT / "addons/service.actweeter/addon.xml"
         tree = ET.parse(manifest)
         imports = {
@@ -31,7 +31,7 @@ class OptionalTrailerSetupTests(unittest.TestCase):
         }
 
         self.assertIn("slyguy.trailers", imports)
-        self.assertEqual(imports["slyguy.trailers"].get("optional"), "true")
+        self.assertTrue(all(node.get("optional") != "true" for node in imports.values()))
         self.assertIn("slyguy.trailers", {
             addon_id for addon_id, item in module_catalog.all_addons().items()
             if item.get("required", True)
@@ -57,7 +57,8 @@ class OptionalTrailerSetupTests(unittest.TestCase):
         self.assertEqual(first_run.REQUIRED_EXTERNAL_ADDON_MINIMUMS["script.trakt"], "3.9.0")
         self.assertIn("script_trakt_authorization", first_run.OPTIONAL_SETUP_CHECKS)
         service = module_catalog.all_addons()["service.actweeter"]
-        self.assertNotIn("slyguy.trailers", service["dependencies"])
+        self.assertIn("slyguy.trailers", service["dependencies"])
+        self.assertIn("script.trakt", service["dependencies"])
 
     def test_missing_slyguy_and_trakt_are_reported_as_required_in_service_status(self):
         rows = first_run.service_rows({"required": True, "slyguy": False})
