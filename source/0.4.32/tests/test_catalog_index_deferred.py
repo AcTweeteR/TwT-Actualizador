@@ -1,9 +1,11 @@
 import ast
+import hashlib
 import importlib.util
 import json
 import re
 import unicodedata
 import sqlite3
+import subprocess
 import sys
 import tempfile
 import threading
@@ -48,6 +50,80 @@ class DeferredIndexTests(unittest.TestCase):
 
     def requests(self):
         return list(Path(self.temp.name).glob('catalog-index-request-*.json'))
+
+    def test_transactional_generation_request_is_discovered_and_indexed(self):
+        fingerprint = hashlib.sha256(self.source.encode()).hexdigest()
+        parent = Path(self.temp.name) / 'catalog_generations'
+        generation = 'a' * 32
+        folder = parent / ('p1-' + fingerprint) / generation
+        folder.mkdir(parents=True)
+        path = folder / 'movies.json'
+        path.write_text(json.dumps({'_src': fingerprint, '_data': self.items}), encoding='utf-8')
+        (parent / ('p1-' + fingerprint + '.json')).write_text(json.dumps(
+            {'schema': 1, 'generation': generation}), encoding='utf-8')
+        with mock.patch.object(INDEX.time, 'time', return_value=-10):
+            INDEX.schedule_rebuild(str(path), self.source, 1, 'movie')
+        request = list(folder.glob('catalog-index-request-*.json'))
+        self.assertEqual(len(request), 1)
+        self.assertNotIn(self.source, request[0].read_text())
+        self.worker().run_pending()
+        self.assertFalse(request[0].exists())
+        index = INDEX.CatalogIndex(str(path), self.source, 1, 'movie')
+        self.assertTrue(index.reused)
+        self.assertEqual(index.item_count, len(self.items))
+        with self.assertRaises(ValueError):
+            INDEX.CatalogIndex(str(path), 'another-provider', 1, 'movie')
+        with self.assertRaises(ValueError):
+            INDEX.CatalogIndex(str(path), self.source, 2, 'movie')
+
+    def test_independent_workers_share_generation_build_lock(self):
+        fingerprint = hashlib.sha256(self.source.encode()).hexdigest()
+        parent = Path(self.temp.name) / 'catalog_generations'
+        folder = parent / ('p1-' + fingerprint) / ('a' * 32)
+        folder.mkdir(parents=True)
+        path = folder / 'movies.json'
+        path.write_text(json.dumps({'_src': fingerprint, '_data': self.items}), encoding='utf-8')
+        (parent / ('p1-' + fingerprint + '.json')).write_text(json.dumps(
+            {'schema': 1, 'generation': 'a' * 32}), encoding='utf-8')
+        with mock.patch.object(INDEX.time, 'time', return_value=-10):
+            INDEX.schedule_rebuild(str(path), self.source, 1, 'movie')
+        code = ('import sys; sys.path.insert(0, sys.argv[1]); '
+                'from provider_catalog_index import IndexBuildWorker; '
+                'IndexBuildWorker(sys.argv[2], idle=lambda: True, '
+                'cancelled=lambda: False).run_pending()')
+        processes = [subprocess.Popen([sys.executable, '-c', code,
+                     str(ROOT / 'third_party/xstream'), self.temp.name]) for _ in range(2)]
+        for process in processes:
+            self.assertEqual(process.wait(timeout=10), 0)
+        self.assertEqual(len(list(folder.glob('*.sqlite'))), 1)
+        self.assertFalse(list(folder.glob('catalog-index-request-*.json')))
+        self.assertEqual(INDEX.CatalogIndex(str(path), self.source, 1, 'movie').item_count,
+                         len(self.items))
+
+    def test_worker_ignores_requests_from_inactive_generations(self):
+        fingerprint = hashlib.sha256(self.source.encode()).hexdigest()
+        parent = Path(self.temp.name) / 'catalog_generations'
+        folder = parent / ('p1-' + fingerprint) / ('a' * 32)
+        folder.mkdir(parents=True)
+        path = folder / 'movies.json'
+        path.write_text(json.dumps({'_src': fingerprint, '_data': self.items}), encoding='utf-8')
+        (parent / ('p1-' + fingerprint + '.json')).write_text(json.dumps(
+            {'schema': 1, 'generation': 'b' * 32}), encoding='utf-8')
+        self.path = path
+        self.schedule()
+        self.worker().run_pending()
+        self.assertEqual(len(list(folder.glob('catalog-index-request-*.json'))), 1)
+        self.assertFalse(list(folder.glob('*.sqlite')))
+
+    def test_malformed_generation_pointer_does_not_block_legacy_request(self):
+        parent = Path(self.temp.name) / 'catalog_generations'
+        parent.mkdir()
+        name = 'p1-' + 'a' * 64
+        (parent / name).mkdir()
+        (parent / (name + '.json')).write_text('[]', encoding='utf-8')
+        self.schedule()
+        self.worker().run_pending()
+        self.assertTrue(self.open().reused)
 
     def test_missing_open_never_reads_catalog_or_starts_a_build(self):
         before = self.path.read_bytes()

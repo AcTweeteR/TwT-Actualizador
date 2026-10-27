@@ -21,7 +21,7 @@ class CandidateSourceMetadataTests(unittest.TestCase):
                          ("skin.actweeter", "1.2.36~beta5"))
         self.assertEqual((repository.get("id"), repository.get("version")),
                          ("repository.actweeter", "1.0.3"))
-        self.assertEqual(xstream["distribution_version"], "1.1.2.36~beta4")
+        self.assertEqual(xstream["distribution_version"], "1.1.2.38~beta1")
         rivulet = json.loads((ROOT / "third_party/rivulet/upstream.json").read_text())
         self.assertEqual(rivulet["version"], "1.0.2")
         self.assertEqual(rivulet["sha256"],
@@ -45,7 +45,10 @@ class CandidateSourceMetadataTests(unittest.TestCase):
                          ("repository.rivulet", "1.0.2"))
         required = service.find("requires/import[@addon='plugin.video.xstream-pro']")
         self.assertIsNotNone(required)
-        self.assertEqual(required.get("version"), xstream["distribution_version"])
+        self.assertEqual(required.get("version"), "1.1.2.36~beta4")
+        minimum = tuple(map(int, required.get("version").split('~')[0].split('.')))
+        candidate = tuple(map(int, xstream["distribution_version"].split('~')[0].split('.')))
+        self.assertGreater(candidate, minimum)
 
     def test_migration_is_versioned_after_official_0_4_31_layout(self):
         sys_path = ROOT / "addons/service.actweeter/resources/lib"

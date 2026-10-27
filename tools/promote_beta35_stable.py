@@ -29,7 +29,7 @@ def build(output: Path) -> dict:
         output,
         beta_manifest=root / "manifests/actweeter-beta35-20261027.json",
         versions=VERSIONS,
-        testing_index_path=root / "docs/testing/repo/addons.xml",
+        testing_index_path=root / "manifests/archive/beta35-testing-addons.xml",
         stable_index_path=archived_index,
         notes=NOTES,
         previous_index_sha256=previous,

@@ -143,8 +143,26 @@ def _norm(value):
     return ''.join(char for char in value if char.isalnum())
 
 
+def _generation_provider(path, profile):
+    generation = os.path.dirname(os.path.abspath(path))
+    provider = os.path.dirname(generation)
+    if (os.path.basename(os.path.dirname(provider)) != 'catalog_generations'
+            or not re.fullmatch(r'[a-f0-9]{32}', os.path.basename(generation))):
+        return None
+    match = re.fullmatch(r'p([1-9]|10)-([a-f0-9]{64})', os.path.basename(provider))
+    if not match or int(match.group(1)) != int(profile):
+        raise ValueError('catalog profile does not match generation')
+    return match.group(2)
+
+
 def _stamp(path, source, profile, stype):
     stat = os.stat(path)
+    provider = _generation_provider(path, profile)
+    if provider:
+        identity = source if source == provider else hashlib.sha256(source.encode('utf-8')).hexdigest()
+        if identity != provider:
+            raise ValueError('catalog provider does not match generation')
+        source = provider
     return (str(stat.st_size), str(getattr(stat, 'st_mtime_ns', int(stat.st_mtime * 1e9))),
             str(getattr(stat, 'st_ino', 0)), '2', hashlib.sha256(
                 (str(profile) + '\0' + source + '\0' + stype).encode('utf-8')).hexdigest())
@@ -196,7 +214,10 @@ class CatalogIndex:
                     raise ValueError('empty catalog')
                 with mmap.mmap(source_file.fileno(), 0, access=mmap.ACCESS_READ) as raw:
                     phase = time.perf_counter() if trace is not None else 0
-                    if _provider_source(raw) != source:
+                    stored_source = _provider_source(raw)
+                    provider = _generation_provider(self.catalog_path, self.profile)
+                    if stored_source != source and not (provider and stored_source == provider
+                            and hashlib.sha256(source.encode('utf-8')).hexdigest() == provider):
                         raise ValueError('catalog provider does not match')
                     if trace is not None:
                         phases['source'] += time.perf_counter() - phase
@@ -504,10 +525,8 @@ class IndexBuildWorker:
         if not self.idle():
             return
         try:
-            with os.scandir(self.profile_dir) as entries:
-                if not any(entry.name.startswith(_REQUEST_PREFIX) and entry.name.endswith('.json')
-                           for entry in entries):
-                    return
+            if not any(self._requests()):
+                return
         except OSError:
             return
         self.thread = threading.Thread(target=self.run_pending, name='XStreamCatalogIndex', daemon=True)
@@ -521,6 +540,39 @@ class IndexBuildWorker:
     def _cancel(self):
         return self.stopping.is_set() or self.cancelled()
 
+    def _requests(self):
+        directories = [self.profile_dir]
+        root = os.path.join(self.profile_dir, 'catalog_generations')
+        if os.path.isdir(root) and not os.path.islink(root):
+            for name in sorted(os.listdir(root)):
+                if not re.fullmatch(r'p(?:[1-9]|10)-[a-f0-9]{64}', name):
+                    continue
+                parent = os.path.join(root, name)
+                pointer = os.path.join(root, name + '.json')
+                if os.path.islink(parent) or os.path.islink(pointer):
+                    continue
+                try:
+                    with open(pointer, encoding='utf-8') as stream:
+                        value = json.loads(stream.read(4096))
+                    if not isinstance(value, dict):
+                        continue
+                    generation = value.get('generation')
+                    if value.get('schema') != 1 or not isinstance(generation, str) or not re.fullmatch(r'[a-f0-9]{32}', generation):
+                        continue
+                    directory = os.path.join(parent, generation)
+                    if os.path.isdir(directory) and not os.path.islink(directory):
+                        directories.append(directory)
+                except (OSError, ValueError, TypeError):
+                    continue
+        for directory in directories:
+            try:
+                names = sorted(os.listdir(directory))
+            except OSError:
+                continue
+            for name in names:
+                if re.fullmatch(_REQUEST_PREFIX + r'[a-f0-9]{24}\.json', name):
+                    yield os.path.join(directory, name)
+
     def run_pending(self):
         """Also callable synchronously by deterministic tests and diagnostics."""
         if self._cancel() or not self.idle():
@@ -533,10 +585,7 @@ class IndexBuildWorker:
                     fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
                 except BlockingIOError:
                     return
-                for name in sorted(os.listdir(self.profile_dir)):
-                    if not re.fullmatch(_REQUEST_PREFIX + r'[a-f0-9]{24}\.json', name):
-                        continue
-                    path = os.path.join(self.profile_dir, name)
+                for path in self._requests():
                     if os.path.islink(path):
                         continue
                     try:
@@ -563,9 +612,12 @@ class IndexBuildWorker:
                 trace.emit()
 
     def _build_request(self, request_path, payload, trace):
-        catalog_path = os.path.join(self.profile_dir, payload['catalog'])
+        directory = os.path.dirname(request_path)
+        catalog_path = os.path.join(directory, payload['catalog'])
         try:
             self._check_cancel()
+            if os.path.islink(catalog_path):
+                raise ValueError('catalog is a symbolic link')
             with open(catalog_path, 'rb') as stream:
                 with mmap.mmap(stream.fileno(), 0, access=mmap.ACCESS_READ) as raw:
                     source = _provider_source(raw)
@@ -575,9 +627,9 @@ class IndexBuildWorker:
                 os.remove(request_path)
                 return
             prefix = os.path.basename(catalog_path) + '.idx-' + payload['stamp'][4][:16] + '.sqlite.tmp-'
-            for name in os.listdir(self.profile_dir):
+            for name in os.listdir(directory):
                 if name.startswith(prefix):
-                    os.remove(os.path.join(self.profile_dir, name))
+                    os.remove(os.path.join(directory, name))
             CatalogIndex(catalog_path, source, payload['profile'], payload['stype'],
                          build=True, trace=trace, cancel=self._cancel, rebuild=True)
             if trace is not None:
