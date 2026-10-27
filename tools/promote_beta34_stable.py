@@ -36,7 +36,8 @@ def sha(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def promote(archive: Path, target: Path, addon_id: str, beta: str, stable: str) -> None:
+def promote(archive: Path, target: Path, addon_id: str, beta: str, stable: str,
+            xstream_versions=VERSIONS["plugin.video.xstream-pro"], notes=NOTES) -> None:
     if target.exists() or target.is_symlink():
         raise ValueError("refusing to overwrite Stable ZIP: " + str(target))
     addon_from_zip(archive, addon_id, beta)
@@ -54,22 +55,22 @@ def promote(archive: Path, target: Path, addon_id: str, beta: str, stable: str) 
                     raise ValueError("unexpected Beta version metadata")
                 data = data.replace(old, f'version="{stable}"'.encode())
                 if addon_id == "service.actweeter":
-                    dependency = b'<import addon="plugin.video.xstream-pro" version="1.1.2.36~beta3" />'
+                    dependency = f'<import addon="plugin.video.xstream-pro" version="{xstream_versions[0]}" />'.encode()
                     if data.count(dependency) != 1:
                         raise ValueError("unexpected XStream dependency metadata")
-                    data = data.replace(dependency, b'<import addon="plugin.video.xstream-pro" version="1.1.2.36" />')
-                if addon_id in NOTES:
+                    data = data.replace(dependency, f'<import addon="plugin.video.xstream-pro" version="{xstream_versions[1]}" />'.encode())
+                if addon_id in notes:
                     old_news = f"<news>changelog-{beta}.txt</news>".encode()
                     if data.count(old_news) != 1:
                         raise ValueError("unexpected Beta release note metadata")
                     data = data.replace(old_news, f"<news>changelog-{stable}.txt</news>".encode())
                 ET.fromstring(data)
             output.writestr(info, data)
-        if addon_id in NOTES:
+        if addon_id in notes:
             note = zipfile.ZipInfo(note_name, source.infolist()[0].date_time)
             note.compress_type = zipfile.ZIP_DEFLATED
             note.external_attr = (stat.S_IFREG | 0o644) << 16
-            output.writestr(note, NOTES[addon_id], compress_type=zipfile.ZIP_DEFLATED,
+            output.writestr(note, notes[addon_id], compress_type=zipfile.ZIP_DEFLATED,
                             compresslevel=9)
     addon_from_zip(target, addon_id, stable)
 
@@ -101,17 +102,22 @@ def publish_metadata(package: Path, addon: ET.Element, output: Path) -> list[dic
     return result
 
 
-def build(output: Path) -> dict:
+def build(output: Path, *, beta_manifest=BETA_MANIFEST, versions=VERSIONS,
+          testing_index_path=ROOT / "manifests/archive/beta34-testing-addons.xml",
+          stable_index_path=ROOT / "manifests/archive/beta34-stable-addons.xml",
+          notes=NOTES, previous_index_sha256="7ce09e4d820d8c52ec697d7a2bac5451a1076eec5d89e2234072be490efe54ee",
+          release="actweeter-stable-beta34-20261027",
+          beta_release="actweeter-beta34-20261027") -> dict:
     if output.exists() or output.is_symlink():
         raise ValueError("refusing to overwrite Stable candidate")
-    beta = json.loads(BETA_MANIFEST.read_text())
-    if beta.get("release") != "actweeter-beta34-20261027" or beta.get("channel") != "testing":
+    beta = json.loads(beta_manifest.read_text())
+    if beta.get("release") != beta_release or beta.get("channel") != "testing":
         raise ValueError("unexpected Beta manifest")
-    testing_index = (ROOT / "docs/testing/repo/addons.xml").read_bytes()
+    testing_index = testing_index_path.read_bytes()
     if sha(testing_index) != beta["index_sha256"]:
         raise ValueError("Testing index differs from Beta34 manifest")
     sources = {row["id"]: row for row in beta["addons"]}
-    if set(sources) != {"repository.actweeter.testing", *VERSIONS,
+    if set(sources) != {"repository.actweeter.testing", *versions,
                         "repository.rivulet", "repository.zachmorris"}:
         raise ValueError("unexpected Beta34 package set")
     for addon_id, row in sources.items():
@@ -128,7 +134,7 @@ def build(output: Path) -> dict:
                         for dep in addon.findall("requires/import")]
         if dependencies != row["dependencies"]:
             raise ValueError("Beta34 dependency manifest differs: " + addon_id)
-    current = ET.fromstring((ROOT / "repo/addons.xml").read_bytes())
+    current = ET.fromstring(stable_index_path.read_bytes())
     if tuple(node.get("id") for node in current) != EXPECTED_IDS:
         raise ValueError("unexpected current Stable index")
     output.mkdir(parents=True)
@@ -137,10 +143,8 @@ def build(output: Path) -> dict:
     index = ET.Element("addons")
     for old in current:
         addon_id = old.get("id")
-        if addon_id in VERSIONS:
-            beta_version, stable_version = VERSIONS[addon_id]
-            if beta_version.split("~", 1)[0] != stable_version:
-                raise ValueError("Stable version does not match verified Beta")
+        if addon_id in versions:
+            beta_version, stable_version = versions[addon_id]
             old_version = old.get("version")
             if tuple(map(int, old_version.split("."))) > tuple(map(int, stable_version.split("."))):
                 raise ValueError("Stable version would downgrade " + addon_id)
@@ -148,13 +152,14 @@ def build(output: Path) -> dict:
             rel = Path("repo") / addon_id / f"{addon_id}-{stable_version}.zip"
             target = output / rel
             target.parent.mkdir(parents=True)
-            promote(source, target, addon_id, beta_version, stable_version)
+            promote(source, target, addon_id, beta_version, stable_version,
+                    versions["plugin.video.xstream-pro"], notes)
             published = ROOT / rel
-            if old_version == stable_version:
+            if published.exists() or published.is_symlink():
                 if not published.is_file() or published.read_bytes() != target.read_bytes():
                     raise ValueError("published Stable version has different bytes: " + addon_id)
-            elif published.exists() or published.is_symlink():
-                raise ValueError("refusing to reuse an existing Stable version: " + addon_id)
+            elif old_version == stable_version:
+                raise ValueError("indexed Stable version has no matching ZIP: " + addon_id)
             addon = addon_from_zip(target, addon_id, stable_version)
             assets.extend(publish_metadata(target, addon, output))
         else:
@@ -171,7 +176,7 @@ def build(output: Path) -> dict:
         entries.append(dict(id=addon_id, version=addon.get("version"), path=str(rel),
                             sha256=sha(target.read_bytes())))
     service_dep = index.find("addon[@id='service.actweeter']/requires/import[@addon='plugin.video.xstream-pro']")
-    if service_dep is None or service_dep.get("version") != VERSIONS["plugin.video.xstream-pro"][1]:
+    if service_dep is None or service_dep.get("version") != versions["plugin.video.xstream-pro"][1]:
         raise ValueError("Stable Service/XStream pair differs")
     service = index.find("addon[@id='service.actweeter']")
     if service.find("requires/import[@addon='script.trakt']") is None:
@@ -180,12 +185,12 @@ def build(output: Path) -> dict:
     (output / "repo/addons.xml").write_bytes(data)
     md5 = hashlib.md5(data).hexdigest()
     (output / "repo/addons.xml.md5").write_text(md5 + "\n")
-    manifest = dict(release="actweeter-stable-beta34-20261027", channel="stable",
+    manifest = dict(release=release, channel="stable",
                     release_date="2026-10-27",
-                    beta_manifest=str(BETA_MANIFEST.relative_to(ROOT)),
+                    beta_manifest=str(beta_manifest.relative_to(ROOT)),
                     source_commit=beta["source_commit"],
                     beta_index_sha256=beta["index_sha256"],
-                    previous_index_sha256="7ce09e4d820d8c52ec697d7a2bac5451a1076eec5d89e2234072be490efe54ee",
+                    previous_index_sha256=previous_index_sha256,
                     index_sha256=sha(data),
                     index_md5=md5, addons=entries, assets=assets)
     (output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")

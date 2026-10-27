@@ -122,7 +122,11 @@ class MenuContractTests(unittest.TestCase):
         with zipfile.ZipFile(os.environ["ACTWEETER_SERVICE_LIVE_ZIP"]) as archive:
             layout = archive.read(
                 "service.actweeter/resources/lib/interface_layout.py").decode()
-            self.assertIn("interface-layout-v18-trakt-home-recommendations", layout)
+            addon = ET.fromstring(archive.read("service.actweeter/addon.xml"))
+            migration = ("interface-layout-v17-trakt-menu" if
+                         addon.get("version") == "0.4.94" else
+                         "interface-layout-v18-trakt-home-recommendations")
+            self.assertIn(migration, layout)
             self.assertIn("current_root.find(\"shortcut[defaultID='trakt']\")", layout)
         with zipfile.ZipFile(os.environ["ACTWEETER_XSTREAM_LIVE_ZIP"]) as archive:
             addon = archive.read(

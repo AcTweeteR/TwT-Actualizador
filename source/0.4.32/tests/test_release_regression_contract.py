@@ -25,7 +25,7 @@ class ReleaseRegressionContract(unittest.TestCase):
                 self.assertIsNotNone(addon.find('extension[@point="xbmc.addon.repository"]'))
 
     @unittest.skipUnless(os.environ.get('ACTWEETER_RELEASE_CHANNEL') == 'stable',
-                         'Stable publication is intentionally deferred until Mac and Lenovo pass')
+                         'requires ACTWEETER_RELEASE_CHANNEL=stable')
     def test_stable_bootstrap_repositories_are_discoverable(self):
         index = ET.parse(REPO / 'addons.xml').getroot()
         for addon_id in REQUIRED_SEED_REPOS:

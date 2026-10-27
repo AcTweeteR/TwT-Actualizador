@@ -1,0 +1,160 @@
+<?xml version='1.0' encoding='utf-8'?>
+<addons><addon id="repository.actweeter" name="AcTweeteR Repository" version="1.0.3" provider-name="AcTweeteR">
+	<extension point="xbmc.addon.repository" name="AcTweeteR Repository">
+		<requires>
+			<import addon="xbmc.addon" version="12.0.0" />
+		</requires>
+		<dir minversion="20.9.1">
+			<info compressed="false">https://raw.githubusercontent.com/AcTweeteR/TwT-Actualizador/main/repo/addons.xml</info>
+			<checksum>https://raw.githubusercontent.com/AcTweeteR/TwT-Actualizador/main/repo/addons.xml.md5</checksum>
+			<datadir zip="true">https://raw.githubusercontent.com/AcTweeteR/TwT-Actualizador/main/repo/</datadir>
+		</dir>
+		<dir minversion="20.9.1">
+			<info compressed="false">https://raw.githubusercontent.com/matke-84/repository.bingie/main/omega/addons.xml</info>
+			<checksum>https://raw.githubusercontent.com/matke-84/repository.bingie/main/omega/addons.xml.md5</checksum>
+			<datadir zip="true">https://raw.githubusercontent.com/matke-84/repository.bingie/main/omega/</datadir>
+		</dir>
+		<dir minversion="20.9.1">
+			<info compressed="false">https://slyguy.uk/.repo/repository.slyguy/addons.xml</info>
+			<checksum>https://slyguy.uk/.repo/repository.slyguy/addons.xml.md5</checksum>
+			<datadir zip="true">https://slyguy.uk/.repo/repository.slyguy/</datadir>
+		</dir>
+	</extension>
+	<extension point="xbmc.addon.metadata">
+		<summary lang="es_ES">Repositorio oficial de distribución AcTweeteR</summary>
+		<description lang="es_ES">Canal manual de distribución de la skin AcTweeteR para Kodi.</description>
+		<summary lang="en_GB">AcTweeteR distribution repository</summary>
+		<description lang="en_GB">Manual Kodi add-on distribution channel for AcTweeteR.</description>
+		<platform>all</platform>
+		<license>MIT</license>
+		<news>changelog-1.0.3.txt</news>
+		<assets>
+			<icon>resources/icon.png</icon>
+		</assets>
+	</extension>
+</addon><addon id="skin.actweeter" version="1.2.36" name="AcTweeteR" provider-name="AcTweeteR maintainers">
+	<requires>
+		<import version="5.17.0" addon="xbmc.gui" />
+		<import addon="script.bingie.helper" version="1.1.2" />
+		<import addon="script.bingie.toolbox" version="1.0.0" />
+		<import addon="script.bingie.widgets" version="1.0.1" />
+		<import addon="script.skinshortcuts" version="2.0.3" />
+		<import addon="service.actweeter" version="0.4.53" />
+		<import addon="resource.language.es_es" version="11.0.108" />
+		<import addon="resource.images.studios.coloured" version="0.0.24" />
+		<import addon="plugin.video.tmdb.bingie.helper" version="1.0.1" />
+		<import addon="plugin.program.autocompletion" version="2.1.2" />
+	</requires>
+	<extension debugging="false" defaultthemename="Textures.xbt" effectslowdown="1" point="xbmc.gui.skin">
+        <res aspect="16:9" default="true" folder="1080i" height="1080" width="1920" />
+    </extension>
+	<extension point="xbmc.addon.metadata">
+		<summary lang="en_GB">AcTweeteR streaming interface for Kodi.</summary>
+		<summary lang="zh_CN">AcTweeteR Kodi 流媒体界面。</summary>
+		<summary lang="es_ES">Kodi con una interfaz cinematográfica y personalizable.</summary>
+		<summary lang="es_AR">Kodi con una interfaz cinematográfica y personalizable.</summary>
+		<summary lang="es_MX">Kodi con una interfaz cinematográfica y personalizable.</summary>
+		<description lang="en_GB">AcTweeteR – a locally maintained streaming interface for movies, series and live TV.</description>
+		<description lang="zh_CN">AcTweeteR - 电影、剧集和电视的流媒体界面。</description>
+		<description lang="es_ES">AcTweeteR - tu espacio de películas, series y televisión.</description>
+		<description lang="es_AR">AcTweeteR - tu espacio de películas, series y televisión.</description>
+		<description lang="es_MX">AcTweeteR - tu espacio de películas, series y televisión.</description>
+		<platform>all</platform>
+		<license>GPL v2.0</license>
+		<news>changelog-1.2.36.txt</news>
+		<forum />
+		<source />
+		<assets>
+			<icon>resources/icon.png</icon>
+			<fanart>extras/media/backgrounds/settings_interface.jpg</fanart>
+		</assets>
+	</extension>
+</addon><addon id="service.actweeter" name="AcTweeteR Service" version="0.4.94" provider-name="AcTweeteR maintainers">
+  <requires>
+    <import addon="xbmc.python" version="3.0.0" />
+        <import addon="plugin.video.xstream-pro" version="1.1.2.36" />
+    <import addon="pvr.iptvsimple" version="21.4.0" />
+    <import addon="slyguy.trailers" version="0.2.1" />
+    <import addon="plugin.video.youtube" />
+    <import addon="script.trakt" version="3.9.0" />
+    <import addon="plugin.video.tmdb.bingie.helper" version="1.0.1" />
+  </requires>
+  <extension point="xbmc.service" library="service.py" start="startup" />
+  <extension point="xbmc.python.script" library="setup.py">
+    <provides>executable</provides>
+  </extension>
+  <extension point="xbmc.python.pluginsource" library="resources/lib/diagnostic_plugin.py">
+    <provides>executable</provides>
+  </extension>
+  <extension point="xbmc.addon.metadata">
+    <summary lang="en_GB">AcTweeteR search, setup and service-status helper</summary>
+    <summary lang="es_ES">Ayudante de búsqueda, configuración y estado de servicios de AcTweeteR</summary>
+    <description lang="en_GB">Schedules provider-only XStream search-index refreshes and offers a resumable setup wizard that remains incomplete until required runtime checks pass. Credentials remain in official add-on settings.</description>
+    <description lang="es_ES">Búsqueda visual inteligente de películas, series, programas y personas. Consulta el índice local de XStream, la guía EPG y los metadatos del helper TMDb existente. Coordina la configuración reanudable y las actualizaciones del catálogo. Las credenciales permanecen en los ajustes oficiales de cada complemento.</description>
+    <platform>all</platform>
+    <license>GPL-2.0-or-later</license>
+    <news>changelog-0.4.94.txt</news>
+  </extension>
+</addon><addon id="plugin.video.xstream-pro" name="Xstream Pro" version="1.1.2.36" provider-name="PesicP">
+    <requires>
+        <import addon="xbmc.python" version="3.0.1" />
+        <import addon="script.module.requests" version="2.22.0" />
+        <import addon="pvr.iptvsimple" version="21.4.0" />
+        <import addon="service.upnext" version="1.1.0" optional="true" />
+    </requires>
+    <extension point="xbmc.python.pluginsource" library="resources/lib/addon.py">
+        <provides>video</provides>
+    </extension>
+    <extension point="xbmc.service" library="service.py" start="startup" />
+    <extension point="xbmc.addon.metadata">
+        <reuselanguageinvoker>false</reuselanguageinvoker>
+        <summary lang="en_GB">Xstream Pro - Organised M3U &amp; Xtream player</summary>
+        <description lang="en_GB">A clean M3U &amp; Xtream player with proper sorting: PVR, Live TV, Movies, Series and Replay, TMDB, Trakt, EPG support.</description>
+        <platform>all</platform>
+        <license>CC BY-NC 4.0</license>
+        <source>https://github.com/Pesicp/XStreamPro</source>
+        <assets>
+            <icon>icon.png</icon>
+            <fanart>resources/background/background.png</fanart>
+        </assets>
+    </extension>
+</addon><addon id="repository.rivulet" name="Rivulet Repository" version="1.0.2" provider-name="M0Rf30">
+  <extension point="xbmc.addon.repository" name="Rivulet Repository">
+    <dir>
+      <info compressed="false">https://rivulet-kodi.github.io/plugin.video.rivulet/addons.xml</info>
+      <checksum>https://rivulet-kodi.github.io/plugin.video.rivulet/addons.xml.md5</checksum>
+      <datadir zip="true">https://rivulet-kodi.github.io/plugin.video.rivulet/</datadir>
+    </dir>
+  </extension>
+  <extension point="xbmc.addon.metadata">
+    <summary lang="en_GB">Rivulet Repository</summary>
+    <description lang="en_GB">Add this repository to Kodi to install Rivulet and receive automatic updates.</description>
+    <news>v1.0.2:
+- Changed: the new Rivulet ripple logo. The artwork shipped with 0.16.0's rebrand, but a repository addon only refetches its icon when its own version changes - this release exists to carry that change to installed copies.</news>
+    <platform>all</platform>
+    <license>MIT</license>
+    <website>https://github.com/rivulet-kodi/plugin.video.rivulet</website>
+    <source>https://github.com/rivulet-kodi/plugin.video.rivulet</source>
+    <assets>
+      <icon>icon.png</icon>
+      <fanart>fanart.jpg</fanart>
+    </assets>
+  </extension>
+</addon><addon id="repository.zachmorris" name="Zach Morris Add-ons" version="1.0.4" provider-name="zachmorris">
+    <extension point="xbmc.addon.repository" name="Zach Morris Add-ons">
+        <dir minversion="18.0.0">
+            <info compressed="false">https://github.com/zach-morris/repository.zachmorris/raw/master/addons.xml</info>
+            <checksum>https://github.com/zach-morris/repository.zachmorris/raw/master/addons.xml.md5</checksum>
+            <datadir zip="true">https://github.com/zach-morris/repository.zachmorris/raw/master/</datadir>
+        </dir>
+    </extension>
+    <extension point="xbmc.addon.metadata">
+        <summary lang="en_GB">Zach Morris Add-ons</summary>
+        <description>Zach Morris Add-ons</description>
+        <platform>all</platform>
+        <assets>
+            <icon>icon.png</icon>
+            <fanart>fanart.jpg</fanart>
+        </assets>
+    </extension>
+</addon></addons>

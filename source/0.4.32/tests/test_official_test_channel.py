@@ -130,7 +130,7 @@ class OfficialTestChannelTests(unittest.TestCase):
             ])
             self.assertEqual(checksum.read_text().strip(), hashlib.md5(index.read_bytes()).hexdigest())
             self.assert_metadata_assets_published(index)
-            self.assertEqual(ET.parse(ROOT / "repo" / "addons.xml").getroot().find("addon[@id='service.actweeter']").get("version"), "0.4.94")
+            self.assertEqual(ET.parse(ROOT / "repo" / "addons.xml").getroot().find("addon[@id='service.actweeter']").get("version"), "0.4.95")
             self.assertEqual((ROOT / "repo" / "addons.xml").read_bytes(), stable_index)
             with zipfile.ZipFile(bootstrap) as archive:
                 self.assertIsNone(archive.testzip())
