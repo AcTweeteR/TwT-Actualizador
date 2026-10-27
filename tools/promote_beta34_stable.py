@@ -139,11 +139,22 @@ def build(output: Path) -> dict:
         addon_id = old.get("id")
         if addon_id in VERSIONS:
             beta_version, stable_version = VERSIONS[addon_id]
+            if beta_version.split("~", 1)[0] != stable_version:
+                raise ValueError("Stable version does not match verified Beta")
+            old_version = old.get("version")
+            if tuple(map(int, old_version.split("."))) > tuple(map(int, stable_version.split("."))):
+                raise ValueError("Stable version would downgrade " + addon_id)
             source = ROOT / sources[addon_id]["path"]
             rel = Path("repo") / addon_id / f"{addon_id}-{stable_version}.zip"
             target = output / rel
             target.parent.mkdir(parents=True)
             promote(source, target, addon_id, beta_version, stable_version)
+            published = ROOT / rel
+            if old_version == stable_version:
+                if not published.is_file() or published.read_bytes() != target.read_bytes():
+                    raise ValueError("published Stable version has different bytes: " + addon_id)
+            elif published.exists() or published.is_symlink():
+                raise ValueError("refusing to reuse an existing Stable version: " + addon_id)
             addon = addon_from_zip(target, addon_id, stable_version)
             assets.extend(publish_metadata(target, addon, output))
         else:
