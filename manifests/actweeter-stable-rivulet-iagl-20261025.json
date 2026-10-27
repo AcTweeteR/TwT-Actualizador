@@ -2,6 +2,7 @@
   "release": "actweeter-stable-rivulet-iagl-20261025",
   "source_commit": "bcca210",
   "index_sha256": "7ce09e4d820d8c52ec697d7a2bac5451a1076eec5d89e2234072be490efe54ee",
+  "index_md5": "7ee84d298b4e6690216a8bd0de75cdd9",
   "addons": [
     {
       "id": "repository.actweeter",

@@ -18,7 +18,8 @@ def verify(root=ROOT, manifest_path=MANIFEST):
     index = (root / "repo/addons.xml").read_bytes()
     if hashlib.sha256(index).hexdigest() != manifest["index_sha256"]:
         raise ValueError("Stable index differs from release manifest")
-    if (root / "repo/addons.xml.md5").read_text().strip() != hashlib.md5(index).hexdigest():
+    if ((root / "repo/addons.xml.md5").read_text().strip() != manifest["index_md5"]
+            or hashlib.md5(index).hexdigest() != manifest["index_md5"]):
         raise ValueError("Stable index checksum differs")
     entries = manifest["addons"]
     expected = [(entry["id"], entry["version"]) for entry in entries]
