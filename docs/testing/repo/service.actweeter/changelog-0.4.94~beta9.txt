@@ -1,0 +1,1 @@
+Beta 35: migra de forma segura los widgets de Home y habilita EXPANDIR en Recomendaciones de Trakt.
