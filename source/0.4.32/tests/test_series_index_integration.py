@@ -43,6 +43,8 @@ class SeriesWidgetIndexIntegrationTests(unittest.TestCase):
                       {'tmdb_id': str(i), 'year': '2024', 'titles': []} for i in (4, 9)]},
                   '_log': lambda text: self.assertNotIn('password', text)}
         package = os.environ.get('ACTWEETER_XSTREAM_LIVE_ZIP')
+        if os.environ.get('ACTWEETER_RELEASE_CHANNEL') == 'stable':
+            package = ROOT.parents[1] / 'docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.38~beta2.zip'
         if not package or not Path(package).is_file():
             self.skipTest('candidate ZIP is not built')
         with zipfile.ZipFile(package) as archive:
