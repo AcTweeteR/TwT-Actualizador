@@ -25,7 +25,7 @@ class RivuletIaglReleaseFix(unittest.TestCase):
                     self.assertIsNone(z.testzip())
                     self.assertEqual(ET.fromstring(z.read(f'{aid}/addon.xml')).get('version'),version)
             self.assertEqual(addons['service.actweeter'].get('version'),
-                             '0.4.95' if channel == 'repo' else '0.4.94~beta9')
+                             '0.4.96' if channel == 'repo' else '0.4.94~beta9')
     def test_native_installer_does_not_gate_on_unreliable_installable_query(self):
         source=(ROOT/'source/0.4.32/addons/service.actweeter/setup.py').read_text()
         tree=ast.parse(source)

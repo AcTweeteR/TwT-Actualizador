@@ -10,6 +10,8 @@ on:
       - 'manifests/actweeter-stable-rivulet-iagl-20261025.json'
       - 'manifests/actweeter-stable-beta34-20261027.json'
       - 'manifests/actweeter-stable-beta35-20261027.json'
+      - 'manifests/actweeter-stable-beta37-20261028.json'
+      - 'tools/promote_beta37_stable.py'
       - 'manifests/archive/**'
       - 'tools/verify_current_stable.py'
       - 'tools/promote_beta34_stable.py'
@@ -26,6 +28,8 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -40,10 +44,10 @@ jobs:
       - name: Regression tests, mandatory release checks and security contract
         env:
           ACTWEETER_RELEASE_CHANNEL: stable
-          ACTWEETER_XSTREAM_LIVE_ZIP: ${{ github.workspace }}/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.37.zip
-          ACTWEETER_XSTREAM_TEST_ZIP: ${{ github.workspace }}/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.37.zip
-          ACTWEETER_SKIN_LIVE_ZIP: ${{ github.workspace }}/repo/skin.actweeter/skin.actweeter-1.2.37.zip
-          ACTWEETER_SERVICE_LIVE_ZIP: ${{ github.workspace }}/repo/service.actweeter/service.actweeter-0.4.95.zip
+          ACTWEETER_XSTREAM_LIVE_ZIP: ${{ github.workspace }}/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.38.zip
+          ACTWEETER_XSTREAM_TEST_ZIP: ${{ github.workspace }}/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.38.zip
+          ACTWEETER_SKIN_LIVE_ZIP: ${{ github.workspace }}/repo/skin.actweeter/skin.actweeter-1.2.38.zip
+          ACTWEETER_SERVICE_LIVE_ZIP: ${{ github.workspace }}/repo/service.actweeter/service.actweeter-0.4.96.zip
           ACTWEETER_BETA_INDEX: ${{ github.workspace }}/docs/testing/repo/addons.xml
           ACTWEETER_XSTREAM_UPSTREAM_ZIP: ${{ runner.temp }}/xstream-upstream-1.1.2.zip
         run: python3 -m pytest -q -rs source/0.4.32/tests
@@ -60,6 +64,8 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -77,10 +83,21 @@ jobs:
           cmp "$RUNNER_TEMP/stable-beta34/repo/skin.actweeter/skin.actweeter-1.2.36.zip" repo/skin.actweeter/skin.actweeter-1.2.36.zip
           cmp "$RUNNER_TEMP/stable-beta34/repo/service.actweeter/service.actweeter-0.4.94.zip" repo/service.actweeter/service.actweeter-0.4.94.zip
           cmp "$RUNNER_TEMP/stable-beta34/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.36.zip" repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.36.zip
-          python3 tools/promote_beta35_stable.py --output-dir "$RUNNER_TEMP/stable-beta35"
-          cmp "$RUNNER_TEMP/stable-beta35/repo/addons.xml" repo/addons.xml
-          cmp "$RUNNER_TEMP/stable-beta35/repo/addons.xml.md5" repo/addons.xml.md5
+          python3 -c 'import sys; from pathlib import Path; sys.path.insert(0, "tools"); import promote_beta35_stable; promote_beta35_stable.build(Path(sys.argv[1]))' "$RUNNER_TEMP/stable-beta35"
+          cmp "$RUNNER_TEMP/stable-beta35/repo/addons.xml" manifests/archive/beta35-stable-addons.xml
+          python3 -c 'import hashlib, pathlib; b=pathlib.Path("manifests/archive/beta35-stable-addons.xml").read_bytes(); assert hashlib.md5(b).hexdigest() == pathlib.Path("${{ runner.temp }}/stable-beta35/repo/addons.xml.md5").read_text().strip()'
           cmp "$RUNNER_TEMP/stable-beta35/manifest.json" manifests/actweeter-stable-beta35-20261027.json
           cmp "$RUNNER_TEMP/stable-beta35/repo/skin.actweeter/skin.actweeter-1.2.37.zip" repo/skin.actweeter/skin.actweeter-1.2.37.zip
           cmp "$RUNNER_TEMP/stable-beta35/repo/service.actweeter/service.actweeter-0.4.95.zip" repo/service.actweeter/service.actweeter-0.4.95.zip
           cmp "$RUNNER_TEMP/stable-beta35/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.37.zip" repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.37.zip
+
+      - name: Rebuild current Beta37 Stable promotion
+        run: |
+          set -eu
+          python3 tools/promote_beta37_stable.py --output-dir "$RUNNER_TEMP/stable-beta37"
+          cmp "$RUNNER_TEMP/stable-beta37/repo/addons.xml" repo/addons.xml
+          cmp "$RUNNER_TEMP/stable-beta37/repo/addons.xml.md5" repo/addons.xml.md5
+          cmp "$RUNNER_TEMP/stable-beta37/manifest.json" manifests/actweeter-stable-beta37-20261028.json
+          cmp "$RUNNER_TEMP/stable-beta37/repo/skin.actweeter/skin.actweeter-1.2.38.zip" repo/skin.actweeter/skin.actweeter-1.2.38.zip
+          cmp "$RUNNER_TEMP/stable-beta37/repo/service.actweeter/service.actweeter-0.4.96.zip" repo/service.actweeter/service.actweeter-0.4.96.zip
+          cmp "$RUNNER_TEMP/stable-beta37/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.38.zip" repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.38.zip

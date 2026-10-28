@@ -1,0 +1,73 @@
+{
+  "release": "actweeter-stable-beta37",
+  "channel": "stable",
+  "source_commit": "23d3da2d303d166659f08c1e3c8e113a0c12daeb",
+  "previous_index_sha256": "f890719e18b6c478c44af9cbf9910ec29642943dd686bfcc51cef8cea1469b5f",
+  "beta_index_sha256": "d7cedd024c728b96db918e4eac3eee8ea7127e4b7b69f26fa67a1735bb530393",
+  "index_sha256": "3f0f219bad7736ada4c33386c1b7af00db2536d973b9e3d409a1f7550873c8cf",
+  "index_md5": "95df612e074f1406703385f2241ede83",
+  "addons": [
+    {
+      "id": "repository.actweeter",
+      "version": "1.0.3",
+      "path": "repo/repository.actweeter/repository.actweeter-1.0.3.zip",
+      "sha256": "74620e81ff9a161bb7b0650f01e94406ccc9fa9366210ebb36e58872bb4995e8"
+    },
+    {
+      "id": "skin.actweeter",
+      "version": "1.2.38",
+      "path": "repo/skin.actweeter/skin.actweeter-1.2.38.zip",
+      "sha256": "e51aeb8afb0f3e0982fa1e2fb7ea7d7c8654290b76be4cc07dad714081513340"
+    },
+    {
+      "id": "service.actweeter",
+      "version": "0.4.96",
+      "path": "repo/service.actweeter/service.actweeter-0.4.96.zip",
+      "sha256": "583e2b4593470d032f9938a2e045b4ae86023149a01a3b361e37e6265cfff302"
+    },
+    {
+      "id": "plugin.video.xstream-pro",
+      "version": "1.1.2.38",
+      "path": "repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.38.zip",
+      "sha256": "cf55411a60ad441b57a6a16e4e2dabe6e7491d1330f6ad9e180d396946150d6a"
+    },
+    {
+      "id": "repository.rivulet",
+      "version": "1.0.2",
+      "path": "repo/repository.rivulet/repository.rivulet-1.0.2.zip",
+      "sha256": "e4aabb495d6b49f39b8ec0c828ad9fa4562c387547739e0f38351ddabac9a815"
+    },
+    {
+      "id": "repository.zachmorris",
+      "version": "1.0.4",
+      "path": "repo/repository.zachmorris/repository.zachmorris-1.0.4.zip",
+      "sha256": "3dde8f37dcd64f122cf1e897e139e5b8b7a3cd0ec15db6a1f5c7b59852cb661b"
+    }
+  ],
+  "assets": [
+    {
+      "path": "repo/skin.actweeter/resources/icon.png",
+      "sha256": "ef40775c575c25868ebaeaa52c18664b6ce6fce40b0ad4ecb6221d954396bc9c"
+    },
+    {
+      "path": "repo/skin.actweeter/extras/media/backgrounds/settings_interface.jpg",
+      "sha256": "1b342cf38b29798ffb35a05fdbd60bc0d3c38e0e41469f66708c6cf7bc8454a0"
+    },
+    {
+      "path": "repo/skin.actweeter/changelog-1.2.38.txt",
+      "sha256": "644241f0a91301ce624331c2fc85a8ff51b9bc65b3b1a092f6cff6a4b02cd75d"
+    },
+    {
+      "path": "repo/service.actweeter/changelog-0.4.96.txt",
+      "sha256": "34a28300f72ab852ff0469decded6210fbe51e4576eb76a0374b2af210eb7d2e"
+    },
+    {
+      "path": "repo/plugin.video.xstream-pro/icon.png",
+      "sha256": "4a29ce246b6315e848b4481696e9fa87de4ca1bc6732c24dddf2732e45bfd20b"
+    },
+    {
+      "path": "repo/plugin.video.xstream-pro/resources/background/background.png",
+      "sha256": "931d9a839108487fb80b1c6c4e6ec36815f5c4ba6e4c6c9d08346432136902d5"
+    }
+  ]
+}
