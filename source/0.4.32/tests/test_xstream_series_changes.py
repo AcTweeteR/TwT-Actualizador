@@ -2,6 +2,7 @@ import importlib.util
 import json
 from datetime import datetime, timezone
 import sys
+import subprocess
 import tempfile
 import time
 import types
@@ -85,6 +86,96 @@ class SeriesChangesTests(unittest.TestCase):
         self.assertEqual([row["series_id"] for row in data["events"]], ["0"])
         self.assertNotIn("provider.invalid", json.dumps(data))
         self.assertNotIn("account", json.dumps(data))
+
+    def test_generation_marker_requires_complete_persisted_snapshot(self):
+        provider = ("https://provider.invalid", "account")
+        old = [{"series_id": "1", "name": "Old"}]
+        self.assertTrue(self.module.record_catalog(self.addon, 1, old, provider=provider,
+                                                   generation="a" * 32))
+        self.assertTrue(self.module.generation_processed(self.addon, 1, provider, "a" * 32))
+        self.assertFalse(self.module.generation_processed(self.addon, 1, provider, "b" * 32))
+        self.assertFalse(self.module.record_catalog(self.addon, 1, [], provider=provider,
+                                                    generation="b" * 32))
+        self.assertFalse(self.module.generation_processed(self.addon, 1, provider, "b" * 32))
+        new = old + [{"series_id": "2", "name": "New"}]
+        self.assertTrue(self.module.record_catalog(self.addon, 1, new, provider=provider,
+                                                   generation="b" * 32))
+        self.assertTrue(self.module.generation_processed(self.addon, 1, provider, "b" * 32))
+        self.assertEqual(self.module.status(self.addon, 1, "2"), "NUEVA SERIE")
+
+    def test_failed_history_write_does_not_publish_generation(self):
+        provider = ("https://provider.invalid", "account")
+        rows = [{"series_id": "1", "name": "Old"}]
+        self.module.record_catalog(self.addon, 1, rows, provider=provider, generation="a" * 32)
+        before = Path(self.temp.name, "series_changes_p1.json").read_bytes()
+        with patch.object(self.module.os, "replace", side_effect=OSError("disk full")):
+            with self.assertRaises(OSError):
+                self.module.record_catalog(self.addon, 1, rows, provider=provider,
+                                           generation="b" * 32)
+        self.assertEqual(Path(self.temp.name, "series_changes_p1.json").read_bytes(), before)
+        self.assertFalse(self.module.generation_processed(self.addon, 1, provider, "b" * 32))
+
+    def test_independent_processes_preserve_both_catalog_updates(self):
+        provider = ("https://provider.invalid", "account")
+        self.module.record_catalog(self.addon, 1, [{"series_id": "old", "name": "Old"}],
+                                   provider=provider, generation="a" * 32)
+        program = '''import importlib.util,sys,types
+sys.modules["xbmcvfs"]=types.SimpleNamespace(translatePath=lambda path:path)
+sys.modules["series_state"]=types.SimpleNamespace()
+spec=importlib.util.spec_from_file_location("changes",sys.argv[1])
+m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+addon=types.SimpleNamespace(getAddonInfo=lambda key:sys.argv[2])
+rows=[{"series_id":"old","name":"Old"},{"series_id":sys.argv[3],"name":sys.argv[3]}]
+m.record_catalog(addon,1,rows,force=True,provider=("https://provider.invalid","account"),generation="b"*32)
+'''
+        processes = [subprocess.Popen([sys.executable, '-c', program, str(SOURCE),
+                                      self.temp.name, value]) for value in ('new1', 'new2')]
+        for process in processes:
+            self.assertEqual(process.wait(timeout=10), 0)
+        data = self.read()
+        self.assertEqual(set(data['catalog_ids']), {'old', 'new1', 'new2'})
+        self.assertEqual({event['series_id'] for event in data['events']}, {'new1', 'new2'})
+
+    def test_provider_switch_restores_prior_history_without_cross_contamination(self):
+        first = ('https://provider-one.invalid', 'account')
+        second = ('https://provider-two.invalid', 'account')
+        now = int(time.time())
+        self.module.record_catalog(self.addon, 1, [{'series_id': '1', 'name': 'First', 'added': now}],
+                                   provider=first, generation='a' * 32)
+        self.module.record_catalog(self.addon, 1, [{'series_id': '2', 'name': 'Second', 'added': now}],
+                                   provider=second, generation='b' * 32)
+        self.assertEqual(self.module.status(self.addon, 1, '1'), '')
+        self.assertEqual(self.module.status(self.addon, 1, '2'), 'NUEVA SERIE')
+        self.module.record_catalog(self.addon, 1, [{'series_id': '1', 'name': 'First', 'added': now}],
+                                   provider=first, generation='a' * 32)
+        self.assertEqual(self.module.status(self.addon, 1, '1'), 'NUEVA SERIE')
+        self.assertEqual(self.module.status(self.addon, 1, '2'), '')
+
+    def test_catalog_and_episode_processes_preserve_both_events(self):
+        provider = ('https://provider.invalid', 'account')
+        self.module.record_catalog(self.addon, 1, [{'series_id': 'old', 'name': 'Old'}],
+                                   provider=provider, generation='a' * 32)
+        self.module.record_series_info(self.addon, 1, 'old', 'Old',
+            {'episodes': {'1': [{'id': 'ep1', 'episode_num': 1}]}}, provider=provider)
+        program = '''import importlib.util,sys,types
+sys.modules["xbmcvfs"]=types.SimpleNamespace(translatePath=lambda path:path)
+def normalize(e):
+ return ([{"season":int(s),"episode":int(x["episode_num"]),"provider_id":x["id"]} for s,rows in e.items() for x in rows],True)
+sys.modules["series_state"]=types.SimpleNamespace(normalize_inventory=normalize,inventory_diagnostics=lambda e:{})
+spec=importlib.util.spec_from_file_location("changes",sys.argv[1]);m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+addon=types.SimpleNamespace(getAddonInfo=lambda key:sys.argv[2]);provider=("https://provider.invalid","account")
+if sys.argv[3]=="catalog":
+ m.record_catalog(addon,1,[{"series_id":"old","name":"Old"},{"series_id":"new","name":"New"}],force=True,provider=provider,generation="b"*32)
+else:
+ m.record_series_info(addon,1,"old","Old",{"episodes":{"1":[{"id":"ep1","episode_num":1},{"id":"ep2","episode_num":2}]}},provider=provider)
+'''
+        processes = [subprocess.Popen([sys.executable, '-c', program, str(SOURCE),
+                                      self.temp.name, value]) for value in ('catalog', 'episode')]
+        for process in processes:
+            self.assertEqual(process.wait(timeout=10), 0)
+        data = self.read()
+        self.assertEqual({event['series_id'] for event in data['events']}, {'old', 'new'})
+        self.assertEqual(len(data['episode_inventory']['old']['episodes']), 2)
 
     def test_legacy_empty_baseline_is_not_misread_as_a_complete_empty_catalog(self):
         Path(self.temp.name, "series_changes_p1.json").write_text(

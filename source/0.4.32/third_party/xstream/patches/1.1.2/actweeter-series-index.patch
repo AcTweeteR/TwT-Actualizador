@@ -1,0 +1,105 @@
+diff --git a/resources/lib/premium_routes.py b/resources/lib/premium_routes.py
+--- a/resources/lib/premium_routes.py
++++ b/resources/lib/premium_routes.py
+@@ -192,13 +192,27 @@
+     creds = _performance_call(g, 'provider.credentials', g['_get_credentials_for_profile'], pnum)
+     host, user, password = (creds.get(k, '') for k in
+                             ('xtream_url', 'xtream_username', 'xtream_password'))
++    generation_before = None
++    if stype == 'series' and host and user and password:
++        try:
++            from provider_catalog_index import catalog_generation
++            source = '%s|%s|%s' % (host, user, password)
++            path_before = g['_cache_path']('xtream_streams_series', profile_num=pnum)
++            generation_before = catalog_generation(path_before, source, pnum)
++        except Exception:
++            pass
+     items = _performance_call(g, 'provider.streams', g['_get_cached_xtream_streams'],
+         host, user, password, stype, None,
+         force_refresh=False, require_fresh=False, profile_num=pnum)
+     # Record the unfiltered provider catalogue before UI visibility filters.
+     if stype == 'series' and items and host and user and password:
+         try:
+-            _performance_call(g, 'storage.series_catalog_write', g['series_changes'].record_catalog, g['addon'], pnum, items, provider=(host, user))
++            generation = None
++            if generation_before:
++                path_after = g['_cache_path']('xtream_streams_series', profile_num=pnum)
++                if path_after == path_before and catalog_generation(path_after, source, pnum) == generation_before:
++                    generation = generation_before
++            _performance_call(g, 'storage.series_catalog_write', g['series_changes'].record_catalog, g['addon'], pnum, items, provider=(host, user), generation=generation)
+         except Exception as exc:
+             g['_log']('Series baseline refresh failed: %s' % exc)
+     categories = _performance_call(g, 'provider.categories', g['_get_cached_xtream_categories'],
+@@ -293,6 +307,60 @@
+                   type(exc).__name__)
+         return None
+-
++
++
++def indexed_series_page(g, pnum, view, get):
++    """Use the derived index only after the active catalog is recorded."""
++    if view not in ('catalog', 'popular', 'trending', 'series_recent'):
++        return None
++    try:
++        from provider_catalog_index import CatalogIndex, IndexUnavailable, schedule_rebuild, catalog_generation
++        creds = g['_get_credentials_for_profile'](pnum)
++        host, user, password = (creds.get(key, '') for key in
++                                ('xtream_url', 'xtream_username', 'xtream_password'))
++        if not all((host, user, password)):
++            return None
++        source = '%s|%s|%s' % (host, user, password)
++        path = g['_cache_path']('xtream_streams_series', profile_num=pnum)
++        generation = catalog_generation(path, source, pnum)
++        if not generation or not g['series_changes'].generation_processed(
++                g['addon'], pnum, (host, user), generation):
++            return None
++        trace = g.get('_performance')
++        try:
++            index = _performance_call(g, 'catalog_index.open', CatalogIndex,
++                                      path, source, pnum, 'series', trace=trace)
++        except IndexUnavailable:
++            schedule_rebuild(path, source, pnum, 'series', trace)
++            return None
++        categories = g['_get_cached_xtream_categories'](host, user, password, 'series', profile_num=pnum)
++        blocked = set(g['_get_hidden_subcats']('series', pnum))
++        blocked.update(str(category.get('category_id', '')) for category in categories
++                       if g['_is_adult_category'](category.get('category_name', '')))
++        args = {'blocked_categories': blocked, 'hidden_ids': set(g['_get_hidden_items']('series', pnum)),
++                'category': get('cat_id'), 'provider_id': get('id'),
++                'browse': get('browse') == '1', 'page': number(get('page', 1)),
++                'limit': min(19, number(get('limit', 24))) if get('actweeter_expand') == '1' else number(get('limit', 24))}
++        if view == 'series_recent':
++            events = g['series_changes'].recent(g['addon'], pnum, 50)
++            result = index.series_events(events, **args)
++        elif view in ('popular', 'trending'):
++            cached = g['_cache_load']('premium_rank_series_%s_es' % view) or {}
++            if cached.get('expires', 0) <= time.time():
++                return None
++            result = index.ranked(cached.get('ranks') or [], **args)
++        else:
++            result = index.page(**args)
++        if g['_cache_path']('xtream_streams_series', profile_num=pnum) != path:
++            return None
++        return result[0], result[1], (host, user, password)
++    except Exception as exc:
++        if 'path' in locals() and 'source' in locals():
++            try:
++                schedule_rebuild(path, source, pnum, 'series', g.get('_performance'))
++            except Exception:
++                g['_log']('Series catalog index rebuild scheduling failed')
++        g['_log']('Series catalog index unavailable; using original path error_type=%s' % type(exc).__name__)
++        return None
+-
++
+ def metadata(g, item, stype, credentials):
+     sid = provider_id(item, stype)
+@@ -1146,7 +1214,8 @@
+     if stype not in ('movie', 'series'):
+         plugin.endOfDirectory(handle, succeeded=False)
+         return
+-    indexed = indexed_movie_page(g, pnum, view, get) if stype == 'movie' else None
++    indexed = (indexed_movie_page(g, pnum, view, get) if stype == 'movie'
++               else indexed_series_page(g, pnum, view, get))
+     if indexed is None:
+         items, credentials = catalog(g, stype, pnum)
+         has_more = False

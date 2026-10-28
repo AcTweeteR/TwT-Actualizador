@@ -168,6 +168,14 @@ def _stamp(path, source, profile, stype):
                 (str(profile) + '\0' + source + '\0' + stype).encode('utf-8')).hexdigest())
 
 
+def catalog_generation(path, source, profile):
+    """Return the verified immutable generation ID, or None for legacy caches."""
+    if not _generation_provider(path, profile):
+        return None
+    _stamp(path, source, profile, 'series')
+    return os.path.basename(os.path.dirname(os.path.abspath(path)))
+
+
 class CatalogIndex:
     def __init__(self, catalog_path, source, profile, stype, *, build=False,
                  trace=None, cancel=None, rebuild=False):
@@ -237,7 +245,8 @@ class CatalogIndex:
                             phase = time.perf_counter()
                         if not isinstance(item, dict):
                             raise ValueError('invalid catalog item')
-                        ident = item.get('stream_id') or item.get('series_id') or ''
+                        ident = (item.get('series_id') if self.stype == 'series' else
+                                 item.get('stream_id') or item.get('series_id')) or ''
                         try:
                             added = int(float(item.get('added') or 0))
                         except (ValueError, TypeError, OverflowError):
@@ -414,6 +423,41 @@ class CatalogIndex:
                 ('%' + escaped + '%', limit)).fetchall()
         return self._read_items(rows)
 
+    def series_events(self, events, blocked_categories=(), hidden_ids=(), category='',
+                      provider_id='', browse=False, page=1, limit=24):
+        """Resolve recent events against visible series, preserving their order."""
+        ids = [str(event.get('series_id')) for event in events if isinstance(event, dict)]
+        if not ids:
+            return [], False
+        unique_ids = tuple(dict.fromkeys(ids))
+        with closing(_connect(self.path)) as db:
+            db.execute('CREATE TEMP TABLE blocked(value TEXT PRIMARY KEY)')
+            db.execute('CREATE TEMP TABLE hidden(value TEXT PRIMARY KEY)')
+            db.executemany('INSERT OR IGNORE INTO blocked VALUES (?)',
+                           [(str(value),) for value in blocked_categories])
+            db.executemany('INSERT OR IGNORE INTO hidden VALUES (?)',
+                           [(str(value),) for value in hidden_ids])
+            rows = db.execute('SELECT i.id,i.start,i.length FROM items i '
+                'WHERE i.id IN (' + ','.join('?' for _ in unique_ids) + ') '
+                'AND NOT EXISTS (SELECT 1 FROM blocked b WHERE b.value=i.category) '
+                'AND NOT EXISTS (SELECT 1 FROM hidden h WHERE h.value=i.id) '
+                'ORDER BY i.ordinal', unique_ids).fetchall()
+        by_id = {str(item.get('series_id') or ''): item for item in self._read_items(rows)}
+        items = [by_id[value] for value in ids if value in by_id]
+        items = [item for item in items if (not category or str(item.get('category_id')) == str(category))
+                 and (not provider_id or str(item.get('series_id') or '') == str(provider_id))]
+        if not browse and not provider_id:
+            seen, unique = set(), []
+            for item in items:
+                identity = (_norm(item.get('name')), str(item.get('year') or ''))
+                if identity not in seen:
+                    seen.add(identity)
+                    unique.append(item)
+            items = unique
+        size = min(48, max(1, int(limit)))
+        offset = (max(1, int(page)) - 1) * size
+        return items[offset:offset + size], len(items) > offset + size
+
     def ranked(self, ranks, blocked_categories=(), hidden_ids=(), category='',
                provider_id='', browse=False, page=1, limit=24):
         """Resolve cached Trakt ranks to visible provider items, as the old path did."""
@@ -456,7 +500,9 @@ class CatalogIndex:
         for item in matched_items:
             if category and str(item.get('category_id')) != str(category):
                 continue
-            if provider_id and str(item.get('stream_id') or item.get('series_id') or '') != str(provider_id):
+            ident = (item.get('series_id') if self.stype == 'series' else
+                     item.get('stream_id') or item.get('series_id')) or ''
+            if provider_id and str(ident) != str(provider_id):
                 continue
             items.append(item)
         if not browse and not provider_id:
@@ -594,7 +640,7 @@ class IndexBuildWorker:
                         catalog = payload['catalog']
                         if (os.path.basename(catalog) != catalog or not catalog.endswith('.json')
                                 or type(payload['profile']) is not int or payload['profile'] < 1
-                                or payload['stype'] != 'movie' or len(payload['stamp']) != 5):
+                                or payload['stype'] not in ('movie', 'series') or len(payload['stamp']) != 5):
                             raise ValueError('invalid build request')
                         if payload['not_before'] > time.time():
                             continue

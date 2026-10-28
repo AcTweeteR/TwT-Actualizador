@@ -24,8 +24,8 @@ jobs:
           echo '915f45708670d07e789bb73b7390a7b5cf30175f818ef5da8ea18c9f13f537fe  '"$RUNNER_TEMP/xstream-upstream-1.1.2.zip" | shasum -a 256 -c -
       - name: Installer and channel-isolation tests
         env:
-          ACTWEETER_XSTREAM_LIVE_ZIP: ${{ github.workspace }}/docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.38~beta1.zip
-          ACTWEETER_XSTREAM_TEST_ZIP: ${{ github.workspace }}/docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.38~beta1.zip
+          ACTWEETER_XSTREAM_LIVE_ZIP: ${{ github.workspace }}/docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.38~beta2.zip
+          ACTWEETER_XSTREAM_TEST_ZIP: ${{ github.workspace }}/docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.38~beta2.zip
           ACTWEETER_XSTREAM_UPSTREAM_ZIP: ${{ runner.temp }}/xstream-upstream-1.1.2.zip
           ACTWEETER_SKIN_LIVE_ZIP: ${{ github.workspace }}/docs/testing/repo/skin.actweeter/skin.actweeter-1.2.36~beta5.zip
           ACTWEETER_SERVICE_LIVE_ZIP: ${{ github.workspace }}/docs/testing/repo/service.actweeter/service.actweeter-0.4.94~beta9.zip
@@ -43,7 +43,7 @@ jobs:
           python3 tools/build_test_channel.py \
             --service-zip docs/testing/repo/service.actweeter/service.actweeter-0.4.94~beta9.zip \
             --skin-zip docs/testing/repo/skin.actweeter/skin.actweeter-1.2.36~beta5.zip \
-            --xstream-zip docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.38~beta1.zip \
+            --xstream-zip docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.38~beta2.zip \
             --rivulet-repository-zip source/0.4.32/third_party/rivulet/repository.rivulet-1.0.2.zip \
             --iagl-repository-zip source/0.4.32/third_party/iagl/repository.zachmorris-1.0.4.zip \
             --output "$RUNNER_TEMP/testing"

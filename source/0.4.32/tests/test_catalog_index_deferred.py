@@ -76,6 +76,86 @@ class DeferredIndexTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             INDEX.CatalogIndex(str(path), self.source, 2, 'movie')
 
+    def test_series_index_worker_preserves_series_ids_and_order(self):
+        items = [dict(item, series_id='series-' + str(i), stream_id='other-' + str(i))
+                 for i, item in enumerate(self.items[:8])]
+        self.write(items)
+        with mock.patch.object(INDEX.time, 'time', return_value=-10):
+            INDEX.schedule_rebuild(str(self.path), self.source, 1, 'series')
+        self.worker().run_pending()
+        index = INDEX.CatalogIndex(str(self.path), self.source, 1, 'series')
+        result, more = index.page(browse=True, limit=8)
+        self.assertEqual(result, items)
+        self.assertFalse(more)
+        result, _ = index.page(provider_id='series-3', browse=True)
+        self.assertEqual(result, [items[3]])
+        ranks = [{'tmdb_id': items[3]['tmdb_id'], 'year': items[3]['year'],
+                  'titles': []}]
+        result, _ = index.ranked(ranks, provider_id='series-3', browse=True)
+        self.assertEqual(result, [items[3]])
+
+    def test_series_index_request_tracks_active_generation(self):
+        fingerprint = hashlib.sha256(self.source.encode()).hexdigest()
+        parent = Path(self.temp.name) / 'catalog_generations'
+        provider = 'p1-' + fingerprint
+        generation = 'a' * 32
+        folder = parent / provider / generation
+        folder.mkdir(parents=True)
+        path = folder / 'xtream_streams_series.json'
+        items = [{'series_id': 's1', 'name': 'Example', 'year': '2024',
+                  'category_id': '1'}]
+        path.write_text(json.dumps({'_src': fingerprint, '_data': items}))
+        pointer = parent / (provider + '.json')
+        pointer.write_text(json.dumps({'schema': 1, 'generation': generation}))
+        with mock.patch.object(INDEX.time, 'time', return_value=-10):
+            INDEX.schedule_rebuild(str(path), self.source, 1, 'series')
+        pointer.write_text(json.dumps({'schema': 1, 'generation': 'b' * 32}))
+        self.worker().run_pending()
+        self.assertFalse(list(folder.glob('*.sqlite')))
+        pointer.write_text(json.dumps({'schema': 1, 'generation': generation}))
+        self.worker().run_pending()
+        index = INDEX.CatalogIndex(str(path), self.source, 1, 'series')
+        self.assertEqual(index.page(browse=True)[0], items)
+
+    def test_independent_workers_build_one_series_index(self):
+        items = [{'series_id': str(i), 'name': 'Title %s' % i,
+                  'year': '2024', 'category_id': '1'} for i in range(300)]
+        self.write(items)
+        with mock.patch.object(INDEX.time, 'time', return_value=-10):
+            INDEX.schedule_rebuild(str(self.path), self.source, 1, 'series')
+        code = ('import sys; sys.path.insert(0, sys.argv[1]); '
+                'from provider_catalog_index import IndexBuildWorker; '
+                'IndexBuildWorker(sys.argv[2], idle=lambda: True, '
+                'cancelled=lambda: False).run_pending()')
+        processes = [subprocess.Popen([sys.executable, '-c', code,
+                     str(ROOT / 'third_party/xstream'), self.temp.name]) for _ in range(2)]
+        for process in processes:
+            self.assertEqual(process.wait(timeout=10), 0)
+        self.assertEqual(len(list(Path(self.temp.name).glob('*.sqlite'))), 1)
+        self.assertFalse(self.requests())
+        index = INDEX.CatalogIndex(str(self.path), self.source, 1, 'series')
+        self.assertEqual(index.item_count, len(items))
+
+    def test_series_events_match_visible_catalog_order_and_deduplication(self):
+        items = [
+            {'series_id': '1', 'name': 'One', 'year': '2024', 'category_id': 'a'},
+            {'series_id': '2', 'name': 'Two', 'year': '2024', 'category_id': 'a'},
+            {'series_id': '1', 'name': 'One revised', 'year': '2024', 'category_id': 'a'},
+            {'series_id': '3', 'name': 'Hidden', 'year': '2024', 'category_id': 'b'},
+        ]
+        self.write(items)
+        index = INDEX.CatalogIndex(str(self.path), self.source, 1, 'series', build=True)
+        events = [{'series_id': value} for value in ('3', '2', '1', '2', 'missing')]
+        result, more = index.series_events(events, blocked_categories=('b',), limit=2)
+        self.assertEqual(result, [items[1], items[2]])
+        self.assertFalse(more)
+        result, more = index.series_events(events, blocked_categories=('b',), browse=True, limit=2)
+        self.assertEqual(result, [items[1], items[2]])
+        self.assertTrue(more)
+        result, more = index.series_events(events, blocked_categories=('b',), browse=True, page=2, limit=2)
+        self.assertEqual(result, [items[1]])
+        self.assertFalse(more)
+
     def test_independent_workers_share_generation_build_lock(self):
         fingerprint = hashlib.sha256(self.source.encode()).hexdigest()
         parent = Path(self.temp.name) / 'catalog_generations'

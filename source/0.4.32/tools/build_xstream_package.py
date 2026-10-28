@@ -512,6 +512,11 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             raise ValueError("Trakt Home widget patch hash mismatch")
         apply_contextual_unified_patch(root, home_widget_patch)
 
+        series_index_patch = ROOT / data['series_index_patch']
+        if sha256(series_index_patch) != data['series_index_patch_sha256']:
+            raise ValueError('Series catalog index patch hash mismatch')
+        apply_contextual_unified_patch(root, series_index_patch)
+
         validate_python_sources(root)
 
         distribution_version = data["distribution_version"]

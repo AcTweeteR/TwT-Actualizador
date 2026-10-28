@@ -1,11 +1,13 @@
 """Provider-only, profile-scoped series change history used by XStream."""
 
 import hashlib
+import fcntl
 import json
 import os
 import tempfile
 import threading
 import time
+from contextlib import contextmanager
 from datetime import datetime
 
 import series_state
@@ -21,6 +23,18 @@ _LOCK = threading.RLock()
 def _path(addon, profile_num):
     profile = xbmcvfs.translatePath(addon.getAddonInfo("profile"))
     return os.path.join(profile, "series_changes_p%d.json" % int(profile_num))
+
+
+@contextmanager
+def _profile_lock(addon, profile_num):
+    path = _path(addon, profile_num) + '.lock'
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with _LOCK, open(path, 'a') as stream:
+        fcntl.flock(stream, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(stream, fcntl.LOCK_UN)
 
 
 def _empty():
@@ -49,6 +63,8 @@ def _read(addon, profile_num):
     for key in ("episode_ids", "episode_inventory"):
         if not isinstance(data.get(key, {}), dict):
             return None
+    if not isinstance(data.get('provider_states', {}), dict):
+        return None
     data.setdefault("events", [])
     data.setdefault("episode_ids", {})
     data.setdefault("episode_inventory", {})
@@ -87,10 +103,20 @@ def _scope_provider(data, provider):
     key = _provider_key(provider)
     previous = str(data.get("provider_key") or "")
     if key and previous and key != previous:
+        fields = ('catalog_ids', 'catalog_checked', 'catalog_generation', 'events',
+                  'episode_ids', 'episode_inventory', 'episode_added_at')
+        states = data.setdefault('provider_states', {})
+        states[previous] = {name: data[name] for name in fields if name in data}
+        saved = states.get(key, {})
+        if not isinstance(saved, dict):
+            raise ValueError('invalid saved provider history')
+        for name in fields:
+            data.pop(name, None)
         data.update(catalog_ids=None, episode_ids={}, episode_inventory={}, events=[])
-        data.pop("episode_added_at", None)
+        data.update(saved)
     if key:
         data["provider_key"] = key
+    return bool(key and previous and key != previous)
 
 
 def _provider_date(value, now):
@@ -158,18 +184,28 @@ def _catalog_snapshot(items):
     return result or None
 
 
+def generation_processed(addon, profile_num, provider, generation):
+    """Only a complete persisted snapshot can authorize indexed news."""
+    data = _read(addon, profile_num)
+    key = _provider_key(provider)
+    return bool(data and key and generation and data.get('provider_key') == key
+                and data.get('catalog_ids') and data.get('catalog_generation') == generation
+                and time.time() - float(data.get('catalog_checked', 0) or 0) < CATALOG_INTERVAL)
+
+
 def record_catalog(addon, profile_num, items, force=False, *, provider=None,
-                   complete=True):
+                   complete=True, generation=None):
     """Baseline complete catalogs; use provider added timestamps when available."""
     if complete is not True:
         return False
     now = time.time()
-    with _LOCK:
+    with _profile_lock(addon, profile_num):
         data = _read(addon, profile_num)
         if data is None:
             return False
-        _scope_provider(data, provider)
-        if (not force and data.get("catalog_ids") is not None
+        switched = _scope_provider(data, provider)
+        if (not force and not switched and data.get("catalog_ids") is not None
+                and (not generation or data.get('catalog_generation') == generation)
                 and now - float(data.get("catalog_checked", 0) or 0) < CATALOG_INTERVAL):
             return False
         snapshot = _catalog_snapshot(items)
@@ -196,6 +232,8 @@ def record_catalog(addon, profile_num, items, force=False, *, provider=None,
             current.update(known_ids)
         data["catalog_ids"] = sorted(current)
         data["catalog_checked"] = now
+        if generation:
+            data['catalog_generation'] = generation
         _trim(data, now)
         _write(addon, profile_num, data)
     return True
@@ -224,7 +262,7 @@ def record_series_info(addon, profile_num, series_id, title, response, *, provid
             added = _provider_date(row.get("added"), now)
             if episode_id and added:
                 dates[episode_id] = added
-    with _LOCK:
+    with _profile_lock(addon, profile_num):
         data = _read(addon, profile_num)
         if data is None:
             return False
