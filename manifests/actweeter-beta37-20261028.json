@@ -1,0 +1,21 @@
+{
+  "channel": "testing",
+  "source_commit": "c9eb254e4ac20a8680016e5a1b49f9ade5cae668",
+  "date": "2026-10-28",
+  "components": {
+    "skin.actweeter": {
+      "version": "1.2.36~beta5",
+      "sha256": "809ba360ba97928b52740f69a2697e96a69a9a51a45c4636c6abd3790317ab78"
+    },
+    "service.actweeter": {
+      "version": "0.4.94~beta9",
+      "sha256": "d326d7ab303e0c959c3b274c3ad3bfcc5e274261cbb5bc6e4e09682511bdec38"
+    },
+    "plugin.video.xstream-pro": {
+      "version": "1.1.2.38~beta2",
+      "sha256": "6ce32e930f5e1d0a7ef84672c501563d3770b98b238664768a3bfa0c0bcbdb4f"
+    }
+  },
+  "testing_index_sha256": "d7cedd024c728b96db918e4eac3eee8ea7127e4b7b69f26fa67a1735bb530393",
+  "stable_reference_sha256": "f890719e18b6c478c44af9cbf9910ec29642943dd686bfcc51cef8cea1469b5f"
+}
