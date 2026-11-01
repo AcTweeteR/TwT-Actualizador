@@ -10,6 +10,8 @@ ROOT = Path(__file__).resolve().parents[3]
 PACKAGE = Path(os.environ.get("ACTWEETER_XSTREAM_LIVE_ZIP", ROOT / "docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.38~beta2.zip"))
 
 
+@unittest.skipIf(os.environ.get('ACTWEETER_RELEASE_CHANNEL') == 'stable',
+                 'Beta-only unified Trakt menu and coordinated writes')
 class UnifiedTraktMenuTest(unittest.TestCase):
     def menu(self, enabled, authorized):
         with zipfile.ZipFile(PACKAGE) as archive:

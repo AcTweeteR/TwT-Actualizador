@@ -137,8 +137,13 @@ for folder,media in [('Favorites','movie'),('Favorites','series'),
 
 class FavoritesRuntimeTests(unittest.TestCase):
     def test_packaged_favorites_pending_capture_and_concurrent_instances(self):
+        channel=os.environ.get('ACTWEETER_RELEASE_CHANNEL')
+        if channel == 'stable':
+            self.skipTest('Beta-only Trakt 2.0 runtime contract; Stable validated separately')
         package=os.environ.get('ACTWEETER_XSTREAM_LIVE_ZIP')
         if not package:
-            self.skipTest('exact candidate ZIP required')
+            if channel == 'testing':
+                self.fail('testing requires the exact candidate ZIP')
+            self.skipTest('exact candidate ZIP required outside release validation')
         result=subprocess.run([sys.executable,'-c',SCRIPT,str(Path(package).resolve()),str(Path(__file__).resolve().parents[1])],capture_output=True,text=True)
         self.assertEqual(result.returncode,0,result.stdout+result.stderr)

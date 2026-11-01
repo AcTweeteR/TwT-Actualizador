@@ -388,6 +388,11 @@ class TraktLiveQueueRuntimeTests(unittest.TestCase):
             addon_source=archive.read('plugin.video.xstream-pro/resources/lib/addon.py')
             self.assertIn(b'season_inventory_record = series_changes.inventory_map',addon_source)
             self.assertIn(b'series_changes.series_state.apply_to_listitem(li, state)',addon_source)
+    @unittest.skipIf(os.environ.get('ACTWEETER_RELEASE_CHANNEL') == 'stable',
+                     'Beta-only Trakt 2.0 pending-conflict runtime')
+    def test_beta_pending_conflict_runtime(self):
+        if not os.environ.get('ACTWEETER_XSTREAM_LIVE_ZIP'):
+            self.fail('Beta runtime validation requires the candidate ZIP')
         result = subprocess.run([sys.executable, '-c', SCRIPT,
             os.environ['ACTWEETER_XSTREAM_LIVE_ZIP'],
             str(ROOT / 'addons/service.actweeter/resources/lib')],
