@@ -5,7 +5,7 @@ import tempfile
 import threading
 from pathlib import Path
 
-DEFAULT_INTERVAL = 300
+DEFAULT_INTERVAL = 60
 MAX_BACKOFF = 3600
 
 

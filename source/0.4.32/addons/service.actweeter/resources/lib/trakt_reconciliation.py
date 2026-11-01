@@ -5,7 +5,7 @@ unrelated operations. A caller must fetch a complete authenticated snapshot.
 """
 
 
-def reconcile_uncertain(outbox, operations, snapshot, *, account, profile):
+def reconcile_uncertain(outbox, operations, snapshot, *, account, profile, provider_scope=None):
     if (not isinstance(snapshot, dict) or snapshot.get('complete') is not True
             or snapshot.get('account') != account
             or not isinstance(snapshot.get('history'), list)
@@ -22,7 +22,7 @@ def reconcile_uncertain(outbox, operations, snapshot, *, account, profile):
             raise ValueError('unknown operation')
         if status['state'] in ('unknown', 'inflight'):
             results[operation] = outbox.confirm_from_snapshot(
-                operation, snapshot, account=account, profile=profile)
+                operation, snapshot, account=account, profile=profile, provider_scope=provider_scope)
         else:
             results[operation] = status['state']
     return results

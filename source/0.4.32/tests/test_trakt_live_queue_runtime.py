@@ -70,6 +70,26 @@ assert '101' not in history.WatchedMovies(addon,2)._data
 try: checkpoint_from_ack(collision_ack,collision)
 except RuntimeError: pass
 else: raise AssertionError('provider ID collision was checkpointed')
+# A confirmed local unwatch protects against a stale remote import.
+from lib.trakt_outbox import Outbox, manual_event
+from lib.trakt_sync import identity
+outbox=Outbox(profile_root/'trakt_explicit_outbox.sqlite')
+event=manual_event('test-account','2','history.remove',identity('movie',{'tmdb':500}),
+                   'a'*32,provider_scope=scope)
+operation=outbox.enqueue_manual(event)
+with outbox.connect() as db:
+    db.execute("update events set state='confirmed' where id=?", (operation,))
+protected_batch=build_batch({'profile':'2','account':'test-account','items':[movie]},
+    provider_scope=scope,consent=True,batch_id='5'*32)
+protected_path=write_batch(queue_root,protected_batch)
+with outbox.import_guard(account='test-account',profile='2',provider_scope=scope) as conflict:
+    protected=apply_batch(protected_path, profile_root/'trakt_live'/'acks', profile='2',
+        account='test-account',provider_scope=scope,addon=addon,history=history,catalog_root=root,
+        pending_conflict=conflict)
+assert any(row.get('reason')=='local_action_unreconciled' for row in protected['results'])
+assert '101' not in history.WatchedMovies(addon,2)._data
+with outbox.connect() as db:
+    db.execute('delete from events where id=?', (operation,))
 ack=apply_batch(path, profile_root/'trakt_live'/'acks', profile='2',
     account='test-account',provider_scope=scope,addon=addon,history=history,catalog_root=root)
 assert len(ack['results']) == 4
@@ -80,6 +100,14 @@ assert '101' in history.WatchedMovies(addon,2)._data
 assert '202' in history.WatchedEpisodes(addon,2)._data['55']['1']
 assert history.ResumePoints(addon,2)._data['Movie||'+url_movie]['position']==300
 assert history.ResumePoints(addon,2)._data['Episode||'+url_episode]['position']==600
+# The real stores journal local playback and imported writes with distinct origins.
+import sqlite3
+journal=sqlite3.connect(root/'trakt_local_changes.sqlite')
+rows=journal.execute('select event,state from changes').fetchall(); journal.close()
+assert rows and all(state == ('observed' if json.loads(event)['origin'] == 'trakt_import' else 'quarantined') for event,state in rows)
+assert {'local','trakt_import'}.issubset({json.loads(raw)['origin'] for raw,_ in rows})
+assert all('provider.invalid' not in raw and 'user' not in raw and 'secret' not in raw
+           for raw,_ in rows)
 # Replay the durable request: no extra writes, no duplicate episodes, stable ack.
 replay=apply_batch(path, profile_root/'trakt_live'/'acks', profile='2',
     account='test-account',provider_scope=scope,addon=addon,history=history,catalog_root=root)

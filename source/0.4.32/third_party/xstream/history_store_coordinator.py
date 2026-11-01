@@ -6,6 +6,8 @@ import os
 import threading
 import time
 
+import trakt_local_journal
+
 
 _thread_lock = threading.RLock()
 _MISSING = object()
@@ -113,6 +115,7 @@ def _install_store(store, attribute, empty, merge):
     def save(self):
         with _locked(self._path):
             latest = _read(self._path, dict, empty)
+            trakt_local_journal.recover(self._path, latest)
             base = getattr(self, "_actweeter_base", empty)
             current = getattr(self, attribute)
             if store.__name__ == "ResumePoints":
@@ -125,11 +128,50 @@ def _install_store(store, attribute, empty, merge):
                             break
             merged = merge(base, current, latest)
             if merged != latest:
+                with trakt_local_journal.runtime_scope(self._path):
+                    ticket = trakt_local_journal.prepare(self._path, store.__name__, latest, merged)
                 setattr(self, attribute, merged)
                 original_save(self)
+                trakt_local_journal.finish(ticket)
             setattr(self, attribute, merged)
             self._actweeter_base = deepcopy(merged)
+        trakt_local_journal.runtime_handoff(self._path)
 
+    def apply_trakt(self, folder, media, items, marker, protected):
+        """Apply a verified snapshot under the same lock as native mutations."""
+        with _locked(self.file):
+            latest = _read(self.file, (dict, list), {'version': 1})
+            if isinstance(latest, list):
+                latest = {'version': 1, module._t(30009) or 'Favorites': latest}
+            protection = protected()
+            blocked, adopted, acknowledge = protection if isinstance(protection, tuple) else (protection, set(), lambda: None)
+            merged = deepcopy(latest)
+            current = list(merged.get(folder, []))
+            desired = {str(item['id']): item for item in items}
+            for item in current:
+                if item.get('stype') == media and str(item['id']) in adopted and str(item['id']) in desired:
+                    item['actweeter_trakt_origin'] = marker
+            removed = [item for item in current if item.get('stype') == media
+                       and item.get('actweeter_trakt_origin') == marker
+                       and str(item['id']) not in desired and str(item['id']) not in blocked]
+            if len(removed) > 20:
+                raise PermissionError('large native removal requires review')
+            current = [item for item in current if item not in removed]
+            existing = {str(item['id']) for item in current if item.get('stype') == media}
+            for ident,item in desired.items():
+                if ident not in existing and ident not in blocked:
+                    current.append(dict(item,actweeter_trakt_origin=marker))
+            merged[folder] = current
+            if merged != latest:
+                with trakt_local_journal.remote_changes(), trakt_local_journal.runtime_scope(self.file):
+                    ticket = trakt_local_journal.prepare(self.file, 'Favorites', latest, merged)
+                self.items = merged
+                original_save(self)
+                trakt_local_journal.finish(ticket)
+            acknowledge()
+            self.items = merged
+            self._actweeter_base = deepcopy(merged)
+    store.apply_trakt = apply_trakt
     store.__init__, store._save = init, save
     store._actweeter_coordinated = True
 
@@ -170,3 +212,91 @@ def install(history):
         return True
 
     store.save_position = save_position
+
+
+def _favorite_map(items):
+    if not isinstance(items, list):
+        raise ValueError('invalid favorites folder')
+    result = {}
+    for item in items:
+        if not isinstance(item, dict) or not str(item.get('id', '')):
+            raise ValueError('invalid favorite identity')
+        key = (str(item.get('stype', 'live')), str(item['id']))
+        if key in result:
+            raise ValueError('duplicate favorite identity')
+        result[key] = item
+    return result
+
+
+def install_favorites(module):
+    store = module.Favorites
+    if getattr(store, '_actweeter_coordinated', False):
+        return
+    original_init, original_save = store.__init__, store._save
+    def init(self, *args, **kwargs):
+        original_init(self, *args, **kwargs)
+        self._actweeter_base = deepcopy(self.items)
+    def save(self):
+        with _locked(self.file):
+            latest = _read(self.file, (dict, list), {'version': 1})
+            if isinstance(latest, list):
+                latest = {'version': 1, module._t(30009) or 'Favorites': latest}
+            base, current = self._actweeter_base, self.items
+            merged = deepcopy(latest)
+            for folder in (set(base) | set(current)) - {'version'}:
+                if base.get(folder) == current.get(folder):
+                    continue
+                old = _favorite_map(base.get(folder, []))
+                new = _favorite_map(current.get(folder, []))
+                disk = _favorite_map(latest.get(folder, []))
+                values = _merge_map(old, new, disk)
+                if folder not in current and not values:
+                    merged.pop(folder, None)
+                else:
+                    merged[folder] = list(values.values())
+            if merged != latest:
+                with trakt_local_journal.runtime_scope(self.file):
+                    ticket = trakt_local_journal.prepare(self.file, 'Favorites', latest, merged)
+                self.items = merged
+                original_save(self)
+                trakt_local_journal.finish(ticket)
+            self.items = merged
+            self._actweeter_base = deepcopy(merged)
+        trakt_local_journal.runtime_handoff(self.file)
+    def apply_trakt(self, folder, media, items, marker, protected):
+        """Apply a verified snapshot under the same lock as native mutations."""
+        with _locked(self.file):
+            latest = _read(self.file, (dict, list), {'version': 1})
+            if isinstance(latest, list):
+                latest = {'version': 1, module._t(30009) or 'Favorites': latest}
+            protection = protected()
+            blocked, adopted, acknowledge = protection if isinstance(protection, tuple) else (protection, set(), lambda: None)
+            merged = deepcopy(latest)
+            current = list(merged.get(folder, []))
+            desired = {str(item['id']): item for item in items}
+            for item in current:
+                if item.get('stype') == media and str(item['id']) in adopted and str(item['id']) in desired:
+                    item['actweeter_trakt_origin'] = marker
+            removed = [item for item in current if item.get('stype') == media
+                       and item.get('actweeter_trakt_origin') == marker
+                       and str(item['id']) not in desired and str(item['id']) not in blocked]
+            if len(removed) > 20:
+                raise PermissionError('large native removal requires review')
+            current = [item for item in current if item not in removed]
+            existing = {str(item['id']) for item in current if item.get('stype') == media}
+            for ident,item in desired.items():
+                if ident not in existing and ident not in blocked:
+                    current.append(dict(item,actweeter_trakt_origin=marker))
+            merged[folder] = current
+            if merged != latest:
+                with trakt_local_journal.remote_changes(), trakt_local_journal.runtime_scope(self.file):
+                    ticket = trakt_local_journal.prepare(self.file, 'Favorites', latest, merged)
+                self.items = merged
+                original_save(self)
+                trakt_local_journal.finish(ticket)
+            acknowledge()
+            self.items = merged
+            self._actweeter_base = deepcopy(merged)
+    store.apply_trakt = apply_trakt
+    store.__init__, store._save = init, save
+    store._actweeter_coordinated = True

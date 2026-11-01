@@ -1,0 +1,1 @@
+Beta experimental Trakt 2.0: sincronización y estado, con exportaciones sujetas a autorización.

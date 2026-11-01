@@ -6,7 +6,9 @@ retried automatically: Trakt does not guarantee idempotency for history writes.
 import hashlib
 import json
 import os
+import re
 import sqlite3
+from pathlib import Path
 from contextlib import contextmanager
 
 from .trakt_sync import _timestamp, identity
@@ -38,11 +40,67 @@ def watched_event(account, profile, content, watched_at):
     return result
 
 
+def manual_event(account, profile, operation, content, nonce, watched_at=None, *, provider_scope):
+    """Build a bounded explicit action; distinct user actions retain distinct IDs."""
+    if (not isinstance(account, str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,128}', account)
+            or not re.fullmatch(r'[1-9][0-9]?', str(profile))):
+        raise ValueError('explicit account and profile required')
+    if not isinstance(provider_scope, str) or not re.fullmatch(r'[0-9a-f]{64}', provider_scope):
+        raise ValueError('verified provider scope required')
+    if not isinstance(nonce, str) or not re.fullmatch(r'[0-9a-f]{32}', nonce):
+        raise ValueError('unique action ID required')
+    supported = {'history.add', 'history.remove', 'watchlist.add', 'watchlist.remove',
+                 'collection.add', 'collection.remove', 'favorites.add', 'favorites.remove', 'checkin'}
+    personal_list = re.fullmatch(r'list\.([1-9][0-9]{0,18})\.(add|remove)', operation) if isinstance(operation, str) else None
+    if (operation not in supported and personal_list is None) or not isinstance(content, dict):
+        raise ValueError('unsupported explicit operation')
+    kind = content.get('kind')
+    clean = identity(kind, content.get('ids'), show_ids=content.get('ids'),
+                     season=content.get('season'), episode=content.get('episode'))
+    if clean is None:
+        raise ValueError('verified identity required')
+    ids = {key: value if key == 'imdb' else int(value) for key, value in clean['ids'].items()}
+    item = {'ids': ids}
+    if kind == 'episode':
+        item['seasons'] = [{'number': clean['season'], 'episodes': [{'number': clean['episode']}]}]
+    if operation == 'history.add':
+        if _timestamp(watched_at) is None or kind not in ('movie', 'episode'):
+            raise ValueError('individual event and UTC timestamp required')
+        if kind == 'episode':
+            item['seasons'][0]['episodes'][0]['watched_at'] = watched_at
+        else:
+            item['watched_at'] = watched_at
+    elif watched_at is not None:
+        raise ValueError('timestamp only applies to watched events')
+    if operation == 'checkin':
+        if kind == 'show':
+            raise ValueError('check-in requires a specific episode')
+        endpoint = '/checkin'
+        payload = {'movie': {'ids': ids}} if kind == 'movie' else {
+            'show': {'ids': ids}, 'episode': {'season': clean['season'], 'number': clean['episode']}}
+        payload['sharing'] = {'twitter': False, 'tumblr': False, 'medium': False}
+    elif personal_list:
+        endpoint = '/users/me/lists/' + personal_list.group(1) + '/items' + ('/remove' if personal_list.group(2) == 'remove' else '')
+        payload = {'movies' if kind == 'movie' else 'shows': [item]}
+    else:
+        section, action = operation.split('.')
+        endpoint = '/sync/' + section + ('/remove' if action == 'remove' else '')
+        payload = {'movies' if kind == 'movie' else 'shows': [item]}
+    event = {'schema': 2, 'account': account, 'profile': str(profile), 'operation': operation,
+             'identity': clean, 'nonce': nonce, 'watched_at': watched_at, 'provider_scope': provider_scope,
+             'endpoint': endpoint, 'payload': payload}
+    event['id'] = hashlib.sha256(json.dumps(event, sort_keys=True).encode()).hexdigest()
+    return event
+
+
 class Outbox:
     def __init__(self, path):
-        self.path = str(path)
+        target = Path(path)
+        if target.is_symlink() or target.parent.is_symlink() or (target.exists() and not target.is_file()):
+            raise ValueError('unsafe outbox path')
+        self.path = str(target)
         try:
-            os.close(os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600))
+            os.close(os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY | getattr(os, 'O_NOFOLLOW', 0), 0o600))
         except FileExistsError:
             pass
         with self.connect() as db:
@@ -58,6 +116,21 @@ class Outbox:
         finally:
             db.close()
 
+    def retain_capture(self, *, source, source_id, fingerprint, reason):
+        """Visible source evidence, never an implicitly authorized remote mutation."""
+        if (source not in ('resume', 'collections', 'favorites')
+                or not isinstance(source_id, str) or not re.fullmatch(r'[0-9a-f]{64}', source_id)
+                or not isinstance(fingerprint, str) or not re.fullmatch(r'[0-9a-f]{64}', fingerprint)
+                or reason not in ('identity_or_authority_unverified', 'scope_or_mapping_unverified')):
+            raise ValueError('invalid retained capture')
+        event = dict(schema=3, source=source, source_id=source_id, fingerprint=fingerprint, reason=reason)
+        identifier = hashlib.sha256(json.dumps(event, sort_keys=True).encode()).hexdigest()
+        event['id'] = identifier
+        with self.connect() as db:
+            db.execute('INSERT OR IGNORE INTO events (id,event,state) VALUES (?,?,?)',
+                       (identifier, json.dumps(event, sort_keys=True), 'retained'))
+        return identifier
+
     def enqueue(self, event):
         # Rebuild at the trust boundary; arbitrary payloads/URLs are not accepted.
         expected = watched_event(event['account'], event['profile'], event['identity'], event['watched_at'])
@@ -68,12 +141,147 @@ class Outbox:
                        (event['id'], json.dumps(event, sort_keys=True), 'pending'))
         return event['id']
 
+    def enqueue_manual(self, event, *, held=False):
+        expected = manual_event(event['account'], event['profile'], event['operation'],
+                                event['identity'], event['nonce'], event['watched_at'], provider_scope=event['provider_scope'])
+        if event != expected:
+            raise ValueError('manual action payload or identity modified')
+        with self.connect() as db:
+            db.execute('INSERT OR IGNORE INTO events (id,event,state) VALUES (?,?,?)',
+                       (event['id'], json.dumps(event, sort_keys=True), 'held' if held else 'pending'))
+        return event['id']
+
+    def send_manual(self, operation, *, account, profile, provider_scope, approved, post, now):
+        if approved != operation:
+            raise PermissionError('specific operation approval required')
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            row = db.execute('SELECT event,state,retry_at FROM events WHERE id=?', (operation,)).fetchone()
+            if row is None:
+                raise ValueError('unknown operation')
+            event = json.loads(row[0])
+            if (event.get('schema') != 2 or event['account'] != account
+                    or event['profile'] != str(profile) or event.get('provider_scope') != provider_scope):
+                raise PermissionError('account or profile changed')
+            expected = manual_event(account, profile, event['operation'], event['identity'],
+                                    event['nonce'], event['watched_at'], provider_scope=provider_scope)
+            if event != expected:
+                raise ValueError('stored action changed')
+            if row[1] not in ('pending', 'held') or row[2] > now:
+                return row[1]
+            db.execute('UPDATE events SET state=?, attempts=attempts+1 WHERE id=?', ('inflight', operation))
+        state, retry_at = 'unknown', 0
+        try:
+            response = post(event['endpoint'], event['payload'])
+            if isinstance(response, dict) and not any((response.get('not_found') or {}).values()):
+                if event['operation'] == 'checkin':
+                    if type(response.get('id')) is int and response['id'] > 0:
+                        state = 'confirmed'
+                else:
+                    key = 'deleted' if event['operation'].endswith('.remove') else 'added'
+                    counts = response.get(key, {})
+                    item_key = {'movie': 'movies', 'episode': 'episodes', 'show': 'shows'}[event['identity']['kind']]
+                    value = counts.get(item_key) if isinstance(counts, dict) else None
+                    if type(value) is int and value == 1:
+                        state = 'confirmed'
+        except RetryLater as exc:
+            state, retry_at = ('held' if row[1] == 'held' else 'pending'), now + exc.seconds
+        except Exception:
+            pass  # The server may have committed before the response was lost.
+        with self.connect() as db:
+            db.execute('UPDATE events SET state=?,retry_at=? WHERE id=? AND state=?',
+                       (state, retry_at, operation, 'inflight'))
+            return db.execute('SELECT state FROM events WHERE id=?', (operation,)).fetchone()[0]
+
+    def pending_manual(self, *, account, profile, provider_scope, now, limit=5, include_held=False):
+        """Return due explicit actions for this exact binding, never unknown sends."""
+        if type(limit) is not int or not 1 <= limit <= 20:
+            raise ValueError('invalid pending-action limit')
+        selected = []
+        with self.connect() as db:
+            rows = db.execute("SELECT id,event,state FROM events WHERE (state='pending' OR (state='held' AND ?)) AND retry_at<=? ORDER BY rowid", (include_held is True, now))
+            for identifier, raw, state in rows:
+                try:
+                    event = json.loads(raw)
+                    if not isinstance(event, dict):
+                        continue
+                    # Removals require an individual user decision in the experimental beta.
+                    if str(event.get('operation', '')).endswith('.remove'):
+                        continue
+                    # Playback history may already be scrobbled by script.trakt.
+                    if state == 'held' and event.get('operation') == 'history.add':
+                        continue
+                    if (event.get('schema') == 2 and event.get('account') == account
+                            and event.get('profile') == str(profile)
+                            and event.get('provider_scope') == provider_scope
+                            and event.get('operation') != 'checkin'):
+                        expected = manual_event(account, profile, event['operation'], event['identity'],
+                                                event['nonce'], event['watched_at'], provider_scope=provider_scope)
+                        if expected == event and identifier == event['id']:
+                            selected.append(identifier)
+                except (KeyError, TypeError, ValueError):
+                    continue
+                if len(selected) == limit:
+                    break
+        return selected
+
+    @contextmanager
+    def import_guard(self, *, account, profile, provider_scope):
+        """Serialize remote projection with local intent creation for this binding."""
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            rows = db.execute("SELECT event,state FROM events WHERE state IN ('held','pending','inflight','unknown','confirmed')").fetchall()
+            intents = []
+            for raw, state in rows:
+                try:
+                    event = json.loads(raw)
+                    if (not isinstance(event, dict) or not isinstance(event.get('account'), str)
+                            or not isinstance(event.get('profile'), str)):
+                        raise ValueError('invalid queued action')
+                    if event.get('account') != account or event.get('profile') != str(profile):
+                        continue
+                    if event.get('schema') == 2:
+                        if event.get('provider_scope') != provider_scope:
+                            continue
+                        action = event.get('operation')
+                        if action not in ('history.add', 'history.remove'):
+                            continue
+                        # A confirmed removal still protects against an older remote snapshot.
+                        if state == 'confirmed' and action != 'history.remove':
+                            continue
+                        expected = manual_event(account, profile, action, event['identity'],
+                                                event['nonce'], event['watched_at'], provider_scope=provider_scope)
+                    else:
+                        if state == 'confirmed':
+                            continue
+                        expected = watched_event(account, profile, event['identity'], event['watched_at'])
+                    if expected != event:
+                        raise ValueError('queued action failed integrity validation')
+                    intents.append(event['identity'])
+                except (KeyError, TypeError, ValueError) as exc:
+                    raise ValueError('unsafe pending action; remote import deferred') from exc
+            def conflict(operation):
+                item = operation.get('identity')
+                if not isinstance(item, dict) or not isinstance(item.get('ids'), dict):
+                    return True
+                for intent in intents:
+                    kind = intent.get('kind')
+                    if kind != item.get('kind') and not (kind == 'show' and item.get('kind') == 'episode'):
+                        continue
+                    if kind == 'episode' and (intent.get('season'), intent.get('episode')) != (item.get('season'), item.get('episode')):
+                        continue
+                    common = set(intent['ids']) & set(item['ids'])
+                    if common and any(intent['ids'][key] == item['ids'][key] for key in common):
+                        return True
+                return False
+            yield conflict
+
     def status(self, operation):
         with self.connect() as db:
             row = db.execute('SELECT state,attempts FROM events WHERE id=?', (operation,)).fetchone()
         return None if row is None else {'state': row[0], 'attempts': row[1]}
 
-    def confirm_from_snapshot(self, operation, snapshot, *, account, profile):
+    def confirm_from_snapshot(self, operation, snapshot, *, account, profile, provider_scope=None):
         """Resolve an uncertain POST only from a complete authenticated GET snapshot."""
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
@@ -88,6 +296,10 @@ class Outbox:
             if (snapshot.get('complete') is not True or
                     not isinstance(snapshot.get('history'), list)):
                 raise ValueError('complete authenticated history snapshot required')
+            if event.get('schema') == 2 and event.get('provider_scope') != provider_scope:
+                raise PermissionError('provider scope changed')
+            if event.get('schema') == 2 and event.get('operation') != 'history.add':
+                raise ValueError('history snapshot cannot confirm this action')
             expected = event['identity']
             for history in snapshot['history']:
                 actual = history['identity']
@@ -134,5 +346,7 @@ class Outbox:
             # Connection loss can happen after a successful server-side commit.
             pass
         with self.connect() as db:
-            db.execute('UPDATE events SET state=?, retry_at=? WHERE id=?', (state, retry_at, operation))
-        return state
+            db.execute('UPDATE events SET state=?, retry_at=? WHERE id=? AND state=?',
+                       (state, retry_at, operation, 'inflight'))
+            row = db.execute('SELECT state FROM events WHERE id=?', (operation,)).fetchone()
+        return row[0]

@@ -83,7 +83,7 @@ def _catalog_identity_exact(operation, index):
 
 
 def apply_batch(batch_path, ack_directory, *, profile, account, provider_scope,
-                addon, history, catalog_root, playing_file='', max_operations=200):
+                addon, history, catalog_root, playing_file='', max_operations=200, pending_conflict=None):
     """Idempotently apply additions; ack only after fresh-reader verification."""
     path = Path(batch_path)
     if path.is_symlink() or not path.is_file() or path.stat().st_size > 2_000_000:
@@ -144,6 +144,9 @@ def apply_batch(batch_path, ack_directory, *, profile, account, provider_scope,
                 or identity.get('season') != operation['season']
                 or identity.get('episode') != operation['episode']):
             raise ValueError('episode identity mismatch')
+        if pending_conflict is not None and pending_conflict(operation):
+            results.append({'id': op_id, 'status': 'deferred', 'reason': 'local_action_unreconciled'})
+            continue
         if target == 'provider' and not _catalog_identity_exact(operation, catalog_index):
             results.append({'id': op_id, 'status': 'deferred',
                             'reason': 'provider_identity_not_verified_in_catalog'})
@@ -232,12 +235,14 @@ def apply_batch(batch_path, ack_directory, *, profile, account, provider_scope,
 
     # Each data store is saved through XStream's coordinated writer. A crash
     # between stores is recoverable because every action in this bridge adds.
-    if changed['movie']:
-        watched_movies._save()
-    if changed['episode']:
-        watched_episodes._save()
-    if changed['resume']:
-        resume._save()
+    from trakt_local_journal import remote_changes
+    with remote_changes():
+        if changed['movie']:
+            watched_movies._save()
+        if changed['episode']:
+            watched_episodes._save()
+        if changed['resume']:
+            resume._save()
 
     verify_movies = history.WatchedMovies(addon, profile_num=int(profile))
     verify_episodes = history.WatchedEpisodes(addon, profile_num=int(profile))

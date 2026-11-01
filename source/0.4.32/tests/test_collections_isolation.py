@@ -74,7 +74,9 @@ class CollectionsIsolationTests(unittest.TestCase):
                 if name != 'premium_routes.py':
                     self.assertEqual(payload, (self.root / member).read_bytes())
                 if name not in ('addon.py', 'premium_routes.py'):
-                    self.assertEqual(hashlib.sha256(payload).hexdigest(), manifest['local_runtime_sha256'][member])
+                    self.assertEqual(hashlib.sha256(payload).hexdigest(),
+                                     manifest['favorites_capture_base_sha256'] if name == 'favorites.py'
+                                     else manifest['local_runtime_sha256'][member])
             # The pinned published ZIP predates the new Mis listas entry.
             # Verify the candidate separately, preserving the immutable artifact.
             self.assertIn(b"plugin://service.actweeter/?action=collections",

@@ -11,14 +11,29 @@ diff --git a/resources/lib/addon.py b/resources/lib/addon.py
 diff --git a/resources/lib/tmdb_routes.py b/resources/lib/tmdb_routes.py
 --- a/resources/lib/tmdb_routes.py
 +++ b/resources/lib/tmdb_routes.py
-@@ -2454,7 +2454,5 @@
+@@ -2454,7 +2454,6 @@
  def trakt_menu():
 -    if not _trakt_guard():
 -        return
      if not trakt.enabled():
          li = c("_new_listitem")("Direct Trakt menus are disabled")
-         _add_items([("", li, False)])
+-        _add_items([("", li, False)])
++        sync = c("_new_listitem")("Sincronización y estado")
++        _add_items([("", li, False), ("plugin://service.actweeter/?action=trakt_restore", sync, True)])
          return
+@@ -2490,3 +2490,4 @@
+     if trakt.auth_configured():
+         if trakt.authorized():
+             items.extend([
++                _folder_item("Mis listas", {"mode": "xstream_trakt_lists", "section": "my"}, "trakt"),
+@@ -2519,4 +2519,6 @@
+     else:
+         items.append(_folder_item("Configure Trakt application for account features", {"mode": "settings"}, "settings"))
+-
++
++    sync = c("_new_listitem")("Sincronización y estado")
++    items.append(("plugin://service.actweeter/?action=trakt_restore", sync, True))
+     _add_items(items)
 @@ -2524,2 +2524,32 @@
 -def trakt_list_route(params):
 +def trakt_snapshot_route(params):
@@ -87,3 +102,32 @@ diff --git a/resources/lib/trakt.py b/resources/lib/trakt.py
 +
  def cached_request(path, params=None, auth=True, ttl=300):
      cache_key = cache.make_key(path, sorted((params or {}).items()), bool(auth))
+diff --git a/resources/lib/tmdb_routes.py b/resources/lib/tmdb_routes.py
+--- a/resources/lib/tmdb_routes.py
++++ b/resources/lib/tmdb_routes.py
+@@ -2918,13 +2918,16 @@
+             return
+         label, action_type, action = actions[choice]
+-        if action_type == "mark_watched":
+-            trakt.mark_watched(tmdb_type, tmdb_id, season, episode)
+-        elif action_type == "mark_unwatched":
+-            trakt.mark_unwatched(tmdb_type, tmdb_id, season, episode)
+-        elif action_type == "checkin":
+-            trakt.checkin_item(tmdb_type, tmdb_id, season, episode)
+-        else:
+-            trakt.sync_item(action_type, action, tmdb_type, tmdb_id, season, episode)
+-        xbmcgui.Dialog().notification("Xstream Pro", label)
++        if action_type == "mark_unwatched" and not xbmcgui.Dialog().yesno(
++                "Trakt", "Esta acción puede eliminar todo el historial del contenido en Trakt. ¿Continuar?"):
++            xbmcplugin.endOfDirectory(c("addon_handle"), succeeded=False)
++            return
++        from trakt_auto_routes import coordinated_manual_action
++        state = coordinated_manual_action(c, trakt, tmdb_type, tmdb_id, season, episode,
++                                          action_type, action)
++        message = label if state == "confirmed" else (
++            "Check-in no enviado: hay reproducción activa" if state == "blocked_playback"
++            else "Check-in no enviado: sin conexión" if state == "blocked_offline"
++            else "Acción pendiente de confirmación: " + state)
++        xbmcgui.Dialog().notification("Xstream Pro", message)
+         xbmc.executebuiltin("Container.Refresh")
+     except Exception as exc:

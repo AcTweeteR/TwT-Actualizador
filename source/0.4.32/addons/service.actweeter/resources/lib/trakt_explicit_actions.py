@@ -21,7 +21,7 @@ class ExplicitWatchedActions:
         return self.outbox.send(operation, account=account, profile=profile,
                                 approved=approval, post=post, now=now)
 
-    def verify(self, operations, snapshot, *, account, profile):
+    def verify(self, operations, snapshot, *, account, profile, provider_scope=None):
         """Resolve uncertain operations using authenticated complete GET data."""
         return reconcile_uncertain(self.outbox, operations, snapshot,
-                                   account=account, profile=profile)
+                                   account=account, profile=profile, provider_scope=provider_scope)

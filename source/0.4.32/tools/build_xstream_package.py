@@ -458,6 +458,7 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             ("trakt_episode_index.py", ROOT / "addons/service.actweeter/resources/lib/trakt_episode_index.py"),
             ("trakt_snapshot.py", ROOT / "third_party/xstream/trakt_snapshot.py"),
             ("history_store_coordinator.py", HISTORY_STORE_COORDINATOR_SOURCE),
+            ("trakt_local_journal.py", ROOT / "third_party/xstream/trakt_local_journal.py"),
             ("trakt_live_queue.py", ROOT / "addons/service.actweeter/resources/lib/trakt_live_queue.py"),
             ("trakt_live_consumer.py", ROOT / "third_party/xstream/trakt_live_consumer.py"),
             ("trakt_auto_routes.py", TRAKT_AUTO_ROUTES_SOURCE),
@@ -576,6 +577,11 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
         manifest.set("version", distribution_version)
         (root / "addon.xml").write_bytes(ET.tostring(
             manifest, encoding="utf-8", xml_declaration=True) + b"\n")
+
+        favorites = root / 'resources/lib/favorites.py'
+        if sha256(favorites) != data['favorites_capture_base_sha256']:
+            raise ValueError('favorites capture base changed')
+        favorites.write_bytes(favorites.read_bytes() + b"\nfrom history_store_coordinator import install_favorites as _install_favorites\n_install_favorites(__import__(__name__))\n")
 
         output.parent.mkdir(parents=True, exist_ok=True)
         with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED,

@@ -45,7 +45,7 @@ class TraktAutoSyncSchedulerTests(unittest.TestCase):
             path.symlink_to(Path(folder) / 'missing')
             self.assertFalse(consent.enabled(path))
 
-    def test_scheduler_requires_opt_in_skips_playback_and_waits_five_minutes(self):
+    def test_scheduler_requires_opt_in_skips_playback_and_waits_one_minute(self):
         with tempfile.TemporaryDirectory() as folder:
             now = [1000.0]
             scheduler = Scheduler(Path(folder) / 'scheduler.json', clock=lambda: now[0])
@@ -55,7 +55,7 @@ class TraktAutoSyncSchedulerTests(unittest.TestCase):
             self.assertFalse(scheduler.dispatch_if_due(dispatch, authorized=True, playing=True))
             self.assertTrue(scheduler.dispatch_if_due(dispatch, authorized=True))
             self.assertFalse(scheduler.dispatch_if_due(dispatch, authorized=True))
-            now[0] += 299
+            now[0] += 59
             self.assertFalse(scheduler.dispatch_if_due(dispatch, authorized=True))
             now[0] += 1
             self.assertTrue(scheduler.dispatch_if_due(dispatch, authorized=True))
@@ -70,7 +70,7 @@ class TraktAutoSyncSchedulerTests(unittest.TestCase):
             self.assertFalse(scheduler.dispatch_if_due(fail, authorized=True))
             state = json.loads(path.read_text())
             self.assertEqual(state['failures'], 1)
-            self.assertEqual(state['next_at'], 310.0)
+            self.assertEqual(state['next_at'], 70.0)
 
     def test_concurrent_calls_dispatch_once(self):
         with tempfile.TemporaryDirectory() as folder:

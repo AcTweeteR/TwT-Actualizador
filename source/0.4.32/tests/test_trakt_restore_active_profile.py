@@ -6,6 +6,8 @@ import unittest
 from unittest.mock import patch
 import importlib.util
 import ast
+import json
+import tempfile
 
 ROOT = Path(__file__).resolve().parents[1] / 'addons/service.actweeter/resources/lib'
 sys.path.insert(0, str(ROOT.parent))
@@ -22,6 +24,25 @@ class Item:
 
 
 class TraktRestoreProfileTests(unittest.TestCase):
+    def test_status_reads_scheduler_and_global_queue_without_claiming_success(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder) / 'trakt_live'
+            (root / 'queue').mkdir(parents=True)
+            (root / 'scheduler.json').write_text(json.dumps({'next_at': 1760000000, 'failures': 2}))
+            (root / 'queue' / 'one.json').write_text('{}')
+            labels = ui.sync_status_labels(folder)
+            self.assertTrue(any('Próxima ejecución prevista:' in label for label in labels))
+            self.assertIn('Fallos consecutivos del planificador: 2', labels)
+            self.assertIn('Lotes pendientes de importar (todos los perfiles): 1', labels)
+            self.assertFalse(any('correcta' in label for label in labels))
+
+    def test_corrupt_scheduler_is_reported_not_counted_as_success(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder) / 'trakt_live'
+            root.mkdir()
+            (root / 'scheduler.json').write_text('{broken')
+            self.assertIn('Planificación de sincronización no disponible', ui.sync_status_labels(folder))
+
     def test_profile_setting_matches_xstream_profile_manager(self):
         addon = types.SimpleNamespace(getSetting=lambda _: 'Profile 7')
         self.assertEqual(ui.active_xstream_profile(addon), '7')
@@ -60,6 +81,74 @@ class TraktRestoreProfileTests(unittest.TestCase):
         self.assertEqual(stage.call_args.kwargs['movie_source'].name, 'watched_movies_p4.json')
         self.assertEqual(stage.call_args.kwargs['episode_source'].name, 'watched_episodes_p4.json')
 
+    def test_confirmed_preview_persists_plan_but_cancel_does_not(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            profile_path = root / 'xstream'
+            service_path = root / 'service'
+            profile_path.mkdir()
+            service_path.mkdir()
+            addon = types.SimpleNamespace(getSetting=lambda _: 'Profile 2',
+                getAddonInfo=lambda key: str(profile_path) if key == 'profile' else '1.1.2.38')
+            service = types.SimpleNamespace(getAddonInfo=lambda _: str(service_path))
+            accepted = [False]
+            gui = types.SimpleNamespace(ListItem=Item,
+                Dialog=lambda: types.SimpleNamespace(yesno=lambda *_: accepted[0]))
+            plugin = types.SimpleNamespace(setPluginCategory=lambda *_: None,
+                setContent=lambda *_: None, addDirectoryItem=lambda *_: None,
+                endOfDirectory=lambda *_a, **_kw: None)
+            def stage(*_args, staging_directory, **_kwargs):
+                paths = [Path(staging_directory) / name for name in ('m', 'e', 'r')]
+                for path in paths: path.write_text('{}')
+                return {'movie_path': str(paths[0]), 'episode_path': str(paths[1]),
+                    'resume_path': str(paths[2]), 'movies': 1, 'episodes': 0,
+                    'resumes_added': 0, 'resumes_updated': 0, 'resumes_deferred': 0,
+                    'resume_error': False}
+            with patch.object(ui, 'startup_restore_status', return_value={'pending': 0, 'safe': True}), \
+                 patch.object(ui, 'summarize_exports', return_value=[{'name': 'snapshot-a',
+                     'account': 'synthetic', 'watched_movies': 1, 'watched_episodes': 0, 'resume_pending': 0}]), \
+                 patch.object(ui, 'prepare_restore', return_value={}), \
+                 patch.object(ui, 'preview_changes', return_value={'plan': {'items': []}}), \
+                 patch.object(ui, 'stage_complete_restore', side_effect=stage):
+                args = dict(gui=gui, plugin=plugin, vfs=types.SimpleNamespace(translatePath=lambda x: x),
+                            xstream_addon=addon, service_addon=service, params={'operation': ['confirm']})
+                ui.render(1, **args)
+                self.assertFalse((service_path / 'trakt_restore_plans').exists())
+                accepted[0] = True
+                ui.render(1, **args)
+            plans = list((service_path / 'trakt_restore_plans').glob('plan-*/plan.json'))
+            self.assertEqual(len(plans), 1)
+            self.assertEqual(json.loads(plans[0].read_text())['profile'], '2')
+            self.assertFalse(any(profile_path.iterdir()))
+
+    def test_cancel_plan_requires_matching_profile_and_confirmation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            xstream, service_path = root / 'xstream', root / 'service'
+            xstream.mkdir(); service_path.mkdir()
+            plans = service_path / 'trakt_restore_plans'
+            name = 'plan-' + 'a' * 32
+            target = plans / name
+            target.mkdir(parents=True)
+            (target / 'plan.json').write_text(json.dumps({'schema': 1, 'profile': '2'}))
+            addon = types.SimpleNamespace(getSetting=lambda _: 'Profile 2',
+                getAddonInfo=lambda key: str(xstream) if key == 'profile' else '1.1.2.38')
+            service = types.SimpleNamespace(getAddonInfo=lambda _: str(service_path))
+            accept = [False]
+            gui = types.SimpleNamespace(ListItem=Item, Dialog=lambda: types.SimpleNamespace(yesno=lambda *_: accept[0]))
+            plugin = types.SimpleNamespace(setPluginCategory=lambda *_: None, setContent=lambda *_: None,
+                addDirectoryItem=lambda *_: None, endOfDirectory=lambda *_a, **_kw: None)
+            args = dict(gui=gui, plugin=plugin, vfs=types.SimpleNamespace(translatePath=lambda x: x),
+                xstream_addon=addon, service_addon=service,
+                params={'operation': ['cancel_plan'], 'plan': [name]})
+            with patch.object(ui, 'startup_restore_status', return_value={'pending': 0, 'safe': True}), \
+                 patch.object(ui, 'summarize_exports', return_value=[]):
+                ui.render(1, **args)
+                self.assertTrue(target.exists())
+                accept[0] = True
+                ui.render(1, **args)
+            self.assertFalse(target.exists())
+
     def test_render_offers_native_snapshot_and_refresh_links(self):
         addon = types.SimpleNamespace(
             getSetting=lambda _: 'Profile 2',
@@ -76,6 +165,7 @@ class TraktRestoreProfileTests(unittest.TestCase):
                       vfs=types.SimpleNamespace(translatePath=lambda path: path),
                       xstream_addon=addon)
         self.assertIn((ui.XSTREAM_SNAPSHOT, True), links)
+        self.assertIn(('plugin://service.actweeter/?action=trakt_actions', True), links)
         self.assertIn((ui.ROOT + '&operation=refresh', True), links)
 
     def test_old_xstream_does_not_offer_a_broken_snapshot_route(self):

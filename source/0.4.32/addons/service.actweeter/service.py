@@ -694,7 +694,8 @@ def _run_coordinator(kodi, addon_factory, vfs, clock=time.time, monitor=None,
             consent_path = os.path.join(service_profile, "trakt_live", "consent.json")
             player = getattr(kodi, "Player", lambda: None)()
             playing = bool(player and player.isPlaying())
-            if trakt_sync_enabled(consent_path):
+            if (trakt_sync_enabled(consent_path) or trakt_sync_enabled(
+                    os.path.join(service_profile, "trakt_live", "export_consent.json"))):
                 trakt_scheduler.dispatch_if_due(
                     lambda: kodi.executebuiltin(
                         "RunPlugin(plugin://plugin.video.xstream-pro/?mode=xstream_trakt_sync_cycle)",
