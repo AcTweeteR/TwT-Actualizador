@@ -2,7 +2,13 @@
 import ast
 import os
 import zipfile
+import unittest
 from pathlib import Path
+
+
+def load_tests(loader, tests, pattern):
+    tests.addTest(unittest.FunctionTestCase(test_recommendation_cache_reuses_identity_and_invalidates_on_new_catalog))
+    return tests
 
 
 def test_recommendation_cache_reuses_identity_and_invalidates_on_new_catalog():

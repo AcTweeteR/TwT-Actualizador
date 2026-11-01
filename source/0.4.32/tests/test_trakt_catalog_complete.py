@@ -218,13 +218,46 @@ class CompleteCatalogTests(unittest.TestCase):
                     activity_get=lambda:('user',{}), export_snapshot=lambda: self.root,
                     apply_batch=apply, addon=None, history=None, one_shot=True)
         with patch.object(trakt_auto_cycle, 'prepare_batches', return_value=[]):
-            self.assertEqual(run_cycle(service, self.root, **args)['status'], 'deferred')
+            result = run_cycle(service, self.root, **args)
+            self.assertEqual(result['status'], 'deferred')
+            self.assertEqual(result['remaining_batches'], 2)
+            self.assertEqual(result['applied'], 0)
+            self.assertEqual(result['deferred_operations'][0]['reason'], 'unmatched')
+            self.assertEqual(result['deferred_operations'][0]['identity']['ids']['tmdb'], '42')
             self.assertFalse(list((service / 'trakt_live/checkpoints').glob('*.json')))
             self.assertEqual(run_cycle(service, self.root, **args)['status'], 'pending')
             self.assertEqual(visited, ['0'*32, 'f'*32])
             self.assertEqual(len(list(queue.glob('*.json'))), 1)
             self.assertEqual(run_cycle(service, self.root, **args)['status'], 'deferred')
             self.assertEqual(visited[-1], '0'*32)
+
+    def test_partial_batch_reports_each_status_and_deferred_identity(self):
+        from lib.trakt_live_queue import build_batch, write_batch, write_ack
+        service = self.root / 'service'
+        queue = service / 'trakt_live' / 'queue'
+        batch = build_batch({'profile': '1', 'account': 'user', 'items': [
+            {'identity': sync.identity('movie', {'tmdb': str(i)}),
+             'provider_id': str(i), 'watched': True, 'watched_at': LATE}
+            for i in (42, 43, 44)]}, provider_scope='a'*64, consent=True,
+            activity_fingerprint='f'*64, catalog_generation='a'*64)
+        write_batch(queue, batch)
+        (service / 'trakt_live').chmod(0o700)
+        def apply(path, ackroot, **kwargs):
+            current = json.loads(Path(path).read_text())
+            rows = [{'id': op['id'], 'status': status, 'reason': reason}
+                    for op, status, reason in zip(current['operations'],
+                        ('applied', 'already_applied', 'deferred'),
+                        (None, None, 'exact_playback_reference_missing'))]
+            return write_ack(Path(ackroot) / (current['batch_id'] + '.json'), current, rows)
+        args = dict(account='user', profile='1', provider_scope='a'*64,
+                    activity_get=lambda: ('user', {}), export_snapshot=lambda: self.root,
+                    apply_batch=apply, addon=None, history=None, one_shot=True)
+        with patch.object(trakt_auto_cycle, 'prepare_batches', return_value=[]):
+            result = run_cycle(service, self.root, **args)
+        self.assertEqual((result['applied'], result['already_applied'],
+                          len(result['deferred_operations'])), (1, 1, 1))
+        self.assertEqual(result['deferred_operations'][0]['reason'], 'exact_playback_reference_missing')
+        self.assertEqual(len(list(queue.glob('*.json'))), 1)
 
     def test_unchanged_remote_activity_reuses_verified_export_when_catalog_grows(self):
         from lib.trakt_live_queue import build_batch, write_ack

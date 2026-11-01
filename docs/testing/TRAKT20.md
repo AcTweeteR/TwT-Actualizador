@@ -205,3 +205,6 @@ Validación continuada: las cuatro combinaciones usan Favorites empaquetado, dia
 ## Candidata experimental para Testing
 
 XStream 1.1.2.39~beta1 (`88dc63547f981c16c84faced4f1c437b83de5f0baa73c1ef1fdde7fe1547d3e8`) y Service 0.4.97~beta1 (`a6a79fda37e88e7d594a6fcba87d2b4b5eef3c5a6b85b5f4afd9847e5027b9f4`). Suite exacta del índice candidato: 815 aprobadas, una omitida exclusiva Stable y 108 subpruebas. Las exportaciones automáticas de bajas quedan retenidas para autorización individual; restauración de escritura y avances duplicables siguen deshabilitados/retenidos. El usuario debe autorizar cualquier envío. La sincronización bidireccional real, el planificador completo con las cuatro colecciones y la concurrencia entre dispositivos no están validados.
+### Diagnóstico de lotes aplazados
+
+La candidata XStream 1.1.2.39~beta2 y Service 0.4.97~beta2 muestra los recuentos del último lote procesado y, cuando hay operaciones aplazadas, sus identificadores externos y motivos. Los lotes pendientes no se borran: el planificador continúa rotando entre ellos y vuelve a evaluar el catálogo cuando cambia su generación. Los contadores no son un total histórico. No se han efectuado escrituras de prueba en Trakt; la validación con cuenta real y el comportamiento visual de la candidata siguen pendientes hasta su instalación.

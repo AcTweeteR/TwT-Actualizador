@@ -3,7 +3,17 @@ import os
 import sys
 import time
 import urllib.parse
+import tempfile
+import unittest
 from pathlib import Path
+
+
+def load_tests(loader, tests, pattern):
+    def run():
+        with tempfile.TemporaryDirectory() as directory:
+            test_failed_refresh_callback_is_terminal_and_backoff_does_not_hide_typeerror(Path(directory))
+    tests.addTest(unittest.FunctionTestCase(run))
+    return tests
 
 
 ROOT = Path(__file__).resolve().parents[1]

@@ -267,9 +267,30 @@ def cycle_route(context, guard, trakt, xbmcaddon, xbmc, xbmcplugin, xbmcvfs,
     if applied_count:
         xbmc.executebuiltin(
             'RunPlugin(plugin://service.actweeter/?action=trakt_continue_refresh)', False)
-    item = context('_new_listitem')('AcTweeteR Trakt sync: ' + result['status'])
+    status = result['status']
+    if result.get('reason') == 'operations_deferred':
+        status = 'parcial (último lote): %d aplicadas, %d ya aplicadas, %d aplazadas; %d lotes pendientes' % (
+            result.get('applied', 0), result.get('already_applied', 0),
+            len(result.get('deferred_operations', [])), result.get('remaining_batches', 0))
+    item = context('_new_listitem')('AcTweeteR Trakt sync: ' + status)
     item.setProperty('actweeter.trakt.sync', json.dumps(result, sort_keys=True))
     xbmcplugin.addDirectoryItem(context('addon_handle'), '', item, isFolder=False)
+    reasons = {
+        'provider_identity_not_verified_in_catalog': 'identidad no verificada en el catálogo',
+        'exact_playback_reference_missing': 'falta una referencia exacta de reproducción',
+        'local_action_unreconciled': 'existe un cambio local pendiente',
+        'provider_catalog_scope_changed': 'el catálogo no corresponde al proveedor activo',
+    }
+    for operation in result.get('deferred_operations', []):
+        identity = operation.get('identity', {})
+        ids = identity.get('ids', {})
+        identifiers = ', '.join('%s:%s' % (key, value) for key, value in sorted(ids.items())
+                                if key in ('tmdb', 'imdb', 'tvdb', 'trakt'))
+        if identity.get('kind') == 'episode':
+            identifiers += ' S%sE%s' % (identity.get('season', '?'), identity.get('episode', '?'))
+        label = '%s — %s' % (identifiers or 'Identidad pendiente',
+                            reasons.get(operation.get('reason'), operation.get('reason', 'motivo desconocido')))
+        xbmcplugin.addDirectoryItem(context('addon_handle'), '', context('_new_listitem')(label), isFolder=False)
     xbmcplugin.endOfDirectory(context('addon_handle'), cacheToDisc=False)
 
 

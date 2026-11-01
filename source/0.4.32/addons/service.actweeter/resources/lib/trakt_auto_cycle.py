@@ -128,8 +128,16 @@ def _run_cycle(service_root, xstream_root, *, account, profile, provider_scope,
                           catalog_root=xstream_root, playing_file=playing_file)
             rows = verify_ack(ack, batch)
             if any(row['status'] == 'deferred' for row in rows):
+                operations = {op['id']: op for op in batch['operations']}
                 deferred = {'status': 'deferred', 'reason': 'operations_deferred',
-                            'remaining_batches': len(pending)}
+                            'remaining_batches': len(pending),
+                            'applied': sum(row['status'] == 'applied' for row in rows),
+                            'already_applied': sum(row['status'] == 'already_applied' for row in rows),
+                            'deferred_operations': [
+                                {'reason': row.get('reason', 'unknown'),
+                                 'identity': operations[row['id']].get('identity', {}),
+                                 'action': operations[row['id']].get('action')}
+                                for row in rows if row['status'] == 'deferred']}
             elif confirm_batch(_ServiceAddon(root), _VFS(), batch) is None:
                 deferred = {'status': 'deferred', 'reason': 'operations_unconfirmed'}
         _write(rotation_path, {'account': account, 'profile': profile,

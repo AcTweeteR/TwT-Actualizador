@@ -2,7 +2,7 @@
   "addon_id": "plugin.video.xstream-pro",
   "upstream_project": "https://github.com/Pesicp/XStreamPro",
   "upstream_version": "1.1.2",
-  "distribution_version": "1.1.2.39~beta1",
+  "distribution_version": "1.1.2.39~beta2",
   "upstream_ref": "1.1.2",
   "upstream_commit": "1aa3e67da7c03c6acc3ec7e1ca579a7f645220f4",
   "upstream_release_url": "https://github.com/Pesicp/XStreamPro/releases/download/1.1.2/plugin.video.xstream-pro-1.1.2.zip",
@@ -114,7 +114,7 @@
     "trakt_episode_index.py": "7eedd8071d359f233f45bad027c351c92fd4e1bbeb51d2a9b5617ed0ee8daeee",
     "trakt_local_journal.py": "bb510556a236795ed7a1a08f511969ef99d1d813e2e5405a70dc8f2928d55bd2"
   },
-  "trakt_auto_routes_sha256": "c626b4c6a222420787ceb0445b179d6ee9448c31f77c8bf0c0fd9065c213d849",
+  "trakt_auto_routes_sha256": "c3eae15c070534353670fbb13a3d40dd534eae4cfdc8e963e7a98e4b4ef4b842",
   "trakt_pkce_applier_sha256": "4138cd46b31986adb8cb0cbe49de389692f3ebe74fa8c0594f8b739abbe2879d",
   "trakt_pkce_source_sha256": "9475d2a5fa2438c337718212f908257f0ddb7ed2bf697ef30431b74e5e38ec77",
   "catalog_generation_patch": "third_party/xstream/patches/1.1.2/actweeter-catalog-generation.patch",

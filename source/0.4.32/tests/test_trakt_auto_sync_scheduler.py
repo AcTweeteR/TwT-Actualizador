@@ -193,6 +193,41 @@ class AutoCycleProgressTests(unittest.TestCase):
 
 
 class AutoRouteRefreshTests(unittest.TestCase):
+    def test_partial_result_displays_counts_and_reasons(self):
+        sys.path.insert(0, str(ROOT / 'addons/service.actweeter/resources'))
+        from lib import trakt_auto_cycle, trakt_sync_consent, trakt_sync_scheduler
+        spec = importlib.util.spec_from_file_location('auto_routes_partial_test',
+            ROOT / 'third_party/xstream/trakt_auto_routes.py')
+        route = importlib.util.module_from_spec(spec); spec.loader.exec_module(route)
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            xbmc = Mock(); xbmc.Player.return_value.isPlaying.return_value = False
+            addon = Mock(); addon.getAddonInfo.return_value = str(root)
+            labels = []
+            def item(label):
+                labels.append(label)
+                return Mock()
+            context = lambda key: {'addon': addon, 'addon_handle': 1, '_new_listitem': item}[key]
+            result = {'status': 'deferred', 'reason': 'operations_deferred',
+                      'applied': 2, 'already_applied': 3, 'remaining_batches': 4,
+                      'deferred_operations': [{'reason': 'provider_identity_not_verified_in_catalog',
+                                               'identity': {'kind': 'movie', 'ids': {'tmdb': '42'}}},
+                                              {'reason': 'exact_playback_reference_missing',
+                                               'identity': {'kind': 'movie', 'ids': {'imdb': 'tt123'}}}]}
+            with patch.object(route, '_binding', return_value=('user', '1', 'a'*64, root)), \
+                 patch.object(trakt_sync_consent, 'authorized', return_value=True), \
+                 patch.object(trakt_sync_scheduler, 'record_result'), \
+                 patch.object(trakt_auto_cycle, 'run_cycle', return_value=result), \
+                 patch.dict(sys.modules, {'history': types.ModuleType('history'),
+                     'trakt_live_consumer': Mock(), 'trakt_snapshot': types.ModuleType('trakt_snapshot'),
+                     'xbmc': xbmc}):
+                vfs = Mock(); vfs.translatePath.side_effect = str
+                addons = Mock(); addons.Addon.return_value = addon
+                route.cycle_route(context, lambda **kw: True, Mock(), addons, xbmc, Mock(), vfs)
+            self.assertIn('2 aplicadas, 3 ya aplicadas, 2 aplazadas; 4 lotes pendientes', labels[0])
+            self.assertIn('tmdb:42 — identidad no verificada en el catálogo', labels)
+            self.assertIn('imdb:tt123 — falta una referencia exacta de reproducción', labels)
+
     def test_refresh_preserves_intermediate_writes_even_when_later_cycle_fails(self):
         sys.path.insert(0, str(ROOT / 'addons/service.actweeter/resources'))
         from lib import trakt_auto_cycle, trakt_sync_consent, trakt_sync_scheduler
