@@ -224,7 +224,8 @@ class AutoRouteRefreshTests(unittest.TestCase):
                 vfs = Mock(); vfs.translatePath.side_effect = str
                 addons = Mock(); addons.Addon.return_value = addon
                 route.cycle_route(context, lambda **kw: True, Mock(), addons, xbmc, Mock(), vfs)
-            self.assertIn('2 aplicadas, 3 ya aplicadas, 2 aplazadas; 4 lotes pendientes', labels[0])
+            self.assertIn('2 aplicadas, 3 ya aplicadas', labels[0])
+            self.assertIn('Último lote: 2 aplazadas; 4 lotes pendientes', labels)
             self.assertIn('tmdb:42 — identidad no verificada en el catálogo', labels)
             self.assertIn('imdb:tt123 — falta una referencia exacta de reproducción', labels)
 

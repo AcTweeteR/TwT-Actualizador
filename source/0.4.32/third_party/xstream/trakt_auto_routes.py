@@ -269,12 +269,16 @@ def cycle_route(context, guard, trakt, xbmcaddon, xbmc, xbmcplugin, xbmcvfs,
             'RunPlugin(plugin://service.actweeter/?action=trakt_continue_refresh)', False)
     status = result['status']
     if result.get('reason') == 'operations_deferred':
-        status = 'parcial (último lote): %d aplicadas, %d ya aplicadas, %d aplazadas; %d lotes pendientes' % (
+        status = 'parcial: %d aplicadas, %d ya aplicadas' % (
             result.get('applied', 0), result.get('already_applied', 0),
-            len(result.get('deferred_operations', [])), result.get('remaining_batches', 0))
+        )
     item = context('_new_listitem')('AcTweeteR Trakt sync: ' + status)
     item.setProperty('actweeter.trakt.sync', json.dumps(result, sort_keys=True))
     xbmcplugin.addDirectoryItem(context('addon_handle'), '', item, isFolder=False)
+    if result.get('reason') == 'operations_deferred':
+        detail = 'Último lote: %d aplazadas; %d lotes pendientes' % (
+            len(result.get('deferred_operations', [])), result.get('remaining_batches', 0))
+        xbmcplugin.addDirectoryItem(context('addon_handle'), '', context('_new_listitem')(detail), isFolder=False)
     reasons = {
         'provider_identity_not_verified_in_catalog': 'identidad no verificada en el catálogo',
         'exact_playback_reference_missing': 'falta una referencia exacta de reproducción',
@@ -284,8 +288,8 @@ def cycle_route(context, guard, trakt, xbmcaddon, xbmc, xbmcplugin, xbmcvfs,
     for operation in result.get('deferred_operations', []):
         identity = operation.get('identity', {})
         ids = identity.get('ids', {})
-        identifiers = ', '.join('%s:%s' % (key, value) for key, value in sorted(ids.items())
-                                if key in ('tmdb', 'imdb', 'tvdb', 'trakt'))
+        identifiers = next(('%s:%s' % (key, ids[key]) for key in ('tmdb', 'imdb', 'tvdb', 'trakt')
+                            if ids.get(key)), '')
         if identity.get('kind') == 'episode':
             identifiers += ' S%sE%s' % (identity.get('season', '?'), identity.get('episode', '?'))
         label = '%s — %s' % (identifiers or 'Identidad pendiente',
