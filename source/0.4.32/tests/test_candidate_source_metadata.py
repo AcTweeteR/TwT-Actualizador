@@ -21,7 +21,7 @@ class CandidateSourceMetadataTests(unittest.TestCase):
                          ("skin.actweeter", "1.2.36~beta5"))
         self.assertEqual((repository.get("id"), repository.get("version")),
                          ("repository.actweeter", "1.0.3"))
-        self.assertEqual(xstream["distribution_version"], "1.1.2.39~beta3")
+        self.assertEqual(xstream["distribution_version"], "1.1.2.39~beta4")
         rivulet = json.loads((ROOT / "third_party/rivulet/upstream.json").read_text())
         self.assertEqual(rivulet["version"], "1.0.2")
         self.assertEqual(rivulet["sha256"],

@@ -122,7 +122,7 @@ diff --git a/resources/lib/premium_routes.py b/resources/lib/premium_routes.py
 diff --git a/resources/lib/addon.py b/resources/lib/addon.py
 --- a/resources/lib/addon.py
 +++ b/resources/lib/addon.py
-@@ -11540,16 +11540,7 @@
+@@ -11540,16 +11540,8 @@
                  li.setProperty("XStream.ChangeStatus", change_status)
              if series_watched_store is not None:
                  inventory_record = series_inventory_map.get(sid)
@@ -136,7 +136,8 @@ diff --git a/resources/lib/addon.py b/resources/lib/addon.py
 -                        pass
 -                tmdb_id = series_changes.series_state.resolve_tmdb_id(
 -                    inventory_record, s, cached_tmdb_id)
-+                tmdb_id = series_changes.series_state.resolve_tmdb_id(inventory_record, s)
++                tmdb_id = series_changes.series_state.resolve_tmdb_id(inventory_record, s,
++                    __import__('content_state').provider_tmdb_id(globals(), 'series', sid, pnum))
                  try:
                      state = series_changes.series_state.derive_series_state(
                          tmdb_id, sid, inventory_record, series_watched_store,

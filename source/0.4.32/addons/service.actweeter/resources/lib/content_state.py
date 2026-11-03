@@ -13,23 +13,32 @@ def _remembered_tmdb_id(g, stype, provider_id, profile_num):
     if not str(provider_id or '').isdigit() or not str(profile_num).isdigit():
         return ''
     import sqlite3
+    from contextlib import closing
     from pathlib import Path
     try:
         root = Path(g['xbmcvfs'].translatePath(g['addon'].getAddonInfo('profile')))
         path = root / ('provider_search_%s.sqlite' % profile_num)
         cache = g.setdefault('_actweeter_identity_matches', {})
         key = str(profile_num), stype
-        if key not in cache:
-            with sqlite3.connect(path.resolve().as_uri() + '?mode=ro', uri=True, timeout=.1) as db:
+        def stamp(p):
+            try:
+                s = p.stat()
+                return s.st_ino, s.st_size, s.st_mtime_ns
+            except FileNotFoundError:
+                return None
+        revision = (stamp(path), stamp(Path(str(path) + '-wal')))
+        if key not in cache or cache[key][0] != revision:
+            with closing(sqlite3.connect(path.resolve().as_uri() + '?mode=ro', uri=True, timeout=.1)) as db:
                 exists = db.execute("SELECT 1 FROM sqlite_master WHERE type='table' "
                                     "AND name='identity_matches'").fetchone()
-                cache[key] = {str(identifier): str(tmdb_id) for identifier, tmdb_id in
+                matches = {str(identifier): str(tmdb_id) for identifier, tmdb_id in
                               db.execute("SELECT m.provider_id,m.tmdb_id FROM identity_matches m "
                                          "JOIN items i ON m.stype=i.stype AND "
                                          "m.provider_id=i.provider_id AND m.title_key=i.norm "
                                          "AND m.year=i.year WHERE m.stype=?", (stype,))
                               if str(tmdb_id).isdigit() and int(tmdb_id) > 0} if exists else {}
-        return cache[key].get(str(provider_id), '')
+                cache[key] = (revision, matches)
+        return cache[key][1].get(str(provider_id), '')
     except (KeyError, AttributeError, OSError, sqlite3.Error, ValueError):
         return ''
 
@@ -60,10 +69,7 @@ def provider_tmdb_id(g, stype, provider_id, profile_num, supplied=''):
 
 def local_tmdb_id(g, stype, supplied, provider_id, profile_num):
     """Use explicit/provider metadata IDs; premium title matches stay artwork only."""
-    identity = str(supplied or '').strip()
-    if identity.isdigit() and int(identity) > 0:
-        return identity
-    return provider_tmdb_id(g, stype, provider_id, profile_num)
+    return provider_tmdb_id(g, stype, provider_id, profile_num, supplied)
 
 
 def tmdb_watched_state(g, item, movies, episodes):

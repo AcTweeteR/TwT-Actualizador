@@ -40,6 +40,8 @@ class WatchedIntegrityTests(unittest.TestCase):
         self.assertEqual(calls, [('vod_info_7', 2)])
         self.assertEqual(content_state.provider_tmdb_id(g, 'movie', '7', 2, '99'), '')
         self.assertEqual(content_state.provider_tmdb_id(g, 'movie', '8', 2), '')
+        self.assertEqual(content_state.local_tmdb_id(g, 'movie', '99', '7', 2), '')
+        self.assertEqual(content_state.local_tmdb_id(g, 'movie', '42', '7', 2), '42')
 
     def test_remembered_identity_projects_to_catalog_without_overriding_exact_ids(self):
         with tempfile.TemporaryDirectory() as root:
@@ -58,6 +60,23 @@ class WatchedIntegrityTests(unittest.TestCase):
             with sqlite3.connect(path) as db:
                 db.execute("UPDATE items SET norm='different' WHERE provider_id='7'")
             self.assertEqual(content_state.provider_tmdb_id(context(), 'movie', '7', 2), '')
+
+    def test_remembered_identity_refreshes_after_index_changes(self):
+        with tempfile.TemporaryDirectory() as root:
+            path = Path(root) / 'provider_search_2.sqlite'
+            with sqlite3.connect(path) as db:
+                db.execute('CREATE TABLE items (stype TEXT,provider_id TEXT,norm TEXT,year TEXT)')
+                db.execute('CREATE TABLE identity_matches (stype TEXT,provider_id TEXT,title_key TEXT,year TEXT,tmdb_id TEXT)')
+                db.execute("INSERT INTO items VALUES ('series','7','example','2025')")
+            g = {'addon': SimpleNamespace(getAddonInfo=lambda _: root),
+                 'xbmcvfs': SimpleNamespace(translatePath=lambda value: value)}
+            self.assertEqual(content_state.provider_tmdb_id(g, 'series', '7', 2), '')
+            with sqlite3.connect(path) as db:
+                db.execute("INSERT INTO identity_matches VALUES ('series','7','example','2025','42')")
+            self.assertEqual(content_state.provider_tmdb_id(g, 'series', '7', 2), '42')
+            with sqlite3.connect(path) as db:
+                db.execute("UPDATE items SET norm='different' WHERE provider_id='7'")
+            self.assertEqual(content_state.provider_tmdb_id(g, 'series', '7', 2), '')
 
     def test_legacy_complete_marks_never_mark_a_new_episode_seen(self):
         g, movies, episodes, _, _ = self.context(
@@ -175,6 +194,19 @@ class WatchedIntegrityTests(unittest.TestCase):
         exec(compile(ast.Module(body=[method], type_ignores=[]), 'candidate-route', 'exec'), namespace)
         self.assertFalse(namespace['_is_watched'](
             {'tmdb_type': 'tv', 'tmdb_id': '42', 'season': 1, 'episode': 2}, movies, episodes))
+
+    def test_packaged_series_catalog_uses_persisted_identity(self):
+        package = os.environ.get('ACTWEETER_XSTREAM_LIVE_ZIP')
+        self.assertTrue(package, 'exact candidate ZIP required')
+        with zipfile.ZipFile(package) as archive:
+            tree = ast.parse(archive.read('plugin.video.xstream-pro/resources/lib/addon.py'))
+        method = next(n for n in tree.body if isinstance(n, ast.FunctionDef)
+                      and n.name == 'xtream_streams')
+        calls = [n for n in ast.walk(method) if isinstance(n, ast.Call)
+                 and isinstance(n.func, ast.Attribute) and n.func.attr == 'resolve_tmdb_id']
+        self.assertTrue(any(len(call.args) == 3 and isinstance(call.args[2], ast.Call)
+                            and isinstance(call.args[2].func, ast.Attribute)
+                            and call.args[2].func.attr == 'provider_tmdb_id' for call in calls))
 
     def test_packaged_trakt_media_card_exposes_percentage_without_fake_resume(self):
         package = os.environ.get('ACTWEETER_XSTREAM_LIVE_ZIP')
