@@ -195,6 +195,8 @@ class WatchedIntegrityTests(unittest.TestCase):
         self.assertFalse(namespace['_is_watched'](
             {'tmdb_type': 'tv', 'tmdb_id': '42', 'season': 1, 'episode': 2}, movies, episodes))
 
+    @unittest.skipIf(os.environ.get('ACTWEETER_RELEASE_CHANNEL') == 'stable',
+                     'requires the Beta4 XStream package')
     def test_packaged_series_catalog_uses_persisted_identity(self):
         package = os.environ.get('ACTWEETER_XSTREAM_LIVE_ZIP')
         self.assertTrue(package, 'exact candidate ZIP required')
