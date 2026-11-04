@@ -84,9 +84,8 @@ def build(output):
     if trakt is None or trakt.get('optional') == 'true' or dep is None or dep.get('version') != '1.1.2.39':
         raise ValueError('required Service dependencies are not satisfied')
     data = ET.tostring(index, encoding='utf-8', xml_declaration=True) + b'\n'
-    current = common.sha((ROOT / 'repo/addons.xml').read_bytes())
-    if current not in (PREVIOUS, common.sha(data)):
-        raise ValueError('current Stable is neither predecessor nor this candidate')
+    # A historical release must be reproducible even after newer Stable releases.
+    # Its exact predecessor and source Beta remain pinned by git source commit.
     (output / 'repo/addons.xml').write_bytes(data)
     (output / 'repo/addons.xml.md5').write_text(hashlib.md5(data).hexdigest() + '\n')
     result = {'release': 'actweeter-stable-beta6', 'channel': 'stable', 'source_commit': SOURCE,

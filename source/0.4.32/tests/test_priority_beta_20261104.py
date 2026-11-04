@@ -78,7 +78,7 @@ class SeriesProgressTests(unittest.TestCase):
         record = inventory()
         sys.modules["series_changes"] = types.SimpleNamespace(
             inventory_map=lambda addon, pnum: {"my-series": record})
-        package = PROJECT / "build/priority-beta-ready/plugin.video.xstream-pro-1.1.2.40~beta1.zip"
+        package = PROJECT / "docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.40~beta1.zip"
         with zipfile.ZipFile(package) as archive:
             watched_source = archive.read(
                 "plugin.video.xstream-pro/resources/lib/watched_actions.py")
@@ -138,11 +138,11 @@ class EPGHealthTests(unittest.TestCase):
 
 class CandidatePackageTests(unittest.TestCase):
     def test_beta_packages_are_constructed_from_stable_not_in_place(self):
-        directory = PROJECT / "build/priority-beta-ready"
+        directory = PROJECT / "docs/testing/repo"
         for addon, v in [("skin.actweeter", "1.2.40~beta1"),
                          ("service.actweeter", "0.4.98~beta1"),
                          ("plugin.video.xstream-pro", "1.1.2.40~beta1")]:
-            path = directory / f"{addon}-{v}.zip"
+            path = directory / addon / f"{addon}-{v}.zip"
             self.assertTrue(path.exists(), path)
             with zipfile.ZipFile(path) as z:
                 self.assertIsNone(z.testzip())
@@ -150,7 +150,7 @@ class CandidatePackageTests(unittest.TestCase):
                 self.assertEqual(info.get("version"), v)
 
     def test_episodes_art_and_progress_are_in_distribution(self):
-        path = PROJECT / "build/priority-beta-ready/plugin.video.xstream-pro-1.1.2.40~beta1.zip"
+        path = PROJECT / "docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.40~beta1.zip"
         with zipfile.ZipFile(path) as z:
             src = z.read("plugin.video.xstream-pro/resources/lib/addon.py").decode()
             self.assertIn('setContent(addon_handle, "seasons")', src)
