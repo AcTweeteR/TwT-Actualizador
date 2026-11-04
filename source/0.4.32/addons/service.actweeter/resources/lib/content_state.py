@@ -8,6 +8,133 @@ def _number(value):
         return 0.0
 
 
+def _title_key(value):
+    import re
+    import unicodedata
+    value = re.sub(r'\s*\(\d{4}\)\s*$', '', str(value or ''))
+    return ''.join(c for c in unicodedata.normalize('NFKD', value).casefold()
+                   if c.isalnum())
+
+
+def series_identity_evidence(title, year, matches, details):
+    """Capture evidence only for one exact search result and its own TV details."""
+    if (not isinstance(matches, list) or len(matches) != 1
+            or not isinstance(matches[0], dict) or not isinstance(details, dict)):
+        return None
+    year, ident = str(year or '')[:4], str(matches[0].get('tmdb_id') or '')
+    if (not year.isdigit() or len(year) != 4 or not ident.isdigit() or int(ident) < 1
+            or not _title_key(title) or _title_key(matches[0].get('title')) != _title_key(title)
+            or str(matches[0].get('year') or '')[:4] != year
+            or str(details.get('id') or '') != ident
+            or str(details.get('first_air_date') or '')[:4] != year):
+        return None
+    rows = details.get('seasons')
+    if not isinstance(rows, list):
+        return None
+    seasons = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            return None
+        number, count = row.get('season_number'), row.get('episode_count')
+        if (type(number) is not int or type(count) is not int
+                or not 0 <= number <= 200 or not 0 <= count <= 2000):
+            return None
+        if number > 0 and count > 0:
+            if str(number) in seasons:
+                return None
+            seasons[str(number)] = count
+    if not seasons or sum(seasons.values()) > 20000:
+        return None
+    return {'source': 'unique_title_year_search', 'title': str(title or ''),
+            'year': year, 'tmdb_id': ident, 'seasons': seasons}
+
+
+def remember_verified_series(g, item, data, profile_num, inventory):
+    """Persist a unique title/year match only after episode inventories agree."""
+    import sqlite3
+    import time
+    from contextlib import closing
+    from pathlib import Path
+    from series_state import INVENTORY_MAX_AGE_SECONDS
+
+    try:
+        evidence = data.get('_identity_evidence') or {}
+        sid = str(item.get('series_id') or '')
+        tmdb_id = str(evidence.get('tmdb_id') or '')
+        year = str(item.get('year') or data.get('year') or '')[:4]
+        if (not sid.isdigit() or not tmdb_id.isdigit() or int(tmdb_id) < 1
+                or not year.isdigit() or len(year) != 4
+                or evidence.get('source') != 'unique_title_year_search'
+                or str(evidence.get('year')) != year
+                or str(data.get('tmdb_id')) != tmdb_id
+                or not _title_key(item.get('name'))
+                or _title_key(item.get('name')) != _title_key(evidence.get('title'))
+                or not isinstance(inventory, dict) or inventory.get('complete') is not True):
+            return False
+        checked = inventory.get('checked_at')
+        if type(checked) not in (int, float) or not 0 <= time.time() - checked <= INVENTORY_MAX_AGE_SECONDS:
+            return False
+        supplied = str(item.get('tmdb_id') or item.get('tmdb') or '')
+        if supplied and supplied != tmdb_id:
+            return False
+        expected = evidence.get('seasons')
+        if (not isinstance(expected, dict) or not expected
+                or any(not isinstance(k, str) or not k.isdigit() or not 1 <= int(k) <= 200
+                       or type(v) is not int or not 1 <= v <= 2000 for k, v in expected.items())
+                or sum(expected.values()) > 20000):
+            return False
+        actual = {}
+        for row in inventory.get('episodes', []):
+            season, episode = int(row['season']), int(row['episode'])
+            if season < 1:
+                continue
+            if episode < 1 or not str(row.get('provider_id') or '').isdigit():
+                return False
+            numbers = actual.setdefault(str(season), set())
+            if episode in numbers:
+                return False
+            numbers.add(episode)
+        if (not actual or not set(actual).issubset(expected)
+                or sum(len(numbers) for numbers in actual.values()) < 3
+                or any(len(actual[season]) > expected[season]
+                       or sorted(actual[season]) != list(range(1, len(actual[season]) + 1))
+                       for season in actual)):
+            return False
+        root = Path(g['xbmcvfs'].translatePath(g['addon'].getAddonInfo('profile')))
+        path = root / ('provider_search_%s.sqlite' % int(profile_num))
+        if root.is_symlink() or path.is_symlink() or not path.is_file():
+            return False
+        with closing(sqlite3.connect(path.resolve().as_uri() + '?mode=rw', uri=True, timeout=.1)) as db:
+            db.execute('BEGIN IMMEDIATE')
+            row = db.execute('SELECT title,norm,year FROM items WHERE stype=? AND provider_id=?',
+                             ('series', sid)).fetchone()
+            if (not row or row[0] != item.get('name') or str(row[2]) != year
+                    or db.execute('SELECT COUNT(*) FROM items WHERE stype=? AND norm=? AND year=?',
+                                  ('series', row[1], year)).fetchone()[0] != 1):
+                return False
+            db.execute('CREATE TABLE IF NOT EXISTS identity_matches ('
+                       'stype TEXT NOT NULL, provider_id TEXT NOT NULL, title_key TEXT NOT NULL, '
+                       'year TEXT NOT NULL, tmdb_id TEXT NOT NULL, '
+                       'PRIMARY KEY(stype,provider_id,title_key,year))')
+            existing = db.execute('SELECT tmdb_id FROM identity_matches WHERE stype=? AND provider_id=? '
+                                  'AND title_key=? AND year=?', ('series', sid, row[1], year)).fetchone()
+            if existing and str(existing[0]) != tmdb_id:
+                return False
+            collision = db.execute('SELECT 1 FROM identity_matches m JOIN items i ON '
+                'm.stype=i.stype AND m.provider_id=i.provider_id AND m.title_key=i.norm AND m.year=i.year '
+                'WHERE m.stype=? AND m.tmdb_id=? AND m.provider_id<>? LIMIT 1',
+                ('series', tmdb_id, sid)).fetchone()
+            if collision:
+                return False
+            db.execute('INSERT OR IGNORE INTO identity_matches VALUES (?,?,?,?,?)',
+                       ('series', sid, row[1], year, tmdb_id))
+            db.commit()
+        g.get('_actweeter_identity_matches', {}).pop((str(profile_num), 'series'), None)
+        return True
+    except (AttributeError, KeyError, OSError, TypeError, ValueError, sqlite3.Error):
+        return False
+
+
 def _remembered_tmdb_id(g, stype, provider_id, profile_num):
     """Read visual-only associations from XStream's current provider index."""
     if not str(provider_id or '').isdigit() or not str(profile_num).isdigit():
@@ -104,7 +231,9 @@ def tmdb_watched_state(g, item, movies, episodes):
     states = []
     episode_known = False
     for provider_id, record in cached[2].items():
-        if not isinstance(record, dict) or str(record.get('tmdb_id') or '') != tmdb_id:
+        if not isinstance(record, dict) or provider_tmdb_id(
+                g, 'series', provider_id, profile,
+                record.get('tmdb_id') or record.get('tmdb')) != tmdb_id:
             continue
         if exact_episode:
             for row in record.get('episodes', []):

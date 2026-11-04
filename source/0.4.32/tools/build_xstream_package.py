@@ -518,6 +518,11 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             raise ValueError('Series catalog index patch hash mismatch')
         apply_contextual_unified_patch(root, series_index_patch)
 
+        identity_patch = ROOT / data['identity_recovery_patch']
+        if sha256(identity_patch) != data['identity_recovery_patch_sha256']:
+            raise ValueError('Identity recovery patch hash mismatch')
+        apply_contextual_unified_patch(root, identity_patch)
+
         validate_python_sources(root)
 
         distribution_version = data["distribution_version"]

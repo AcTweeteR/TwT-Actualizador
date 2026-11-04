@@ -1,6 +1,7 @@
 """Regressions for exact identities and dynamic completion across UI routes."""
 import ast
 import os
+import re
 from pathlib import Path
 import sqlite3
 import sys
@@ -8,6 +9,7 @@ import tempfile
 import time
 from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 import zipfile
 import xml.etree.ElementTree as ET
 
@@ -77,6 +79,151 @@ class WatchedIntegrityTests(unittest.TestCase):
             with sqlite3.connect(path) as db:
                 db.execute("UPDATE items SET norm='different' WHERE provider_id='7'")
             self.assertEqual(content_state.provider_tmdb_id(g, 'series', '7', 2), '')
+
+    def test_clean_profile_recovers_series_identity_from_metadata_and_inventory(self):
+        import series_state
+        with tempfile.TemporaryDirectory() as root:
+            path = Path(root) / 'provider_search_1.sqlite'
+            with sqlite3.connect(path) as db:
+                db.execute('CREATE TABLE items (stype TEXT,provider_id TEXT,title TEXT,norm TEXT,year TEXT)')
+                db.executemany('INSERT INTO items VALUES (?,?,?,?,?)', [
+                    ('series', '10', 'Paradise (2025)', 'paradise 2025', '2025'),
+                    ('series', '20', 'Tierra de mafiosos (2025)', 'tierra de mafiosos 2025', '2025')])
+            g = {'addon': SimpleNamespace(getAddonInfo=lambda _: root),
+                 'xbmcvfs': SimpleNamespace(translatePath=lambda value: value)}
+            # These are metadata and watched responses, not identifiers passed to the resolver.
+            fixtures = [
+                ('10', 'Paradise', {'id': 245927, 'first_air_date': '2025-01-01',
+                                  'seasons': [{'season_number': 1, 'episode_count': 8},
+                                              {'season_number': 2, 'episode_count': 8}]}, 16),
+                ('20', 'Tierra de mafiosos', {'id': 247718, 'first_air_date': '2025-01-01',
+                                  'seasons': [{'season_number': 1, 'episode_count': 10},
+                                              {'season_number': 2, 'episode_count': 6}]}, 10)]
+            for sid, title, response, watched_count in fixtures:
+                matches = [{'tmdb_id': str(response['id']), 'title': title, 'year': '2025'}]
+                evidence = content_state.series_identity_evidence(title, '2025', matches, response)
+                item = {'series_id': sid, 'name': title + ' (2025)', 'year': '2025'}
+                rows = [{'season': season['season_number'], 'episode': n,
+                         'provider_id': str(1000 + season['season_number'] * 100 + n)}
+                        for season in response['seasons'] for n in range(1, season['episode_count'] + 1)]
+                inventory = {'complete': True, 'checked_at': time.time(), 'episodes': rows}
+                data = {'year': '2025', 'tmdb_id': str(response['id']), '_identity_evidence': evidence}
+                self.assertTrue(content_state.remember_verified_series(g, item, data, 1, inventory))
+                fresh_g = {'addon': g['addon'], 'xbmcvfs': g['xbmcvfs']}
+                resolved = content_state.provider_tmdb_id(fresh_g, 'series', sid, 1)
+                watched = {'tmdb:episode:%s:s%s:e%s' % (response['id'], row['season'], row['episode']): True
+                           for row in rows[:watched_count]}
+                state = series_state.derive_series_state(resolved, sid, inventory,
+                    SimpleNamespace(is_watched=lambda *args: False),
+                    tmdb_watched_store=SimpleNamespace(_data=watched))
+                self.assertEqual((state['watched'], state['total']), (watched_count, 16))
+            self.assertIsNone(content_state.series_identity_evidence('Paradise', '2025',
+                [{'tmdb_id': '1', 'title': 'Paradise', 'year': '2025'},
+                 {'tmdb_id': '2', 'title': 'Paradise', 'year': '2025'}], {}))
+
+    def test_series_identity_rejects_incomplete_stale_or_ambiguous_evidence(self):
+        with tempfile.TemporaryDirectory() as root:
+            path = Path(root) / 'provider_search_1.sqlite'
+            with sqlite3.connect(path) as db:
+                db.execute('CREATE TABLE items (stype TEXT,provider_id TEXT,title TEXT,norm TEXT,year TEXT)')
+                db.execute("INSERT INTO items VALUES ('series','10','Example (2025)','example 2025','2025')")
+            g = {'addon': SimpleNamespace(getAddonInfo=lambda _: root),
+                 'xbmcvfs': SimpleNamespace(translatePath=lambda value: value)}
+            item = {'series_id': '10', 'name': 'Example (2025)', 'year': '2025'}
+            matches = [{'tmdb_id': '42', 'title': 'Example', 'year': '2025'}]
+            details = {'id': 42, 'first_air_date': '2025-01-01',
+                       'seasons': [{'season_number': 1, 'episode_count': 2}]}
+            evidence = content_state.series_identity_evidence('Example', '2025', matches, details)
+            data = {'tmdb_id': '42', '_identity_evidence': evidence}
+            rows = [{'season': 1, 'episode': 1, 'provider_id': '101'},
+                    {'season': 1, 'episode': 2, 'provider_id': '102'}]
+            inventory = {'complete': True, 'checked_at': time.time(), 'episodes': rows}
+            self.assertFalse(content_state.remember_verified_series(g, item, data, 1,
+                dict(inventory, complete=False)))
+            self.assertFalse(content_state.remember_verified_series(g, item, data, 1,
+                dict(inventory, checked_at=1)))
+            self.assertFalse(content_state.remember_verified_series(g, item, data, 1,
+                dict(inventory, episodes=rows[:1])))
+            self.assertFalse(content_state.remember_verified_series(g,
+                dict(item, tmdb_id='99'), data, 1, inventory))
+            with sqlite3.connect(path) as db:
+                db.execute("INSERT INTO items VALUES ('series','11','Example (2025)','example 2025','2025')")
+            self.assertFalse(content_state.remember_verified_series(g, item, data, 1, inventory))
+
+    @unittest.skipIf(os.environ.get('ACTWEETER_RELEASE_CHANNEL') == 'stable',
+                     'requires Beta6 XStream identity recovery')
+    def test_clean_profile_uses_packaged_enrichment_and_card_routes(self):
+        import series_state
+        package = os.environ.get('ACTWEETER_XSTREAM_LIVE_ZIP')
+        self.assertTrue(package, 'exact candidate ZIP required')
+        with zipfile.ZipFile(package) as archive:
+            tree = ast.parse(archive.read('plugin.video.xstream-pro/resources/lib/premium_routes.py'))
+        functions = [node for node in tree.body if isinstance(node, ast.FunctionDef)
+                     and node.name in ('enrich', 'listitem')]
+        class Tag:
+            def __getattr__(self, name):
+                return lambda *args: None
+        class Card:
+            def __init__(self): self.properties = {}
+            def setProperty(self, key, value): self.properties[key] = value
+            def getVideoInfoTag(self): return Tag()
+            def setArt(self, value): pass
+        fixtures = {
+            'Paradise': {'id': 245927, 'first_air_date': '2025-01-01',
+                         'seasons': [{'season_number': 1, 'episode_count': 8},
+                                     {'season_number': 2, 'episode_count': 8}]},
+            'Tierra de mafiosos': {'id': 247718, 'first_air_date': '2025-01-01',
+                                   'seasons': [{'season_number': 1, 'episode_count': 10},
+                                               {'season_number': 2, 'episode_count': 6}]}}
+        cache, calls = {}, []
+        tmdb = SimpleNamespace(
+            paged=lambda path, media, params, ttl: (calls.append(params['query']) or {'total_pages': 1, 'results': [
+                {'tmdb_id': str(fixtures[params['query']]['id']), 'title': params['query'], 'year': '2025'}]}),
+            details=lambda media, ident: next(v for v in fixtures.values() if str(v['id']) == str(ident)),
+            image_url=lambda value, *args: '', fanart_url=lambda value: '')
+        namespace = {'content_state': content_state, 're': re, 'time': time,
+                     'normalized': lambda x: content_state._title_key(x),
+                     'number': lambda value: int(value or 0), 'backdrop': lambda x: x or '',
+                     'provider_id': lambda item, kind: str(item['series_id']),
+                     '_performance_call': lambda g, name, fn, *args, **kwargs: fn(*args, **kwargs)}
+        exec(compile(ast.Module(body=functions, type_ignores=[]), 'candidate-series', 'exec'), namespace)
+        with tempfile.TemporaryDirectory() as root, patch.dict(sys.modules, {'tmdb': tmdb}):
+            path = Path(root) / 'provider_search_1.sqlite'
+            with sqlite3.connect(path) as db:
+                db.execute('CREATE TABLE items (stype TEXT,provider_id TEXT,title TEXT,norm TEXT,year TEXT)')
+                db.executemany('INSERT INTO items VALUES (?,?,?,?,?)', [
+                    ('series', '10', 'Paradise (2025)', 'paradise 2025', '2025'),
+                    ('series', '20', 'Tierra de mafiosos (2025)', 'tierra de mafiosos 2025', '2025')])
+            g = {'addon': SimpleNamespace(getAddonInfo=lambda _: root),
+                 'xbmcvfs': SimpleNamespace(translatePath=lambda value: value),
+                 '_cache_load': lambda key, **kwargs: cache.get(key),
+                 '_cache_save': lambda key, value: cache.__setitem__(key, value),
+                 '_new_listitem': lambda *args: Card(), '_log': lambda *args: None,
+                 'series_changes': SimpleNamespace(series_state=series_state)}
+            for sid, title, count in (('10', 'Paradise', 16), ('20', 'Tierra de mafiosos', 10)):
+                response = fixtures[title]
+                rows = [{'season': season['season_number'], 'episode': n,
+                         'provider_id': str(1000 + season['season_number'] * 100 + n)}
+                        for season in response['seasons'] for n in range(1, season['episode_count'] + 1)]
+                inventory = {'complete': True, 'checked_at': time.time(), 'episodes': rows}
+                watched = {'tmdb:episode:%s:s%s:e%s' % (response['id'], row['season'], row['episode']): True
+                           for row in rows[:count]}
+                context = {'inventory': {sid: inventory}, 'watched': SimpleNamespace(is_watched=lambda *args: False),
+                           'resume': [], 'tmdb_watched': SimpleNamespace(_data=watched)}
+                item = {'series_id': sid, 'name': title + ' (2025)', 'year': '2025'}
+                enriched = namespace['enrich'](g, item, 'series', {'year': '2025', 'title': item['name']}, [1, 0])
+                card = namespace['listitem'](g, item, 'series', enriched, profile_num=1, series_context=context)
+                fresh = {'addon': g['addon'], 'xbmcvfs': g['xbmcvfs']}
+                self.assertTrue(content_state.provider_tmdb_id(fresh, 'series', sid, 1))
+                self.assertEqual(card.properties['XStream.SeriesComplete'], 'true' if count == 16 else 'false')
+                self.assertIn('%s/16' % count, card.properties['XStream.SeriesProgressLabel'] if count < 16 else '16/16')
+            self.assertEqual(calls, ['Paradise', 'Tierra de mafiosos'])
+            cache.clear()
+            tmdb.paged = lambda path, media, params, ttl: {'total_pages': 2, 'results': [
+                {'tmdb_id': str(fixtures[params['query']]['id']), 'title': params['query'], 'year': '2025'}]}
+            uncertain = namespace['enrich'](g, {'series_id': '10', 'name': 'Paradise (2025)'},
+                'series', {'year': '2025', 'title': 'Paradise (2025)'}, [1, 0])
+            self.assertNotIn('_identity_evidence', uncertain)
 
     def test_legacy_complete_marks_never_mark_a_new_episode_seen(self):
         g, movies, episodes, _, _ = self.context(

@@ -1,0 +1,2 @@
+0.4.97~beta4
+- Recupera identidades de series verificando título, año y episodios.

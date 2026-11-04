@@ -1,0 +1,64 @@
+diff --git a/resources/lib/premium_routes.py b/resources/lib/premium_routes.py
+--- a/resources/lib/premium_routes.py
++++ b/resources/lib/premium_routes.py
+@@ -119,9 +119,14 @@
+             import tmdb
+             media = 'tv' if stype == 'series' else 'movie'
+             tmdb_id = data.get('tmdb_id')
++            matches, query, search_complete = [], '', False
+             if not tmdb_id:
+                 query = re.sub(r'\s*\(\d{4}\)\s*$', '', item.get('name', ''))
+-                matches = [m for m in _performance_call(g, 'external.tmdb.search', tmdb.search, media, query).get('results', [])
++                search_result = (_performance_call(g, 'external.tmdb.search', tmdb.paged, '/search/tv', media,
++                    params={'query': query, 'first_air_date_year': str(data.get('year') or '')}, ttl=1)
++                    if stype == 'series' else _performance_call(g, 'external.tmdb.search', tmdb.search, media, query))
++                search_complete = search_result.get('total_pages') == 1
++                matches = [m for m in search_result.get('results', [])
+                     if normalized(m.get('title')) == normalized(query)
+                     and str(m.get('year')) == str(data.get('year'))
+                     and number(data.get('year'))]
+@@ -139,6 +144,10 @@
+                     extra['fanart_url'] = tmdb.fanart_url(meta.get('backdrop_path'))
+                     extra['imdb_id'] = meta.get('imdb_id') or meta.get('external_ids', {}).get('imdb_id') or ''
+                     extra['rating'] = meta.get('vote_average') or ''
++                    if stype == 'series' and matches and search_complete:
++                        evidence = content_state.series_identity_evidence(query, data.get('year'), matches, meta)
++                        if evidence:
++                            extra['_identity_evidence'] = evidence
+                     extra['tagline'] = meta.get('tagline') or ''
+                     extra['cast'] = [{'name':a.get('name', ''), 'role':a.get('character', ''),
+                                      'thumbnail':tmdb.image_url(a.get('profile_path'))}
+@@ -410,6 +419,10 @@
+         if profile_num not in contexts:
+             contexts[profile_num] = prepare_series_state_context(g, profile_num)
+         series_context = contexts[profile_num]
++    if stype == 'series' and series_context and not data['_verified_tmdb_id']:
++        sid = provider_id(item, stype)
++        if content_state.remember_verified_series(g, item, data, profile_num, series_context['inventory'].get(sid)):
++            data['_verified_tmdb_id'] = content_state.provider_tmdb_id(g, stype, sid, profile_num)
+     tag = li.getVideoInfoTag()
+     tag.setMediaType('tvshow' if stype == 'series' else 'movie')
+     tag.setTitle(data['title'])
+diff --git a/resources/lib/addon.py b/resources/lib/addon.py
+--- a/resources/lib/addon.py
++++ b/resources/lib/addon.py
+@@ -11708,6 +11708,7 @@
+     ctx = []
+     season_inventory_record = series_changes.inventory_map(addon, pnum).get(str(series_id))
+     season_tmdb_id = str((info.get("info") or {}).get("tmdb_id") or (info.get("info") or {}).get("tmdb") or "")
++    season_tmdb_id = __import__('content_state').provider_tmdb_id(globals(), 'series', series_id, pnum, season_tmdb_id)
+     season_watched_store = WatchedEpisodes(addon, profile_num=pnum)
+     season_tmdb_watched_store = WatchedMovies(addon, profile_num=pnum)
+     for season_num in sorted(
+@@ -11819,10 +11820,7 @@
+     eps = info.get("episodes", {}).get(season_num, [])
+     series_meta = info.get("info", {}) or {}
+     series_tmdb_id = str(series_meta.get("tmdb_id") or series_meta.get("tmdb") or "")
+-    if not series_tmdb_id:
+-        premium_cache = _cache_load("premium_meta_series_{0}_es".format(series_id)) or {}
+-        if premium_cache.get("expires", 0) > time.time():
+-            series_tmdb_id = str((premium_cache.get("data") or {}).get("tmdb_id") or "")
++    series_tmdb_id = __import__('content_state').provider_tmdb_id(globals(), 'series', series_id, pnum, series_tmdb_id)
+     xbmcplugin.setContent(addon_handle, "episodes")
+     xbmcplugin.setPluginCategory(addon_handle, "Episodios")
+ 
