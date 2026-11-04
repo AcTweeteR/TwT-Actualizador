@@ -181,6 +181,7 @@ def _run_cycle(service_root, xstream_root, *, account, profile, provider_scope,
             if (candidate.is_dir() and not candidate.is_symlink()
                     and Path(xstream_root).resolve() in candidate.resolve().parents):
                 export_directory = candidate
+    reused_export = export_directory is not None
     if export_directory is None:
         export_directory = export_snapshot()
     if not binding_valid():
@@ -193,7 +194,10 @@ def _run_cycle(service_root, xstream_root, *, account, profile, provider_scope,
                 source_export = None
             batches = prepare_batches(export_directory, xstream_root, profile=profile,
                 account=account, provider_scope=provider_scope, consent=True,
-                activity_fingerprint=fingerprint, catalog_generation=generation, source_export=source_export)
+                activity_fingerprint=fingerprint, catalog_generation=generation, source_export=source_export,
+                include_tmdb=not (reused_export and not attempt and previous
+                                  and previous.get('planner_contract') == 2
+                                  and previous.get('activity_fingerprint') == fingerprint))
             break
         except (OSError, ValueError):
             if attempt or not (previous and previous.get('activity_fingerprint') == fingerprint):

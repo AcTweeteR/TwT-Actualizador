@@ -1,7 +1,10 @@
 """Provider-only, profile-scoped series change history used by XStream."""
 
 import hashlib
-import fcntl
+try:
+    import fcntl
+except ImportError:
+    fcntl = None
 import json
 import os
 import tempfile
@@ -29,12 +32,24 @@ def _path(addon, profile_num):
 def _profile_lock(addon, profile_num):
     path = _path(addon, profile_num) + '.lock'
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    with _LOCK, open(path, 'a') as stream:
-        fcntl.flock(stream, fcntl.LOCK_EX)
+    with _LOCK, open(path, 'a+b') as stream:
+        if fcntl is None:
+            import msvcrt
+            if stream.seek(0, os.SEEK_END) == 0:
+                stream.write(b'\0')
+                stream.flush()
+            stream.seek(0)
+            msvcrt.locking(stream.fileno(), msvcrt.LK_LOCK, 1)
+        else:
+            fcntl.flock(stream, fcntl.LOCK_EX)
         try:
             yield
         finally:
-            fcntl.flock(stream, fcntl.LOCK_UN)
+            if fcntl is None:
+                stream.seek(0)
+                msvcrt.locking(stream.fileno(), msvcrt.LK_UNLCK, 1)
+            else:
+                fcntl.flock(stream, fcntl.LOCK_UN)
 
 
 def _empty():

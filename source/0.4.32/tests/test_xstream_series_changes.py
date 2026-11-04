@@ -75,6 +75,17 @@ class SeriesChangesTests(unittest.TestCase):
     def read(self):
         return json.loads(Path(self.temp.name, "series_changes_p1.json").read_text())
 
+    def test_windows_lock_serializes_and_releases_on_error(self):
+        calls = []
+        win = types.SimpleNamespace(LK_LOCK=1, LK_UNLCK=2,
+                                    locking=lambda fd, mode, size: calls.append((mode, size)))
+        with patch.object(self.module, 'fcntl', None), patch.dict(sys.modules, {'msvcrt': win}):
+            with self.assertRaisesRegex(RuntimeError, 'interrupted'):
+                with self.module._profile_lock(self.addon, 1):
+                    raise RuntimeError('interrupted')
+        self.assertEqual(calls, [(win.LK_LOCK, 1), (win.LK_UNLCK, 1)])
+        self.assertTrue(Path(self.temp.name, 'series_changes_p1.json.lock').is_file())
+
     def test_first_install_baselines_without_flood_and_uses_only_recent_added_dates(self):
         now = time.time()
         rows = [{"series_id": str(i), "name": "Series %d" % i} for i in range(70)]
@@ -150,6 +161,29 @@ m.record_catalog(addon,1,rows,force=True,provider=("https://provider.invalid","a
                                    provider=first, generation='a' * 32)
         self.assertEqual(self.module.status(self.addon, 1, '1'), 'NUEVA SERIE')
         self.assertEqual(self.module.status(self.addon, 1, '2'), '')
+
+    @unittest.skipIf(sys.platform == 'win32', 'POSIX lockf is used to simulate Windows byte locks')
+    def test_windows_lock_branch_preserves_two_process_updates(self):
+        self.module.record_catalog(self.addon, 1, [{'series_id': 'old', 'name': 'Old'}],
+                                   provider=('https://provider.invalid', 'account'), generation='a' * 32)
+        program = '''import importlib.util,sys,types,fcntl
+sys.modules["xbmcvfs"]=types.SimpleNamespace(translatePath=lambda path:path)
+sys.modules["series_state"]=types.SimpleNamespace()
+sys.modules["msvcrt"]=types.SimpleNamespace(LK_LOCK=1,LK_UNLCK=2,
+    locking=lambda fd,mode,size:fcntl.lockf(fd,fcntl.LOCK_EX if mode==1 else fcntl.LOCK_UN,size))
+spec=importlib.util.spec_from_file_location("changes",sys.argv[1])
+m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);m.fcntl=None
+addon=types.SimpleNamespace(getAddonInfo=lambda key:sys.argv[2])
+rows=[{"series_id":"old","name":"Old"},{"series_id":sys.argv[3],"name":sys.argv[3]}]
+m.record_catalog(addon,1,rows,force=True,provider=("https://provider.invalid","account"),generation="b"*32)
+'''
+        processes = [subprocess.Popen([sys.executable, '-c', program, str(SOURCE),
+                                      self.temp.name, value]) for value in ('new1', 'new2')]
+        for process in processes:
+            self.assertEqual(process.wait(timeout=10), 0)
+        data = self.read()
+        self.assertEqual(set(data['catalog_ids']), {'old', 'new1', 'new2'})
+        self.assertEqual({event['series_id'] for event in data['events']}, {'new1', 'new2'})
 
     def test_catalog_and_episode_processes_preserve_both_events(self):
         provider = ('https://provider.invalid', 'account')

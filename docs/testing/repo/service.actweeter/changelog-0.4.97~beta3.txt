@@ -1,0 +1,2 @@
+0.4.97~beta3
+- Evita reencolar el historial sin cambios al actualizar el catálogo.

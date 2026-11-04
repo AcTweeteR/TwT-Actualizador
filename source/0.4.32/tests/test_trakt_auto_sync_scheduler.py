@@ -172,6 +172,37 @@ class AutoCycleProgressTests(unittest.TestCase):
             self.assertTrue((service / 'trakt_live/planned/profile_1.json').exists())
             args['apply_batch'].assert_not_called()
 
+    def test_catalog_change_does_not_requeue_unchanged_remote_watched_history(self):
+        sys.path.insert(0, str(ROOT / 'addons/service.actweeter/resources'))
+        from lib import trakt_auto_cycle as cycle
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            activity = {'all': 'first'}
+            export = root / 'exports' / 'snapshot'
+            export.mkdir(parents=True)
+            args = dict(account='user', profile='1', provider_scope='a' * 64,
+                        activity_get=lambda: ('user', dict(activity)),
+                        export_snapshot=Mock(return_value=export), apply_batch=Mock(),
+                        addon=None, history=None, one_shot=True)
+            with patch.object(cycle, 'prepare_batches', return_value=[]) as planner:
+                cycle.run_cycle(root / 'service', root, **args)
+                (root / 'data_cache_p1_premium_meta_series_7_es.json').write_text('{}')
+                cycle.run_cycle(root / 'service', root, **args)
+                activity['all'] = 'second'
+                cycle.run_cycle(root / 'service', root, **args)
+            self.assertEqual([call.kwargs['include_tmdb'] for call in planner.call_args_list],
+                             [True, False, True])
+
+    def test_catalog_only_plan_validates_snapshot_without_requeueing_tmdb_history(self):
+        sys.path.insert(0, str(ROOT / 'addons/service.actweeter/resources'))
+        from lib import trakt_live_sync
+        with patch.object(trakt_live_sync, 'prepare_tmdb_restore', return_value={'items': []}) as tmdb, \
+             patch.object(trakt_live_sync, 'prepare_restore', side_effect=ValueError('missing catalog')):
+            self.assertEqual(trakt_live_sync.prepare_batches(
+                '/synthetic/export', '/synthetic/profile', profile='1', account='user',
+                provider_scope='a' * 64, consent=True, include_tmdb=False), [])
+            tmdb.assert_called_once()
+
     def test_empty_plan_is_checkpointed_without_claiming_pending_applied(self):
         sys.path.insert(0, str(ROOT / 'addons/service.actweeter/resources'))
         from lib import trakt_auto_cycle as cycle

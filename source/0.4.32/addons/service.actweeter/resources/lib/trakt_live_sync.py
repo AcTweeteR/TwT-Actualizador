@@ -19,15 +19,17 @@ def prepare_batch(export_directory, xstream_profile, *, profile, account,
 
 
 def prepare_batches(export_directory, xstream_profile, *, profile, account,
-                    provider_scope, consent=False, activity_fingerprint=None, catalog_generation=None, source_export=None):
+                    provider_scope, consent=False, activity_fingerprint=None, catalog_generation=None,
+                    source_export=None, include_tmdb=True):
     common = dict(provider_scope=provider_scope, consent=consent,
                   activity_fingerprint=activity_fingerprint,
                   catalog_generation=catalog_generation, source_export=source_export)
     tmdb = prepare_tmdb_restore(export_directory, profile=profile, account=account)
     batches = []
-    for offset in range(0, len(tmdb['items']), 100):
-        batches.append(build_batch(dict(tmdb, items=tmdb['items'][offset:offset + 100]),
-                                   target='tmdb', **common))
+    if include_tmdb:
+        for offset in range(0, len(tmdb['items']), 100):
+            batches.append(build_batch(dict(tmdb, items=tmdb['items'][offset:offset + 100]),
+                                       target='tmdb', **common))
     try:
         plan = prepare_restore(export_directory, xstream_profile,
                                profile=profile, account=account)
