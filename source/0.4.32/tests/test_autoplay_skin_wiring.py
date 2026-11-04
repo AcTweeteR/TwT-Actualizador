@@ -66,6 +66,10 @@ class AutoplaySkinWiringTests(unittest.TestCase):
                     # Smart Search intentionally replaces this screen. Its launcher,
                     # native rows and absence of autoplay have separate contracts.
                     continue
+                if path.name == 'IncludesTouchMode.xml':
+                    # Touch UI is a new include absent in this historical Beta10
+                    # comparison. The current touch package has its own contracts.
+                    continue
                 name = 'skin.actweeter/1080i/' + path.name
                 before = ET.fromstring(archive.read(name))
                 after = ET.parse(path).getroot()

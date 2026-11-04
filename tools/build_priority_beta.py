@@ -11,12 +11,16 @@ import hashlib
 import os
 import re
 import stat
+import subprocess
 import sys
 import zipfile
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
+# The published 1.2.40~beta1 package must remain reproducible as current
+# skin sources advance. Pin only its original skin overlays to its release.
+PRIORITY_SKIN_COMMIT = "092587c54d578c422851058fd766a3c6082dba5f"
 sys.path.insert(0, str(ROOT / "tools"))
 from priority_xstream_patch import patch_xstream
 
@@ -55,7 +59,9 @@ def build(output):
                 "shortcuts/inicio-1.DATA.xml", "shortcuts/10000-1.DATA.xml",
                 "shortcuts/moviehub.DATA.xml", "shortcuts/tvshowhub.DATA.xml",
             ]:
-                payloads[addon + "/" + relative] = (sources / addon / relative).read_bytes()
+                path = "source/0.4.32/addons/skin.actweeter/" + relative
+                payloads[addon + "/" + relative] = subprocess.check_output(
+                    ["git", "show", PRIORITY_SKIN_COMMIT + ":" + path], cwd=ROOT)
         elif addon == "service.actweeter":
             for relative in ["setup.py", "resources/lib/kodi_auto_preview.py"]:
                 payloads[addon + "/" + relative] = (sources / addon / relative).read_bytes()

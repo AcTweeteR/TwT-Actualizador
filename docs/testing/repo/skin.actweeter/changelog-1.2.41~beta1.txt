@@ -1,0 +1,2 @@
+AcTweeteR 1.2.41~beta1 - touch interface only.
+Selector in sidebar and skin settings; large Menu, Search, Home, up/down, Spotlight arrow and Info Close touch targets. Remote mode remains the default. No add-on integrations changed.

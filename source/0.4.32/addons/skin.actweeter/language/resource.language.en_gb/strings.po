@@ -2411,3 +2411,31 @@ msgstr "Read full synopsis"
 msgctxt "#32018"
 msgid "Interaction diagnostics (temporary, no content recorded)"
 msgstr "Interaction diagnostics (temporary, no content recorded)"
+
+msgctxt "#32019"
+msgid "Remote mode"
+msgstr "Remote mode"
+
+msgctxt "#32020"
+msgid "Touch mode"
+msgstr "Touch mode"
+
+msgctxt "#32021"
+msgid "Menu"
+msgstr "Menu"
+
+msgctxt "#32022"
+msgid "Search"
+msgstr "Search"
+
+msgctxt "#32023"
+msgid "Home"
+msgstr "Home"
+
+msgctxt "#32024"
+msgid "Input mode"
+msgstr "Input mode"
+
+msgctxt "#32025"
+msgid "The setting affects only the AcTweeteR skin."
+msgstr "The setting affects only the AcTweeteR skin."

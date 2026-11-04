@@ -172,6 +172,7 @@
         <include content="SkinSettings_Tab">
             <param name="id" value="6"/>
             <!-- content -->  
+            <include>AcTweeteRInputModeSettings</include>
             <include>General_Artwork_Details_Settings</include>			
 			<include>Footer_Media_Flags_Ratings</include>
 			<include>General_Trailers_Settings</include>

@@ -2412,3 +2412,31 @@ msgstr "Leer sinopsis completa"
 msgctxt "#32018"
 msgid "Interaction diagnostics (temporary, no content recorded)"
 msgstr "Diagnóstico de interacción (temporal, sin registrar contenido)"
+
+msgctxt "#32019"
+msgid "Modo mando"
+msgstr "Modo mando"
+
+msgctxt "#32020"
+msgid "Modo táctil"
+msgstr "Modo táctil"
+
+msgctxt "#32021"
+msgid "Menú"
+msgstr "Menú"
+
+msgctxt "#32022"
+msgid "Buscar"
+msgstr "Buscar"
+
+msgctxt "#32023"
+msgid "Inicio"
+msgstr "Inicio"
+
+msgctxt "#32024"
+msgid "Modo de interacción"
+msgstr "Modo de interacción"
+
+msgctxt "#32025"
+msgid "La selección afecta solo a la skin AcTweeteR."
+msgstr "La selección afecta solo a la skin AcTweeteR."

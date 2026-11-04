@@ -1849,6 +1849,9 @@
                 <include condition="$EXP[IsBingieViewsActive]">MainMenuContent</include>
             </control>
 
+            <!-- Touch/remote selector is independent from Skin Shortcuts. -->
+            <include>AcTweeteRInputModeSideMenu</include>
+
             <!-- PowerMenu Buttons -->
             <control type="list" id="40003">
                 <visible>$EXP[IsMainMenuOpened]</visible>

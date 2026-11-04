@@ -973,6 +973,9 @@
 			<include>BingieSideBladeMainMenu</include>
 			<animation effect="fade" start="100" end="50" time="300" condition="!Control.IsVisible(40003) + !$EXP[IsMainMenuOpened] + !$EXP[IsCurrentWidgetSpotlight] + [Window.IsActive(Home) | $EXP[IsBingieHubsActive2]] + Container.HasPrevious">Conditional</animation>
 		</control>	 
+		<!-- Touch-only controls; remote-mode layout remains unchanged. -->
+        <include>AcTweeteRTouchToolbar</include>
+
 		<!-- Snow Effect -->
         <include condition="Skin.HasSetting(EnableSnowAnimation)">SnowAnimation</include>
 		</control>

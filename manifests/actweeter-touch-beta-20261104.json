@@ -1,0 +1,46 @@
+{
+  "release": "actweeter-touch-skin-beta-20261104",
+  "channel": "testing",
+  "status": "static-and-regression-qa-passed",
+  "scope": "skin.actweeter only; control mode defaults to remote",
+  "previous_stable_index_sha256": "1c09e8f65b829378a0cb4359b5424034c4c5073692d1b435efe9e531240ba7a5",
+  "current_stable_index_sha256": "1c09e8f65b829378a0cb4359b5424034c4c5073692d1b435efe9e531240ba7a5",
+  "stable_unchanged": true,
+  "testing_index_sha256": "d3d9561f8db8c37af07789bea55851a04da6399a51c5196f16efa31f1e4a6852",
+  "testing_index_md5": "4177e16dbe7dd7c900b5c151035bec7e",
+  "skin": {
+    "version": "1.2.41~beta1",
+    "path": "docs/testing/repo/skin.actweeter/skin.actweeter-1.2.41~beta1.zip",
+    "sha256": "19bde76b808942b1b287ca032219d0ee494afdfe2a58ba054f6ddebf5ec5c516",
+    "size_bytes": 30277901,
+    "baseline_stable": "1.2.40",
+    "baseline_stable_sha256": "3edfdacd277d0cc2ab4045c1f1acc3285bb677444e24312a5767b8cbceb09a67"
+  },
+  "unchanged_dependencies": {
+    "service.actweeter": {
+      "version": "0.4.98~beta1",
+      "sha256": "8e64e4c2cb79bc085993691e0c5ae7c31321a2a5f07c060ce7e8de633ac16a90"
+    },
+    "plugin.video.xstream-pro": {
+      "version": "1.1.2.40~beta1",
+      "sha256": "9c3c7c175eed44229734249a630c80027aaec0087548b07889900efb18d1e893"
+    },
+    "repository.rivulet": {
+      "version": "1.0.2",
+      "sha256": "e4aabb495d6b49f39b8ec0c828ad9fa4562c387547739e0f38351ddabac9a815"
+    },
+    "repository.zachmorris": {
+      "version": "1.0.4",
+      "sha256": "3dde8f37dcd64f122cf1e897e139e5b8b7a3cd0ec15db6a1f5c7b59852cb661b"
+    }
+  },
+  "tests": {
+    "passed": 841,
+    "skipped": 3,
+    "deselected_historical": 4,
+    "subtests_passed": 110,
+    "failed": 0,
+    "runtime_lenovo_verified": false,
+    "runtime_apple_tv_verified": false
+  }
+}

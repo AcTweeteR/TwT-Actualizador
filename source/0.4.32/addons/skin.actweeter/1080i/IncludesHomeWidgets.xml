@@ -66,7 +66,7 @@
         <definition>
                 <include content="SomethingContainerTemplate">
                     <nested />
-                    <include condition="Skin.HasSetting(ShowInformationBypass) + $PARAM[allow_showinfo_onclick]">ContainerShowInfoOnclick</include>
+                    <include condition="[Skin.HasSetting(ShowInformationBypass) | Skin.HasSetting(AcTweeteRTouchMode)] + $PARAM[allow_showinfo_onclick]">ContainerShowInfoOnclick</include>
                     <param name="widgetid" value="$PARAM[widgetid]"/>
                 </include>
         </definition>
@@ -761,7 +761,7 @@
         <onunfocus condition="System.HasAlarm(preview_delay)">CancelAlarm(preview_delay,silent)</onunfocus>
         <onunfocus condition="!System.HasAddon(slyguy.trailers) + Skin.HasSetting(BingieAutoTrailer) + $EXP[IsPlayingUnrecognizedContent] + String.IsEmpty(Window(Home).Property(KeepPlayingPreview))">PlayerControl(Stop)</onunfocus>
         <onfocus condition="!String.IsEmpty(Window(Home).Property(KeepPlayingPreview))">ClearProperty(KeepPlayingPreview,home)</onfocus>
-        <include content="ContainerShowInfoOnclick" condition="Skin.HasSetting(ShowInformationBypass)">
+        <include content="ContainerShowInfoOnclick" condition="Skin.HasSetting(ShowInformationBypass) | Skin.HasSetting(AcTweeteRTouchMode)">
             <param name="widgetid" value="$PARAM[widgetid]" />
         </include>
         <include content="SetFixedVerticalNavigationProps">

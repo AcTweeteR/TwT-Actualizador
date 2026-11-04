@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<includes>
+    <!-- This setting is per-skin, persistent, and OFF by default. The remote path
+         is unchanged when disabled; no Kodi global touch/mouse setting is touched. -->
+    <variable name="AcTweeteRInputModeLabel">
+        <value condition="Skin.HasSetting(AcTweeteRTouchMode)">$LOCALIZE[32020]</value>
+        <value>$LOCALIZE[32019]</value>
+    </variable>
+
+    <!-- Always accessible from the side menu regardless of current input mode.
+         Use a real focusable button, not a fake item in Skin Shortcuts. -->
+    <include name="AcTweeteRInputModeSideMenu">
+        <control type="button" id="43870">
+            <visible>$EXP[IsMainMenuOpened]</visible>
+            <left>25</left><top>824</top><width>345</width><height>74</height>
+            <font>Reg24</font><align>center</align><aligny>center</aligny>
+            <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
+            <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+            <texturenofocus border="10" colordiffuse="B0202020">diffuse/panel.png</texturenofocus>
+            <label>$VAR[AcTweeteRInputModeLabel]</label>
+            <onclick>Skin.ToggleSetting(AcTweeteRTouchMode)</onclick>
+            <onup>900</onup><ondown>40003</ondown><onleft>900</onleft>
+            <onright>77777</onright>
+        </control>
+    </include>
+
+    <!-- Target sizes are at least 74x74 Kodi 1080i skin units.
+         Only the button rectangles accept touches: the rest of the screen
+         remains available for native swipe/scroll, item selection and dragging.
+         Menu/keyboard/EPG/provider UI remain owned by their own windows. -->
+    <include name="AcTweeteRTouchToolbar">
+        <control type="group">
+            <visible>Skin.HasSetting(AcTweeteRTouchMode) + !$EXP[IsMainMenuOpened] + !Window.IsVisible(DialogVideoInfo.xml)</visible>
+            <left>0</left><top>0</top><width>1920</width><height>1080</height>
+            <control type="button" id="43871">
+                <left>16</left><top>14</top><width>126</width><height>76</height>
+                <font>Reg24</font><align>center</align><aligny>center</aligny>
+                <label>$LOCALIZE[32021]</label>
+                <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                <texturenofocus border="10" colordiffuse="D01B1B1B">diffuse/panel.png</texturenofocus>
+                <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
+                <onclick>SetFocus(900)</onclick>
+                <onright>43872</onright>
+            </control>
+            <control type="button" id="43872">
+                <left>158</left><top>14</top><width>150</width><height>76</height>
+                <font>Reg24</font><align>center</align><aligny>center</aligny>
+                <label>$LOCALIZE[32022]</label>
+                <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                <texturenofocus border="10" colordiffuse="D01B1B1B">diffuse/panel.png</texturenofocus>
+                <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
+                <!-- Existing skin search entrypoint; no search addon changes. -->
+                <onclick>ActivateWindow(1109)</onclick>
+                <onleft>43871</onleft>
+            </control>
+            <control type="button" id="43873">
+                <visible>!Window.IsActive(Home)</visible>
+                <left>324</left><top>14</top><width>142</width><height>76</height>
+                <font>Reg24</font><align>center</align><aligny>center</aligny>
+                <label>$LOCALIZE[32023]</label>
+                <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                <texturenofocus border="10" colordiffuse="D01B1B1B">diffuse/panel.png</texturenofocus>
+                <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
+                <onclick>ActivateWindow(Home)</onclick>
+            </control>
+            <control type="button" id="43874">
+                <visible>Integer.IsGreater(Container(77777).NumItems,1)</visible>
+                <right>192</right><top>14</top><width>78</width><height>76</height>
+                <font>Bold36</font><align>center</align><aligny>center</aligny>
+                <label>↑</label>
+                <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                <texturenofocus border="10" colordiffuse="D01B1B1B">diffuse/panel.png</texturenofocus>
+                <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
+                <onclick>Control.Message(77777,moveup)</onclick>
+                <onright>43875</onright>
+            </control>
+            <control type="button" id="43875">
+                <visible>Integer.IsGreater(Container(77777).NumItems,1)</visible>
+                <right>100</right><top>14</top><width>78</width><height>76</height>
+                <font>Bold36</font><align>center</align><aligny>center</aligny>
+                <label>↓</label>
+                <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                <texturenofocus border="10" colordiffuse="D01B1B1B">diffuse/panel.png</texturenofocus>
+                <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
+                <onclick>Control.Message(77777,movedown)</onclick>
+                <onleft>43874</onleft>
+            </control>
+            <!-- Spotlight's list is horizontally scrollable with arrows as well
+                 as swipe. Arrows are conditional and never appear over other rows. -->
+            <control type="button" id="43876">
+                <visible>Container(1508).HasPrevious + Integer.IsEqual(Container(77777).Position,0) + Control.IsVisible(1508)</visible>
+                <right>132</right><top>318</top><width>80</width><height>84</height>
+                <font>Bold40</font><align>center</align><aligny>center</aligny>
+                <label>‹</label>
+                <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                <texturenofocus border="10" colordiffuse="D01B1B1B">diffuse/panel.png</texturenofocus>
+                <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
+                <onclick>SetFocus(1508)</onclick><onclick>Control.Move(1508,-1)</onclick>
+            </control>
+            <control type="button" id="43877">
+                <visible>Container(1508).HasNext + Integer.IsEqual(Container(77777).Position,0) + Control.IsVisible(1508)</visible>
+                <right>32</right><top>318</top><width>80</width><height>84</height>
+                <font>Bold40</font><align>center</align><aligny>center</aligny>
+                <label>›</label>
+                <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                <texturenofocus border="10" colordiffuse="D01B1B1B">diffuse/panel.png</texturenofocus>
+                <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
+                <onclick>SetFocus(1508)</onclick><onclick>Control.Move(1508,1)</onclick>
+            </control>
+        </control>
+    </include>
+
+    <!-- The close button is visible only in our skin's movie/series info sheet.
+         All provider windows, EPG and Kodi native dialogs are untouched. -->
+    <include name="AcTweeteRTouchInfoClose">
+        <control type="button" id="43878">
+            <visible>Skin.HasSetting(AcTweeteRTouchMode)</visible>
+            <right>28</right><top>22</top><width>88</width><height>82</height>
+            <font>Bold36</font><align>center</align><aligny>center</aligny>
+            <label>×</label>
+            <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+            <texturenofocus border="10" colordiffuse="D01B1B1B">diffuse/panel.png</texturenofocus>
+            <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
+            <onclick>Dialog.Close(movieinformation)</onclick>
+        </control>
+    </include>
+
+    <!-- An explicit remote selection means disabling Touch never relies on
+         touching a disappearing toolbar. Both settings are in skin UI only. -->
+    <include name="AcTweeteRInputModeSettings">
+        <control type="label" id="43880">
+            <include>SkinSettings_Header</include>
+            <label>$LOCALIZE[32024]</label>
+        </control>
+        <control type="radiobutton" id="43881">
+            <include>SkinSettings_Button</include>
+            <label>$LOCALIZE[32020]</label>
+            <onclick>Skin.SetBool(AcTweeteRTouchMode)</onclick>
+            <selected>Skin.HasSetting(AcTweeteRTouchMode)</selected>
+        </control>
+        <control type="radiobutton" id="43882">
+            <include>SkinSettings_Button</include>
+            <label>$LOCALIZE[32019]</label>
+            <onclick>Skin.Reset(AcTweeteRTouchMode)</onclick>
+            <selected>!Skin.HasSetting(AcTweeteRTouchMode)</selected>
+        </control>
+        <control type="label" id="43883">
+            <include>SkinSettings_Header</include>
+            <height>50</height><font>Reg24</font>
+            <label>$LOCALIZE[32025]</label>
+        </control>
+    </include>
+</includes>

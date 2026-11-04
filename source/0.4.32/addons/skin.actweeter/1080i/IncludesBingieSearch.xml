@@ -731,7 +731,7 @@
         <definition>
                 <include content="SearchContainerTemplate">
                     <nested />
-                    <include condition="Skin.HasSetting(ShowInformationBypass) + $PARAM[allow_showinfo_onclick]">ContainerShowInfoOnclick</include>
+                    <include condition="[Skin.HasSetting(ShowInformationBypass) | Skin.HasSetting(AcTweeteRTouchMode)] + $PARAM[allow_showinfo_onclick]">ContainerShowInfoOnclick</include>
                     <param name="id" value="$PARAM[id]"/>
                     <param name="width" value="1188" />
                     <param name="height" value="975" />
@@ -749,7 +749,7 @@
         <definition>
                 <include content="CustomSearchContainerTemplate">
                     <nested />
-                    <include condition="Skin.HasSetting(ShowInformationBypass) + $PARAM[allow_showinfo_onclick]">ContainerShowInfoOnclick</include>
+                    <include condition="[Skin.HasSetting(ShowInformationBypass) | Skin.HasSetting(AcTweeteRTouchMode)] + $PARAM[allow_showinfo_onclick]">ContainerShowInfoOnclick</include>
                     <param name="id" value="$PARAM[id]"/>
                     <param name="width" value="1188" />
                     <param name="height" value="$PARAM[height]" />
