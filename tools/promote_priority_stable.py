@@ -33,11 +33,13 @@ def build(output):
         raise ValueError("unexpected Beta manifest")
     if set(beta["packages"]) != set(VERSIONS):
         raise ValueError("unexpected Beta components")
-    testing_index = ROOT / beta["index"]["path"]
-    if common.sha(testing_index.read_bytes()) != beta["index"]["sha256"]:
-        raise ValueError("published Beta index mismatch")
-    # SOURCE_COMMIT refers to the immutable public Beta publication.
-    for rel in [beta["index"]["path"]] + [row["path"] for row in beta["packages"].values()]:
+    # Newer Testing Betas update the live index. Verify the historical index
+    # against its immutable publication commit instead of the moving live feed.
+    historical_index = subprocess.check_output(
+        ["git", "show", SOURCE_COMMIT + ":" + beta["index"]["path"]], cwd=ROOT)
+    if common.sha(historical_index) != beta["index"]["sha256"]:
+        raise ValueError("historical published Beta index mismatch")
+    for rel in [row["path"] for row in beta["packages"].values()]:
         if subprocess.check_output(["git", "show", SOURCE_COMMIT + ":" + rel], cwd=ROOT) != (ROOT / rel).read_bytes():
             raise ValueError("published Beta source differs: " + rel)
     predecessor = subprocess.check_output(["git", "show", SOURCE_COMMIT + ":repo/addons.xml"], cwd=ROOT)
