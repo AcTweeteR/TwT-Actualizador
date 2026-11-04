@@ -120,9 +120,9 @@ jobs:
           cmp "$RUNNER_TEMP/stable-beta6/manifest.json" manifests/actweeter-stable-beta6-20261104.json
           cmp "$RUNNER_TEMP/stable-beta6/repo/addons.xml" manifests/archive/beta6-stable-addons.xml
           python3 -c 'import hashlib,pathlib,sys; b=pathlib.Path("manifests/archive/beta6-stable-addons.xml").read_bytes(); assert hashlib.md5(b).hexdigest()==pathlib.Path(sys.argv[1]).read_text().strip()' "$RUNNER_TEMP/stable-beta6/repo/addons.xml.md5"
-          cmp "$RUNNER_TEMP/stable-beta6/repo/skin.actweeter/skin.actweeter-1.2.39.zip" repo/skin.actweeter/skin.actweeter-1.2.40.zip
-          cmp "$RUNNER_TEMP/stable-beta6/repo/service.actweeter/service.actweeter-0.4.97.zip" repo/service.actweeter/service.actweeter-0.4.98.zip
-          cmp "$RUNNER_TEMP/stable-beta6/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.39.zip" repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.40.zip
+          cmp "$RUNNER_TEMP/stable-beta6/repo/skin.actweeter/skin.actweeter-1.2.39.zip" repo/skin.actweeter/skin.actweeter-1.2.39.zip
+          cmp "$RUNNER_TEMP/stable-beta6/repo/service.actweeter/service.actweeter-0.4.97.zip" repo/service.actweeter/service.actweeter-0.4.97.zip
+          cmp "$RUNNER_TEMP/stable-beta6/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.39.zip" repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.39.zip
 
       - name: Rebuild and verify current priority Stable publication
         run: |
