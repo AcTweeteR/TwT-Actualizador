@@ -70,7 +70,7 @@ from xstream_setup import (
     validate_xtream_credentials,
 )
 from module_catalog import all_addons, installation_plan
-from kodi_auto_preview import read_preview_metadata, stable_identity
+from kodi_auto_preview import read_preview_metadata, stable_identity, extract_preview_trailer_id
 from platform_support import detect_platform
 from dependency_graph import inspect_graph
 from pvr_binding import profile_is_bound
@@ -1593,19 +1593,7 @@ def _auto_preview_focus(args):
         focus = int(xbmcgui.Window(window).getFocusId())
         prefix = "Container(%d).ListItem." % container
         trailer = xbmc.getInfoLabel(prefix + "Trailer")
-        trailer_id = ""
-        try:
-            parsed = urlparse(trailer)
-            query = parse_qs(parsed.query)
-            if parsed.hostname in ("youtube.com", "www.youtube.com", "m.youtube.com",
-                                  "youtu.be", "plugin.video.youtube"):
-                candidate = ((query.get("v") or query.get("video_id") or [""])[0]
-                             if parsed.hostname != "youtu.be" else
-                             parsed.path.strip("/"))
-                if re.fullmatch(r"[A-Za-z0-9_-]{6,64}", candidate):
-                    trailer_id = candidate
-        except (TypeError, ValueError):
-            trailer_id = ""
+        trailer_id = extract_preview_trailer_id(trailer)
         payload = {
             "window": window,
             "container": container,

@@ -16,15 +16,20 @@ class MasterBetaUnificationContracts(unittest.TestCase):
         actions = [node for node in include.findall("onclick")
                    if "slyguy.trailers" in node.get("condition", "")
                    and node.text != "RunScript(slyguy.trailers)"]
-        self.assertEqual(len(actions), 8)
+        self.assertEqual(len(actions), 9)
         for action in actions:
             condition = action.get("condition", "")
-            self.assertIn("String.IsEqual(ListItem.DBType,movie)", condition)
-            self.assertIn("String.IsEqual(ListItem.DBType,tvshow)", condition)
+            if "RunScript(slyguy.trailers," in (action.text or ""):
+                self.assertIn("!String.IsEmpty(ListItem.Trailer)", condition)
+            else:
+                self.assertIn("String.IsEqual(ListItem.DBType,movie)", condition)
+                self.assertIn("String.IsEqual(ListItem.DBType,tvshow)", condition)
         self.assertTrue(any(node.text == "RunScript(service.actweeter,preview_manual)"
                             for node in actions))
         self.assertTrue(any(node.text == "RunScript(slyguy.trailers)"
                             for node in include.findall("onclick")))
+        self.assertTrue(any("RunScript(slyguy.trailers,$ESCINFO[ListItem.Trailer])" ==
+                            (node.text or "") for node in include.findall("onclick")))
 
     def test_automatic_preview_remains_opt_in_per_surface(self):
         skin = ROOT / "addons/skin.actweeter/1080i"

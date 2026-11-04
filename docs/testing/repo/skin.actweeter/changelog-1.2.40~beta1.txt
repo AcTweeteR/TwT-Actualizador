@@ -1,0 +1,2 @@
+1.2.40~beta1
+Priority Beta: automatic/manual trailers, series art and synopsis, monotonic episode progress, widget expansion, PVR XMLTV freshness.

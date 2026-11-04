@@ -109,7 +109,9 @@
         <onclick condition="!String.IsEmpty(ListItem.UniqueID(imdb)) + System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) + [String.IsEqual(ListItem.DBType,movie) | String.IsEqual(ListItem.DBType,tvshow)]">SetProperty(SLYGUY_TRAILER_RETURN_ID,imdb:$INFO[ListItem.UniqueID(imdb)],Home)</onclick>
         <onclick condition="String.IsEmpty(ListItem.UniqueID(imdb)) + !String.IsEmpty(ListItem.UniqueID(tmdb)) + System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) + [String.IsEqual(ListItem.DBType,movie) | String.IsEqual(ListItem.DBType,tvshow)]">SetProperty(SLYGUY_TRAILER_RETURN_ID,tmdb:$INFO[ListItem.UniqueID(tmdb)],Home)</onclick>
         <onclick condition="String.IsEmpty(ListItem.UniqueID(imdb)) + String.IsEmpty(ListItem.UniqueID(tmdb)) + !String.IsEmpty(ListItem.DBID) + System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) + [String.IsEqual(ListItem.DBType,movie) | String.IsEqual(ListItem.DBType,tvshow)]">SetProperty(SLYGUY_TRAILER_RETURN_ID,dbid:$INFO[ListItem.DBID],Home)</onclick>
-        <onclick condition="System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb)">RunScript(slyguy.trailers)</onclick>
+        <!-- Prefer the item's verified trailer URL; search by title only if absent. -->
+        <onclick condition="System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) + !String.IsEmpty(ListItem.Trailer)">RunScript(slyguy.trailers,$ESCINFO[ListItem.Trailer])</onclick>
+        <onclick condition="System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) + String.IsEmpty(ListItem.Trailer)">RunScript(slyguy.trailers)</onclick>
     </include>
 
 	<include name="Bingie_Spotlight_Trailer_Action">

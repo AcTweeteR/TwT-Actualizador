@@ -12,6 +12,7 @@ import time
 import uuid
 
 from automatic_preview import LatestPreviewScheduler
+from urllib.parse import parse_qs, urlparse
 
 
 SENDER = "service.actweeter.SIGNAL"
@@ -33,6 +34,32 @@ def stable_identity(payload):
         return "title:%s:%s" % (title.strip().casefold(),
                                 year if isinstance(year, str) and year.isdecimal() else "")
     return ""
+
+
+def extract_preview_trailer_id(path):
+    """Accept only a real YouTube video ID, including Kodi plugin URLs.
+
+    Selection polling must capture the same ID as the first onfocus callback.
+    A missing/foreign URL is never passed to the provider as a guessed video.
+    """
+    if not isinstance(path, str) or not path:
+        return ""
+    try:
+        parsed = urlparse(path)
+        hostname = (parsed.hostname or "").lower()
+        query = parse_qs(parsed.query)
+        if parsed.scheme == "plugin" and parsed.netloc == "plugin.video.youtube":
+            candidate = next((x for key in ("video_id", "videoid", "v")
+                              for x in query.get(key, []) if x), "")
+        elif hostname in ("youtube.com", "www.youtube.com", "m.youtube.com"):
+            candidate = next((x for key in ("v", "video_id") for x in query.get(key, []) if x), "")
+        elif hostname == "youtu.be":
+            candidate = parsed.path.strip("/").split("/")[0]
+        else:
+            return ""
+        return candidate if re.fullmatch(r"[A-Za-z0-9_-]{11}", candidate) else ""
+    except (TypeError, ValueError):
+        return ""
 
 
 def read_preview_metadata(kodi, prefix):
@@ -827,7 +854,8 @@ class KodiAutoPreviewCoordinator:
             "window": previous.window, "container": previous.container,
             "focus": focus, "position": position,
             **read_preview_metadata(self.kodi, prefix),
-            "trailer_id": "", "delay": 3.0,
+            "trailer_id": extract_preview_trailer_id(
+                self.kodi.getInfoLabel(prefix + "Trailer")), "delay": 3.0,
         }
         if stable_identity(payload) != previous.identity:
             self._log("CARD_REFOCUS", container=previous.container,
@@ -849,7 +877,9 @@ class KodiAutoPreviewCoordinator:
         except (TypeError, ValueError):
             return
         prefix = "Container(%d).ListItem." % container
-        current = dict(previous, position=position, trailer_id="",
+        current = dict(previous, position=position,
+                       trailer_id=extract_preview_trailer_id(
+                           self.kodi.getInfoLabel(prefix + "Trailer")),
                        **read_preview_metadata(self.kodi, prefix))
         if (position, stable_identity(current), current["media_type"]) != (
                 int(previous["position"]), stable_identity(previous), previous.get("media_type")):

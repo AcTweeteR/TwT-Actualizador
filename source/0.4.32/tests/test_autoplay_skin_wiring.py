@@ -81,7 +81,9 @@ class AutoplaySkinWiringTests(unittest.TestCase):
                 for tag in ('onclick', 'onup', 'ondown', 'onleft', 'onright', 'onback'):
                     def actions(root):
                         return [(n.attrib, n.text) for n in root.iter(tag)
-                                if 'AcTweeteR.CollectionFolder' not in n.get('condition', '')]
+                                if 'AcTweeteR.CollectionFolder' not in n.get('condition', '')
+                                and not (path.name == 'IncludesFunctions.xml'
+                                         and 'RunScript(slyguy.trailers' in (n.text or ''))]
                     self.assertEqual(actions(before), actions(after),
                                      (path.name, tag))
                 if path.name == 'IncludesBingie.xml':

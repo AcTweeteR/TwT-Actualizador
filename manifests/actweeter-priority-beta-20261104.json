@@ -1,0 +1,41 @@
+{
+  "base_commit": "fa8da37",
+  "channel": "testing",
+  "index": {
+    "md5": "115ce516dc80ee1cf2862c819cc15ab0",
+    "path": "docs/testing/repo/addons.xml",
+    "sha256": "fac1b734851b818995dcc995067a4db850b832e4970dfa101948ccea0b87981e"
+  },
+  "installed_runtime_verified": false,
+  "packages": {
+    "plugin.video.xstream-pro": {
+      "bytes": 5631145,
+      "path": "docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.40~beta1.zip",
+      "sha256": "9c3c7c175eed44229734249a630c80027aaec0087548b07889900efb18d1e893",
+      "version": "1.1.2.40~beta1"
+    },
+    "service.actweeter": {
+      "bytes": 312520,
+      "path": "docs/testing/repo/service.actweeter/service.actweeter-0.4.98~beta1.zip",
+      "sha256": "8e64e4c2cb79bc085993691e0c5ae7c31321a2a5f07c060ce7e8de633ac16a90",
+      "version": "0.4.98~beta1"
+    },
+    "skin.actweeter": {
+      "bytes": 30275003,
+      "path": "docs/testing/repo/skin.actweeter/skin.actweeter-1.2.40~beta1.zip",
+      "sha256": "2fb21abf1742a518efb83828008072cd7b29c53c969cb09db03d97d05c4cc3cf",
+      "version": "1.2.40~beta1"
+    }
+  },
+  "release": "actweeter-priority-beta-20261104",
+  "stable_unchanged": true,
+  "status": "static-qa-passed",
+  "tests": {
+    "errors": 0,
+    "executed": 837,
+    "failed": 0,
+    "live_zip": "plugin.video.xstream-pro-1.1.2.40~beta1",
+    "skipped": 9,
+    "suite": "unittest discover -s tests -p test_*.py"
+  }
+}

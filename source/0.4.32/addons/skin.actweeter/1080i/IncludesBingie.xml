@@ -2287,6 +2287,8 @@
             <onunfocus>ClearProperty(spotlightinfo,home)</onunfocus>
             <!-- The visible Spotlight list owns the preview's selection context. -->
             <onfocus condition="System.HasAddon(slyguy.trailers) + Skin.HasSetting(SpotLightTrailers) + String.IsEqual(Skin.String(AutoYoutubeTrailer),true) + !String.IsEqual(Skin.String(trailersource),imdb)">RunScript(service.actweeter,preview_focus,$PARAM[widgetid],3)</onfocus>
+            <!-- Preserve an automatic Spotlight preview on devices without SlyGuy. -->
+            <onfocus condition="!System.HasAddon(slyguy.trailers) + Skin.HasSetting(SpotLightTrailers) + String.IsEqual(Skin.String(AutoYoutubeTrailer),true) + !String.IsEmpty(Container($PARAM[widgetid]).ListItem.Trailer)">AlarmClock(preview_delay,PlayMedia($ESCINFO[Container($PARAM[widgetid]).ListItem.Trailer],1),00:03,silent)</onfocus>
             <onunfocus condition="System.HasAddon(slyguy.trailers)">RunScript(service.actweeter,preview_cancel,$PARAM[widgetid])</onunfocus>
 			<onfocus>SetProperty(FullImage,1,Home)</onfocus>
 			<onunfocus>ClearProperty(FullImage,home)</onunfocus>
