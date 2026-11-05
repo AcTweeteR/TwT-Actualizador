@@ -87,6 +87,11 @@ class CandidatePackageBuildTests(unittest.TestCase):
                 ("trakt_live_consumer.py", ROOT / "third_party/xstream/trakt_live_consumer.py")):
             self.assertEqual(hashlib.sha256(source.read_bytes()).hexdigest(),
                              manifest["trakt_snapshot_sources_sha256"][name])
+        # Historical provenance cannot depend on later changes to the live
+        # local journal; the archived builder source matches its pinned hash.
+        historical = ROOT / "third_party/xstream/pinned/trakt_local_journal-20261101.py"
+        self.assertEqual(hashlib.sha256(historical.read_bytes()).hexdigest(),
+                         manifest["trakt_snapshot_sources_sha256"]["trakt_local_journal.py"])
         auto_patch = ROOT / manifest["trakt_auto_cycle_patch"]
         self.assertEqual(hashlib.sha256(auto_patch.read_bytes()).hexdigest(),
                          manifest["trakt_auto_cycle_patch_sha256"])

@@ -458,7 +458,9 @@ def build(source_zip: Path, output: Path) -> dict[str, str]:
             ("trakt_episode_index.py", ROOT / "addons/service.actweeter/resources/lib/trakt_episode_index.py"),
             ("trakt_snapshot.py", ROOT / "third_party/xstream/trakt_snapshot.py"),
             ("history_store_coordinator.py", HISTORY_STORE_COORDINATOR_SOURCE),
-            ("trakt_local_journal.py", ROOT / "third_party/xstream/trakt_local_journal.py"),
+            # The 2026-11-01 release is immutable. Later versions extended the
+            # active journal, so its original pinned bytes must remain separate.
+            ("trakt_local_journal.py", ROOT / "third_party/xstream/pinned/trakt_local_journal-20261101.py"),
             ("trakt_live_queue.py", ROOT / "addons/service.actweeter/resources/lib/trakt_live_queue.py"),
             ("trakt_live_consumer.py", ROOT / "third_party/xstream/trakt_live_consumer.py"),
             ("trakt_auto_routes.py", TRAKT_AUTO_ROUTES_SOURCE),
