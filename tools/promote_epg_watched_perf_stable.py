@@ -80,9 +80,17 @@ def build(output):
             next_archive = ROOT / "manifests/archive/trakt-persistence-prior-stable-addons-20261105.xml"
             if next_path.is_file() and next_archive.is_file():
                 following = json.loads(next_path.read_text(encoding="utf-8"))
-                later_matches = (following.get("previous_index_sha256") == later.get("index_sha256")
-                                 and sha(next_archive.read_bytes()) == later.get("index_sha256")
-                                 and following.get("index_sha256") == current_sha)
+                second_valid = (following.get("previous_index_sha256") == later.get("index_sha256")
+                                and sha(next_archive.read_bytes()) == later.get("index_sha256"))
+                later_matches = second_valid and following.get("index_sha256") == current_sha
+                if second_valid and not later_matches:
+                    latest_path = ROOT / "manifests/actweeter-stable-trakt-bidirectional-20261105.json"
+                    latest_archive = ROOT / "manifests/archive/trakt-bidirectional-prior-stable-addons-20261105.xml"
+                    if latest_path.is_file() and latest_archive.is_file():
+                        latest = json.loads(latest_path.read_text(encoding="utf-8"))
+                        later_matches = (latest.get("previous_index_sha256") == following.get("index_sha256")
+                                         and sha(latest_archive.read_bytes()) == following.get("index_sha256")
+                                         and latest.get("index_sha256") == current_sha)
     if live_beta_index != beta_index and current_sha != PROMOTED_INDEX and not later_matches:
         raise ValueError("Testing source changed after publication")
     if hashlib.md5(beta_index).hexdigest() != beta["testing_index_md5"]:
