@@ -119,6 +119,16 @@ class OptionalTrailerSetupTests(unittest.TestCase):
             self.assertFalse(first_run.should_offer_first_run(state, True))
             self.assertTrue(first_run.should_offer_first_run(state, False))
 
+    def test_rechecking_completed_profile_does_not_restart_wizard(self):
+        state = {"schema_version": 1, "wizard_version": first_run.WIZARD_VERSION,
+                 "completed": True, "prompted": True, "setup_state": "COMPLETE",
+                 "setup_checks": {key: "PASS_RUNTIME" for key in first_run.MANDATORY_SETUP_CHECKS}}
+        state = first_run.mark_setup_check(state, "pvr_configuration", "NOT_TESTED")
+        self.assertEqual(state["setup_checks"]["pvr_configuration"], "NOT_TESTED")
+        self.assertFalse(state["completed"])
+        self.assertFalse(first_run.should_offer_first_run(first_run.normalize_state(state), True))
+        self.assertTrue(first_run.should_offer_first_run(first_run.normalize_state(state), False))
+
     def test_unconfigured_profile_is_reoffered_and_malformed_state_rejected(self):
         state = first_run.mark_deferred(
             {"schema_version": 1}, 12345, core_configured=False)
