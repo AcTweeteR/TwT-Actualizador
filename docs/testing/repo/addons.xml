@@ -66,10 +66,10 @@
 			<fanart>extras/media/backgrounds/settings_interface.jpg</fanart>
 		</assets>
 	</extension>
-</addon><addon id="service.actweeter" name="AcTweeteR Service" version="0.4.100~beta1" provider-name="AcTweeteR maintainers">
+</addon><addon id="service.actweeter" name="AcTweeteR Service" version="0.4.100~beta2" provider-name="AcTweeteR maintainers">
   <requires>
     <import addon="xbmc.python" version="3.0.0" />
-        <import addon="plugin.video.xstream-pro" version="1.1.2.43" />
+        <import addon="plugin.video.xstream-pro" version="1.1.2.42" />
     <import addon="pvr.iptvsimple" version="21.4.0" />
     <import addon="slyguy.trailers" version="0.2.1" />
     <import addon="plugin.video.youtube" />

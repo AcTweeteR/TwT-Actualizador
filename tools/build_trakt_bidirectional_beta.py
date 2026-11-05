@@ -40,7 +40,7 @@ def build(output):
    xml.set('version',version)
    if aid=='service.actweeter':
     for node in xml.findall("requires/import[@addon='plugin.video.xstream-pro']"):
-     node.set('version','1.1.2.43')
+     node.set('version','1.1.2.42')
    ET.ElementTree(xml).write(manifest,encoding='utf-8',xml_declaration=True)
    for py in tree.rglob('*.py'):
     compile(py.read_bytes(),str(py),'exec')
