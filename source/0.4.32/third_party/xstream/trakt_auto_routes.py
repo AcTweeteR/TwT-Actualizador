@@ -441,15 +441,16 @@ def retry_due_manual_actions(context, trakt, xbmcaddon, xbmcvfs, *, account, pro
                 candidates = None
             if candidates is not None:
                 account_verified = remote.get('complete') is True and remote.get('account') == account
-                by_key = {key for key, row in remote.get('records', {}).items()
-                          if isinstance(row, dict) and row.get('watched_at')}
+                from lib.trakt_watched_reconcile import remote_watched_status
                 missing = []
                 for identifier, content in candidates:
-                    if account_verified and content.get('key') in by_key:
+                    status = remote_watched_status(remote, content, account=account)
+                    if account_verified and status == 'watched':
                         queue.mark_remote_already_watched(identifier, account=account,
                             profile=profile, provider_scope=scope)
-                    elif account_verified:
+                    elif account_verified and status == 'missing':
                         missing.append((identifier, content))
+                    # Conflicts or incomplete identities remain held; no POST.
                 candidates = missing if account_verified else None
         else:
             candidates = []

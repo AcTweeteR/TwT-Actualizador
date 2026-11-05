@@ -1,17 +1,17 @@
 {
   "channel": "testing",
-  "index_sha256": "17840862adb6d2884bf6b4fa1e4e83571aeb5ff0951a0ec57be3e5e4647099ea",
+  "index_sha256": "6029d0333d838707ffe090a9e00ab0def1ad36f26bb40e2fac0c0d86c602e197",
   "notes": "Candidate only: no live bidirectional Trakt verification; earlier stable intentionally unchanged.",
   "release": "actweeter-trakt-bidirectional-beta-20261105",
   "runtime_verified": false,
   "stable_untouched": true,
   "versions": {
-    "plugin.video.xstream-pro": "1.1.2.43~beta1",
+    "plugin.video.xstream-pro": "1.1.2.43~beta2",
     "service.actweeter": "0.4.100~beta2",
     "skin.actweeter": "1.2.41~beta4"
   },
   "zip_sha256": {
-    "plugin.video.xstream-pro": "8ee68571886e34ee4d1888e07b989b5e6bf70fd445782fccd88f42c76fbd9000",
-    "service.actweeter": "9df737aab1609bc87f8cb0a95460f3b63e69099faeff81d8a288d1b325b8d4c0"
+    "plugin.video.xstream-pro": "98e493ff0fad8a02b4577dc697c87b4fa7d45b7816b77e8852374cc78a10eafe",
+    "service.actweeter": "3e37f4c8d5e2872322640af72ba2f6b3a2defc0fbdef282b3d3e334d21c837ed"
   }
 }

@@ -7,7 +7,7 @@ ROOT=Path(__file__).resolve().parents[1]
 BASE_VERSIONS={'service.actweeter':'0.4.99','plugin.video.xstream-pro':'1.1.2.42'}
 BETA_VERSIONS={'service.actweeter':'0.4.100~beta1','plugin.video.xstream-pro':'1.1.2.43~beta1'}
 CHANGED={
- 'service.actweeter':['resources/lib/trakt_outbox.py','resources/lib/trakt_resume_bridge.py'],
+ 'service.actweeter':['resources/lib/trakt_outbox.py','resources/lib/trakt_resume_bridge.py','resources/lib/trakt_watched_reconcile.py'],
  'plugin.video.xstream-pro':['resources/lib/trakt_local_journal.py','resources/lib/trakt_live_consumer.py','resources/lib/trakt_auto_routes.py']}
 
 

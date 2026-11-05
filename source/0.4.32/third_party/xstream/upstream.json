@@ -114,7 +114,7 @@
     "trakt_episode_index.py": "7eedd8071d359f233f45bad027c351c92fd4e1bbeb51d2a9b5617ed0ee8daeee",
     "trakt_local_journal.py": "bb510556a236795ed7a1a08f511969ef99d1d813e2e5405a70dc8f2928d55bd2"
   },
-  "trakt_auto_routes_sha256": "cff2e2cae9f07ba63e27e52d1fc8b6b603b397ccc486c36de7f57edde363962a",
+  "trakt_auto_routes_sha256": "df4a4ee4caf2fc82526a4342ef09ef25dcc3c4bc6c4b0c7bf1ddb6f46d003bf1",
   "trakt_pkce_applier_sha256": "4138cd46b31986adb8cb0cbe49de389692f3ebe74fa8c0594f8b739abbe2879d",
   "trakt_pkce_source_sha256": "9475d2a5fa2438c337718212f908257f0ddb7ed2bf697ef30431b74e5e38ec77",
   "catalog_generation_patch": "third_party/xstream/patches/1.1.2/actweeter-catalog-generation.patch",

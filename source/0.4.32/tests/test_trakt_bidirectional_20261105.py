@@ -18,6 +18,16 @@ MOVIE=dict(kind='movie',ids={'tmdb':'42'})
 EPISODE=dict(kind='episode',ids={'tmdb':'99'},season=1,episode=2)
 
 class TestBidirectionalTrakt(unittest.TestCase):
+ def test_reconcile_held_watched_with_distinct_id_sets(self):
+  from lib.trakt_watched_reconcile import remote_watched_status
+  record=dict(identity=dict(kind='movie',ids={'tmdb':'42','imdb':'tt0000042'}),
+              watched_at='2026-11-05T12:00:00Z')
+  remote=dict(account='synthetic',complete=True,records={'movie:tmdb:42':record})
+  self.assertEqual(remote_watched_status(remote,MOVIE,account='synthetic'),'watched')
+  self.assertEqual(remote_watched_status(remote,dict(kind='movie',ids={'imdb':'tt0000042'}),account='synthetic'),'watched')
+  self.assertEqual(remote_watched_status(remote,dict(kind='movie',ids={'tmdb':'41'}),account='synthetic'),'missing')
+  self.assertEqual(remote_watched_status(remote,dict(kind='movie',ids={'tmdb':'42','imdb':'tt0000043'}),account='synthetic'),'conflict')
+
  def test_pause_event_is_bounded_exact_and_contains_no_provider_url(self):
   for kind in (MOVIE,EPISODE):
    event=manual_event('synthetic','1','playback.pause',kind,'e'*32,provider_scope='a'*64,progress=22.123456)
