@@ -1,0 +1,56 @@
+name: Publish active Kodi repositories
+on:
+  push:
+    branches: [main]
+    paths: ['docs/**', '.github/workflows/pages.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - name: Stage current packages; retain historical ZIPs in GitHub
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import shutil
+          from xml.etree import ElementTree as ET
+          root = Path('docs')
+          referenced = set()
+          for index in root.rglob('addons.xml'):
+              for addon in ET.parse(index).getroot():
+                  aid, version = addon.attrib['id'], addon.attrib['version']
+                  path = index.parent / aid / (aid + '-' + version + '.zip')
+                  if not path.is_file():
+                      raise ValueError('Missing active package: ' + str(path))
+                  referenced.add(path)
+          for path in root.rglob('*'):
+              if path.is_symlink():
+                  raise ValueError('Symlink in publication')
+              if not path.is_file():
+                  continue
+              if path.suffix == '.zip' and 'repo' in path.parts and path not in referenced:
+                  continue
+              target = Path('_site') / path.relative_to(root)
+              target.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copyfile(path, target)
+          for path in referenced:
+              assert (Path('_site') / path.relative_to(root)).read_bytes() == path.read_bytes()
+          assert sum(p.stat().st_size for p in Path('_site').rglob('*') if p.is_file()) < 900_000_000
+          PY
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v5
