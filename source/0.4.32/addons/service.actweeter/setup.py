@@ -71,7 +71,7 @@ from xstream_setup import (
 )
 from module_catalog import all_addons, installation_plan
 from kodi_auto_preview import read_preview_metadata, stable_identity, extract_preview_trailer_id
-from platform_support import detect_platform
+from platform_support import detect_platform, configure_rivulet
 from dependency_graph import inspect_graph
 from pvr_binding import profile_is_bound
 from interface_layout import (LAYOUT_VERSION, KodiPath, digest,
@@ -560,7 +560,7 @@ def _ensure_repository_enabled(dialog, repository_id):
 
 
 def _is_tvos():
-    return bool(xbmc.getCondVisibility("System.Platform.TVOS"))
+    return _platform() == "tvos"
 
 
 def _enabled_install_sources(dialog, sources):
@@ -1484,6 +1484,8 @@ def _install_components_once(dialog, *, consent_granted=False, quiet=False,
             dialog, addon_id, ", ".join(enabled_sources) or "instalación existente de Kodi",
             required=True, consent_granted=True,
             minimum_version=row.get("minimum") or None)
+        if addon_id == "plugin.video.rivulet" and result == "INSTALLED":
+            configure_rivulet(xbmc.getCondVisibility, xbmcaddon.Addon)
         if addon_id in ("repository.slyguy", "repository.rivulet",
                         "repository.zachmorris") and result == "INSTALLED":
             xbmc.executebuiltin("UpdateAddonRepos", True)

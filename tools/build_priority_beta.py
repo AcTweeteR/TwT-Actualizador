@@ -19,8 +19,9 @@ from xml.etree import ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 # The published 1.2.40~beta1 package must remain reproducible as current
-# skin sources advance. Pin only its original skin overlays to its release.
+# sources advance. Pin its original overlays to their release commits.
 PRIORITY_SKIN_COMMIT = "092587c54d578c422851058fd766a3c6082dba5f"
+PRIORITY_SERVICE_COMMIT = "e6f0488e6e1249fbbe7cc3263b65687ec57a27de"
 sys.path.insert(0, str(ROOT / "tools"))
 from priority_xstream_patch import patch_xstream
 
@@ -41,7 +42,6 @@ def digest(data):
 
 def build(output):
     output.mkdir(parents=True, exist_ok=True)
-    sources = ROOT / "source/0.4.32/addons"
     result = {}
     for addon, (stable_version, beta_version, expected_sha) in VERSIONS.items():
         candidate = ROOT / "repo" / addon / f"{addon}-{stable_version}.zip"
@@ -64,7 +64,9 @@ def build(output):
                     ["git", "show", PRIORITY_SKIN_COMMIT + ":" + path], cwd=ROOT)
         elif addon == "service.actweeter":
             for relative in ["setup.py", "resources/lib/kodi_auto_preview.py"]:
-                payloads[addon + "/" + relative] = (sources / addon / relative).read_bytes()
+                path = "source/0.4.32/addons/service.actweeter/" + relative
+                payloads[addon + "/" + relative] = subprocess.check_output(
+                    ["git", "show", PRIORITY_SERVICE_COMMIT + ":" + path], cwd=ROOT)
         else:
             patch_xstream(payloads)
 

@@ -869,6 +869,12 @@ class _null_measure:
 def run_service(kodi, addon_factory, vfs, clock=time.time):
     """Log one opaque lifecycle identity around the sole coordinator loop."""
     try:
+        from platform_support import configure_rivulet
+        status = configure_rivulet(kodi.getCondVisibility, addon_factory)
+        kodi.log("[AcTweeteR] RIVULET_PLATFORM_POLICY status=" + status, kodi.LOGINFO)
+    except (OSError, ValueError, RuntimeError) as exc:
+        kodi.log("[AcTweeteR] RIVULET_PLATFORM_POLICY error_type=" + type(exc).__name__, kodi.LOGWARNING)
+    try:
         from slyguy_player_guard import install as guard_slyguy_player
         status = guard_slyguy_player(kodi, addon_factory, vfs)
         kodi.log("[AcTweeteR] SLYGUY_PLAYER_GUARD status=" + status, kodi.LOGINFO)

@@ -1,0 +1,1 @@
+tvOS: mantener Rivulet como cliente de servidor externo sin gestionar binarios integrados incompatibles. Conserva URL, cuenta y resto de ajustes. Detecta Apple TV mediante modelo aunque Python indique Darwin. Incluye la reparación de identidad de autoplay y las correcciones de persistencia del configurador de Beta3. Validación real pendiente en tvOS.
