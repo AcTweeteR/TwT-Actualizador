@@ -155,9 +155,9 @@ class TouchBetaTests(unittest.TestCase):
         self.assertEqual(versions["repository.zachmorris"],"1.0.4")
         stable={x.get("id"):x.get("version") for x in
                 ET.parse(ROOT/"repo/addons.xml").getroot()}
-        self.assertEqual(stable["skin.actweeter"],"1.2.40")
+        self.assertEqual(stable["skin.actweeter"],"1.2.41")
         self.assertEqual(stable["service.actweeter"],"0.4.98")
-        self.assertEqual(stable["plugin.video.xstream-pro"],"1.1.2.40")
+        self.assertEqual(stable["plugin.video.xstream-pro"],"1.1.2.41")
         for addon_id in ("service.actweeter","plugin.video.xstream-pro",
                          "repository.rivulet","repository.zachmorris"):
             a=ROOT/f"docs/testing/repo/{addon_id}/{addon_id}-{versions[addon_id]}.zip"

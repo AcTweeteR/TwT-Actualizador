@@ -10,7 +10,7 @@ from xml.etree import ElementTree as ET
 
 
 ROOT = Path(__file__).resolve().parents[1]
-MANIFEST = ROOT / "manifests/actweeter-stable-priority-20261104.json"
+MANIFEST = ROOT / "manifests/actweeter-stable-epg-watched-performance-20261105.json"
 
 
 def verify(root=ROOT, manifest_path=MANIFEST):

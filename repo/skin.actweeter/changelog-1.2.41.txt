@@ -1,0 +1,2 @@
+1.2.41 Stable - EPG event title visibility and existing touch-mode refinements.
+AcTweeteR XStream 1.1.2.41 adds watched state refresh and faster Home widgets.

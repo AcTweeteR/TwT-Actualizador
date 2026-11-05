@@ -1,0 +1,74 @@
+{
+  "release": "actweeter-stable-epg-watched-performance-20261105",
+  "channel": "stable",
+  "release_date": "2026-11-05",
+  "source_commit": "d41512caf58c83888aa4d6bf00609221f92dc7ac",
+  "beta_manifest": "manifests/actweeter-epg-watched-performance-beta-20261105.json",
+  "beta_index_sha256": "a97781f86feb81bee543f81f556e16e6ef7a14b32d085dffd76172bb1e77ab33",
+  "previous_index_sha256": "1c09e8f65b829378a0cb4359b5424034c4c5073692d1b435efe9e531240ba7a5",
+  "index_sha256": "ac4bffccee2d60b1bd05eeafb33c1e7b037c881c030b16b67e9faef4d206412a",
+  "index_md5": "7af86ce61bceeefff1ba7ec1a5856fe9",
+  "addons": [
+    {
+      "id": "repository.actweeter",
+      "version": "1.0.3",
+      "path": "repo/repository.actweeter/repository.actweeter-1.0.3.zip",
+      "sha256": "74620e81ff9a161bb7b0650f01e94406ccc9fa9366210ebb36e58872bb4995e8"
+    },
+    {
+      "id": "skin.actweeter",
+      "version": "1.2.41",
+      "path": "repo/skin.actweeter/skin.actweeter-1.2.41.zip",
+      "sha256": "137dba12db655a9a969308e11399eb41d43fea2d9b395cb7440005fedcd5a349"
+    },
+    {
+      "id": "service.actweeter",
+      "version": "0.4.98",
+      "path": "repo/service.actweeter/service.actweeter-0.4.98.zip",
+      "sha256": "8ec1ede1db5286b3f77f9a424d08db519c75f69757bda24021b27f42269564b9"
+    },
+    {
+      "id": "plugin.video.xstream-pro",
+      "version": "1.1.2.41",
+      "path": "repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.41.zip",
+      "sha256": "8d4404087ddc9b5640eb64a905df6c3372274b02a95c0080a9d46f6f07dad137"
+    },
+    {
+      "id": "repository.rivulet",
+      "version": "1.0.2",
+      "path": "repo/repository.rivulet/repository.rivulet-1.0.2.zip",
+      "sha256": "e4aabb495d6b49f39b8ec0c828ad9fa4562c387547739e0f38351ddabac9a815"
+    },
+    {
+      "id": "repository.zachmorris",
+      "version": "1.0.4",
+      "path": "repo/repository.zachmorris/repository.zachmorris-1.0.4.zip",
+      "sha256": "3dde8f37dcd64f122cf1e897e139e5b8b7a3cd0ec15db6a1f5c7b59852cb661b"
+    }
+  ],
+  "assets": [
+    {
+      "path": "repo/skin.actweeter/resources/icon.png",
+      "sha256": "ef40775c575c25868ebaeaa52c18664b6ce6fce40b0ad4ecb6221d954396bc9c"
+    },
+    {
+      "path": "repo/skin.actweeter/extras/media/backgrounds/settings_interface.jpg",
+      "sha256": "1b342cf38b29798ffb35a05fdbd60bc0d3c38e0e41469f66708c6cf7bc8454a0"
+    },
+    {
+      "path": "repo/skin.actweeter/changelog-1.2.41.txt",
+      "sha256": "9545ccbd4bd2d7080c0530af97ed718c674b50e05324136805cc1e442754a0c9"
+    },
+    {
+      "path": "repo/plugin.video.xstream-pro/icon.png",
+      "sha256": "4a29ce246b6315e848b4481696e9fa87de4ca1bc6732c24dddf2732e45bfd20b"
+    },
+    {
+      "path": "repo/plugin.video.xstream-pro/resources/background/background.png",
+      "sha256": "931d9a839108487fb80b1c6c4e6ec36815f5c4ba6e4c6c9d08346432136902d5"
+    }
+  ],
+  "runtime_lenovo_verified": false,
+  "runtime_epg_validated": false,
+  "compatibility_note": "EPG display fix does not supply programs for channels without XMLTV IDs"
+}
