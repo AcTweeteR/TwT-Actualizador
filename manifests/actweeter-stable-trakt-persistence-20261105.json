@@ -1,0 +1,49 @@
+{
+  "addons": [
+    {
+      "id": "repository.actweeter",
+      "path": "repo/repository.actweeter/repository.actweeter-1.0.3.zip",
+      "sha256": "74620e81ff9a161bb7b0650f01e94406ccc9fa9366210ebb36e58872bb4995e8",
+      "version": "1.0.3"
+    },
+    {
+      "id": "skin.actweeter",
+      "path": "repo/skin.actweeter/skin.actweeter-1.2.41.zip",
+      "sha256": "137dba12db655a9a969308e11399eb41d43fea2d9b395cb7440005fedcd5a349",
+      "version": "1.2.41"
+    },
+    {
+      "id": "service.actweeter",
+      "path": "repo/service.actweeter/service.actweeter-0.4.99.zip",
+      "sha256": "7745d20308429f21f6eeee43b0ee6cd9c500bf9c955e28864cd799a7c8c059e9",
+      "version": "0.4.99"
+    },
+    {
+      "id": "plugin.video.xstream-pro",
+      "path": "repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.42.zip",
+      "sha256": "b3c64230df67d297d6b1f21af87fc3151708cd335bef02cc75e45e41f9e3d992",
+      "version": "1.1.2.42"
+    },
+    {
+      "id": "repository.rivulet",
+      "path": "repo/repository.rivulet/repository.rivulet-1.0.2.zip",
+      "sha256": "e4aabb495d6b49f39b8ec0c828ad9fa4562c387547739e0f38351ddabac9a815",
+      "version": "1.0.2"
+    },
+    {
+      "id": "repository.zachmorris",
+      "path": "repo/repository.zachmorris/repository.zachmorris-1.0.4.zip",
+      "sha256": "3dde8f37dcd64f122cf1e897e139e5b8b7a3cd0ec15db6a1f5c7b59852cb661b",
+      "version": "1.0.4"
+    }
+  ],
+  "assets": [],
+  "channel": "stable",
+  "index_md5": "755afa1b9438e2c592c0533ed2bcd758",
+  "index_sha256": "52c89db406c9cc4d2890c8f7e962e811b7d6fc1209e2d05f51399df7f94b6a3a",
+  "previous_index_sha256": "e05b34fc718a8ecf4b70894cdbbee5a59daf81e31d061c2a51b16d5be0cdb107",
+  "release": "actweeter-stable-trakt-persistence-20261105",
+  "release_date": "2026-11-05",
+  "runtime_tvos_verified": false,
+  "source_beta_sha256": "e7b50639ecea6e2a5b94747bbba368afdd37275af01aaa64823ba2400fe0c34d"
+}
