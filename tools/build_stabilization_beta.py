@@ -11,7 +11,7 @@ from build_test_channel import zip_tree
 
 ROOT = Path(__file__).resolve().parents[1]
 ADDON = 'service.actweeter'
-VERSION = '0.4.99~beta1'
+VERSION = '0.4.99~beta2'
 FILES = ('setup.py', 'resources/lib/first_run.py', 'resources/lib/trakt_integration.py')
 BASE_SHA = '8ec1ede1db5286b3f77f9a424d08db519c75f69757bda24021b27f42269564b9'
 
@@ -36,6 +36,8 @@ def build(output):
             (tree / relative).write_bytes((ROOT / 'source/0.4.32/addons' / ADDON / relative).read_bytes())
         manifest = ET.parse(tree / 'addon.xml')
         manifest.getroot().set('version', VERSION)
+        # Setup-only changes retain the previous Beta's XStream API minimum.
+        manifest.find("requires/import[@addon='plugin.video.xstream-pro']").set('version', '1.1.2.39')
         manifest.write(tree / 'addon.xml', encoding='utf-8', xml_declaration=True)
         for path in tree.rglob('*.py'):
             compile(path.read_bytes(), str(path), 'exec')
