@@ -48,6 +48,12 @@ def mark_trakt_status(state, status, *, integration="script"):
     return result
 
 
+def should_offer_authorization(state, integration):
+    """Resume setup without repeating a reviewed optional account decision."""
+    return state.get(integration + '_trakt_status') not in (
+        'DEFERRED', 'AUTHORIZATION_UNVERIFIED', 'AUTHORIZED_RUNTIME', 'AUTHORIZED_LOCAL')
+
+
 def configure_fresh_defaults(addon, *, newly_installed=False):
     """Do not alter settings of any add-on that predates this installation."""
     if not newly_installed:

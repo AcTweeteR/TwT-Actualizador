@@ -91,7 +91,8 @@ from interaction_trace import arm as arm_interaction_trace
 from trakt_integration import (AUTH_ACTION as TRAKT_AUTH_ACTION,
                               AUTH_WINDOW as TRAKT_AUTH_WINDOW,
                               configure_fresh_defaults,
-                              mark_trakt_status, supports_device_authorization)
+                              mark_trakt_status, should_offer_authorization,
+                              supports_device_authorization)
 
 SETTINGS_ADDONS = {
     "xstream": "plugin.video.xstream-pro",
@@ -2004,8 +2005,10 @@ def _run_onboarding(dialog, *, core_configured=False):
     _write_state(mark_step(_read_state(), "Autorizaciones externas", "IN_PROGRESS"))
     # Optional consent belongs to setup, never to a successful menu rebuild.
     _install_slyguy_stack(dialog)
-    _connect_trakt(dialog)
-    _connect_xstream_trakt(dialog)
+    if should_offer_authorization(_read_state(), 'script'):
+        _connect_trakt(dialog)
+    if should_offer_authorization(_read_state(), 'xstream'):
+        _connect_xstream_trakt(dialog)
     _write_state(mark_step(_read_state(), "Autorizaciones externas", "REVIEWED"))
     _write_state(mark_step(_read_state(), "Configurar y verificar servicios", "IN_PROGRESS"))
     return _verify_connected_services(dialog)
