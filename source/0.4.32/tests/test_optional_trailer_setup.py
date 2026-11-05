@@ -16,6 +16,14 @@ import module_catalog  # noqa: E402
 
 
 class OptionalTrailerSetupTests(unittest.TestCase):
+    def test_explicit_repair_keeps_completed_installation_history(self):
+        state = {"schema_version": 1, "wizard_version": first_run.WIZARD_VERSION,
+                 "completed": True, "setup_state": "COMPLETE",
+                 "setup_checks": {key: "PASS_RUNTIME" for key in first_run.MANDATORY_SETUP_CHECKS}}
+        repaired = first_run.mark_started(state)
+        self.assertTrue(repaired.get('legacy_completed_review'))
+        self.assertFalse(first_run.should_offer_first_run(repaired, True))
+
     def test_every_declared_addon_is_required_on_every_supported_platform(self):
         self.assertTrue(all(item["required"] for item in module_catalog.all_addons().values()))
         expected = set(module_catalog.all_addons()) - {"xbmc.gui"}
