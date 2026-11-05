@@ -55,8 +55,8 @@ jobs:
           python3 tools/build_priority_beta.py --output "$RUNNER_TEMP/priority-beta"
           cmp "$RUNNER_TEMP/priority-beta/skin.actweeter-1.2.40~beta1.zip" \
             docs/testing/repo/skin.actweeter/skin.actweeter-1.2.40~beta1.zip
-          cmp "$RUNNER_TEMP/priority-beta/service.actweeter-0.4.99~beta2.zip" \
-            docs/testing/repo/service.actweeter/service.actweeter-0.4.99~beta2.zip
+          cmp "$RUNNER_TEMP/priority-beta/service.actweeter-0.4.98~beta1.zip" \
+            docs/testing/repo/service.actweeter/service.actweeter-0.4.98~beta1.zip
           cmp "$RUNNER_TEMP/priority-beta/plugin.video.xstream-pro-1.1.2.40~beta1.zip" \
             docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.40~beta1.zip
       - name: Verify immutable Stable channel remains unchanged
