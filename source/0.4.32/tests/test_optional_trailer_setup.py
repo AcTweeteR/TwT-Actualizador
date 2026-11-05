@@ -107,6 +107,18 @@ class OptionalTrailerSetupTests(unittest.TestCase):
         self.assertNotIn("configured_onboarding_declined", reset)
         self.assertTrue(first_run.should_offer_first_run(reset, True))
 
+    def test_completed_profile_survives_failed_check_across_restarts(self):
+        old = {"schema_version": 1, "wizard_version": first_run.WIZARD_VERSION,
+               "completed": True, "prompted": True, "setup_state": "COMPLETE",
+               "setup_checks": {"mandatory_addons": "FAIL"}}
+        state = first_run.normalize_state(old)
+        for _ in range(2):
+            state = first_run.normalize_state(state)
+            self.assertFalse(state["completed"])
+            self.assertEqual(state["setup_checks"]["mandatory_addons"], "FAIL")
+            self.assertFalse(first_run.should_offer_first_run(state, True))
+            self.assertTrue(first_run.should_offer_first_run(state, False))
+
     def test_unconfigured_profile_is_reoffered_and_malformed_state_rejected(self):
         state = first_run.mark_deferred(
             {"schema_version": 1}, 12345, core_configured=False)
