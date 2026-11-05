@@ -1461,7 +1461,7 @@
             <!--Button NF-->
             <posx>0</posx>
             <posy>0</posy>
-            <width>54</width>
+            <width>98%</width>
             <height>92%</height>
             <texture colordiffuse="$VAR[PVRGuideItemColor]" border="10">diffuse/panel.png</texture>
             <visible>!Skin.HasSetting(ShowEpgGenreColors)</visible>
@@ -1470,7 +1470,7 @@
             <!--Button NF epg genre-->
             <posx>0</posx>
             <posy>0</posy>
-            <width>54</width>
+            <width>98%</width>
             <height>92%</height>
             <visible>Skin.HasSetting(ShowEpgGenreColors)</visible>
             <texture border="10" fallback="epg-genres/0.png">epg-genres/$INFO[ListItem.Property(GenreType)].png</texture>
@@ -1491,10 +1491,10 @@
         <control type="label" id="1">
             <!--Channel Now Playing (with recording or timer active)-->
             <visible>[ListItem.IsRecording | ListItem.HasTimer | ListItem.IsPlaying]</visible>
-            <left>42</left>
-            <right>63</right>
+            <left>5%</left>
+            <right>5%</right>
 			<textoffsetx>20</textoffsetx>
-            <width>0</width>
+            <width>90%</width>
             <height>92%</height>
             <include condition="!String.IsEqual(Skin.String(GuideRows),7)">Font_Reg24</include>
             <include condition="Skin.String(GuideRows, 7)">Font_Reg31</include>
@@ -1506,9 +1506,9 @@
         <control type="label" id="1">
             <!--Channel Now Playing-->
             <visible>![ListItem.IsRecording | ListItem.HasTimer | ListItem.IsPlaying]</visible>
-			<left>23</left>
-            <right>23</right>
-            <width>0</width>
+			<left>5%</left>
+            <right>5%</right>
+            <width>90%</width>
             <height>92%</height>
             <include condition="!String.IsEqual(Skin.String(GuideRows),7)">Font_Reg24</include>
             <include condition="Skin.String(GuideRows, 7)">Font_Reg31</include>
@@ -1524,7 +1524,7 @@
             <!--Button FO-->
             <posx>0</posx>
             <posy>0</posy>
-            <width>54</width>
+            <width>98%</width>
             <height>92%</height>
             <texture border="10" colordiffuse="$INFO[Skin.String(PVRGuideItemColorFocus)]">diffuse/panel.png</texture>
         </control>
@@ -1543,10 +1543,10 @@
         <control type="label" id="1">
             <!--Channel Now Playing (with recording or timer active)-->
             <visible>[ListItem.IsRecording | ListItem.HasTimer | ListItem.IsPlaying]</visible>
-            <left>42</left>
-            <right>63</right>
+            <left>5%</left>
+            <right>5%</right>
 			<textoffsetx>20</textoffsetx>
-            <width>0</width>
+            <width>90%</width>
             <height>92%</height>
             <include condition="!String.IsEqual(Skin.String(GuideRows),7)">Font_Reg24</include>
             <include condition="Skin.String(GuideRows, 7)">Font_Reg31</include>
@@ -1559,9 +1559,9 @@
         <control type="label" id="1">
             <!--Channel Now Playing-->
             <visible>![ListItem.IsRecording | ListItem.HasTimer | ListItem.IsPlaying]</visible>
-            <left>23</left>
-            <right>23</right>
-            <width>0</width>
+            <left>5%</left>
+            <right>5%</right>
+            <width>90%</width>
             <height>92%</height>
             <include condition="!String.IsEqual(Skin.String(GuideRows),7)">Font_Reg24</include>
             <include condition="Skin.String(GuideRows, 7)">Font_Reg31</include>

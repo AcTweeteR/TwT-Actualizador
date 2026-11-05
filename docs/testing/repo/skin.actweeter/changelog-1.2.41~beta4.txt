@@ -1,0 +1,1 @@
+AcTweeteR Beta4: visible EPG event cards on timeline; four formerly zero-width titles and three narrow backgrounds corrected. Other skin windows and remote mode remain untouched.

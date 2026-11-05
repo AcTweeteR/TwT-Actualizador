@@ -252,6 +252,11 @@ class BulkWatchedRuntimeTests(unittest.TestCase):
                                  {'season': 1, 'episode': 2, 'provider_id': '12'},
                                  {'season': 2, 'episode': 1, 'provider_id': '21'}]}}
         changes.inventory_map = lambda addon, profile: records
+        refresh = types.ModuleType('watch_ui_refresh')
+        # The production ZIP bundles its own UI invalidation helper. This
+        # historical safety test isolates inventory mutations; a dedicated
+        # Beta test executes the helper itself against a mocked Kodi window.
+        refresh.invalidate_after_watched_mutation = Mock(return_value={'status': 'invalidated'})
         store = SimpleNamespace(_data={}, _save=Mock())
         g = {'addon': object(), 'pm': SimpleNamespace(active='2'),
              'WatchedMovies': lambda *a, **k: store,
@@ -261,7 +266,7 @@ class BulkWatchedRuntimeTests(unittest.TestCase):
         def toggle(season=''):
             return namespace['toggle_tmdb_watched'](g, {'tmdb_id': ['42'], 'tmdb_type': ['tv'],
                                                          'season': [season], 'episode': ['']})
-        with patch.dict(sys.modules, {'series_changes': changes}):
+        with patch.dict(sys.modules, {'series_changes': changes, 'watch_ui_refresh': refresh}):
             self.assertTrue(toggle('1'))
             self.assertEqual(store._data, {'tmdb:episode:42:s1:e1': True,
                                            'tmdb:episode:42:s1:e2': True})
@@ -273,6 +278,7 @@ class BulkWatchedRuntimeTests(unittest.TestCase):
             records['provider-7']['complete'] = False
             self.assertIsNone(toggle())
             self.assertEqual(store._save.call_count, saves)
+            self.assertEqual(refresh.invalidate_after_watched_mutation.call_count, 3)
             records['provider-7']['complete'] = True
             records['provider-7']['checked_at'] = time.time() - 16 * 86400
             self.assertIsNone(toggle())
