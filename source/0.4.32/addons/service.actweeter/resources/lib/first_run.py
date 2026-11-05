@@ -517,8 +517,7 @@ def normalize_state(state):
     if (result.get("completed") and any(
             result["setup_checks"].get(key) != "PASS_RUNTIME"
             for key in MANDATORY_SETUP_CHECKS)):
-        if result["wizard_version"] < WIZARD_VERSION:
-            result["legacy_completed_review"] = True
+        result["legacy_completed_review"] = True
         result.update(completed=False, prompted=False, setup_state="INCOMPLETE",
                       configuration_status="INCOMPLETE")
     elif result.get("completed") and result["wizard_version"] < WIZARD_VERSION:
