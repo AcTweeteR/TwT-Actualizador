@@ -7,13 +7,17 @@ ROOT=Path(__file__).resolve().parents[1]
 VERSIONS={'service.actweeter':('0.4.101~beta1','0.4.101'),'plugin.video.xstream-pro':('1.1.2.44~beta4','1.1.2.44')}
 EXPECTED={'service.actweeter':'a493c9aeb7b1f0ebd109fcd60e57eeded75333c2769bfe806ab54ead79972fdf','plugin.video.xstream-pro':'a77401fa119e40f581f9ef09afb1796fdedb1a2f539a2664d3dd9f0be0c583e2'}
 PRIOR='8663fe695a935c9718310bffbe501b3b0b6c04532bddb787ff51daad8c2e7eea'
+PROMOTED='87a926cf7a33bbb7676d26ca93e826c26a2e2e50b0fd438a89badf41559a259c'
+SUCCESSOR='006ab64927071d2f185fa7ec6003b47e4ec3a56618891b1aa273f8cd9dc2e858'
 def sha(data):return hashlib.sha256(data).hexdigest()
 def build(out):
  out=Path(out)
  if out.exists():raise FileExistsError(out)
- old=(ROOT/'repo/addons.xml').read_bytes()
- if sha(old)!=PRIOR:raise ValueError('Stable changed; refusing stale release')
- if hashlib.md5(old).hexdigest()!=(ROOT/'repo/addons.xml.md5').read_text().strip():raise ValueError('prior md5')
+ current=(ROOT/'repo/addons.xml').read_bytes()
+ if sha(current) not in (PRIOR,PROMOTED,SUCCESSOR):raise ValueError('unexpected current Stable')
+ if hashlib.md5(current).hexdigest()!=(ROOT/'repo/addons.xml.md5').read_text().strip():raise ValueError('current md5')
+ old=(ROOT/'manifests/archive/trakt-continue-prior-stable-addons-20261105.xml').read_bytes()
+ if sha(old)!=PRIOR:raise ValueError('historical Stable predecessor invalid')
  root=ET.fromstring(old)
  for aid,(beta,stable) in VERSIONS.items():
   source=ROOT/'docs/testing/repo'/aid/f'{aid}-{beta}.zip'
@@ -28,7 +32,8 @@ def build(out):
   source=ROOT/'docs/testing/repo'/aid/f'{aid}-{beta}.zip'
   target=out/'repo'/aid/f'{aid}-{stable}.zip'
   published=ROOT/'repo'/aid/target.name
-  if published.exists() or published.is_symlink():raise FileExistsError('refusing overwrite '+str(published))
+  if published.is_symlink() or (published.exists() and not published.is_file()):
+   raise FileExistsError('invalid existing package '+str(published))
   target.parent.mkdir(parents=True,exist_ok=True)
   with zipfile.ZipFile(source) as before,zipfile.ZipFile(target,'x') as after:
    for info in before.infolist():
@@ -46,6 +51,8 @@ def build(out):
     after.writestr(info,data)
   with zipfile.ZipFile(target) as z:
    if z.testzip() is not None:raise ValueError('bad stable CRC')
+  if published.exists() and published.read_bytes()!=target.read_bytes():
+   raise FileExistsError('historical package differs: '+str(published))
   node=root.find(f"addon[@id='{aid}']");idx=list(root).index(node);root.remove(node);root.insert(idx,addon)
  index=ET.tostring(root,encoding='utf-8',xml_declaration=True)+b'\n'
  (out/'repo/addons.xml').write_bytes(index)
