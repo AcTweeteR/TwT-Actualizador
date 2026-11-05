@@ -1,0 +1,53 @@
+{
+  "addons": [
+    {
+      "id": "repository.actweeter",
+      "path": "repo/repository.actweeter/repository.actweeter-1.0.3.zip",
+      "sha256": "74620e81ff9a161bb7b0650f01e94406ccc9fa9366210ebb36e58872bb4995e8",
+      "version": "1.0.3"
+    },
+    {
+      "id": "skin.actweeter",
+      "path": "repo/skin.actweeter/skin.actweeter-1.2.41.zip",
+      "sha256": "137dba12db655a9a969308e11399eb41d43fea2d9b395cb7440005fedcd5a349",
+      "version": "1.2.41"
+    },
+    {
+      "id": "service.actweeter",
+      "path": "repo/service.actweeter/service.actweeter-0.4.101.zip",
+      "sha256": "8a89c80ae178ff665398259ae307c2d0e6235441782955bd8d4f6dbb2df46cab",
+      "version": "0.4.101"
+    },
+    {
+      "id": "plugin.video.xstream-pro",
+      "path": "repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.44.zip",
+      "sha256": "4a5a3c11fa6b1af045014c8403de304d145defbb7213879f004467fd68bf6dfa",
+      "version": "1.1.2.44"
+    },
+    {
+      "id": "repository.rivulet",
+      "path": "repo/repository.rivulet/repository.rivulet-1.0.2.zip",
+      "sha256": "e4aabb495d6b49f39b8ec0c828ad9fa4562c387547739e0f38351ddabac9a815",
+      "version": "1.0.2"
+    },
+    {
+      "id": "repository.zachmorris",
+      "path": "repo/repository.zachmorris/repository.zachmorris-1.0.4.zip",
+      "sha256": "3dde8f37dcd64f122cf1e897e139e5b8b7a3cd0ec15db6a1f5c7b59852cb661b",
+      "version": "1.0.4"
+    }
+  ],
+  "assets": [],
+  "channel": "stable",
+  "index_md5": "c448e2b8d7a57047137e6f64040ae171",
+  "index_sha256": "87a926cf7a33bbb7676d26ca93e826c26a2e2e50b0fd438a89badf41559a259c",
+  "previous_index_sha256": "8663fe695a935c9718310bffbe501b3b0b6c04532bddb787ff51daad8c2e7eea",
+  "release": "actweeter-stable-trakt-continue-20261105",
+  "release_date": "2026-11-05",
+  "runtime_lenovo_verified": false,
+  "runtime_tvos_verified": false,
+  "source_beta_sha256": {
+    "plugin.video.xstream-pro": "a77401fa119e40f581f9ef09afb1796fdedb1a2f539a2664d3dd9f0be0c583e2",
+    "service.actweeter": "a493c9aeb7b1f0ebd109fcd60e57eeded75333c2769bfe806ab54ead79972fdf"
+  }
+}
