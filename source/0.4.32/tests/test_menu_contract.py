@@ -125,7 +125,7 @@ class MenuContractTests(unittest.TestCase):
             addon = ET.fromstring(archive.read("service.actweeter/addon.xml"))
             migration = ("interface-layout-v17-trakt-menu" if
                          addon.get("version") == "0.4.94" else
-                         "interface-layout-v18-trakt-home-recommendations")
+                         "interface-layout-v19-restore-rivulet-launcher")
             self.assertIn(migration, layout)
             self.assertIn("current_root.find(\"shortcut[defaultID='trakt']\")", layout)
         with zipfile.ZipFile(os.environ["ACTWEETER_XSTREAM_LIVE_ZIP"]) as archive:
@@ -209,6 +209,26 @@ class MenuContractTests(unittest.TestCase):
                          '/custom/gamepad.png')
         self.assertEqual(after.find("shortcut[defaultID='arcade']/action").text,
                          'RunAddon(plugin.program.iagl)')
+
+    def test_missing_rivulet_in_existing_profile_is_restored_without_touching_user_row(self):
+        defaults = (ADDON / "shortcuts/mainmenu.DATA.xml").read_bytes()
+        root = ET.fromstring(defaults)
+        root.remove(root.find("shortcut[defaultID='rivulet']"))
+        custom = ET.SubElement(root, "shortcut")
+        ET.SubElement(custom, 'defaultID').text = 'my-button'
+        ET.SubElement(custom, 'label').text = 'Mi botón'
+        ET.SubElement(custom, 'action').text = 'ActivateWindow(Settings)'
+        original = ET.tostring(root)
+        restored = ET.fromstring(interface_layout.merge_arcade_shortcut(original, defaults))
+        ids = [n.findtext('defaultID') for n in restored.findall('shortcut')]
+        self.assertEqual(ids.count('rivulet'), 1)
+        self.assertEqual(ids.index('arcade'), ids.index('rivulet') + 1)
+        self.assertEqual(restored.find("shortcut[defaultID='rivulet']/action").text,
+                         'RunAddon(plugin.video.rivulet)')
+        self.assertEqual(ET.tostring(restored.find("shortcut[defaultID='my-button']")),
+                         ET.tostring(custom))
+        self.assertEqual(interface_layout.merge_arcade_shortcut(ET.tostring(restored), defaults),
+                         ET.tostring(restored))
 
     def test_bottom_menu_has_exactly_settings_catalog_refresh_and_skin_reload(self):
         self.assertEqual(
@@ -333,7 +353,7 @@ class MenuContractTests(unittest.TestCase):
                 result = interface_layout.apply_layout(
                     shortcuts, service, ADDON, interface_layout.SETTINGS)
                 self.assertEqual(result["status"], "APPLIED")
-                self.assertEqual(interface_layout.LAYOUT_VERSION, 18)
+                self.assertEqual(interface_layout.LAYOUT_VERSION, 19)
                 expected_main = interface_layout.merge_arcade_shortcut(
                     previous_main, (ADDON / "shortcuts/mainmenu.DATA.xml").read_bytes())
                 for name, wanted in (("skin.actweeter-mainmenu.DATA.xml", expected_main),

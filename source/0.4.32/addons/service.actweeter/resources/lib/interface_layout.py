@@ -15,8 +15,8 @@ import urllib.parse
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-LAYOUT_VERSION = 18
-LAYOUT_MIGRATION_ID = 'interface-layout-v18-trakt-home-recommendations'
+LAYOUT_VERSION = 19
+LAYOUT_MIGRATION_ID = 'interface-layout-v19-restore-rivulet-launcher'
 GROUPS = ('mainmenu', 'powermenu', 'inicio-1', '10000-1', 'moviehub', 'tvshowhub')
 # Exact profile copies shipped as defaults in Beta 8. They may be updated when
 # older state files do not yet track ownership; any byte-level customization
@@ -284,6 +284,20 @@ def merge_arcade_shortcut(current, defaults):
                     icon = ET.SubElement(node, 'icon')
                 icon.text = wanted.findtext('icon')
                 changed = True
+    # A customized/older profile can lose the Rivulet row while retaining
+    # Arcade/Trakt. Restore only the missing shipped launcher; never overwrite
+    # a user-defined Rivulet action, label, icon, or unrelated menu row.
+    if current_root.find("shortcut[defaultID='rivulet']") is None:
+        shipped_rivulet = default_root.find("shortcut[defaultID='rivulet']")
+        if shipped_rivulet is not None:
+            anchor = current_root.find("shortcut[defaultID='arcade']")
+            if anchor is None:
+                anchor = current_root.find("shortcut[defaultID='trakt']")
+                position = list(current_root).index(anchor) + 1 if anchor is not None else len(current_root)
+            else:
+                position = list(current_root).index(anchor)
+            current_root.insert(position, ET.fromstring(ET.tostring(shipped_rivulet)))
+            changed = True
     existing = current_root.find("shortcut[defaultID='arcade']")
     rivulet = next((node for node in current_root.findall('shortcut')
                     if node.findtext('defaultID') == 'rivulet'), None)
