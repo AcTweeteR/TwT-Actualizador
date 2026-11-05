@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<includes>
+    <include name="AcTweeteRTouchVideoNavigation">
+        <control type="group">
+            <visible>Skin.HasSetting(AcTweeteRTouchMode)</visible>
+            <width>1920</width><height>1080</height>
+            <control type="grouplist">
+                <left>440</left><top>8</top><width>1230</width><height>83</height>
+                <orientation>horizontal</orientation><itemgap>12</itemgap>
+                <control type="button" id="44201">
+                    <width>178</width><height>78</height>
+                    <font>Reg25</font><align>center</align><aligny>center</aligny>
+                    <label>$LOCALIZE[32034]</label>
+                    <onclick>PreviousMenu</onclick>
+                    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
+                    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                </control>
+                <control type="button" id="44202">
+                    <width>200</width><height>78</height>
+                    <font>Reg25</font><align>center</align><aligny>center</aligny>
+                    <label>$LOCALIZE[32035]</label>
+                    <!-- Return focus to the active media-view group before
+                         asking Kodi to open the selected item's information. -->
+                    <onclick>SetFocus(5000)</onclick>
+                    <onclick>Action(Info)</onclick>
+                    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
+                    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                </control>
+                <control type="button" id="44203">
+                    <width>218</width><height>78</height>
+                    <font>Reg25</font><align>center</align><aligny>center</aligny>
+                    <label>$LOCALIZE[32036]</label>
+                    <onclick>SetFocus(5000)</onclick>
+                    <onclick>Action(ContextMenu)</onclick>
+                    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
+                    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                </control>
+                <control type="button" id="44204">
+                    <width>156</width><height>78</height>
+                    <font>Bold30</font><align>center</align><aligny>center</aligny>
+                    <label>$LOCALIZE[32032]</label>
+                    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
+                    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                    <include>AcTweeteRTouchVideoPageUp</include>
+                </control>
+                <control type="button" id="44205">
+                    <width>156</width><height>78</height>
+                    <font>Bold30</font><align>center</align><aligny>center</aligny>
+                    <label>$LOCALIZE[32033]</label>
+                    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
+                    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                    <include>AcTweeteRTouchVideoPageDown</include>
+                </control>
+            </control>
+        </control>
+    </include>
+    <include name="AcTweeteRTouchVideoPageUp">
+        <onclick condition="Control.IsVisible(50)">Control.Message(50,pageup)</onclick>
+        <onclick condition="Control.IsVisible(51)">Control.Message(51,pageup)</onclick>
+        <onclick condition="Control.IsVisible(52)">Control.Message(52,pageup)</onclick>
+        <onclick condition="Control.IsVisible(53)">Control.Message(53,pageup)</onclick>
+        <onclick condition="Control.IsVisible(54)">Control.Message(54,pageup)</onclick>
+        <onclick condition="Control.IsVisible(55)">Control.Message(55,pageup)</onclick>
+        <onclick condition="Control.IsVisible(56)">Control.Message(56,pageup)</onclick>
+        <onclick condition="Control.IsVisible(57)">Control.Message(57,pageup)</onclick>
+        <onclick condition="Control.IsVisible(501)">Control.Message(501,pageup)</onclick>
+        <onclick condition="Control.IsVisible(502)">Control.Message(502,pageup)</onclick>
+        <onclick condition="Control.IsVisible(503)">Control.Message(503,pageup)</onclick>
+        <onclick condition="Control.IsVisible(507)">Control.Message(507,pageup)</onclick>
+        <onclick condition="Control.IsVisible(509)">Control.Message(509,pageup)</onclick>
+        <onclick condition="Control.IsVisible(510)">Control.Message(510,pageup)</onclick>
+        <onclick condition="Control.IsVisible(511)">Control.Message(511,pageup)</onclick>
+        <onclick condition="Control.IsVisible(512)">Control.Message(512,pageup)</onclick>
+        <onclick condition="Control.IsVisible(513)">Control.Message(513,pageup)</onclick>
+        <onclick condition="Control.IsVisible(514)">Control.Message(514,pageup)</onclick>
+        <onclick condition="Control.IsVisible(523)">Control.Message(523,pageup)</onclick>
+        <onclick condition="Control.IsVisible(524)">Control.Message(524,pageup)</onclick>
+        <onclick condition="Control.IsVisible(525)">Control.Message(525,pageup)</onclick>
+        <onclick condition="Control.IsVisible(526)">Control.Message(526,pageup)</onclick>
+        <onclick condition="Control.IsVisible(527)">Control.Message(527,pageup)</onclick>
+        <onclick condition="Control.IsVisible(528)">Control.Message(528,pageup)</onclick>
+    </include>
+    <include name="AcTweeteRTouchVideoPageDown">
+        <onclick condition="Control.IsVisible(50)">Control.Message(50,pagedown)</onclick>
+        <onclick condition="Control.IsVisible(51)">Control.Message(51,pagedown)</onclick>
+        <onclick condition="Control.IsVisible(52)">Control.Message(52,pagedown)</onclick>
+        <onclick condition="Control.IsVisible(53)">Control.Message(53,pagedown)</onclick>
+        <onclick condition="Control.IsVisible(54)">Control.Message(54,pagedown)</onclick>
+        <onclick condition="Control.IsVisible(55)">Control.Message(55,pagedown)</onclick>
+        <onclick condition="Control.IsVisible(56)">Control.Message(56,pagedown)</onclick>
+        <onclick condition="Control.IsVisible(57)">Control.Message(57,pagedown)</onclick>
+        <onclick condition="Control.IsVisible(501)">Control.Message(501,pagedown)</onclick>
+        <onclick condition="Control.IsVisible(502)">Control.Message(502,pagedown)</onclick>
+        <onclick condition="Control.IsVisible(503)">Control.Message(503,pagedown)</onclick>
+        <onclick condition="Control.IsVisible(507)">Control.Message(507,pagedown)</onclick>
+        <onclick condition="Control.IsVisible(509)">Control.Message(509,pagedown)</onclick>
+        <onclick condition="Control.IsVisible(510)">Control.Message(510,pagedown)</onclick>
+        <onclick condition="Control.IsVisible(511)">Control.Message(511,pagedown)</onclick>
+        <onclick condition="Control.IsVisible(512)">Control.Message(512,pagedown)</onclick>
+        <onclick condition="Control.IsVisible(513)">Control.Message(513,pagedown)</onclick>
+        <onclick condition="Control.IsVisible(514)">Control.Message(514,pagedown)</onclick>
+        <onclick condition="Control.IsVisible(523)">Control.Message(523,pagedown)</onclick>
+        <onclick condition="Control.IsVisible(524)">Control.Message(524,pagedown)</onclick>
+        <onclick condition="Control.IsVisible(525)">Control.Message(525,pagedown)</onclick>
+        <onclick condition="Control.IsVisible(526)">Control.Message(526,pagedown)</onclick>
+        <onclick condition="Control.IsVisible(527)">Control.Message(527,pagedown)</onclick>
+        <onclick condition="Control.IsVisible(528)">Control.Message(528,pagedown)</onclick>
+    </include>
+</includes>

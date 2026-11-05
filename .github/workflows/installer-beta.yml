@@ -27,7 +27,7 @@ jobs:
           ACTWEETER_XSTREAM_LIVE_ZIP: ${{ github.workspace }}/docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.40~beta1.zip
           ACTWEETER_XSTREAM_TEST_ZIP: ${{ github.workspace }}/docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.40~beta1.zip
           ACTWEETER_XSTREAM_UPSTREAM_ZIP: ${{ runner.temp }}/xstream-upstream-1.1.2.zip
-          ACTWEETER_SKIN_LIVE_ZIP: ${{ github.workspace }}/docs/testing/repo/skin.actweeter/skin.actweeter-1.2.41~beta1.zip
+          ACTWEETER_SKIN_LIVE_ZIP: ${{ github.workspace }}/docs/testing/repo/skin.actweeter/skin.actweeter-1.2.41~beta2.zip
           ACTWEETER_SERVICE_LIVE_ZIP: ${{ github.workspace }}/docs/testing/repo/service.actweeter/service.actweeter-0.4.98~beta1.zip
           ACTWEETER_BETA_INDEX: ${{ github.workspace }}/docs/testing/repo/addons.xml
           ACTWEETER_RELEASE_CHANNEL: beta
@@ -38,16 +38,18 @@ jobs:
           --deselect source/0.4.32/tests/test_stable_20261021_release.py::StableOctober21ReleaseTests::test_reproducible_create_only_promotion
           --deselect source/0.4.32/tests/test_unified_stable_release.py::UnifiedStableReleaseTests::test_release_versions_hashes_and_checksum
           --deselect source/0.4.32/tests/test_unified_stable_release.py::UnifiedStableReleaseTests::test_stable_package_builder_deterministic_and_create_only
-      - name: Rebuild skin-only Touch Beta from immutable Stable
+      - name: Verify historical Touch Beta1 and current Touch Beta2 without replacing Stable
         run: |
           python3 tools/build_touch_skin_beta.py --output "$RUNNER_TEMP/skin.actweeter-1.2.41~beta1.zip"
           cmp "$RUNNER_TEMP/skin.actweeter-1.2.41~beta1.zip" docs/testing/repo/skin.actweeter/skin.actweeter-1.2.41~beta1.zip
+          python3 tools/build_touch_refinement_beta.py --output "$RUNNER_TEMP/skin.actweeter-1.2.41~beta2.zip"
+          cmp "$RUNNER_TEMP/skin.actweeter-1.2.41~beta2.zip" docs/testing/repo/skin.actweeter/skin.actweeter-1.2.41~beta2.zip
           python3 tools/verify_current_stable.py
       - name: Verify isolated Beta feed and immutable dependencies
         run: |
           python3 tools/build_test_channel.py \
             --service-zip docs/testing/repo/service.actweeter/service.actweeter-0.4.98~beta1.zip \
-            --skin-zip docs/testing/repo/skin.actweeter/skin.actweeter-1.2.41~beta1.zip \
+            --skin-zip docs/testing/repo/skin.actweeter/skin.actweeter-1.2.41~beta2.zip \
             --xstream-zip docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.40~beta1.zip \
             --rivulet-repository-zip source/0.4.32/third_party/rivulet/repository.rivulet-1.0.2.zip \
             --iagl-repository-zip source/0.4.32/third_party/iagl/repository.zachmorris-1.0.4.zip \

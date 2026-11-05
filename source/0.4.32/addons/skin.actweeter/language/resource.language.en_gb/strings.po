@@ -2439,3 +2439,175 @@ msgstr "Input mode"
 msgctxt "#32025"
 msgid "The setting affects only the AcTweeteR skin."
 msgstr "The setting affects only the AcTweeteR skin."
+
+msgctxt "#32026"
+msgid "Play"
+msgstr "Play"
+
+msgctxt "#32027"
+msgid "Resume"
+msgstr "Resume"
+
+msgctxt "#32028"
+msgid "Episodes"
+msgstr "Episodes"
+
+msgctxt "#32029"
+msgid "Trailer"
+msgstr "Trailer"
+
+msgctxt "#32030"
+msgid "All actions"
+msgstr "All actions"
+
+msgctxt "#32031"
+msgid "Close"
+msgstr "Close"
+
+msgctxt "#32032"
+msgid "Up"
+msgstr "Up"
+
+msgctxt "#32033"
+msgid "Down"
+msgstr "Down"
+
+msgctxt "#32034"
+msgid "Back"
+msgstr "Back"
+
+msgctxt "#32035"
+msgid "Info"
+msgstr "Info"
+
+msgctxt "#32036"
+msgid "Options"
+msgstr "Options"
+
+msgctxt "#32100"
+msgid "Play"
+msgstr "Play"
+
+msgctxt "#32101"
+msgid "Resume"
+msgstr "Resume"
+
+msgctxt "#32102"
+msgid "Next episode"
+msgstr "Next episode"
+
+msgctxt "#32103"
+msgid "Next episode"
+msgstr "Next episode"
+
+msgctxt "#32104"
+msgid "Play from start"
+msgstr "Play from start"
+
+msgctxt "#32105"
+msgid "Seasons and episodes"
+msgstr "Seasons and episodes"
+
+msgctxt "#32106"
+msgid "Trailer"
+msgstr "Trailer"
+
+msgctxt "#32107"
+msgid "More trailers"
+msgstr "More trailers"
+
+msgctxt "#32108"
+msgid "Add to my list"
+msgstr "Add to my list"
+
+msgctxt "#32109"
+msgid "Remove from my list"
+msgstr "Remove from my list"
+
+msgctxt "#32110"
+msgid "Trakt: list"
+msgstr "Trakt: list"
+
+msgctxt "#32111"
+msgid "Trakt: synchronize"
+msgstr "Trakt: synchronize"
+
+msgctxt "#32112"
+msgid "Synopsis"
+msgstr "Synopsis"
+
+msgctxt "#32113"
+msgid "Full synopsis"
+msgstr "Full synopsis"
+
+msgctxt "#32114"
+msgid "Cast"
+msgstr "Cast"
+
+msgctxt "#32115"
+msgid "More information"
+msgstr "More information"
+
+msgctxt "#32116"
+msgid "Similar titles"
+msgstr "Similar titles"
+
+msgctxt "#32117"
+msgid "Wikipedia"
+msgstr "Wikipedia"
+
+msgctxt "#32118"
+msgid "Wikipedia"
+msgstr "Wikipedia"
+
+msgctxt "#32119"
+msgid "Collections"
+msgstr "Collections"
+
+msgctxt "#32120"
+msgid "Versions"
+msgstr "Versions"
+
+msgctxt "#32121"
+msgid "Artwork"
+msgstr "Artwork"
+
+msgctxt "#32122"
+msgid "Artwork"
+msgstr "Artwork"
+
+msgctxt "#32123"
+msgid "Refresh"
+msgstr "Refresh"
+
+msgctxt "#32124"
+msgid "Refresh"
+msgstr "Refresh"
+
+msgctxt "#32125"
+msgid "Like"
+msgstr "Like"
+
+msgctxt "#32126"
+msgid "Remove like"
+msgstr "Remove like"
+
+msgctxt "#32127"
+msgid "Dislike"
+msgstr "Dislike"
+
+msgctxt "#32128"
+msgid "Remove dislike"
+msgstr "Remove dislike"
+
+msgctxt "#32129"
+msgid "Trakt: like"
+msgstr "Trakt: like"
+
+msgctxt "#32130"
+msgid "Trakt: dislike"
+msgstr "Trakt: dislike"
+
+msgctxt "#32131"
+msgid "Trakt: reset rating"
+msgstr "Trakt: reset rating"

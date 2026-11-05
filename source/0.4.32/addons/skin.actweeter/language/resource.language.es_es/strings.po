@@ -2440,3 +2440,175 @@ msgstr "Modo de interacción"
 msgctxt "#32025"
 msgid "La selección afecta solo a la skin AcTweeteR."
 msgstr "La selección afecta solo a la skin AcTweeteR."
+
+msgctxt "#32026"
+msgid "Reproducir"
+msgstr "Reproducir"
+
+msgctxt "#32027"
+msgid "Continuar"
+msgstr "Continuar"
+
+msgctxt "#32028"
+msgid "Episodios"
+msgstr "Episodios"
+
+msgctxt "#32029"
+msgid "Tráiler"
+msgstr "Tráiler"
+
+msgctxt "#32030"
+msgid "Todas las acciones"
+msgstr "Todas las acciones"
+
+msgctxt "#32031"
+msgid "Cerrar"
+msgstr "Cerrar"
+
+msgctxt "#32032"
+msgid "Subir"
+msgstr "Subir"
+
+msgctxt "#32033"
+msgid "Bajar"
+msgstr "Bajar"
+
+msgctxt "#32034"
+msgid "Volver"
+msgstr "Volver"
+
+msgctxt "#32035"
+msgid "Ficha"
+msgstr "Ficha"
+
+msgctxt "#32036"
+msgid "Opciones"
+msgstr "Opciones"
+
+msgctxt "#32100"
+msgid "Reproducir"
+msgstr "Reproducir"
+
+msgctxt "#32101"
+msgid "Continuar"
+msgstr "Continuar"
+
+msgctxt "#32102"
+msgid "Siguiente episodio"
+msgstr "Siguiente episodio"
+
+msgctxt "#32103"
+msgid "Siguiente episodio"
+msgstr "Siguiente episodio"
+
+msgctxt "#32104"
+msgid "Desde el principio"
+msgstr "Desde el principio"
+
+msgctxt "#32105"
+msgid "Temporadas y episodios"
+msgstr "Temporadas y episodios"
+
+msgctxt "#32106"
+msgid "Tráiler"
+msgstr "Tráiler"
+
+msgctxt "#32107"
+msgid "Más tráilers"
+msgstr "Más tráilers"
+
+msgctxt "#32108"
+msgid "Añadir a mi lista"
+msgstr "Añadir a mi lista"
+
+msgctxt "#32109"
+msgid "Quitar de mi lista"
+msgstr "Quitar de mi lista"
+
+msgctxt "#32110"
+msgid "Trakt: lista"
+msgstr "Trakt: lista"
+
+msgctxt "#32111"
+msgid "Trakt: sincronizar"
+msgstr "Trakt: sincronizar"
+
+msgctxt "#32112"
+msgid "Sinopsis"
+msgstr "Sinopsis"
+
+msgctxt "#32113"
+msgid "Sinopsis completa"
+msgstr "Sinopsis completa"
+
+msgctxt "#32114"
+msgid "Reparto"
+msgstr "Reparto"
+
+msgctxt "#32115"
+msgid "Más información"
+msgstr "Más información"
+
+msgctxt "#32116"
+msgid "Similares"
+msgstr "Similares"
+
+msgctxt "#32117"
+msgid "Wikipedia"
+msgstr "Wikipedia"
+
+msgctxt "#32118"
+msgid "Wikipedia"
+msgstr "Wikipedia"
+
+msgctxt "#32119"
+msgid "Colecciones"
+msgstr "Colecciones"
+
+msgctxt "#32120"
+msgid "Versiones"
+msgstr "Versiones"
+
+msgctxt "#32121"
+msgid "Ilustraciones"
+msgstr "Ilustraciones"
+
+msgctxt "#32122"
+msgid "Ilustraciones"
+msgstr "Ilustraciones"
+
+msgctxt "#32123"
+msgid "Actualizar"
+msgstr "Actualizar"
+
+msgctxt "#32124"
+msgid "Actualizar"
+msgstr "Actualizar"
+
+msgctxt "#32125"
+msgid "Me gusta"
+msgstr "Me gusta"
+
+msgctxt "#32126"
+msgid "Quitar me gusta"
+msgstr "Quitar me gusta"
+
+msgctxt "#32127"
+msgid "No me gusta"
+msgstr "No me gusta"
+
+msgctxt "#32128"
+msgid "Quitar no me gusta"
+msgstr "Quitar no me gusta"
+
+msgctxt "#32129"
+msgid "Trakt: me gusta"
+msgstr "Trakt: me gusta"
+
+msgctxt "#32130"
+msgid "Trakt: no me gusta"
+msgstr "Trakt: no me gusta"
+
+msgctxt "#32131"
+msgid "Trakt: sin valoración"
+msgstr "Trakt: sin valoración"

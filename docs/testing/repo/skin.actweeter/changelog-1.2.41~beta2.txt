@@ -1,0 +1,4 @@
+AcTweeteR 1.2.41~beta2: correct touch access to movie and series actions.
+Large primary-action strip; native-action drawer forwards click by control ID,
+touch-native scroll on Info / native video views / synopsis.
+Remote mode untouched. Service, XStream, providers, Trakt and PVR unchanged.

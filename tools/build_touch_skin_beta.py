@@ -10,12 +10,15 @@ import argparse
 import hashlib
 import json
 import stat
+import subprocess
 import zipfile
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "source/0.4.32/addons/skin.actweeter"
+# Previous Beta1 is immutable. Newly edited skin sources are for Beta2.
+SOURCE_COMMIT = "9e79068"
 ADDON = "skin.actweeter"
 BASE = "1.2.40"
 BETA = "1.2.41~beta1"
@@ -57,10 +60,11 @@ def build(path: Path) -> dict:
                    if name and not name.endswith("/")}
     before = dict(content)
     for relative in OVERLAY:
-        file = SOURCE / relative
-        if not file.is_file() or file.is_symlink():
-            raise ValueError("missing or linked skin overlay: " + relative)
-        content[f"{ADDON}/{relative}"] = file.read_bytes()
+        # Reconstruct the original published overlay, not mutable HEAD.
+        data = subprocess.check_output(
+            ["git", "show", SOURCE_COMMIT + ":source/0.4.32/addons/skin.actweeter/" + relative],
+            cwd=ROOT)
+        content[f"{ADDON}/{relative}"] = data
     manifest_name = f"{ADDON}/addon.xml"
     addon = ET.fromstring(content[manifest_name])
     if addon.get("id") != ADDON or addon.get("version") != BASE:

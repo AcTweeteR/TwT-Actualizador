@@ -100,5 +100,36 @@
             </control>
 			
         </control>
+        <!-- AcTweeteR touch accessibility applies only to this skin dialog. -->
+        <control type="group">
+            <visible>Skin.HasSetting(AcTweeteRTouchMode)</visible>
+            <control type="button" id="44210">
+                <right>386</right><top>159</top><width>92</width><height>86</height>
+                <font>Bold34</font><align>center</align><aligny>center</aligny>
+                <label>×</label>
+                <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
+                <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                <onclick>PreviousMenu</onclick>
+            </control>
+            <control type="button" id="44211">
+                <right>362</right><top>473</top><width>88</width><height>82</height>
+                <font>Bold32</font><align>center</align><aligny>center</aligny>
+                <label>↑</label>
+                <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
+                <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                <onclick>PageUp(60)</onclick>
+            </control>
+            <control type="button" id="44212">
+                <right>362</right><top>577</top><width>88</width><height>82</height>
+                <font>Bold32</font><align>center</align><aligny>center</aligny>
+                <label>↓</label>
+                <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
+                <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                <onclick>PageDown(60)</onclick>
+            </control>
+        </control>
     </controls>
 </window>

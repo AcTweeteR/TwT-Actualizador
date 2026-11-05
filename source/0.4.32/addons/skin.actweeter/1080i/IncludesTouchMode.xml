@@ -71,7 +71,7 @@
                 <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
                 <texturenofocus border="10" colordiffuse="D01B1B1B">diffuse/panel.png</texturenofocus>
                 <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-                <onclick>Control.Message(77777,moveup)</onclick>
+                <onclick>PageUp(317)</onclick>
                 <onright>43875</onright>
             </control>
             <control type="button" id="43875">
@@ -82,7 +82,7 @@
                 <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
                 <texturenofocus border="10" colordiffuse="D01B1B1B">diffuse/panel.png</texturenofocus>
                 <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-                <onclick>Control.Message(77777,movedown)</onclick>
+                <onclick>PageDown(317)</onclick>
                 <onleft>43874</onleft>
             </control>
             <!-- Spotlight's list is horizontally scrollable with arrows as well

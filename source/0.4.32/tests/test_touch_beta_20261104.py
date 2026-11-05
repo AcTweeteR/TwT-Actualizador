@@ -69,8 +69,9 @@ class TouchBetaTests(unittest.TestCase):
         self.assertIn("SetFocus(900)",actions)
         self.assertIn("ActivateWindow(1109)",actions)
         self.assertIn("ActivateWindow(Home)",actions)
-        self.assertIn("Control.Message(77777,moveup)",actions)
-        self.assertIn("Control.Message(77777,movedown)",actions)
+        # The refined touch-only scroller targets Kodi's real pagecontrol.
+        self.assertIn("PageUp(317)",actions)
+        self.assertIn("PageDown(317)",actions)
         self.assertIn("Control.Move(1508,-1)",actions)
         self.assertIn("Control.Move(1508,1)",actions)
         self.assertIn("Dialog.Close(movieinformation)",actions)
@@ -145,7 +146,9 @@ class TouchBetaTests(unittest.TestCase):
     def test_testing_feed_only_skin_version_advanced(self):
         feed=ET.parse(ROOT/"docs/testing/repo/addons.xml").getroot()
         versions={x.get("id"):x.get("version") for x in feed}
-        self.assertEqual(versions["skin.actweeter"],"1.2.41~beta1")
+        # The live Testing feed advances independently of the immutable
+        # 2026-11-04 Beta1 archive, which remains reproducible above.
+        self.assertEqual(versions["skin.actweeter"],"1.2.41~beta2")
         self.assertEqual(versions["service.actweeter"],"0.4.98~beta1")
         self.assertEqual(versions["plugin.video.xstream-pro"],"1.1.2.40~beta1")
         self.assertEqual(versions["repository.rivulet"],"1.0.2")

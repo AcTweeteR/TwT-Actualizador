@@ -6,6 +6,8 @@
     <include file="IncludesBingie.xml" />
     <include file="IncludesTouchDiagnostics.xml" />
     <include file="IncludesTouchMode.xml" />
+    <include file="IncludesTouchInfoActions.xml" />
+    <include file="IncludesTouchVideoNavigation.xml" />
     <include file="IncludesHomeWidgets.xml" />
     <include file="IncludesFunctions.xml" />
     <include file="IncludesAnimations.xml" />

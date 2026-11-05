@@ -141,5 +141,6 @@
 		<!--Header-->
         <include>Header</include>
         <include condition="Skin.HasSetting(DebugGrid) | Skin.HasSetting(DebugInfo)">DebugInfo</include>
+        <include>AcTweeteRTouchVideoNavigation</include>
 	</controls>
 </window>
