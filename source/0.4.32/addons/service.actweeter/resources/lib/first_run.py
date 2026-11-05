@@ -558,6 +558,8 @@ def mark_prompted(state):
 
 def mark_started(state):
     result = normalize_state(state)
+    if result.get("completed"):
+        result["legacy_completed_review"] = True
     result.update({"schema_version": 1, "wizard_version": WIZARD_VERSION,
                    "prompted": False, "started": True, "setup_state": "INSTALLING_ADDONS",
                    "completed": False, "configuration_status": "INCOMPLETE"})

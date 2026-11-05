@@ -1820,9 +1820,13 @@ def _run_pending_interface_migration(dialog, *, explicit=False):
 
 
 def _finish_setup(dialog):
-    if _prepare_product_interface(dialog, allow_prompt=True) != 'GENERATED':
+    previous = _read_state()
+    existing = previous.get('completed') or previous.get('legacy_completed_review')
+    interface_result = _prepare_product_interface(dialog, allow_prompt=True)
+    if interface_result != 'GENERATED':
         dialog.ok('Interfaz pendiente', 'La preparación de las filas de AcTweeteR no se ha confirmado. Tus ajustes se conservan; puedes volver a reparar la interfaz.')
-        return False
+        if not existing:
+            return False
     state, evidence = _evaluate_setup_gates(_read_state())
     blockers = completion_blockers(state)
     _write_state(mark_completed(state))
@@ -1844,7 +1848,9 @@ def _finish_setup(dialog):
     except Exception as exc:
         xbmc.log("[AcTweeteR] UPDATE_POLICY review_error=" + type(exc).__name__, xbmc.LOGWARNING)
     dialog.ok("AcTweeteR está preparado",
-              "Tus componentes y catálogos están preparados. La reproducción real se comprueba por separado; la disponibilidad de guía depende del proveedor.")
+              "Tus componentes y catálogos están preparados. La reproducción real se comprueba por separado; la disponibilidad de guía depende del proveedor."
+              + (" La reparación de interfaz sigue pendiente; tus personalizaciones se conservan."
+                 if interface_result != 'GENERATED' else ""))
     return True
 
 
