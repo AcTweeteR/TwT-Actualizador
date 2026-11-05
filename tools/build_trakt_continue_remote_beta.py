@@ -6,8 +6,8 @@ from build_test_channel import zip_tree
 
 ROOT = Path(__file__).resolve().parents[1]
 AID = 'plugin.video.xstream-pro'
-OLD = '1.1.2.44~beta1'
-NEW = '1.1.2.44~beta2'
+OLD = '1.1.2.44~beta2'
+NEW = '1.1.2.44~beta3'
 SOURCE = ROOT/'docs/testing/repo'/AID/(AID + '-' + OLD + '.zip')
 
 def replace_one(data, old, new):
@@ -32,27 +32,6 @@ def build(output):
                 path = Path(folder)/member.filename
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_bytes(archive.read(member))
-        trakt = tree/'resources/lib/trakt.py'
-        s = trakt.read_text()
-        s = replace_one(s,
-            '''def playback(media_kind="movies", page=1):
-    kind = "episodes" if media_kind == "episodes" else "movies"
-    payload, total_pages = request(
-        "/sync/playback/{0}".format(kind),
-        params={"extended": "full", "page": page, "limit": TRAKT_PAGE_LIMIT},
-        auth=True,
-    )
-''',
-            '''def playback(media_kind="movies", page=1, cached=False):
-    kind = "episodes" if media_kind == "episodes" else "movies"
-    params = {"extended": "full", "page": page, "limit": TRAKT_PAGE_LIMIT}
-    path = "/sync/playback/{0}".format(kind)
-    # Home widgets share a short per-account cache to avoid repeated GETs.
-    # The explicit Trakt playback menu always requests fresh remote progress.
-    payload, total_pages = (cached_request(path, params, auth=True, ttl=180, timeout=2)
-                            if cached else request(path, params=params, auth=True))
-''')
-        trakt.write_text(s)
         premium = tree/'resources/lib/premium_routes.py'
         s = premium.read_text()
         helper = '''def _trakt_continue_extra(g, stype, seen, limit):
@@ -91,15 +70,64 @@ def build(output):
                     continue
                 seen.add(identifier)
                 pending.append(item)
-        # Only cache-backed artwork hydration; no synchronous TMDb requests.
+        # Match exact TMDb IDs against the existing provider's ES metadata
+        # cache. This cache is already populated by provider search and avoids
+        # displaying Trakt's English-only synopsis or placeholder artwork.
+        # Do not guess from a similar title or construct a playback URL.
+        import glob
+        import os
+        from urllib.parse import urlparse
+        base = g['xbmcvfs'].translatePath(g['addon'].getAddonInfo('profile'))
+        pnum = str(g['pm'].active)
+        matched = {}
+        for path in glob.glob(os.path.join(base,
+                'data_cache_p%s_premium_meta_movie_*_es.json' % pnum)):
+            try:
+                with open(path, encoding='utf-8') as stream:
+                    cache = json.load(stream)
+                meta = cache.get('data') or {}
+                tmdb_id = str(meta.get('tmdb_id') or '')
+                sid = os.path.basename(path).split('premium_meta_movie_', 1)[1].split('_es.json')[0]
+                if (not tmdb_id.isdigit() or not sid.isdigit()
+                        or cache.get('expires', 0) <= time.time()):
+                    continue
+                if tmdb_id in matched:
+                    matched[tmdb_id] = None  # ambiguous ID: never auto-select
+                else:
+                    matched[tmdb_id] = (sid, meta)
+            except (OSError, ValueError, TypeError, KeyError):
+                continue
+        catalog = g['_cache_load']('xtream_streams_movie') or {}
+        by_sid = {str(entry.get('stream_id')): entry
+                  for entry in catalog.get('_data', []) if isinstance(entry, dict)}
         pending = routes._hydrate_from_tmdb_meta_cache(pending)
         results = []
         for item in pending[:limit]:
-            url, li, folder = routes._media_item(item)
+            tmdb_id = str(item.get('tmdb_id') or '')
+            candidate = matched.get(tmdb_id) if item.get('tmdb_type') == 'movie' else None
+            if candidate and candidate[0] in by_sid:
+                sid, meta = candidate
+                provider = by_sid[sid]
+                # The provider metadata is already keyed to a verified TMDb
+                # ID, and the same stream ID must exist in this profile.
+                data = dict(meta)
+                data['title'] = data.get('title') or provider.get('name') or item.get('title') or ''
+                data['plot'] = data.get('plot') or provider.get('plot') or ''
+                data['poster_url'] = data.get('poster_url') or provider.get('stream_icon') or ''
+                data['fanart_url'] = data.get('fanart_url') or provider.get('backdrop_path') or ''
+                li = listitem(g, provider, 'movie', data, profile_num=pnum)
+                url = g['build_url']({'mode':'premium','view':'play','stype':'movie',
+                                      'id':sid,'profile_num':pnum})
+                li.setProperty('XStream.ProviderMatched', 'true')
+                li.setProperty('XStream.TraktProgress', str(item['raw']['progress']))
+                li.setProperty('path', url)
+                folder = False
+            else:
+                # Unmatched cards retain Trakt's verified ID and can select
+                # the source manually; request TMDb artwork asynchronously.
+                url, li, folder = routes._media_item(item)
+                li.setProperty('XStream.RemoteOnly', 'true')
             li.setProperty('XStream.ResumeOrigin', 'Trakt')
-            # A remote-only card uses the standard provider chooser, not an
-            # invented Xtream URL or estimated resume position.
-            li.setProperty('XStream.RemoteOnly', 'true')
             if url:
                 results.append((url, li, folder))
         return results
@@ -111,37 +139,9 @@ def build(output):
 
 
 '''
-        s = replace_one(s, 'def dispatch(g, params):\n', helper+'def dispatch(g, params):\n')
-        s = replace_one(s, '''        valid_count = 0
-        has_more = False
-        for entry in entries:
-''', '''        valid_count = 0
-        has_more = False
-        local_shown = 0
-        seen_resume_ids = set()
-        for entry in entries:
-''')
-        s = replace_one(s, '''            content_state.add_context_actions(li, context_actions, watched_actions)
-            plugin.addDirectoryItem(handle, build({'mode':'premium', 'view':'resume',
-                'stype':kind, 'key':resume_key(entry), 'profile_num':pnum}), li, False)
-        if has_more and get('actweeter_expand') == '1':
-''', '''            content_state.add_context_actions(li, context_actions, watched_actions)
-            plugin.addDirectoryItem(handle, build({'mode':'premium', 'view':'resume',
-                'stype':kind, 'key':resume_key(entry), 'profile_num':pnum}), li, False)
-            local_shown += 1
-            remote_type = 'movie' if kind == 'movie' else 'tv'
-            verified = str(data.get('_verified_tmdb_id') or '')
-            episode_match = re.search(r'S(\\d+)E(\\d+)', entry.get('name', ''), re.I)
-            if verified.isdigit() and (kind == 'movie' or episode_match):
-                seen_resume_ids.add((remote_type, verified,
-                    episode_match.group(1) if episode_match else '',
-                    episode_match.group(2) if episode_match else ''))
-        if view == 'continue' and page == 1:
-            for extra_url, extra_li, extra_folder in _trakt_continue_extra(
-                    g, stype, seen_resume_ids, limit - local_shown):
-                plugin.addDirectoryItem(handle, extra_url, extra_li, extra_folder)
-        if has_more and get('actweeter_expand') == '1':
-''')
+        start_helper = s.index('def _trakt_continue_extra(')
+        end_helper = s.index('def dispatch(g, params):', start_helper)
+        s = s[:start_helper] + helper + s[end_helper:]
         premium.write_text(s)
         manifest = tree/'addon.xml'
         raw = manifest.read_text()
@@ -152,7 +152,7 @@ def build(output):
         zip_tree(tree, output, AID)
     with zipfile.ZipFile(SOURCE) as before, zipfile.ZipFile(output) as after:
         changed = [n for n in before.namelist() if not n.endswith('/') and before.read(n)!=after.read(n)]
-        assert set(changed)=={AID+'/addon.xml', AID+'/resources/lib/trakt.py', AID+'/resources/lib/premium_routes.py'},changed
+        assert set(changed)=={AID+'/addon.xml', AID+'/resources/lib/premium_routes.py'},changed
         if after.testzip() is not None:
             raise ValueError('bad output CRC')
     return {'version':NEW,'sha256':hashlib.sha256(output.read_bytes()).hexdigest(),'changed':changed}

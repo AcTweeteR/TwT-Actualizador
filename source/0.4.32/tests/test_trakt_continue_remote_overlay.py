@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 ROOT=Path(__file__).resolve().parents[3]
 AID='plugin.video.xstream-pro'
-DEFAULT=ROOT/'docs/testing/repo'/AID/(AID+'-1.1.2.44~beta2.zip')
+DEFAULT=ROOT/'docs/testing/repo'/AID/(AID+'-1.1.2.44~beta3.zip')
 
 class FakeListItem:
     def __init__(self):self.props={}
@@ -46,7 +46,7 @@ class RemoteContinueOverlayTests(unittest.TestCase):
         fake_routes=types.SimpleNamespace(
             _hydrate_from_tmdb_meta_cache=lambda items:items,
             _media_item=lambda item:('plugin://provider/mode=source/'+str(item['tmdb_id']),FakeListItem(),True))
-        g={'_setup_tmdb_routes':lambda:True,'_tmdb_routes':fake_routes,'_log':lambda x:calls.append(('log',x))}
+        g={'_setup_tmdb_routes':lambda:True,'_tmdb_routes':fake_routes,'_log':lambda x:calls.append(('log',x)), '_cache_load':lambda key:{}, 'xbmcvfs':types.SimpleNamespace(translatePath=lambda x:'/tmp/nonexistent-actweeter-profile'), 'addon':types.SimpleNamespace(getAddonInfo=lambda key:'/tmp/nonexistent-actweeter-profile'), 'pm':types.SimpleNamespace(active='1')}
         with patch.dict(sys.modules,{'trakt':fake_trakt}):
             scope={};exec(self.code,scope)
             result=scope['_trakt_continue_extra'](g,stype,set(seen or ()),limit)
@@ -80,6 +80,8 @@ class RemoteContinueOverlayTests(unittest.TestCase):
     def test_overlay_is_read_only_and_preserves_provider_seek_authority(self):
         func=ast.get_source_segment(self.premium_source,self.helper)
         self.assertIn("_media_item(item)",func)
+        self.assertIn("data_cache_p%s_premium_meta_movie_*_es.json",func)
+        self.assertIn("XStream.ProviderMatched",func)
         self.assertIn("_hydrate_from_tmdb_meta_cache",func)
         self.assertNotIn('save_position(',func)
         self.assertNotIn('setResumePoint(',func)
