@@ -278,7 +278,11 @@ class BulkWatchedRuntimeTests(unittest.TestCase):
             records['provider-7']['complete'] = False
             self.assertIsNone(toggle())
             self.assertEqual(store._save.call_count, saves)
-            self.assertEqual(refresh.invalidate_after_watched_mutation.call_count, 3)
+            # Stable 1.1.2.40 intentionally has no UI notifier yet; only
+            # Testing Beta2 is required to emit three invalidations here.
+            notifier_present = b'from watch_ui_refresh import invalidate_after_watched_mutation' in source
+            self.assertEqual(refresh.invalidate_after_watched_mutation.call_count,
+                             3 if notifier_present else 0)
             records['provider-7']['complete'] = True
             records['provider-7']['checked_at'] = time.time() - 16 * 86400
             self.assertIsNone(toggle())
