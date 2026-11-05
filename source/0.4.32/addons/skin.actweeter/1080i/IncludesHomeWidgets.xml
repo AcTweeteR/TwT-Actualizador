@@ -792,7 +792,7 @@
             <orientation>$PARAM[position]</orientation>
             <width>$PARAM[width]</width>
             <include>ScrollTime</include>
-            <preloaditems>5</preloaditems>
+            <preloaditems>2</preloaditems>
             <include content="WidgetBaseBingieIncludes">
                 <param name="widgetid" value="$PARAM[widgetid]" />
             </include>
@@ -834,7 +834,7 @@
             <orientation>vertical</orientation>
             <width>1804</width>
             <include>ScrollTime</include>
-            <preloaditems>5</preloaditems>
+            <preloaditems>2</preloaditems>
 			<onleft>back</onleft>
             <include content="WidgetBaseBingieIncludes">
                 <param name="widgetid" value="117" />

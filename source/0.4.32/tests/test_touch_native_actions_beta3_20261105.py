@@ -143,9 +143,9 @@ class TouchNativeActionsBeta3(unittest.TestCase):
         for path in all_xml: ET.parse(path)
         versions={e.get("id"):e.get("version") for e in
                   ET.parse(ROOT/"docs/testing/repo/addons.xml").getroot()}
-        self.assertEqual(versions["skin.actweeter"],"1.2.41~beta4")
+        self.assertEqual(versions["skin.actweeter"],"1.2.41~beta5")
         self.assertEqual(versions["service.actweeter"],"0.4.101~beta1")
-        self.assertEqual(versions["plugin.video.xstream-pro"],"1.1.2.44~beta5")
+        self.assertEqual(versions["plugin.video.xstream-pro"],"1.1.2.44~beta6")
         stable={e.get("id"):e.get("version") for e in
                 ET.parse(ROOT/"repo/addons.xml").getroot()}
         self.assertEqual(stable["skin.actweeter"],"1.2.41")
