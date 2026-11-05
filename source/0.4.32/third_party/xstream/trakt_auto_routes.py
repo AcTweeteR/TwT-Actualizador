@@ -424,7 +424,42 @@ def retry_due_manual_actions(context, trakt, xbmcaddon, xbmcvfs, *, account, pro
     from lib.trakt_sync_consent import authorized
     export_path = root / 'trakt_live' / 'export_consent.json'
     export_allowed = authorized(export_path, account=account, profile=profile, provider_scope=scope)
-    pending = queue.pending_manual(account=account, profile=profile, provider_scope=scope, now=now, include_held=export_allowed)
+    if export_allowed:
+        # A newly captured explicit watched mark may have been scrobbled by
+        # the official script.trakt already. Check a complete account snapshot
+        # before sending any history additions to avoid duplicate play events.
+        candidates = queue.pending_remote_watched(account=account, profile=profile,
+                                                   provider_scope=scope, now=now)
+        if candidates:
+            from lib.trakt_sync import fetch_snapshot
+            try:
+                remote = fetch_snapshot(lambda path, params: trakt.snapshot_request(path, params),
+                                        require_page_metadata=True)
+            except Exception:
+                # An incomplete/failed GET cannot prove absence, so retain all
+                # watched additions until the next trusted synchronization.
+                candidates = None
+            if candidates is not None:
+                account_verified = remote.get('complete') is True and remote.get('account') == account
+                by_key = {key for key, row in remote.get('records', {}).items()
+                          if isinstance(row, dict) and row.get('watched_at')}
+                missing = []
+                for identifier, content in candidates:
+                    if account_verified and content.get('key') in by_key:
+                        queue.mark_remote_already_watched(identifier, account=account,
+                            profile=profile, provider_scope=scope)
+                    elif account_verified:
+                        missing.append((identifier, content))
+                candidates = missing if account_verified else None
+        else:
+            candidates = []
+        # Only positively absent watched identities may be POSTed after the
+        # complete snapshot; otherwise keep their state held and retry later.
+        allow_history = {identifier for identifier, _ in candidates} if candidates is not None else set()
+    else:
+        allow_history = set()
+    pending = queue.pending_manual(account=account, profile=profile, provider_scope=scope,
+                                   now=now, include_held=export_allowed)
     outcomes = []
     requires_export = False
     def post(path, payload):
@@ -447,7 +482,17 @@ def retry_due_manual_actions(context, trakt, xbmcaddon, xbmcvfs, *, account, pro
     for identifier in pending:
         if player.isPlaying():
             break
-        requires_export = queue.status(identifier)['state'] == 'held'
+        status = queue.status(identifier)
+        if status is None:
+            continue
+        requires_export = status['state'] == 'held'
+        if requires_export and identifier not in allow_history:
+            # The manual outbox can hold mapped collections as well; only
+            # watched additions require this expensive full-history fence.
+            with queue.connect() as db:
+                row = db.execute('SELECT event FROM events WHERE id=?',(identifier,)).fetchone()
+            if row and json.loads(row[0]).get('operation') == 'history.add':
+                continue
         if requires_export and not authorized(export_path, account=account, profile=profile, provider_scope=scope):
             continue
         outcomes.append(queue.send_manual(identifier, account=account, profile=profile,

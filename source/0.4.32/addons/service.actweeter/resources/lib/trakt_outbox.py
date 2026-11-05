@@ -40,7 +40,7 @@ def watched_event(account, profile, content, watched_at):
     return result
 
 
-def manual_event(account, profile, operation, content, nonce, watched_at=None, *, provider_scope):
+def manual_event(account, profile, operation, content, nonce, watched_at=None, *, provider_scope, progress=None):
     """Build a bounded explicit action; distinct user actions retain distinct IDs."""
     if (not isinstance(account, str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,128}', account)
             or not re.fullmatch(r'[1-9][0-9]?', str(profile))):
@@ -50,7 +50,8 @@ def manual_event(account, profile, operation, content, nonce, watched_at=None, *
     if not isinstance(nonce, str) or not re.fullmatch(r'[0-9a-f]{32}', nonce):
         raise ValueError('unique action ID required')
     supported = {'history.add', 'history.remove', 'watchlist.add', 'watchlist.remove',
-                 'collection.add', 'collection.remove', 'favorites.add', 'favorites.remove', 'checkin'}
+                 'collection.add', 'collection.remove', 'favorites.add', 'favorites.remove',
+                 'checkin', 'playback.pause'}
     personal_list = re.fullmatch(r'list\.([1-9][0-9]{0,18})\.(add|remove)', operation) if isinstance(operation, str) else None
     if (operation not in supported and personal_list is None) or not isinstance(content, dict):
         raise ValueError('unsupported explicit operation')
@@ -63,6 +64,13 @@ def manual_event(account, profile, operation, content, nonce, watched_at=None, *
     item = {'ids': ids}
     if kind == 'episode':
         item['seasons'] = [{'number': clean['season'], 'episodes': [{'number': clean['episode']}]}]
+    if operation == 'playback.pause':
+        if (kind not in ('movie', 'episode') or watched_at is not None
+                or type(progress) not in (int, float) or not 1 <= progress < 93):
+            raise ValueError('bounded playback pause requires exact movie/episode identity')
+        progress = round(float(progress), 5)
+    elif progress is not None:
+        raise ValueError('progress applies only to playback pause')
     if operation == 'history.add':
         if _timestamp(watched_at) is None or kind not in ('movie', 'episode'):
             raise ValueError('individual event and UTC timestamp required')
@@ -72,7 +80,15 @@ def manual_event(account, profile, operation, content, nonce, watched_at=None, *
             item['watched_at'] = watched_at
     elif watched_at is not None:
         raise ValueError('timestamp only applies to watched events')
-    if operation == 'checkin':
+    if operation == 'playback.pause':
+        endpoint = '/scrobble/pause'
+        payload = {'progress': progress}
+        if kind == 'movie':
+            payload['movie'] = {'ids': ids}
+        else:
+            payload['show'] = {'ids': ids}
+            payload['episode'] = {'season': clean['season'], 'number': clean['episode']}
+    elif operation == 'checkin':
         if kind == 'show':
             raise ValueError('check-in requires a specific episode')
         endpoint = '/checkin'
@@ -89,6 +105,8 @@ def manual_event(account, profile, operation, content, nonce, watched_at=None, *
     event = {'schema': 2, 'account': account, 'profile': str(profile), 'operation': operation,
              'identity': clean, 'nonce': nonce, 'watched_at': watched_at, 'provider_scope': provider_scope,
              'endpoint': endpoint, 'payload': payload}
+    if progress is not None:
+        event['progress'] = progress
     event['id'] = hashlib.sha256(json.dumps(event, sort_keys=True).encode()).hexdigest()
     return event
 
@@ -143,7 +161,8 @@ class Outbox:
 
     def enqueue_manual(self, event, *, held=False):
         expected = manual_event(event['account'], event['profile'], event['operation'],
-                                event['identity'], event['nonce'], event['watched_at'], provider_scope=event['provider_scope'])
+                                event['identity'], event['nonce'], event['watched_at'], provider_scope=event['provider_scope'],
+                                progress=event.get('progress'))
         if event != expected:
             raise ValueError('manual action payload or identity modified')
         with self.connect() as db:
@@ -164,7 +183,8 @@ class Outbox:
                     or event['profile'] != str(profile) or event.get('provider_scope') != provider_scope):
                 raise PermissionError('account or profile changed')
             expected = manual_event(account, profile, event['operation'], event['identity'],
-                                    event['nonce'], event['watched_at'], provider_scope=provider_scope)
+                                    event['nonce'], event['watched_at'], provider_scope=provider_scope,
+                                    progress=event.get('progress'))
             if event != expected:
                 raise ValueError('stored action changed')
             if row[1] not in ('pending', 'held') or row[2] > now:
@@ -174,7 +194,13 @@ class Outbox:
         try:
             response = post(event['endpoint'], event['payload'])
             if isinstance(response, dict) and not any((response.get('not_found') or {}).values()):
-                if event['operation'] == 'checkin':
+                if event['operation'] == 'playback.pause':
+                    remote = response.get('progress')
+                    if (response.get('action') == 'pause'
+                            and type(remote) in (int, float)
+                            and abs(float(remote) - event['progress']) <= 0.5):
+                        state = 'confirmed'
+                elif event['operation'] == 'checkin':
                     if type(response.get('id')) is int and response['id'] > 0:
                         state = 'confirmed'
                 else:
@@ -193,6 +219,49 @@ class Outbox:
                        (state, retry_at, operation, 'inflight'))
             return db.execute('SELECT state FROM events WHERE id=?', (operation,)).fetchone()[0]
 
+    def pending_remote_watched(self, *, account, profile, provider_scope, now, limit=20):
+        """Inspect authorized outgoing watched additions before a network POST.
+
+        The caller must verify every target against a complete authenticated
+        Trakt watched snapshot. No send occurs here and uncertain events are
+        never replayed.
+        """
+        if type(limit) is not int or not 1 <= limit <= 20:
+            raise ValueError('invalid bounded watched batch size')
+        selected = []
+        with self.connect() as db:
+            for identifier, raw in db.execute(
+                    "SELECT id,event FROM events WHERE state='held' AND retry_at<=? ORDER BY rowid", (now,)):
+                try:
+                    event = json.loads(raw)
+                    if (event.get('schema') != 2 or event.get('operation') != 'history.add'
+                            or event.get('account') != account or event.get('profile') != str(profile)
+                            or event.get('provider_scope') != provider_scope):
+                        continue
+                    if manual_event(account, profile, 'history.add', event['identity'],
+                            event['nonce'], event['watched_at'], provider_scope=provider_scope) != event:
+                        continue
+                    selected.append((identifier, event['identity']))
+                except (KeyError, TypeError, ValueError):
+                    continue
+                if len(selected) >= limit:
+                    break
+        return selected
+
+    def mark_remote_already_watched(self, identifier, *, account, profile, provider_scope):
+        """A complete remote GET is required by the caller before this method."""
+        with self.connect() as db:
+            row = db.execute('SELECT event,state FROM events WHERE id=?',(identifier,)).fetchone()
+            if not row or row[1] != 'held':
+                return False
+            event = json.loads(row[0])
+            if (event.get('account'), event.get('profile'), event.get('provider_scope'),
+                    event.get('operation')) != (account, str(profile), provider_scope, 'history.add'):
+                raise PermissionError('remote watched status bound to another account')
+            db.execute('UPDATE events SET state=? WHERE id=? AND state=?',
+                       ('confirmed',identifier,'held'))
+        return True
+
     def pending_manual(self, *, account, profile, provider_scope, now, limit=5, include_held=False):
         """Return due explicit actions for this exact binding, never unknown sends."""
         if type(limit) is not int or not 1 <= limit <= 20:
@@ -208,15 +277,16 @@ class Outbox:
                     # Removals require an individual user decision in the experimental beta.
                     if str(event.get('operation', '')).endswith('.remove'):
                         continue
-                    # Playback history may already be scrobbled by script.trakt.
-                    if state == 'held' and event.get('operation') == 'history.add':
-                        continue
+                    # Account-scoped export consent authorizes native manual
+                    # watched changes and settled resume pauses. Playback
+                    # scrobbling still belongs to the official script.trakt.
                     if (event.get('schema') == 2 and event.get('account') == account
                             and event.get('profile') == str(profile)
                             and event.get('provider_scope') == provider_scope
                             and event.get('operation') != 'checkin'):
                         expected = manual_event(account, profile, event['operation'], event['identity'],
-                                                event['nonce'], event['watched_at'], provider_scope=provider_scope)
+                                                event['nonce'], event['watched_at'], provider_scope=provider_scope,
+                                    progress=event.get('progress'))
                         if expected == event and identifier == event['id']:
                             selected.append(identifier)
                 except (KeyError, TypeError, ValueError):
@@ -244,13 +314,14 @@ class Outbox:
                         if event.get('provider_scope') != provider_scope:
                             continue
                         action = event.get('operation')
-                        if action not in ('history.add', 'history.remove'):
+                        if action not in ('history.add', 'history.remove', 'playback.pause'):
                             continue
                         # A confirmed removal still protects against an older remote snapshot.
                         if state == 'confirmed' and action != 'history.remove':
                             continue
                         expected = manual_event(account, profile, action, event['identity'],
-                                                event['nonce'], event['watched_at'], provider_scope=provider_scope)
+                                                event['nonce'], event['watched_at'], provider_scope=provider_scope,
+                                    progress=event.get('progress'))
                     else:
                         if state == 'confirmed':
                             continue

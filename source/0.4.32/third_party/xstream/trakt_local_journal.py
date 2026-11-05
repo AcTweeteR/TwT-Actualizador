@@ -148,11 +148,15 @@ def prepare(store_path, kind, before, after):
         event['scope'] = dict(scope)
         if kind == 'Favorites':
             _capture_native_destinations(Path(store_path).parent, scope, delta)
+        if kind == 'WatchedMovies':
+            _capture_movie_identities(Path(store_path).parent, profile, scope, delta)
         if kind == 'WatchedEpisodes':
             for change in delta:
                 external = _episode_identity(Path(store_path).parent, profile, scope, change['identity'])
                 if external is not None:
                     change['external_identity'] = external
+        if kind == 'ResumePoints':
+            _capture_resume_identities(Path(store_path).parent, profile, scope, delta, after)
     with sqlite3.connect(str(journal), timeout=5) as db:
         db.execute('CREATE TABLE IF NOT EXISTS changes (id TEXT PRIMARY KEY, event TEXT NOT NULL, state TEXT NOT NULL)')
         db.execute('INSERT INTO changes VALUES (?,?,?)', (event['id'], json.dumps(event, sort_keys=True), 'prepared'))
@@ -205,9 +209,12 @@ def deliver(store_path, outbox, *, scope):
             event = json.loads(raw)
             if event.get('scope') != scope or event.get('origin') != 'local':
                 continue
-            if event['kind'] == 'ResumePoints' or (event['kind'] == 'Favorites' and
-                    not all(change.get('destination_capture') and change.get('external_identity')
-                            for change in event['changes'])):
+            if ((event['kind'] == 'ResumePoints' and
+                    not all(change.get('external_identity') and change.get('progress') is not None
+                            for change in event['changes'])) or
+                    (event['kind'] == 'Favorites' and
+                     not all(change.get('destination_capture') and change.get('external_identity')
+                             for change in event['changes']))):
                 receipt = outbox.retain_capture(source='resume' if event['kind'] == 'ResumePoints' else 'favorites', source_id=_hash(identifier),
                     fingerprint=_state_hash(event), reason='identity_or_authority_unverified')
                 event['outbox_ids'] = [receipt]
@@ -231,12 +238,26 @@ def deliver(store_path, outbox, *, scope):
                         _hash(identifier + ':' + str(index))[:32],
                         provider_scope=scope['provider_scope']))
                     continue
-                # Raw IPTV IDs are not external identities; do not infer them.
+                if event['kind'] == 'ResumePoints':
+                    content = change.get('external_identity')
+                    progress = change.get('progress')
+                    if (change.get('change') not in ('add', 'update')
+                            or not isinstance(content, dict) or content.get('kind') not in ('movie', 'episode')
+                            or type(progress) not in (int, float) or not 1.0 <= progress < 93.0):
+                        break
+                    operations.append(manual_event(scope['account'], scope['profile'],
+                        'playback.pause', content, _hash(identifier + ':' + str(index))[:32],
+                        provider_scope=scope['provider_scope'], progress=progress))
+                    continue
+                # Provider IDs are never sent as Trakt IDs. Only strict catalog
+                # evidence captured at mutation time may attribute them.
                 match = re.fullmatch(r'tmdb:movie:([1-9][0-9]*)', str(change['identity']))
-                if event['kind'] == 'WatchedMovies' and match:
+                if event['kind'] == 'WatchedMovies' and (match or change.get('external_identity')):
                     if change['change'] != 'remove' and type(change.get('watched')) is not bool:
                         break
-                    content = {'kind': 'movie', 'ids': {'tmdb': int(match.group(1))}}
+                    content = change.get('external_identity') or {'kind': 'movie', 'ids': {'tmdb': int(match.group(1))}}
+                    if not isinstance(content, dict) or content.get('kind') != 'movie':
+                        break
                     watched = change['change'] != 'remove' and change.get('watched') is True
                 elif event['kind'] == 'WatchedEpisodes' and change.get('external_identity'):
                     content = change['external_identity']
@@ -358,6 +379,96 @@ def runtime_handoff(store_path):
         from lib.trakt_outbox import Outbox
         root = Path(xbmcvfs.translatePath(service.getAddonInfo('profile')))
         deliver(store_path, Outbox(root / 'trakt_explicit_outbox.sqlite'), scope=scope)
+
+
+def _catalog_binding_valid(root, profile, scope, kind):
+    """Provider auth/source must match exactly; no inferred cross-account IDs."""
+    try:
+        import xbmcaddon
+        from trakt_live_consumer import _catalog_scope_verified
+        return _catalog_scope_verified([{'kind': kind}], root, profile,
+                                       scope['provider_scope'],
+                                       xbmcaddon.Addon('plugin.video.xstream-pro'))
+    except (ImportError, OSError, ValueError, KeyError, TypeError, AttributeError):
+        return False
+
+
+def _capture_movie_identities(root, profile, scope, changes):
+    """Attribute provider-specific seen flags using current immutable catalog IDs."""
+    pending = [change for change in changes
+               if str(change.get('identity', '')).isdigit()]
+    if not pending or not _catalog_binding_valid(root, profile, scope, 'movie'):
+        return
+    try:
+        from trakt_provider_index import verified_vod_records
+        provider_ids = [change['identity'] for change in pending]
+        records = verified_vod_records(root, profile=profile, provider_ids=provider_ids)
+        owners = {}
+        for record in records:
+            owners.setdefault(str(record['provider_id']), []).append(record)
+        for change in pending:
+            hits = owners.get(change['identity'], [])
+            if len(hits) == 1 and hits[0].get('ids'):
+                change['external_identity'] = {'kind': 'movie', 'ids': hits[0]['ids']}
+    except (ImportError, OSError, ValueError, KeyError, TypeError, AttributeError):
+        return
+
+
+def _capture_resume_identities(root, profile, scope, changes, after):
+    """Capture only exact playback references, never URLs or credentials."""
+    from urllib.parse import urlsplit
+    for change in changes:
+        if change.get('change') not in ('add', 'update'):
+            continue
+        # The native resume key contains a user-specific URL; use it only in
+        # memory, and persist solely a validated catalog ID and percentage.
+        matched = [row for key, row in after.items()
+                   if isinstance(row, dict) and _hash(str(key)) ==
+                   str(change.get('identity', '')).removeprefix('sha256:')]
+        if len(matched) != 1:
+            continue
+        row = matched[0]
+        if row.get('stype') not in ('movie', 'series'):
+            continue
+        url = row.get('url')
+        if not isinstance(url, str):
+            continue
+        media = 'movie' if row['stype'] == 'movie' else 'episode'
+        try:
+            path = urlsplit(url).path
+            match = re.search(r'/(?:movie|series)/[^/]+/[^/]+/([1-9][0-9]*)\.[A-Za-z0-9]+$', path)
+        except ValueError:
+            continue
+        if not match or not _catalog_binding_valid(root, profile, scope, media):
+            continue
+        try:
+            if media == 'movie':
+                from trakt_provider_index import verified_vod_records
+                records = verified_vod_records(root, profile=profile, provider_ids=[match.group(1)])
+                if len(records) != 1 or str(records[0]['provider_id']) != match.group(1):
+                    continue
+                content = {'kind': 'movie', 'ids': records[0]['ids']}
+            else:
+                series = str(row.get('series_id') or '')
+                season = str(row.get('season_num') or '')
+                provider_episode = str(row.get('ep_id') or '')
+                if (not series.isdigit() or not season.isdigit()
+                        or not provider_episode.isdigit() or provider_episode != match.group(1)):
+                    continue
+                content = _episode_identity(root, profile, scope,
+                                            [series, season, provider_episode])
+                if content is None:
+                    continue
+                number = row.get('episode_num')
+                if str(number) != str(content['episode']):
+                    continue
+        except (ImportError, OSError, ValueError, KeyError, TypeError, AttributeError):
+            continue
+        progress = change.get('percent')
+        if type(progress) not in (int, float) or not 1 <= progress < 93:
+            continue
+        change['external_identity'] = content
+        change['progress'] = round(float(progress), 5)
 
 
 def _episode_identity(root, profile, scope, key):

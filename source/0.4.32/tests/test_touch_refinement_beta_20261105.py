@@ -178,6 +178,6 @@ class TouchRefinementTests(unittest.TestCase):
         feed={e.get("id"):e.get("version") for e in
               ET.parse(ROOT/"docs/testing/repo/addons.xml").getroot()}
         self.assertEqual(feed["skin.actweeter"],"1.2.41~beta4")
-        self.assertEqual(feed["service.actweeter"],"0.4.99~beta4")
-        self.assertEqual(feed["plugin.video.xstream-pro"],"1.1.2.42~beta1")
+        self.assertEqual(feed["service.actweeter"],"0.4.100~beta1")
+        self.assertEqual(feed["plugin.video.xstream-pro"],"1.1.2.43~beta1")
         self.assertEqual(feed["repository.actweeter.testing"],"1.0.2")

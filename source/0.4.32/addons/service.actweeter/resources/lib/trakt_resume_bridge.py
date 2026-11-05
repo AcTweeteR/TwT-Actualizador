@@ -59,6 +59,66 @@ def _valid_reference(item, reference, profile):
             and _positive_int(reference.get('episode_num')) == identity.get('episode'))
 
 
+def _remote_movie_references(root, profile, items):
+    """Provider-only reference seeds for first-time installations.
+
+    These are used solely after the importer has verified the Trakt external ID,
+    current provider catalog membership, real duration, and source binding.
+    """
+    from .trakt_provider_index import catalog_members, catalog_source
+    # Never turn a title/year approximation into a streaming URL.
+    catalog = root / ('data_cache_p%s_xtream_streams_movie.json' % profile)
+    settings = root / 'settings.xml'
+    if catalog.is_symlink() or settings.is_symlink() or not catalog.is_file() or not settings.is_file():
+        return {}
+    import xml.etree.ElementTree as ET
+    try:
+        config = ET.parse(settings).getroot()
+        values = {entry.get('id'): (entry.text or entry.get('value') or '')
+                  for entry in config.iter('setting')}
+        base, user, password = catalog_source(catalog).split('|', 2)
+        prefix = 'profile_%s_' % profile
+        if (values.get(prefix + 'source_type') != 'Xtream Codes'
+                or values.get(prefix + 'xtream_url', '').rstrip('/') != base.rstrip('/')
+                or values.get(prefix + 'xtream_username') != user
+                or values.get(prefix + 'xtream_password') != password):
+            return {}
+    except (ET.ParseError, OSError, ValueError, UnicodeError):
+        return {}
+    if not base.startswith(('http://', 'https://')) or not user or not password:
+        return {}
+    from urllib.parse import quote, urlsplit
+    endpoint = urlsplit(base)
+    if (not endpoint.hostname or endpoint.username or endpoint.password
+            or endpoint.query or endpoint.fragment):
+        return {}
+    # Use only external IDs already attached to verified provider rows; the
+    # passed plan was matched by ProviderIndex and is account-bound.
+    ids = {str(item['provider_id']) for item in items
+           if item.get('identity', {}).get('kind') == 'movie' and 'position' in item}
+    members = catalog_members(root, profile, 'movie', ids)
+    output = {}
+    for item in items:
+        kind = item.get('identity', {}).get('kind')
+        if kind != 'movie' or 'position' not in item:
+            continue
+        provider = str(item['provider_id'])
+        row = members.get(provider)
+        if not row or not isinstance(row.get('name'), str) or not row['name']:
+            continue
+        extension = str(row.get('container_extension') or 'mp4')
+        if not re.fullmatch('[A-Za-z0-9]{1,12}',extension):
+            continue
+        url = (base.rstrip('/')+'/movie/'+quote(user,safe='')+'/' +
+               quote(password,safe='')+'/'+provider+'.'+extension)
+        reference = {'confidence':'exact','profile':str(profile),'kind':'movie',
+                     'provider_id':provider,'identity':item['identity'],
+                     'name':row['name'],'url':url,'title':row['name'],
+                     'icon':str(row.get('stream_icon') or '')}
+        output[kind+':'+provider]=reference
+    return output
+
+
 def existing_playback_references(xstream_profile, profile, items):
     """Find unique, exact URLs from the selected XStream profile; never infer URLs."""
     if (not str(profile).isdigit() or not 1 <= int(profile) <= 10
@@ -132,6 +192,11 @@ def existing_playback_references(xstream_profile, profile, items):
             if isinstance(record.get(source), str) and record[source]:
                 reference[source] = record[source]
         references[kind + ':' + provider] = reference
+    # New devices have no matching ResumePoints/WatchHistory yet. Seed from
+    # the currently bound Xtream source, but never override an existing exact
+    # reference or pretend a streaming title alone is an identity match.
+    for key, reference in _remote_movie_references(root, str(profile), items).items():
+        references.setdefault(key, reference)
     return references, resume
 
 

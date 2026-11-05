@@ -72,6 +72,51 @@ def _verified_catalog_index(operations, catalog_root, profile):
     return ProviderIndex(movies + episodes['records'], profile=profile)
 
 
+def _verified_remote_reference(operation, catalog_root, profile, addon):
+    """Build a playable reference from exact catalog identity and active profile.
+
+    Never reuse cross-device IPTV credentials or invent a duration. Only Xtream
+    movie URLs with a verified source triple are generated here; series URLs
+    additionally require a complete episode inventory and are handled by the
+    native episode resolver when that proof is available.
+    """
+    if operation.get('kind') != 'movie' or operation.get('action') != 'resume':
+        return None
+    from trakt_provider_index import catalog_members, catalog_source
+    from profiles import ProfileManager
+    from iptv import IPTV
+    manager = ProfileManager(addon)
+    if str(manager.active) != str(profile):
+        return None
+    credentials = manager.get_credentials()
+    root = Path(catalog_root)
+    catalog = root / ('data_cache_p%s_xtream_streams_movie.json' % profile)
+    if catalog.is_symlink() or root.is_symlink():
+        return None
+    source = catalog_source(catalog).split('|', 2)
+    if (len(source) != 3 or credentials.get('source_type') != 'Xtream Codes'
+            or credentials.get('xtream_url', '').rstrip('/') != source[0].rstrip('/')
+            or credentials.get('xtream_username') != source[1]
+            or credentials.get('xtream_password') != source[2]):
+        return None
+    rows = catalog_members(root, profile, 'movie', [operation['provider_id']])
+    item = rows.get(str(operation['provider_id']))
+    if not item or not item.get('name'):
+        return None
+    url = IPTV.build_xtream_stream_url(credentials['xtream_url'],
+        credentials['xtream_username'], credentials['xtream_password'], item, 'movie')
+    if not isinstance(url, str) or not url.startswith(('http://', 'https://')):
+        return None
+    # A URL with embedded credentials must not appear in errors, logs, batch
+    # files or remote writes. It exists only in the local XStream resume store.
+    if not re.search(r'/movie/[^/]+/[^/]+/%s\.[A-Za-z0-9]+$' %
+                     re.escape(str(operation['provider_id'])), urlsplit(url).path):
+        return None
+    name = str(item['name'])
+    return {'name': name, 'url': url, 'stype': 'movie',
+            'icon': str(item.get('stream_icon') or ''), 'title': name}
+
+
 def _catalog_identity_exact(operation, index):
     status, matches = index.match(operation['identity'])
     if status != 'exact' or str(matches[0]['provider_id']) != str(operation['provider_id']):
@@ -203,6 +248,11 @@ def apply_batch(batch_path, ack_directory, *, profile, account, provider_scope,
             continue
 
         record = _provider_ref(operation, recent)
+        if record is None and target == 'provider':
+            # A new Kodi installation has no local playback history to reuse.
+            # Reconstruct only after the exact Trakt-to-provider match above,
+            # source triple verification and a known, bounded duration.
+            record = _verified_remote_reference(operation, catalog_root, profile, addon)
         if record is None:
             results.append({'id': op_id, 'status': 'deferred', 'reason': 'exact_playback_reference_missing'})
             continue
