@@ -57,10 +57,10 @@ jobs:
       - name: Regression tests, mandatory release checks and security contract
         env:
           ACTWEETER_RELEASE_CHANNEL: stable
-          ACTWEETER_XSTREAM_LIVE_ZIP: ${{ github.workspace }}/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.43.zip
-          ACTWEETER_XSTREAM_TEST_ZIP: ${{ github.workspace }}/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.43.zip
+          ACTWEETER_XSTREAM_LIVE_ZIP: ${{ github.workspace }}/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.45.zip
+          ACTWEETER_XSTREAM_TEST_ZIP: ${{ github.workspace }}/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.45.zip
           ACTWEETER_SKIN_LIVE_ZIP: ${{ github.workspace }}/repo/skin.actweeter/skin.actweeter-1.2.41.zip
-          ACTWEETER_SERVICE_LIVE_ZIP: ${{ github.workspace }}/repo/service.actweeter/service.actweeter-0.4.100.zip
+          ACTWEETER_SERVICE_LIVE_ZIP: ${{ github.workspace }}/repo/service.actweeter/service.actweeter-0.4.101.zip
           ACTWEETER_BETA_INDEX: ${{ github.workspace }}/docs/testing/repo/addons.xml
           ACTWEETER_XSTREAM_UPSTREAM_ZIP: ${{ runner.temp }}/xstream-upstream-1.1.2.zip
         run: >-

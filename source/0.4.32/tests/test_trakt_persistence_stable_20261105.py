@@ -30,7 +30,7 @@ class TraktStablePromotionTests(unittest.TestCase):
    with self.assertRaises(FileExistsError):release.build(a)
  def test_stable_integrity_matches_manifest(self):
   manifest=json.loads((ROOT/'manifests/actweeter-stable-trakt-persistence-20261105.json').read_text())
-  self.assertEqual(verify_current_stable.verify(),__import__('json').loads((ROOT/'manifests/actweeter-stable-trakt-bidirectional-20261105.json').read_text())['index_sha256'])
+  self.assertEqual(verify_current_stable.verify(),__import__('json').loads((ROOT/'manifests/actweeter-stable-trakt-recommendations-20261105.json').read_text())['index_sha256'])
   self.assertFalse(manifest['runtime_tvos_verified'])
 
 if __name__=='__main__':unittest.main()

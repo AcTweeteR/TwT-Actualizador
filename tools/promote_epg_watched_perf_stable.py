@@ -67,30 +67,36 @@ def build(output):
     live_beta_index = (ROOT / "docs/testing/repo/addons.xml").read_bytes()
     published_index = (ROOT / "repo/addons.xml").read_bytes()
     current_sha = sha(published_index)
-    later_release = ROOT / "manifests/actweeter-stable-stabilization-20261105.json"
-    later_matches = False
-    if later_release.is_file():
-        later = json.loads(later_release.read_text(encoding="utf-8"))
-        archive = ROOT / "manifests/archive/epg-watched-perf-stable-addons-20261105.xml"
-        first_successor_valid = (later.get("previous_index_sha256") == PROMOTED_INDEX
-                                 and archive.is_file() and sha(archive.read_bytes()) == PROMOTED_INDEX)
-        later_matches = first_successor_valid and later.get("index_sha256") == current_sha
-        if first_successor_valid and not later_matches:
-            next_path = ROOT / "manifests/actweeter-stable-trakt-persistence-20261105.json"
-            next_archive = ROOT / "manifests/archive/trakt-persistence-prior-stable-addons-20261105.xml"
-            if next_path.is_file() and next_archive.is_file():
-                following = json.loads(next_path.read_text(encoding="utf-8"))
-                second_valid = (following.get("previous_index_sha256") == later.get("index_sha256")
-                                and sha(next_archive.read_bytes()) == later.get("index_sha256"))
-                later_matches = second_valid and following.get("index_sha256") == current_sha
-                if second_valid and not later_matches:
-                    latest_path = ROOT / "manifests/actweeter-stable-trakt-bidirectional-20261105.json"
-                    latest_archive = ROOT / "manifests/archive/trakt-bidirectional-prior-stable-addons-20261105.xml"
-                    if latest_path.is_file() and latest_archive.is_file():
-                        latest = json.loads(latest_path.read_text(encoding="utf-8"))
-                        later_matches = (latest.get("previous_index_sha256") == following.get("index_sha256")
-                                         and sha(latest_archive.read_bytes()) == following.get("index_sha256")
-                                         and latest.get("index_sha256") == current_sha)
+    # Verify every immutable Stable successor via archived predecessor hashes.
+    # The historical EPG promotion must remain reproducible even as newer
+    # public releases advance the active Stable and rolling Testing feeds.
+    successors = (
+        ('actweeter-stable-stabilization-20261105.json',
+         'epg-watched-perf-stable-addons-20261105.xml'),
+        ('actweeter-stable-trakt-persistence-20261105.json',
+         'trakt-persistence-prior-stable-addons-20261105.xml'),
+        ('actweeter-stable-trakt-bidirectional-20261105.json',
+         'trakt-bidirectional-prior-stable-addons-20261105.xml'),
+        ('actweeter-stable-trakt-continue-20261105.json',
+         'trakt-continue-prior-stable-addons-20261105.xml'),
+        ('actweeter-stable-trakt-recommendations-20261105.json',
+         'trakt-recommendations-prior-stable-addons-20261105.xml'),
+    )
+    expected_predecessor = PROMOTED_INDEX
+    later_matches = current_sha == PROMOTED_INDEX
+    for manifest_name, archive_name in successors:
+        successor = ROOT / 'manifests' / manifest_name
+        predecessor = ROOT / 'manifests/archive' / archive_name
+        if not successor.is_file() or not predecessor.is_file():
+            break
+        info = json.loads(successor.read_text(encoding='utf-8'))
+        if (info.get('previous_index_sha256') != expected_predecessor
+                or sha(predecessor.read_bytes()) != expected_predecessor):
+            raise ValueError('historical Stable release chain corrupted')
+        expected_predecessor = info.get('index_sha256')
+        if expected_predecessor == current_sha:
+            later_matches = True
+            break
     if live_beta_index != beta_index and current_sha != PROMOTED_INDEX and not later_matches:
         raise ValueError("Testing source changed after publication")
     if hashlib.md5(beta_index).hexdigest() != beta["testing_index_md5"]:
