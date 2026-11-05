@@ -8,7 +8,7 @@ BETA=ROOT/'docs/testing/repo'/ADDON/(ADDON+'-1.1.2.44~beta6.zip')
 class IndexedContinueTests(unittest.TestCase):
  @classmethod
  def setUpClass(cls):
-  package=Path(os.environ.get('ACTWEETER_XSTREAM_LIVE_ZIP',BETA))
+  package=BETA  # Immutable Beta6 regression; Beta7 has its own dedicated tests.
   with zipfile.ZipFile(package) as archive:
    source=archive.read(ADDON+'/resources/lib/premium_routes.py').decode()
   node=next(n for n in ast.parse(source).body if isinstance(n,ast.FunctionDef) and n.name=='_indexed_continue_movies')
