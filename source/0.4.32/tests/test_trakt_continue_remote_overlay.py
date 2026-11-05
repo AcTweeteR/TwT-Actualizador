@@ -48,7 +48,7 @@ class RemoteContinueOverlayTests(unittest.TestCase):
             _media_item=lambda item:('plugin://provider/mode=source/'+str(item['tmdb_id']),FakeListItem(),True))
         g={'_setup_tmdb_routes':lambda:True,'_tmdb_routes':fake_routes,'_log':lambda x:calls.append(('log',x)), '_cache_load':lambda key:{}, 'xbmcvfs':types.SimpleNamespace(translatePath=lambda x:'/tmp/nonexistent-actweeter-profile'), 'addon':types.SimpleNamespace(getAddonInfo=lambda key:'/tmp/nonexistent-actweeter-profile'), 'pm':types.SimpleNamespace(active='1')}
         with patch.dict(sys.modules,{'trakt':fake_trakt}):
-            scope={};exec(self.code,scope)
+            scope={'_indexed_remote_movie_ids':lambda g,pnum,ids:{}};exec(self.code,scope)
             result=scope['_trakt_continue_extra'](g,stype,set(seen or ()),limit)
         return result,calls
 
