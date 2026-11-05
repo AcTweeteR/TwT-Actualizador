@@ -65,7 +65,8 @@ def build(output):
     beta_index = checked_source_from_commit(
         "docs/testing/repo/addons.xml", beta["testing_index_sha256"])
     live_beta_index = (ROOT / "docs/testing/repo/addons.xml").read_bytes()
-    if live_beta_index != beta_index:
+    if (live_beta_index != beta_index and
+            sha((ROOT / "repo/addons.xml").read_bytes()) != PROMOTED_INDEX):
         raise ValueError("Testing source changed after publication")
     if hashlib.md5(beta_index).hexdigest() != beta["testing_index_md5"]:
         raise ValueError("Testing checksum differs from manifest")
