@@ -54,6 +54,11 @@ def _identity(data):
         value = raw.strip() if isinstance(raw, str) else ""
         if value and value.isascii() and value.isalnum():
             return key + ":" + value
+    title, year = data.get("title"), data.get("year")
+    if (data.get("media_type") in ("movie", "tvshow") and
+            isinstance(title, str) and title.strip()):
+        return "title:%s:%s" % (title.strip().casefold(),
+                                year if isinstance(year, str) and year.isdecimal() else "")
     return ""
 
 
@@ -145,6 +150,9 @@ def request_is_current(xbmc, request):
             return False
         labels = "Container(%d).ListItem." % container
         actual = _identity({
+            "media_type": xbmc.getInfoLabel(labels + "DBType").lower(),
+            "title": xbmc.getInfoLabel(labels + "Title"),
+            "year": xbmc.getInfoLabel(labels + "Year"),
             "imdb": xbmc.getInfoLabel(labels + "UniqueID(imdb)"),
             "tmdb": xbmc.getInfoLabel(labels + "UniqueID(tmdb)"),
             "dbid": xbmc.getInfoLabel(labels + "DBID"),
