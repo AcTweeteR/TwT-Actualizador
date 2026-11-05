@@ -54,7 +54,57 @@ def _catalog_scope_verified(operations, root, profile, scope, addon):
         return False
 
 
-def _verified_catalog_index(operations, catalog_root, profile):
+def _verified_export_records(batch, catalog_root, profile, account):
+    """Replay exactly the complete Trakt export used by the import planner.
+
+    The planner accepts XStream premium-cache IDs only when they agree with
+    Trakt and the active provider. Requiring catalog-only IDs here discarded
+    that proof, so confirmed remote progress could never reach Continue.
+    """
+    from lib.trakt_restore_importer import prepare_restore
+    relative = batch.get('source_export')
+    if not isinstance(relative, str):
+        return []
+    path = Path(relative)
+    if (len(path.parts) != 2 or path.parts[0] != 'trakt_exports'
+            or not path.parts[1].startswith('snapshot-')
+            or any(not part or part in ('.', '..') for part in path.parts)):
+        return []
+    root = Path(catalog_root)
+    export = root / path
+    if (root.is_symlink() or (root / path.parts[0]).is_symlink()
+            or export.is_symlink() or not export.is_dir()
+            or root.resolve() not in export.resolve().parents):
+        return []
+    try:
+        plan = prepare_restore(export, root, profile=profile, account=account)
+        raw = json.loads((export / 'snapshot.json').read_text('utf-8'))
+        # An export from a different cycle cannot approve a queued operation.
+        activity = next((row.get('data') for row in raw.get('responses', [])
+                         if row.get('path') == '/sync/last_activities'), None)
+        import hashlib
+        if (not isinstance(activity, dict) or hashlib.sha256(json.dumps(
+                activity, sort_keys=True, separators=(',', ':'),
+                ensure_ascii=True, allow_nan=False).encode()).hexdigest()
+                != batch.get('activity_fingerprint')):
+            return []
+    except (OSError, ValueError, TypeError, KeyError, PermissionError):
+        return []
+    records = []
+    for item in plan['items']:
+        ident = item['identity']
+        record = {'profile': str(profile), 'confidence': 'verified',
+                  'kind': ident['kind'], 'ids': ident['ids'],
+                  'provider_id': str(item['provider_id'])}
+        if ident['kind'] == 'episode':
+            record.update(season=ident['season'], episode=ident['episode'],
+                          provider_series_id=str(item['provider_series_id']),
+                          provider_episode_id=str(item['provider_episode_id']))
+        records.append(record)
+    return records
+
+
+def _verified_catalog_index(operations, catalog_root, profile, *, batch=None, account=None):
     from trakt_sync import ProviderIndex
     from trakt_provider_index import verified_vod_records
     from trakt_series_index import verified_show_records
@@ -69,7 +119,9 @@ def _verified_catalog_index(operations, catalog_root, profile):
     episodes = (verified_episode_records(catalog_root, profile=profile, snapshot=snapshot,
                                          show_records=shows)
                 if series_ids else {'records': []})
-    return ProviderIndex(movies + episodes['records'], profile=profile)
+    planned = (_verified_export_records(batch, catalog_root, profile, account)
+               if isinstance(batch, dict) and account else [])
+    return ProviderIndex(movies + episodes['records'] + planned, profile=profile)
 
 
 def _verified_remote_reference(operation, catalog_root, profile, addon):
@@ -148,7 +200,8 @@ def apply_batch(batch_path, ack_directory, *, profile, account, provider_scope,
         return write_ack(Path(ack_directory) / (batch['batch_id'] + '.json'), batch,
             [{'id': op['id'], 'status': 'deferred', 'reason': 'provider_catalog_scope_changed'}
              for op in batch['operations']])
-    catalog_index = (_verified_catalog_index(batch['operations'], catalog_root, profile)
+    catalog_index = (_verified_catalog_index(batch['operations'], catalog_root, profile,
+                                             batch=batch, account=account)
                      if target == 'provider' else None)
     watched_movies = history.WatchedMovies(addon, profile_num=int(profile))
     watched_episodes = history.WatchedEpisodes(addon, profile_num=int(profile))
@@ -157,6 +210,7 @@ def apply_batch(batch_path, ack_directory, *, profile, account, provider_scope,
     recent = resume.get_all()
     recent += watch_history.get_all()
     results, changed = [], {'movie': False, 'episode': False, 'resume': False}
+    resume_verification_refs = {}
     for operation in batch['operations']:
         op_id = operation['id']
         kind, action = operation.get('kind'), operation.get('action')
@@ -280,6 +334,7 @@ def apply_batch(batch_path, ack_directory, *, profile, account, provider_scope,
                          season_num=operation['season'], ep_id=str(operation['episode_id']),
                          episode_num=operation['episode'])
         resume._data[key] = value
+        resume_verification_refs[op_id] = record
         changed['resume'] = True
         results.append({'id': op_id, 'status': 'applied'})
 
@@ -314,7 +369,11 @@ def apply_batch(batch_path, ack_directory, *, profile, account, provider_scope,
                     str(operation['series_id']), {}).get(str(operation['season']), []):
                 raise OSError('episode watched state was not persisted')
         elif result['status'] != 'superseded':
-            record = _provider_ref(operation, recent)
+            # Fresh installations have no previous local playback reference.
+            # Verify the exact approved source we just wrote, not the old list.
+            record = resume_verification_refs.get(operation['id']) or _provider_ref(operation, recent)
+            if record is None:
+                raise OSError('resume point verification reference missing')
             verified = verify_resume._data.get(verify_resume._key(record['name'], record['url']))
             if not isinstance(verified, dict) or verified.get('timestamp', 0) < operation['timestamp']:
                 raise OSError('resume point was not persisted')
