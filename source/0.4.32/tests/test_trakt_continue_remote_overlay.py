@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 ROOT=Path(__file__).resolve().parents[3]
 AID='plugin.video.xstream-pro'
-DEFAULT=ROOT/'docs/testing/repo'/AID/(AID+'-1.1.2.44~beta3.zip')
+DEFAULT=ROOT/'docs/testing/repo'/AID/(AID+'-1.1.2.44~beta4.zip')
 
 class FakeListItem:
     def __init__(self):self.props={}
@@ -82,6 +82,7 @@ class RemoteContinueOverlayTests(unittest.TestCase):
         self.assertIn("_media_item(item)",func)
         self.assertIn("data_cache_p%s_premium_meta_movie_*_es.json",func)
         self.assertIn("XStream.ProviderMatched",func)
+        self.assertIn("meta_summary_cached",func)
         self.assertIn("_hydrate_from_tmdb_meta_cache",func)
         self.assertNotIn('save_position(',func)
         self.assertNotIn('setResumePoint(',func)

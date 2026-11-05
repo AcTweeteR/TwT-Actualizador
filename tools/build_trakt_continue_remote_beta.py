@@ -6,8 +6,8 @@ from build_test_channel import zip_tree
 
 ROOT = Path(__file__).resolve().parents[1]
 AID = 'plugin.video.xstream-pro'
-OLD = '1.1.2.44~beta2'
-NEW = '1.1.2.44~beta3'
+OLD = '1.1.2.44~beta3'
+NEW = '1.1.2.44~beta4'
 SOURCE = ROOT/'docs/testing/repo'/AID/(AID + '-' + OLD + '.zip')
 
 def replace_one(data, old, new):
@@ -102,6 +102,7 @@ def build(output):
                   for entry in catalog.get('_data', []) if isinstance(entry, dict)}
         pending = routes._hydrate_from_tmdb_meta_cache(pending)
         results = []
+        remote_metadata_fetches = 0
         for item in pending[:limit]:
             tmdb_id = str(item.get('tmdb_id') or '')
             candidate = matched.get(tmdb_id) if item.get('tmdb_type') == 'movie' else None
@@ -123,8 +124,20 @@ def build(output):
                 li.setProperty('path', url)
                 folder = False
             else:
-                # Unmatched cards retain Trakt's verified ID and can select
-                # the source manually; request TMDb artwork asynchronously.
+                # An exact Trakt TMDb ID is sufficient to retrieve its Spanish
+                # poster and overview even if no provider metadata was cached.
+                # Bound cold-start network work to three titles per render.
+                if remote_metadata_fetches < 3:
+                    remote_metadata_fetches += 1
+                    try:
+                        import tmdb
+                        detail = tmdb.meta_summary_cached(item['tmdb_type'], tmdb_id)
+                        if isinstance(detail, dict):
+                            for field in ('poster', 'fanart', 'plot', 'title', 'year'):
+                                if detail.get(field):
+                                    item[field] = detail[field]
+                    except Exception:
+                        pass
                 url, li, folder = routes._media_item(item)
                 li.setProperty('XStream.RemoteOnly', 'true')
             li.setProperty('XStream.ResumeOrigin', 'Trakt')
