@@ -30,12 +30,16 @@ class TouchRefinementTests(unittest.TestCase):
     def test_original_info_action_ids_all_exist(self):
         native_ids={c.get("id") for name in ("BingieInfo","BingieAltInfo")
                     for c in NATIVE.find(f"./include[@name='{name}']").iter("control")}
-        for button in INFO.findall(".//include[@name='AcTweeteRTouchVideoInfoActions']//control[@type='button']"):
-            for click in button.findall("onclick"):
-                if click.text and click.text.startswith("SendClick("):
-                    native=click.text.removeprefix("SendClick(").removesuffix(")")
-                    self.assertIn(native,native_ids,(button.get("id"),native))
-                    self.assertEqual(button.findtext("visible"),f"Control.IsVisible({native})")
+        targets=(80,90,51,8181,52,53,54,541,56,57,561,562,60,64,61,
+                 63,62,611,631,622,14,10,1040,6,612,7001,7002,
+                 7003,7004,7011,7033,7055)
+        self.assertEqual(len(targets),32)
+        for number,target in enumerate(targets):
+            button=INFO.find(f".//control[@id='{44100+number}']")
+            self.assertIsNotNone(button)
+            self.assertIn(str(target),native_ids)
+            self.assertEqual(button.findtext("visible"),f"Control.IsVisible({target})")
+            self.assertGreaterEqual(len(button.findall("onclick")),2)
 
     def test_info_forwarding_preserves_original_onclick(self):
         # Forwarded native controls are unchanged even when that source layout
@@ -44,8 +48,8 @@ class TouchRefinementTests(unittest.TestCase):
             member="skin.actweeter/1080i/IncludesDialogVideoInfo.xml"
             self.assertEqual(after.read(member),before.read(member))
         info_clicks=[c.text for c in INFO.iter("onclick")]
-        self.assertGreaterEqual(sum(1 for c in info_clicks if c and c.startswith("SendClick(")),32)
-        self.assertFalse(any(c and "RunScript(" in c for c in info_clicks))
+        self.assertFalse(any(c and c.startswith("SendClick(") for c in info_clicks))
+        self.assertGreaterEqual(sum(1 for c in info_clicks if c and "RunScript(" in c),30)
 
     def test_touch_gate_and_info_modes(self):
         parent=INFO.find("./include[@name='AcTweeteRTouchVideoInfoActions']/control")
@@ -122,7 +126,8 @@ class TouchRefinementTests(unittest.TestCase):
                             container.remove(child)
                 if name=="DialogVideoInfo.xml":
                     for child in list(after):
-                        if child.tag in ("onload","onunload") and child.text=="ClearProperty(AcTweeteRTouchInfoActions)":
+                        if child.tag in ("onload","onunload") and child.text in ("ClearProperty(AcTweeteRTouchInfoActions)",
+                                            "ClearProperty(AcTweeteRTouchInfoActions,Home)"):
                             after.remove(child)
                     container=after.find("controls")
                     for child in list(container):
@@ -172,7 +177,7 @@ class TouchRefinementTests(unittest.TestCase):
     def test_current_feed_only_skin_new_version(self):
         feed={e.get("id"):e.get("version") for e in
               ET.parse(ROOT/"docs/testing/repo/addons.xml").getroot()}
-        self.assertEqual(feed["skin.actweeter"],"1.2.41~beta2")
+        self.assertEqual(feed["skin.actweeter"],"1.2.41~beta3")
         self.assertEqual(feed["service.actweeter"],"0.4.98~beta1")
         self.assertEqual(feed["plugin.video.xstream-pro"],"1.1.2.40~beta1")
         self.assertEqual(feed["repository.actweeter.testing"],"1.0.2")

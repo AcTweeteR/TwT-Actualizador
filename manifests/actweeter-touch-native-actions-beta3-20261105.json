@@ -1,0 +1,44 @@
+{
+  "release": "actweeter-touch-native-actions-beta3-20261105",
+  "channel": "testing",
+  "status": "automated-passed-live-lenovo-pending",
+  "scope": "only skin.actweeter; remote controls unchanged",
+  "reason": "SendClick redirects GUI_MSG_CLICKED to a window instead of running native modal control onclick; focus(5000) is a non-selectable group",
+  "skin": {
+    "version": "1.2.41~beta3",
+    "path": "docs/testing/repo/skin.actweeter/skin.actweeter-1.2.41~beta3.zip",
+    "sha256": "1eafc3c983f032b2849796c0625f65333f82a02812f40806ac74e72626a0f358",
+    "bytes": 30286911
+  },
+  "previous_skin_beta2_sha256": "81004dc11b5e697f2e4dada7899002d32c80243278718ff2d844f86d9c7fd986",
+  "stable_index_sha256": "1c09e8f65b829378a0cb4359b5424034c4c5073692d1b435efe9e531240ba7a5",
+  "testing_index_sha256": "8abaeee1f5b469f6e39afa1cf655c918e3313eef4116e4978d2635b4f236d420",
+  "testing_index_md5": "c38bd8b3062462aa44dcaa0ea1912559",
+  "dependencies_unchanged": {
+    "service.actweeter": {
+      "version": "0.4.98~beta1",
+      "sha256": "8e64e4c2cb79bc085993691e0c5ae7c31321a2a5f07c060ce7e8de633ac16a90"
+    },
+    "plugin.video.xstream-pro": {
+      "version": "1.1.2.40~beta1",
+      "sha256": "9c3c7c175eed44229734249a630c80027aaec0087548b07889900efb18d1e893"
+    },
+    "repository.rivulet": {
+      "version": "1.0.2",
+      "sha256": "e4aabb495d6b49f39b8ec0c828ad9fa4562c387547739e0f38351ddabac9a815"
+    },
+    "repository.zachmorris": {
+      "version": "1.0.4",
+      "sha256": "3dde8f37dcd64f122cf1e897e139e5b8b7a3cd0ec15db6a1f5c7b59852cb661b"
+    }
+  },
+  "tests": {
+    "passed": 860,
+    "failed": 0,
+    "skipped": 3,
+    "historical_stable_deselected": 4,
+    "subtests_passed": 110,
+    "runtime_mac_touch_verified": false,
+    "runtime_lenovo_touch_verified": false
+  }
+}

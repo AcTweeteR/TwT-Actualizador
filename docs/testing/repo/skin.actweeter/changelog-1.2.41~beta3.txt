@@ -1,0 +1,4 @@
+AcTweeteR 1.2.41~beta3 - Fix nonresponsive touch actions in native information pages.
+Mirror original Kodi action scripts in touch buttons, with conditions for both info layouts.
+Resolve modal drawer on Home and focus current media list rather than container group.
+Stable/remote controls, Service, XStream, Trakt, Rivulet and EPG unchanged.

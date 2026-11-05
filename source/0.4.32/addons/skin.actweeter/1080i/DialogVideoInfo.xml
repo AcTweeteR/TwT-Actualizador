@@ -30,8 +30,8 @@
 	<onunload condition="!String.IsEmpty(Window.Property(ShowPlayBeginning))">ClearProperty(ShowPlayBeginning)</onunload>
 	<onunload condition="!String.IsEmpty(Window.Property(PlaySearchTrailer))">ClearProperty(PlaySearchTrailer)</onunload>
 	<onload condition="![String.IsEqual(ListItem.Path,plugin://plugin.video.tmdb.bingie.helper/) | !String.IsEmpty(ListItem.DBID)]">SetProperty(SetCustomAddon,1,Home)</onload>
-    <onload>ClearProperty(AcTweeteRTouchInfoActions)</onload>
-    <onunload>ClearProperty(AcTweeteRTouchInfoActions)</onunload>
+    <onload>ClearProperty(AcTweeteRTouchInfoActions,Home)</onload>
+    <onunload>ClearProperty(AcTweeteRTouchInfoActions,Home)</onunload>
     <controls>
 		<include>Defs_TMDbBingieHelper_Loader</include>
         <!-- Playback changes after this dialog loads; visibility must be evaluated dynamically. -->

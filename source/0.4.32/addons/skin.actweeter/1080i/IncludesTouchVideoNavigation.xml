@@ -22,7 +22,7 @@
                     <label>$LOCALIZE[32035]</label>
                     <!-- Return focus to the active media-view group before
                          asking Kodi to open the selected item's information. -->
-                    <onclick>SetFocus(5000)</onclick>
+                    <include>AcTweeteRTouchFocusSelectedMedia</include>
                     <onclick>Action(Info)</onclick>
                     <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
                     <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
@@ -32,7 +32,7 @@
                     <width>218</width><height>78</height>
                     <font>Reg25</font><align>center</align><aligny>center</aligny>
                     <label>$LOCALIZE[32036]</label>
-                    <onclick>SetFocus(5000)</onclick>
+                    <include>AcTweeteRTouchFocusSelectedMedia</include>
                     <onclick>Action(ContextMenu)</onclick>
                     <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
                     <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
@@ -110,5 +110,32 @@
         <onclick condition="Control.IsVisible(526)">Control.Message(526,pagedown)</onclick>
         <onclick condition="Control.IsVisible(527)">Control.Message(527,pagedown)</onclick>
         <onclick condition="Control.IsVisible(528)">Control.Message(528,pagedown)</onclick>
+    </include>
+    <!-- 5000 is an inactive group. Focus the selectable view control itself. -->
+    <include name="AcTweeteRTouchFocusSelectedMedia">
+        <onclick condition="Control.IsVisible(50)">SetFocus(50)</onclick>
+        <onclick condition="Control.IsVisible(51)">SetFocus(51)</onclick>
+        <onclick condition="Control.IsVisible(52)">SetFocus(52)</onclick>
+        <onclick condition="Control.IsVisible(501)">SetFocus(501)</onclick>
+        <onclick condition="Control.IsVisible(502)">SetFocus(502)</onclick>
+        <onclick condition="Control.IsVisible(503)">SetFocus(503)</onclick>
+        <onclick condition="Control.IsVisible(53)">SetFocus(53)</onclick>
+        <onclick condition="Control.IsVisible(54)">SetFocus(54)</onclick>
+        <onclick condition="Control.IsVisible(55)">SetFocus(55)</onclick>
+        <onclick condition="Control.IsVisible(56)">SetFocus(56)</onclick>
+        <onclick condition="Control.IsVisible(57)">SetFocus(57)</onclick>
+        <onclick condition="Control.IsVisible(507)">SetFocus(507)</onclick>
+        <onclick condition="Control.IsVisible(509)">SetFocus(509)</onclick>
+        <onclick condition="Control.IsVisible(510)">SetFocus(510)</onclick>
+        <onclick condition="Control.IsVisible(511)">SetFocus(511)</onclick>
+        <onclick condition="Control.IsVisible(512)">SetFocus(512)</onclick>
+        <onclick condition="Control.IsVisible(513)">SetFocus(513)</onclick>
+        <onclick condition="Control.IsVisible(514)">SetFocus(514)</onclick>
+        <onclick condition="Control.IsVisible(523)">SetFocus(523)</onclick>
+        <onclick condition="Control.IsVisible(524)">SetFocus(524)</onclick>
+        <onclick condition="Control.IsVisible(525)">SetFocus(525)</onclick>
+        <onclick condition="Control.IsVisible(526)">SetFocus(526)</onclick>
+        <onclick condition="Control.IsVisible(527)">SetFocus(527)</onclick>
+        <onclick condition="Control.IsVisible(528)">SetFocus(528)</onclick>
     </include>
 </includes>

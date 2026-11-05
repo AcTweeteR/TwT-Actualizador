@@ -6,12 +6,15 @@ import argparse
 import hashlib
 import json
 import stat
+import subprocess
 import zipfile
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "source/0.4.32/addons/skin.actweeter"
+# Keep already-published Beta2 reproducible as the source skin changes.
+SOURCE_COMMIT = "c7eaed3"
 ADDON = "skin.actweeter"
 PARENT = "1.2.41~beta1"
 VERSION = "1.2.41~beta2"
@@ -53,10 +56,9 @@ def build(output: Path) -> dict:
         content = {name: z.read(name) for name in z.namelist() if name and not name.endswith("/")}
     original = dict(content)
     for rel in OVERLAY:
-        path = SRC / rel
-        if not path.is_file() or path.is_symlink():
-            raise ValueError("missing/linked skin source " + rel)
-        content[f"{ADDON}/{rel}"] = path.read_bytes()
+        content[f"{ADDON}/{rel}"] = subprocess.check_output(
+            ["git", "show", SOURCE_COMMIT + ":source/0.4.32/addons/skin.actweeter/" + rel],
+            cwd=ROOT)
         if rel.endswith(".xml"):
             ET.fromstring(content[f"{ADDON}/{rel}"])
     for locale in ("es_es", "en_gb"):

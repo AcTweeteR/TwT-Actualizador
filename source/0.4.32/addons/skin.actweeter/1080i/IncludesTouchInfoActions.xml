@@ -1,494 +1,989 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <includes>
-    <!-- Both BingieInfo and BingieAltInfo use the same original control IDs.
-         Forward clicks to those IDs to preserve every original conditional
-         onclick and all third-party integrations byte-for-byte. -->
     <include name="AcTweeteRTouchVideoInfoActions">
         <control type="group">
             <visible>Skin.HasSetting(AcTweeteRTouchMode)</visible>
-            <width>1920</width><height>1080</height>
+            <width>1920</width>
+            <height>1080</height>
             <control type="grouplist" id="44000">
-                <left>46</left><top>975</top><width>1815</width><height>92</height>
-                <orientation>horizontal</orientation><itemgap>10</itemgap>
+                <left>46</left>
+                <top>975</top>
+                <width>1815</width>
+                <height>92</height>
+                <orientation>horizontal</orientation>
+                <itemgap>10</itemgap>
                 <scrolltime>160</scrolltime>
                 <control type="button" id="44001">
-    <width>210</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32026]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(80)</visible>
-    <onclick>SendClick(80)</onclick>
-</control>
-<control type="button" id="44002">
-    <width>205</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32027]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(90)</visible>
-    <onclick>SendClick(90)</onclick>
-</control>
-<control type="button" id="44003">
-    <width>205</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32026]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(51)</visible>
-    <onclick>SendClick(51)</onclick>
-</control>
-<control type="button" id="44004">
-    <width>205</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32026]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(8181)</visible>
-    <onclick>SendClick(8181)</onclick>
-</control>
-<control type="button" id="44005">
-    <width>210</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32028]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(53)</visible>
-    <onclick>SendClick(53)</onclick>
-</control>
-<control type="button" id="44006">
-    <width>205</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32029]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(54)</visible>
-    <onclick>SendClick(54)</onclick>
-</control>
-<control type="button" id="44007">
-    <width>220</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32030]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <onclick>SetProperty(AcTweeteRTouchInfoActions,1)</onclick>
-</control>
-<control type="button" id="44008">
-    <width>185</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32031]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <onclick>Dialog.Close(movieinformation)</onclick>
-</control>
+                    <width>210</width>
+                    <height>76</height>
+                    <font>Reg25</font>
+                    <align>center</align>
+                    <aligny>center</aligny>
+                    <label>$LOCALIZE[32026]</label>
+                    <textcolor>FFFFFFFF</textcolor>
+                    <focusedcolor>FFFFFFFF</focusedcolor>
+                    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                    <visible>Control.IsVisible(80)</visible>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback] + System.HasAddon(slyguy.trailers)]">ClearProperty(ACTWEETER_AUTO_PREVIEW_REQUEST,Home)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback] + System.HasAddon(slyguy.trailers)]">RunScript(service.actweeter,preview_vod)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback]]">SetProperty(VODPlaybackContext,1)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback]]">SetProperty(VOD_RETURN_PENDING,1,Home)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!String.IsEmpty(ListItem.FileNameAndPath) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FileNameAndPath]),00:01,silent)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEmpty(ListItem.FileNameAndPath) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FolderPath]),00:01,silent)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">RunScript(plugin.video.tmdb.bingie.helper,close_dialog=1190)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!ListItem.IsFolder + !String.IsEmpty(ListItem.FileNameAndPath) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FileNameAndPath]),00:04,silent)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!ListItem.IsFolder + String.IsEmpty(ListItem.FileNameAndPath) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FolderPath]),00:04,silent)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback] + System.HasAddon(slyguy.trailers)]">ClearProperty(ACTWEETER_AUTO_PREVIEW_REQUEST,Home)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback] + System.HasAddon(slyguy.trailers)]">RunScript(service.actweeter,preview_vod)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback]]">SetProperty(VODPlaybackContext,1)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback]]">SetProperty(VOD_RETURN_PENDING,1,Home)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!String.IsEmpty(ListItem.FileNameAndPath) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FileNameAndPath]),00:01,silent)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [String.IsEmpty(ListItem.FileNameAndPath) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FolderPath]),00:01,silent)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">RunScript(plugin.video.tmdb.bingie.helper,close_dialog=1190)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!ListItem.IsFolder + !String.IsEmpty(ListItem.FileNameAndPath) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FileNameAndPath]),00:04,silent)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!ListItem.IsFolder + String.IsEmpty(ListItem.FileNameAndPath) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FolderPath]),00:04,silent)</onclick>
+                </control>
+                <control type="button" id="44002">
+                    <width>205</width>
+                    <height>76</height>
+                    <font>Reg25</font>
+                    <align>center</align>
+                    <aligny>center</aligny>
+                    <label>$LOCALIZE[32027]</label>
+                    <textcolor>FFFFFFFF</textcolor>
+                    <focusedcolor>FFFFFFFF</focusedcolor>
+                    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                    <visible>Control.IsVisible(90)</visible>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback] + System.HasAddon(slyguy.trailers)]">ClearProperty(ACTWEETER_AUTO_PREVIEW_REQUEST,Home)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback] + System.HasAddon(slyguy.trailers)]">RunScript(service.actweeter,preview_vod)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback]]">SetProperty(VODPlaybackContext,1)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback]]">SetProperty(VOD_RETURN_PENDING,1,Home)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!String.IsEmpty(ListItem.FileNameAndPath) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FileNameAndPath],resume),00:01,silent)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEmpty(ListItem.FileNameAndPath) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FolderPath],resume),00:01,silent)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">RunScript(plugin.video.tmdb.bingie.helper,close_dialog=1190)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!ListItem.IsFolder + !String.IsEmpty(ListItem.FileNameAndPath) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FileNameAndPath],resume),00:04,silent)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!ListItem.IsFolder + String.IsEmpty(ListItem.FileNameAndPath) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FolderPath],resume),00:04,silent)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback] + System.HasAddon(slyguy.trailers)]">ClearProperty(ACTWEETER_AUTO_PREVIEW_REQUEST,Home)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback] + System.HasAddon(slyguy.trailers)]">RunScript(service.actweeter,preview_vod)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback]]">SetProperty(VODPlaybackContext,1)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback]]">SetProperty(VOD_RETURN_PENDING,1,Home)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!String.IsEmpty(ListItem.FileNameAndPath) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FileNameAndPath],resume),00:01,silent)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [String.IsEmpty(ListItem.FileNameAndPath) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FolderPath],resume),00:01,silent)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">RunScript(plugin.video.tmdb.bingie.helper,close_dialog=1190)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!ListItem.IsFolder + !String.IsEmpty(ListItem.FileNameAndPath) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FileNameAndPath],resume),00:04,silent)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!ListItem.IsFolder + String.IsEmpty(ListItem.FileNameAndPath) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FolderPath],resume),00:04,silent)</onclick>
+                </control>
+                <control type="button" id="44003">
+                    <width>205</width>
+                    <height>76</height>
+                    <font>Reg25</font>
+                    <align>center</align>
+                    <aligny>center</aligny>
+                    <label>$LOCALIZE[32026]</label>
+                    <textcolor>FFFFFFFF</textcolor>
+                    <focusedcolor>FFFFFFFF</focusedcolor>
+                    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                    <visible>Control.IsVisible(51)</visible>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [Integer.IsGreater(Container(5050).NumItems,0) + !Container(5050).IsUpdating + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[Container(5050).ListItem.FileNameAndPath],resume),00:01,silent)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [Integer.IsGreater(Container(5050).NumItems,0) + !Container(5050).IsUpdating + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">RunScript(plugin.video.tmdb.bingie.helper,close_dialog=1190)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [Integer.IsGreater(Container(5050).NumItems,0) + !Container(5050).IsUpdating + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[Container(5050).ListItem.FileNameAndPath],resume),00:04,silent)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [Integer.IsGreater(Container(5050).NumItems,0) + !Container(5050).IsUpdating + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[Container(5050).ListItem.FileNameAndPath],resume),00:01,silent)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [Integer.IsGreater(Container(5050).NumItems,0) + !Container(5050).IsUpdating + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">RunScript(plugin.video.tmdb.bingie.helper,close_dialog=1190)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [Integer.IsGreater(Container(5050).NumItems,0) + !Container(5050).IsUpdating + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[Container(5050).ListItem.FileNameAndPath],resume),00:04,silent)</onclick>
+                </control>
+                <control type="button" id="44004">
+                    <width>205</width>
+                    <height>76</height>
+                    <font>Reg25</font>
+                    <align>center</align>
+                    <aligny>center</aligny>
+                    <label>$LOCALIZE[32026]</label>
+                    <textcolor>FFFFFFFF</textcolor>
+                    <focusedcolor>FFFFFFFF</focusedcolor>
+                    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                    <visible>Control.IsVisible(8181)</visible>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!Container(1234).IsUpdating + !Integer.IsEqual(Container(1234).NumItems,0) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[Container(1234).ListItem.FileNameAndPath],resume),00:01,silent)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!Container(1234).IsUpdating + !Integer.IsEqual(Container(1234).NumItems,0) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">RunScript(plugin.video.tmdb.bingie.helper,close_dialog=1190)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!Container(1234).IsUpdating + !Integer.IsEqual(Container(1234).NumItems,0) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[Container(1234).ListItem.FileNameAndPath],resume),00:04,silent)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [Integer.IsGreater(Container(5050).NumItems,0) + !Container(5050).IsUpdating + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[Container(1234).ListItem.FileNameAndPath],resume),00:01,silent)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [Integer.IsGreater(Container(5050).NumItems,0) + !Container(5050).IsUpdating + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">RunScript(plugin.video.tmdb.bingie.helper,close_dialog=1190)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [Integer.IsGreater(Container(5050).NumItems,0) + !Container(5050).IsUpdating + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[Container(1234).ListItem.FileNameAndPath],resume),00:04,silent)</onclick>
+                </control>
+                <control type="button" id="44005">
+                    <width>210</width>
+                    <height>76</height>
+                    <font>Reg25</font>
+                    <align>center</align>
+                    <aligny>center</aligny>
+                    <label>$LOCALIZE[32028]</label>
+                    <textcolor>FFFFFFFF</textcolor>
+                    <focusedcolor>FFFFFFFF</focusedcolor>
+                    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                    <visible>Control.IsVisible(53)</visible>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">SetProperty(BaseWindow,1,Home)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">SetProperty(FadeFanart,1,Home)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">SetProperty(NoFadeOut,1,Home)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">SetProperty(AnimationRight,1,Home)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!String.IsEmpty(Window(Home).Property(FullImage))]">SetProperty(EpisodesAnimation,1,Home)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">Dialog.Close(movieinformation)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,episode) + !String.IsEmpty(ListItem.DBID) + !String.IsEmpty(Window(Home).Property(ListItem.TVShowID))]">SetProperty(KeepTVShowID,1,Home)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,episode) + !String.IsEmpty(ListItem.DBID) + !String.IsEmpty(Window(Home).Property(ListItem.TVShowID))]">ActivateWindow(Videos,videodb://tvshows/titles/$INFO[Window(Home).Property(ListItem.TVShowID)]/-2/,return)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,season) + !String.IsEmpty(ListItem.DBID)]">ActivateWindow(Videos,$ESCINFO[ListItem.FolderPath],return)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,tvshow) + !String.IsEmpty(ListItem.DBID) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">SetProperty(ListItem.TVShowID,$INFO[ListItem.DBID],Home)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,tvshow) + !String.IsEmpty(ListItem.DBID) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">SetProperty(KeepTVShowID,1,Home)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,tvshow) + !String.IsEmpty(ListItem.DBID) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">ActivateWindow(Videos,videodb://tvshows/titles/$INFO[ListItem.DBID]/-2/,return)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [ListItem.IsFolder + !Window.IsVisible(MyVideoNav.xml) + !String.IsEmpty(ListItem.DBID) + String.IsEqual(ListItem.DBType,tvshow) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">RunScript(plugin.video.tmdb.bingie.helper,close_dialog=1190,call_path=$INFO[ListItem.DBID,videodb://tvshows/titles/,/-2/return])</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,tvshow) + String.IsEmpty(ListItem.DBID) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">ActivateWindow(Videos,$ESCINFO[ListItem.FileNameAndPath],return)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,season) + String.IsEmpty(ListItem.DBID) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">ActivateWindow(Videos,$ESCINFO[ListItem.FolderPath],return)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,tvshow) + String.IsEmpty(ListItem.DBID) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">RunScript(plugin.video.tmdb.bingie.helper,close_dialog=1190,call_path=$INFO[ListItem.FolderPath])</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog)">SetProperty(BaseWindow,1,Home)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog)">SetProperty(NoFadeOut,1,Home)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog)">SetProperty(AnimationRight,1,Home)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!String.IsEmpty(Window(Home).Property(FullImage))]">SetProperty(EpisodesAnimation,1,Home)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">Dialog.Close(movieinformation)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,episode) + !String.IsEmpty(ListItem.DBID) + !String.IsEmpty(Window(Home).Property(ListItem.TVShowID))]">SetProperty(KeepTVShowID,1,Home)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,episode) + !String.IsEmpty(ListItem.DBID) + !String.IsEmpty(Window(Home).Property(ListItem.TVShowID))]">ActivateWindow(Videos,videodb://tvshows/titles/$INFO[Window(Home).Property(ListItem.TVShowID)]/-2/,return)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,tvshow) + !String.IsEmpty(ListItem.DBID) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">SetProperty(ListItem.TVShowID,$INFO[ListItem.DBID],Home)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,tvshow) + !String.IsEmpty(ListItem.DBID) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">SetProperty(KeepTVShowID,1,Home)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,tvshow) + !String.IsEmpty(ListItem.DBID) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">ActivateWindow(Videos,videodb://tvshows/titles/$INFO[ListItem.DBID]/-2/,return)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [ListItem.IsFolder + !Window.IsVisible(MyVideoNav.xml) + !String.IsEmpty(ListItem.DBID) + String.IsEqual(ListItem.DBType,tvshow) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">RunScript(plugin.video.tmdb.bingie.helper,close_dialog=1190,call_path=$INFO[ListItem.DBID,videodb://tvshows/titles/,/-2/return])</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,tvshow) + String.IsEmpty(ListItem.DBID) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">ActivateWindow(Videos,$ESCINFO[ListItem.FileNameAndPath],return)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,tvshow) + String.IsEmpty(ListItem.DBID) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">RunScript(plugin.video.tmdb.bingie.helper,close_dialog=1190,call_path=$INFO[ListItem.FolderPath])</onclick>
+                </control>
+                <control type="button" id="44006">
+                    <width>205</width>
+                    <height>76</height>
+                    <font>Reg25</font>
+                    <align>center</align>
+                    <aligny>center</aligny>
+                    <label>$LOCALIZE[32029]</label>
+                    <textcolor>FFFFFFFF</textcolor>
+                    <focusedcolor>FFFFFFFF</focusedcolor>
+                    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                    <visible>Control.IsVisible(54)</visible>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">ClearProperty(VODPlaybackContext)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!System.HasAddon(slyguy.trailers) + !System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) + String.IsEqual(Skin.String(AutoYoutubeTrailer),true)]">InstallAddon(plugin.video.youtube)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!System.HasAddon(plugin.video.imdb.trailers) + String.IsEqual(Skin.String(trailersource),imdb) + String.IsEqual(Skin.String(AutoYoutubeTrailer),true)]">InstallAddon(plugin.video.imdb.trailers)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [[String.IsEqual(Skin.String(AutoYoutubeTrailer),false) | System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) | System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) | System.HasAddon(plugin.video.imdb.trailers) + System.HasAddon(plugin.video.imdb.trailers)] + String.IsEmpty(Window(Home).Property(BusyInfoDialogTrailer)) + Window.IsActive(1190)]">SetProperty(BusyInfoDialogTrailer,1,Home)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(Skin.String(AutoYoutubeTrailer),false) | System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) | System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) | System.HasAddon(plugin.video.imdb.trailers) + System.HasAddon(plugin.video.imdb.trailers)]">SetProperty(TrailerPlayIcon,1)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(Skin.String(AutoYoutubeTrailer),false) | System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) | System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) | System.HasAddon(plugin.video.imdb.trailers) + System.HasAddon(plugin.video.imdb.trailers)]">SetProperty(PlaySearchTrailer,1)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!System.HasAddon(slyguy.trailers) + System.HasAddon(plugin.video.youtube) + !String.IsEmpty(ListItem.Trailer) + [![String.IsEqual(Skin.String(trailersource),imdb) + String.IsEqual(Skin.String(AutoYoutubeTrailer),true)] | [String.IsEqual(Skin.String(trailersource),imdb) + !String.IsEqual(Skin.String(AutoYoutubeTrailer),true)]]]">
+									PlayMedia($ESCINFO[ListItem.Trailer],1)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [System.HasAddon(plugin.video.imdb.trailers) + String.IsEqual(Skin.String(trailersource),imdb) + String.IsEqual(Skin.String(AutoYoutubeTrailer),true)]">
+									PlayMedia(plugin://plugin.video.imdb.trailers/?action=play_id&amp;imdb=$VAR[IMDb_Trailers],1)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!System.HasAddon(slyguy.trailers) + System.HasAddon(plugin.video.youtube) + String.IsEmpty(ListItem.Trailer) + String.IsEqual(ListItem.DBType,movie) + String.IsEqual(Skin.String(AutoYoutubeTrailer),true) + String.IsEqual(Skin.String(trailersource),youtube)]">
+									RunScript(script.bingie.helper,action=playtrailer,title=$INFO[ListItem.Title]$INFO[ListItem.Year])</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!System.HasAddon(slyguy.trailers) + System.HasAddon(plugin.video.youtube) + [String.IsEmpty(ListItem.Trailer) + [String.IsEqual(ListItem.DBType,tvshow) | String.IsEqual(ListItem.DBType,episode)] + String.IsEqual(Skin.String(AutoYoutubeTrailer),true)] + String.IsEqual(Skin.String(trailersource),youtube)]">
+									RunScript(script.bingie.helper,action=playtrailer,title=$VAR[TVShowTitle]$INFO[ListItem.Year],tvshow=true,youtube=$INFO[Skin.String(AutoYoutubeTrailer)])</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(Skin.String(AutoYoutubeTrailer),false) | System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) | System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) | System.HasAddon(plugin.video.imdb.trailers) + System.HasAddon(plugin.video.imdb.trailers)]">SetFocus(70011)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(Skin.String(AutoYoutubeTrailer),false) | System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) | System.HasAddon(plugin.video.imdb.trailers) + System.HasAddon(plugin.video.imdb.trailers)]">SetProperty(TrailerPlayIcon,1)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(Skin.String(AutoYoutubeTrailer),false) | System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) | System.HasAddon(plugin.video.imdb.trailers) + System.HasAddon(plugin.video.imdb.trailers)]">SetProperty(HideNowPlaying,1)</onclick>
+                    <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [[Control.IsVisible(51) + Control.IsVisible(5050) + Container(5050).ListItem.IsResumable] | [Control.IsVisible(8181) + Control.IsVisible(1234) + Container(1234).ListItem.IsResumable]]">SetProperty(ShowPlayBeginning,1)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!System.HasAddon(slyguy.trailers) + !System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) + String.IsEqual(Skin.String(AutoYoutubeTrailer),true)]">InstallAddon(plugin.video.youtube)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!System.HasAddon(plugin.video.imdb.trailers) + String.IsEqual(Skin.String(trailersource),imdb) + String.IsEqual(Skin.String(AutoYoutubeTrailer),true)]">InstallAddon(plugin.video.imdb.trailers)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog)">ClearProperty(VODPlaybackContext)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [[String.IsEqual(Skin.String(AutoYoutubeTrailer),false) | System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) | System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) | System.HasAddon(plugin.video.imdb.trailers) + System.HasAddon(plugin.video.imdb.trailers)] + String.IsEmpty(Window(Home).Property(BusyInfoDialogTrailer)) + Window.IsActive(1190)]">SetProperty(BusyInfoDialogTrailer,1,Home)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(Skin.String(AutoYoutubeTrailer),false) | System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) | System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) | System.HasAddon(plugin.video.imdb.trailers) + System.HasAddon(plugin.video.imdb.trailers)]">SetProperty(TrailerPlayIcon,1)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(Skin.String(AutoYoutubeTrailer),false) | System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) | System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) | System.HasAddon(plugin.video.imdb.trailers) + System.HasAddon(plugin.video.imdb.trailers)]">SetProperty(PlaySearchTrailer,1)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!System.HasAddon(slyguy.trailers) + System.HasAddon(plugin.video.youtube) + !String.IsEmpty(ListItem.Trailer) + [![String.IsEqual(Skin.String(trailersource),imdb) + String.IsEqual(Skin.String(AutoYoutubeTrailer),true)] | [String.IsEqual(Skin.String(trailersource),imdb) + !String.IsEqual(Skin.String(AutoYoutubeTrailer),true)]]]">
+									PlayMedia($ESCINFO[ListItem.Trailer],1)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [System.HasAddon(plugin.video.imdb.trailers) + String.IsEqual(Skin.String(trailersource),imdb) + String.IsEqual(Skin.String(AutoYoutubeTrailer),true)]">
+									PlayMedia(plugin://plugin.video.imdb.trailers/?action=play_id&amp;imdb=$VAR[IMDb_Trailers],1)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!System.HasAddon(slyguy.trailers) + System.HasAddon(plugin.video.youtube) + String.IsEmpty(ListItem.Trailer) + String.IsEqual(ListItem.DBType,movie) + String.IsEqual(Skin.String(AutoYoutubeTrailer),true) + String.IsEqual(Skin.String(trailersource),youtube)]">
+									RunScript(script.bingie.helper,action=playtrailer,title=$INFO[ListItem.Title]$INFO[ListItem.Year])</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!System.HasAddon(slyguy.trailers) + System.HasAddon(plugin.video.youtube) + [String.IsEmpty(ListItem.Trailer) + [String.IsEqual(ListItem.DBType,tvshow) | String.IsEqual(ListItem.DBType,episode)] + String.IsEqual(Skin.String(AutoYoutubeTrailer),true)] + String.IsEqual(Skin.String(trailersource),youtube)]">
+									RunScript(script.bingie.helper,action=playtrailer,title=$VAR[TVShowTitle]$INFO[ListItem.Year],tvshow=true,youtube=$INFO[Skin.String(AutoYoutubeTrailer)])</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(Skin.String(AutoYoutubeTrailer),false) | System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) | System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) | System.HasAddon(plugin.video.imdb.trailers) + System.HasAddon(plugin.video.imdb.trailers)]">SetFocus(70011)</onclick>
+                    <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [[Control.IsVisible(51) + Control.IsVisible(5050) + Container(5050).ListItem.IsResumable] | [Control.IsVisible(8181) + Control.IsVisible(1234) + Container(1234).ListItem.IsResumable]]">SetProperty(ShowPlayBeginning,1)</onclick>
+                </control>
+                <control type="button" id="44007">
+                    <width>220</width>
+                    <height>76</height>
+                    <font>Reg25</font>
+                    <align>center</align>
+                    <aligny>center</aligny>
+                    <label>$LOCALIZE[32030]</label>
+                    <textcolor>FFFFFFFF</textcolor>
+                    <focusedcolor>FFFFFFFF</focusedcolor>
+                    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                    <onclick>SetProperty(AcTweeteRTouchInfoActions,1,Home)</onclick>
+                </control>
+                <control type="button" id="44008">
+                    <width>185</width>
+                    <height>76</height>
+                    <font>Reg25</font>
+                    <align>center</align>
+                    <aligny>center</aligny>
+                    <label>$LOCALIZE[32031]</label>
+                    <textcolor>FFFFFFFF</textcolor>
+                    <focusedcolor>FFFFFFFF</focusedcolor>
+                    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                    <onclick>Dialog.Close(movieinformation)</onclick>
+                </control>
             </control>
-            <!-- The actions panel is a *skin* overlay; it is not a new dialog,
-                 provider action or reimplementation of the underlying controls. -->
             <control type="group" id="44190">
-                <visible>!String.IsEmpty(Window.Property(AcTweeteRTouchInfoActions))</visible>
-                <left>990</left><top>126</top><width>880</width><height>824</height>
+                <visible>!String.IsEmpty(Window(Home).Property(AcTweeteRTouchInfoActions))</visible>
+                <left>990</left>
+                <top>126</top>
+                <width>880</width>
+                <height>824</height>
                 <control type="image">
-                    <width>880</width><height>824</height>
+                    <width>880</width>
+                    <height>824</height>
                     <texture colordiffuse="F50F1014">colors/color_white.png</texture>
                 </control>
                 <control type="label">
-                    <left>32</left><top>18</top><width>500</width><height>64</height>
-                    <font>Bold32</font><textcolor>FFFFFFFF</textcolor>
+                    <left>32</left>
+                    <top>18</top>
+                    <width>500</width>
+                    <height>64</height>
+                    <font>Bold32</font>
+                    <textcolor>FFFFFFFF</textcolor>
                     <label>$LOCALIZE[32030]</label>
                 </control>
                 <control type="button" id="44191">
-                    <left>742</left><top>14</top><width>104</width><height>78</height>
-                    <font>Bold36</font><align>center</align><aligny>center</aligny>
-                    <label>×</label><textcolor>FFFFFFFF</textcolor>
+                    <left>742</left>
+                    <top>14</top>
+                    <width>104</width>
+                    <height>78</height>
+                    <font>Bold36</font>
+                    <align>center</align>
+                    <aligny>center</aligny>
+                    <label>×</label>
+                    <textcolor>FFFFFFFF</textcolor>
                     <focusedcolor>FFFFFFFF</focusedcolor>
                     <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
                     <texturenofocus border="10" colordiffuse="E0303030">diffuse/panel.png</texturenofocus>
-                    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
+                    <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
                 </control>
                 <control type="grouplist" id="44192">
-                    <left>30</left><top>103</top><width>710</width><height>558</height>
-                    <orientation>vertical</orientation><itemgap>8</itemgap>
-                    <scrolltime>150</scrolltime><pagecontrol>44193</pagecontrol>
+                    <left>30</left>
+                    <top>103</top>
+                    <width>710</width>
+                    <height>558</height>
+                    <orientation>vertical</orientation>
+                    <itemgap>8</itemgap>
+                    <scrolltime>150</scrolltime>
+                    <pagecontrol>44193</pagecontrol>
                     <control type="button" id="44100">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32100]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(80)</visible>
-    <onclick>SendClick(80)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44101">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32101]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(90)</visible>
-    <onclick>SendClick(90)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44102">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32102]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(51)</visible>
-    <onclick>SendClick(51)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44103">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32103]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(8181)</visible>
-    <onclick>SendClick(8181)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44104">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32104]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(52)</visible>
-    <onclick>SendClick(52)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44105">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32105]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(53)</visible>
-    <onclick>SendClick(53)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44106">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32106]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(54)</visible>
-    <onclick>SendClick(54)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44107">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32107]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(541)</visible>
-    <onclick>SendClick(541)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44108">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32108]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(56)</visible>
-    <onclick>SendClick(56)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44109">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32109]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(57)</visible>
-    <onclick>SendClick(57)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44110">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32110]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(561)</visible>
-    <onclick>SendClick(561)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44111">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32111]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(562)</visible>
-    <onclick>SendClick(562)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44112">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32112]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(60)</visible>
-    <onclick>SendClick(60)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44113">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32113]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(64)</visible>
-    <onclick>SendClick(64)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44114">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32114]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(61)</visible>
-    <onclick>SendClick(61)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44115">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32115]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(63)</visible>
-    <onclick>SendClick(63)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44116">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32116]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(62)</visible>
-    <onclick>SendClick(62)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44117">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32117]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(611)</visible>
-    <onclick>SendClick(611)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44118">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32118]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(631)</visible>
-    <onclick>SendClick(631)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44119">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32119]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(622)</visible>
-    <onclick>SendClick(622)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44120">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32120]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(14)</visible>
-    <onclick>SendClick(14)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44121">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32121]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(10)</visible>
-    <onclick>SendClick(10)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44122">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32122]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(1040)</visible>
-    <onclick>SendClick(1040)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44123">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32123]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(6)</visible>
-    <onclick>SendClick(6)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44124">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32124]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(612)</visible>
-    <onclick>SendClick(612)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44125">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32125]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(7001)</visible>
-    <onclick>SendClick(7001)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44126">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32126]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(7002)</visible>
-    <onclick>SendClick(7002)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44127">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32127]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(7003)</visible>
-    <onclick>SendClick(7003)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44128">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32128]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(7004)</visible>
-    <onclick>SendClick(7004)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44129">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32129]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(7011)</visible>
-    <onclick>SendClick(7011)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44130">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32130]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(7033)</visible>
-    <onclick>SendClick(7033)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
-<control type="button" id="44131">
-    <width>680</width><height>76</height>
-    <font>Reg25</font><align>center</align><aligny>center</aligny>
-    <label>$LOCALIZE[32131]</label>
-    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
-    <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
-    <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
-    <visible>Control.IsVisible(7055)</visible>
-    <onclick>SendClick(7055)</onclick>
-    <onclick>ClearProperty(AcTweeteRTouchInfoActions)</onclick>
-</control>
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32100]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(80)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback] + System.HasAddon(slyguy.trailers)]">ClearProperty(ACTWEETER_AUTO_PREVIEW_REQUEST,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback] + System.HasAddon(slyguy.trailers)]">RunScript(service.actweeter,preview_vod)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback]]">SetProperty(VODPlaybackContext,1)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback]]">SetProperty(VOD_RETURN_PENDING,1,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!String.IsEmpty(ListItem.FileNameAndPath) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FileNameAndPath]),00:01,silent)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEmpty(ListItem.FileNameAndPath) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FolderPath]),00:01,silent)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">RunScript(plugin.video.tmdb.bingie.helper,close_dialog=1190)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!ListItem.IsFolder + !String.IsEmpty(ListItem.FileNameAndPath) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FileNameAndPath]),00:04,silent)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!ListItem.IsFolder + String.IsEmpty(ListItem.FileNameAndPath) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FolderPath]),00:04,silent)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback] + System.HasAddon(slyguy.trailers)]">ClearProperty(ACTWEETER_AUTO_PREVIEW_REQUEST,Home)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback] + System.HasAddon(slyguy.trailers)]">RunScript(service.actweeter,preview_vod)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback]]">SetProperty(VODPlaybackContext,1)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback]]">SetProperty(VOD_RETURN_PENDING,1,Home)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!String.IsEmpty(ListItem.FileNameAndPath) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FileNameAndPath]),00:01,silent)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [String.IsEmpty(ListItem.FileNameAndPath) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FolderPath]),00:01,silent)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">RunScript(plugin.video.tmdb.bingie.helper,close_dialog=1190)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!ListItem.IsFolder + !String.IsEmpty(ListItem.FileNameAndPath) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FileNameAndPath]),00:04,silent)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!ListItem.IsFolder + String.IsEmpty(ListItem.FileNameAndPath) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FolderPath]),00:04,silent)</onclick>
+                    </control>
+                    <control type="button" id="44101">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32101]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(90)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback] + System.HasAddon(slyguy.trailers)]">ClearProperty(ACTWEETER_AUTO_PREVIEW_REQUEST,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback] + System.HasAddon(slyguy.trailers)]">RunScript(service.actweeter,preview_vod)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback]]">SetProperty(VODPlaybackContext,1)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback]]">SetProperty(VOD_RETURN_PENDING,1,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!String.IsEmpty(ListItem.FileNameAndPath) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FileNameAndPath],resume),00:01,silent)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEmpty(ListItem.FileNameAndPath) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FolderPath],resume),00:01,silent)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">RunScript(plugin.video.tmdb.bingie.helper,close_dialog=1190)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!ListItem.IsFolder + !String.IsEmpty(ListItem.FileNameAndPath) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FileNameAndPath],resume),00:04,silent)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!ListItem.IsFolder + String.IsEmpty(ListItem.FileNameAndPath) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FolderPath],resume),00:04,silent)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback] + System.HasAddon(slyguy.trailers)]">ClearProperty(ACTWEETER_AUTO_PREVIEW_REQUEST,Home)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback] + System.HasAddon(slyguy.trailers)]">RunScript(service.actweeter,preview_vod)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback]]">SetProperty(VODPlaybackContext,1)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBTypeNoFallback]]">SetProperty(VOD_RETURN_PENDING,1,Home)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!String.IsEmpty(ListItem.FileNameAndPath) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FileNameAndPath],resume),00:01,silent)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [String.IsEmpty(ListItem.FileNameAndPath) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FolderPath],resume),00:01,silent)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">RunScript(plugin.video.tmdb.bingie.helper,close_dialog=1190)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!ListItem.IsFolder + !String.IsEmpty(ListItem.FileNameAndPath) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FileNameAndPath],resume),00:04,silent)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!ListItem.IsFolder + String.IsEmpty(ListItem.FileNameAndPath) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[ListItem.FolderPath],resume),00:04,silent)</onclick>
+                    </control>
+                    <control type="button" id="44102">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32102]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(51)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [Integer.IsGreater(Container(5050).NumItems,0) + !Container(5050).IsUpdating + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[Container(5050).ListItem.FileNameAndPath],resume),00:01,silent)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [Integer.IsGreater(Container(5050).NumItems,0) + !Container(5050).IsUpdating + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">RunScript(plugin.video.tmdb.bingie.helper,close_dialog=1190)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [Integer.IsGreater(Container(5050).NumItems,0) + !Container(5050).IsUpdating + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[Container(5050).ListItem.FileNameAndPath],resume),00:04,silent)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [Integer.IsGreater(Container(5050).NumItems,0) + !Container(5050).IsUpdating + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[Container(5050).ListItem.FileNameAndPath],resume),00:01,silent)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [Integer.IsGreater(Container(5050).NumItems,0) + !Container(5050).IsUpdating + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">RunScript(plugin.video.tmdb.bingie.helper,close_dialog=1190)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [Integer.IsGreater(Container(5050).NumItems,0) + !Container(5050).IsUpdating + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[Container(5050).ListItem.FileNameAndPath],resume),00:04,silent)</onclick>
+                    </control>
+                    <control type="button" id="44103">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32103]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(8181)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!Container(1234).IsUpdating + !Integer.IsEqual(Container(1234).NumItems,0) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[Container(1234).ListItem.FileNameAndPath],resume),00:01,silent)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!Container(1234).IsUpdating + !Integer.IsEqual(Container(1234).NumItems,0) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">RunScript(plugin.video.tmdb.bingie.helper,close_dialog=1190)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!Container(1234).IsUpdating + !Integer.IsEqual(Container(1234).NumItems,0) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[Container(1234).ListItem.FileNameAndPath],resume),00:04,silent)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [Integer.IsGreater(Container(5050).NumItems,0) + !Container(5050).IsUpdating + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[Container(1234).ListItem.FileNameAndPath],resume),00:01,silent)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [Integer.IsGreater(Container(5050).NumItems,0) + !Container(5050).IsUpdating + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">RunScript(plugin.video.tmdb.bingie.helper,close_dialog=1190)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [Integer.IsGreater(Container(5050).NumItems,0) + !Container(5050).IsUpdating + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[Container(1234).ListItem.FileNameAndPath],resume),00:04,silent)</onclick>
+                    </control>
+                    <control type="button" id="44104">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32104]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(52)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!Control.IsVisible(5050) + String.IsEqual(ListItem.DBTYPE,episode) + !String.IsEmpty(ListItem.DBID) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia(videodb://tvshows/$INFO[ListItem.DBID]),00:01,silent)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!Control.IsVisible(5050) + $EXP[IsMovieDBTypeNoFallback] + System.HasAddon(slyguy.trailers)]">ClearProperty(ACTWEETER_AUTO_PREVIEW_REQUEST,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!Control.IsVisible(5050) + $EXP[IsMovieDBTypeNoFallback] + System.HasAddon(slyguy.trailers)]">RunScript(service.actweeter,preview_vod)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!Control.IsVisible(5050) + $EXP[IsMovieDBTypeNoFallback]]">SetProperty(VODPlaybackContext,1)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!Control.IsVisible(5050) + $EXP[IsMovieDBTypeNoFallback]]">SetProperty(VOD_RETURN_PENDING,1,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!Control.IsVisible(5050) + String.IsEqual(ListItem.DBTYPE,movie) + !String.IsEmpty(ListItem.DBID) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia(videodb://movies/$INFO[ListItem.DBID]),00:01,silent)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!Control.IsVisible(1234) + [String.IsEqual(ListItem.DBTYPE,episode) | String.IsEqual(ListItem.DBTYPE,movie)] + String.IsEmpty(ListItem.DBID) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($INFO[ListItem.FileNameAndPath],noresume),00:01,silent)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [Control.IsVisible(5050) + String.IsEqual(Container(5050).ListItem.Path) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[Container(5050).ListItem.Path],isdir,playoffset=$VAR[NextUpEpisodeMinusOne]),00:01,silent)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [Control.IsVisible(5050) + !String.IsEqual(Container(5050).ListItem.Path) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[Container(5050).ListItem.FileNameAndPath],noresume),00:01,silent)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [Control.IsVisible(1234) + String.IsEqual(ListItem.dbtype,tvshow) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($INFO[Container(1234).ListItemAbsolute(0).FolderPath],noresume),00:01,silent)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">RunScript(plugin.video.tmdb.bingie.helper,close_dialog=1190)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!Control.IsVisible(5050) + String.IsEqual(ListItem.DBTYPE,episode) + !String.IsEmpty(ListItem.DBID) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia(videodb://tvshows/$INFO[ListItem.DBID]),00:04,silent)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!Control.IsVisible(5050) + String.IsEqual(ListItem.DBTYPE,movie) + !String.IsEmpty(ListItem.DBID) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia(videodb://movies/$INFO[ListItem.DBID]),00:04,silent)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!Control.IsVisible(1234) + [String.IsEqual(ListItem.DBTYPE,episode) | String.IsEqual(ListItem.DBTYPE,movie)] + String.IsEmpty(ListItem.DBID) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($INFO[ListItem.FileNameAndPath],noresume),00:04,silent)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [Control.IsVisible(5050) + String.IsEqual(Container(5050).ListItem.Path) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[Container(5050).ListItem.Path],isdir,playoffset=$VAR[NextUpEpisodeMinusOne]),00:04,silent)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [Control.IsVisible(5050) + !String.IsEqual(Container(5050).ListItem.Path) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[Container(5050).ListItem.FileNameAndPath],noresume),00:04,silent)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [Control.IsVisible(1234) + String.IsEqual(ListItem.dbtype,tvshow) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($INFO[Container(1234).ListItemAbsolute(0).FolderPath],noresume),00:04,silent)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!Control.IsVisible(5050) + String.IsEqual(ListItem.DBTYPE,episode) + !String.IsEmpty(ListItem.DBID) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia(videodb://tvshows/$INFO[ListItem.DBID]),00:01,silent)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!Control.IsVisible(5050) + $EXP[IsMovieDBTypeNoFallback] + System.HasAddon(slyguy.trailers)]">ClearProperty(ACTWEETER_AUTO_PREVIEW_REQUEST,Home)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!Control.IsVisible(5050) + $EXP[IsMovieDBTypeNoFallback] + System.HasAddon(slyguy.trailers)]">RunScript(service.actweeter,preview_vod)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!Control.IsVisible(5050) + $EXP[IsMovieDBTypeNoFallback]]">SetProperty(VODPlaybackContext,1)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!Control.IsVisible(5050) + $EXP[IsMovieDBTypeNoFallback]]">SetProperty(VOD_RETURN_PENDING,1,Home)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!Control.IsVisible(5050) + String.IsEqual(ListItem.DBTYPE,movie) + !String.IsEmpty(ListItem.DBID) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia(videodb://movies/$INFO[ListItem.DBID]),00:01,silent)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!Control.IsVisible(1234) + [String.IsEqual(ListItem.DBTYPE,episode) | String.IsEqual(ListItem.DBTYPE,movie)] + String.IsEmpty(ListItem.DBID) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($INFO[ListItem.FileNameAndPath],noresume),00:01,silent)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [Control.IsVisible(5050) + String.IsEqual(Container(5050).ListItem.Path) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[Container(5050).ListItem.Path],isdir,playoffset=$VAR[NextUpEpisodeMinusOne]),00:01,silent)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [Control.IsVisible(5050) + !String.IsEqual(Container(5050).ListItem.Path) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[Container(5050).ListItem.FileNameAndPath],noresume),00:01,silent)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [Control.IsVisible(1234) + String.IsEqual(ListItem.dbtype,tvshow) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($INFO[Container(1234).ListItemAbsolute(0).FolderPath],noresume),00:01,silent)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">RunScript(plugin.video.tmdb.bingie.helper,close_dialog=1190)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!Control.IsVisible(5050) + String.IsEqual(ListItem.DBTYPE,episode) + !String.IsEmpty(ListItem.DBID) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia(videodb://tvshows/$INFO[ListItem.DBID]),00:04,silent)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!Control.IsVisible(5050) + String.IsEqual(ListItem.DBTYPE,movie) + !String.IsEmpty(ListItem.DBID) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia(videodb://movies/$INFO[ListItem.DBID]),00:04,silent)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!Control.IsVisible(1234) + [String.IsEqual(ListItem.DBTYPE,episode) | String.IsEqual(ListItem.DBTYPE,movie)] + String.IsEmpty(ListItem.DBID) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($INFO[ListItem.FileNameAndPath],noresume),00:04,silent)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [Control.IsVisible(5050) + String.IsEqual(Container(5050).ListItem.Path) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[Container(5050).ListItem.Path],isdir,playoffset=$VAR[NextUpEpisodeMinusOne]),00:04,silent)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [Control.IsVisible(5050) + !String.IsEqual(Container(5050).ListItem.Path) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($ESCINFO[Container(5050).ListItem.FileNameAndPath],noresume),00:04,silent)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [Control.IsVisible(1234) + String.IsEqual(ListItem.dbtype,tvshow) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">AlarmClock(PlayMovie,PlayMedia($INFO[Container(1234).ListItemAbsolute(0).FolderPath],noresume),00:04,silent)</onclick>
+                    </control>
+                    <control type="button" id="44105">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32105]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(53)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">SetProperty(BaseWindow,1,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">SetProperty(FadeFanart,1,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">SetProperty(NoFadeOut,1,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">SetProperty(AnimationRight,1,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!String.IsEmpty(Window(Home).Property(FullImage))]">SetProperty(EpisodesAnimation,1,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">Dialog.Close(movieinformation)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,episode) + !String.IsEmpty(ListItem.DBID) + !String.IsEmpty(Window(Home).Property(ListItem.TVShowID))]">SetProperty(KeepTVShowID,1,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,episode) + !String.IsEmpty(ListItem.DBID) + !String.IsEmpty(Window(Home).Property(ListItem.TVShowID))]">ActivateWindow(Videos,videodb://tvshows/titles/$INFO[Window(Home).Property(ListItem.TVShowID)]/-2/,return)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,season) + !String.IsEmpty(ListItem.DBID)]">ActivateWindow(Videos,$ESCINFO[ListItem.FolderPath],return)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,tvshow) + !String.IsEmpty(ListItem.DBID) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">SetProperty(ListItem.TVShowID,$INFO[ListItem.DBID],Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,tvshow) + !String.IsEmpty(ListItem.DBID) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">SetProperty(KeepTVShowID,1,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,tvshow) + !String.IsEmpty(ListItem.DBID) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">ActivateWindow(Videos,videodb://tvshows/titles/$INFO[ListItem.DBID]/-2/,return)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [ListItem.IsFolder + !Window.IsVisible(MyVideoNav.xml) + !String.IsEmpty(ListItem.DBID) + String.IsEqual(ListItem.DBType,tvshow) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">RunScript(plugin.video.tmdb.bingie.helper,close_dialog=1190,call_path=$INFO[ListItem.DBID,videodb://tvshows/titles/,/-2/return])</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,tvshow) + String.IsEmpty(ListItem.DBID) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">ActivateWindow(Videos,$ESCINFO[ListItem.FileNameAndPath],return)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,season) + String.IsEmpty(ListItem.DBID) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">ActivateWindow(Videos,$ESCINFO[ListItem.FolderPath],return)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,tvshow) + String.IsEmpty(ListItem.DBID) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">RunScript(plugin.video.tmdb.bingie.helper,close_dialog=1190,call_path=$INFO[ListItem.FolderPath])</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog)">SetProperty(BaseWindow,1,Home)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog)">SetProperty(NoFadeOut,1,Home)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog)">SetProperty(AnimationRight,1,Home)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!String.IsEmpty(Window(Home).Property(FullImage))]">SetProperty(EpisodesAnimation,1,Home)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">Dialog.Close(movieinformation)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,episode) + !String.IsEmpty(ListItem.DBID) + !String.IsEmpty(Window(Home).Property(ListItem.TVShowID))]">SetProperty(KeepTVShowID,1,Home)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,episode) + !String.IsEmpty(ListItem.DBID) + !String.IsEmpty(Window(Home).Property(ListItem.TVShowID))]">ActivateWindow(Videos,videodb://tvshows/titles/$INFO[Window(Home).Property(ListItem.TVShowID)]/-2/,return)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,tvshow) + !String.IsEmpty(ListItem.DBID) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">SetProperty(ListItem.TVShowID,$INFO[ListItem.DBID],Home)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,tvshow) + !String.IsEmpty(ListItem.DBID) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">SetProperty(KeepTVShowID,1,Home)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,tvshow) + !String.IsEmpty(ListItem.DBID) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">ActivateWindow(Videos,videodb://tvshows/titles/$INFO[ListItem.DBID]/-2/,return)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [ListItem.IsFolder + !Window.IsVisible(MyVideoNav.xml) + !String.IsEmpty(ListItem.DBID) + String.IsEqual(ListItem.DBType,tvshow) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">RunScript(plugin.video.tmdb.bingie.helper,close_dialog=1190,call_path=$INFO[ListItem.DBID,videodb://tvshows/titles/,/-2/return])</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,tvshow) + String.IsEmpty(ListItem.DBID) + !Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">ActivateWindow(Videos,$ESCINFO[ListItem.FileNameAndPath],return)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBTYPE,tvshow) + String.IsEmpty(ListItem.DBID) + Window.IsActive(Custom_1190_TMDbBingieHelperCast.xml)]">RunScript(plugin.video.tmdb.bingie.helper,close_dialog=1190,call_path=$INFO[ListItem.FolderPath])</onclick>
+                    </control>
+                    <control type="button" id="44106">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32106]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(54)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">ClearProperty(VODPlaybackContext)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!System.HasAddon(slyguy.trailers) + !System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) + String.IsEqual(Skin.String(AutoYoutubeTrailer),true)]">InstallAddon(plugin.video.youtube)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!System.HasAddon(plugin.video.imdb.trailers) + String.IsEqual(Skin.String(trailersource),imdb) + String.IsEqual(Skin.String(AutoYoutubeTrailer),true)]">InstallAddon(plugin.video.imdb.trailers)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [[String.IsEqual(Skin.String(AutoYoutubeTrailer),false) | System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) | System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) | System.HasAddon(plugin.video.imdb.trailers) + System.HasAddon(plugin.video.imdb.trailers)] + String.IsEmpty(Window(Home).Property(BusyInfoDialogTrailer)) + Window.IsActive(1190)]">SetProperty(BusyInfoDialogTrailer,1,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(Skin.String(AutoYoutubeTrailer),false) | System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) | System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) | System.HasAddon(plugin.video.imdb.trailers) + System.HasAddon(plugin.video.imdb.trailers)]">SetProperty(TrailerPlayIcon,1)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(Skin.String(AutoYoutubeTrailer),false) | System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) | System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) | System.HasAddon(plugin.video.imdb.trailers) + System.HasAddon(plugin.video.imdb.trailers)]">SetProperty(PlaySearchTrailer,1)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!System.HasAddon(slyguy.trailers) + System.HasAddon(plugin.video.youtube) + !String.IsEmpty(ListItem.Trailer) + [![String.IsEqual(Skin.String(trailersource),imdb) + String.IsEqual(Skin.String(AutoYoutubeTrailer),true)] | [String.IsEqual(Skin.String(trailersource),imdb) + !String.IsEqual(Skin.String(AutoYoutubeTrailer),true)]]]">
+									PlayMedia($ESCINFO[ListItem.Trailer],1)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [System.HasAddon(plugin.video.imdb.trailers) + String.IsEqual(Skin.String(trailersource),imdb) + String.IsEqual(Skin.String(AutoYoutubeTrailer),true)]">
+									PlayMedia(plugin://plugin.video.imdb.trailers/?action=play_id&amp;imdb=$VAR[IMDb_Trailers],1)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!System.HasAddon(slyguy.trailers) + System.HasAddon(plugin.video.youtube) + String.IsEmpty(ListItem.Trailer) + String.IsEqual(ListItem.DBType,movie) + String.IsEqual(Skin.String(AutoYoutubeTrailer),true) + String.IsEqual(Skin.String(trailersource),youtube)]">
+									RunScript(script.bingie.helper,action=playtrailer,title=$INFO[ListItem.Title]$INFO[ListItem.Year])</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!System.HasAddon(slyguy.trailers) + System.HasAddon(plugin.video.youtube) + [String.IsEmpty(ListItem.Trailer) + [String.IsEqual(ListItem.DBType,tvshow) | String.IsEqual(ListItem.DBType,episode)] + String.IsEqual(Skin.String(AutoYoutubeTrailer),true)] + String.IsEqual(Skin.String(trailersource),youtube)]">
+									RunScript(script.bingie.helper,action=playtrailer,title=$VAR[TVShowTitle]$INFO[ListItem.Year],tvshow=true,youtube=$INFO[Skin.String(AutoYoutubeTrailer)])</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(Skin.String(AutoYoutubeTrailer),false) | System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) | System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) | System.HasAddon(plugin.video.imdb.trailers) + System.HasAddon(plugin.video.imdb.trailers)]">SetFocus(70011)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(Skin.String(AutoYoutubeTrailer),false) | System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) | System.HasAddon(plugin.video.imdb.trailers) + System.HasAddon(plugin.video.imdb.trailers)]">SetProperty(TrailerPlayIcon,1)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(Skin.String(AutoYoutubeTrailer),false) | System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) | System.HasAddon(plugin.video.imdb.trailers) + System.HasAddon(plugin.video.imdb.trailers)]">SetProperty(HideNowPlaying,1)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [[Control.IsVisible(51) + Control.IsVisible(5050) + Container(5050).ListItem.IsResumable] | [Control.IsVisible(8181) + Control.IsVisible(1234) + Container(1234).ListItem.IsResumable]]">SetProperty(ShowPlayBeginning,1)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!System.HasAddon(slyguy.trailers) + !System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) + String.IsEqual(Skin.String(AutoYoutubeTrailer),true)]">InstallAddon(plugin.video.youtube)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!System.HasAddon(plugin.video.imdb.trailers) + String.IsEqual(Skin.String(trailersource),imdb) + String.IsEqual(Skin.String(AutoYoutubeTrailer),true)]">InstallAddon(plugin.video.imdb.trailers)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog)">ClearProperty(VODPlaybackContext)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [[String.IsEqual(Skin.String(AutoYoutubeTrailer),false) | System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) | System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) | System.HasAddon(plugin.video.imdb.trailers) + System.HasAddon(plugin.video.imdb.trailers)] + String.IsEmpty(Window(Home).Property(BusyInfoDialogTrailer)) + Window.IsActive(1190)]">SetProperty(BusyInfoDialogTrailer,1,Home)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(Skin.String(AutoYoutubeTrailer),false) | System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) | System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) | System.HasAddon(plugin.video.imdb.trailers) + System.HasAddon(plugin.video.imdb.trailers)]">SetProperty(TrailerPlayIcon,1)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(Skin.String(AutoYoutubeTrailer),false) | System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) | System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) | System.HasAddon(plugin.video.imdb.trailers) + System.HasAddon(plugin.video.imdb.trailers)]">SetProperty(PlaySearchTrailer,1)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!System.HasAddon(slyguy.trailers) + System.HasAddon(plugin.video.youtube) + !String.IsEmpty(ListItem.Trailer) + [![String.IsEqual(Skin.String(trailersource),imdb) + String.IsEqual(Skin.String(AutoYoutubeTrailer),true)] | [String.IsEqual(Skin.String(trailersource),imdb) + !String.IsEqual(Skin.String(AutoYoutubeTrailer),true)]]]">
+									PlayMedia($ESCINFO[ListItem.Trailer],1)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [System.HasAddon(plugin.video.imdb.trailers) + String.IsEqual(Skin.String(trailersource),imdb) + String.IsEqual(Skin.String(AutoYoutubeTrailer),true)]">
+									PlayMedia(plugin://plugin.video.imdb.trailers/?action=play_id&amp;imdb=$VAR[IMDb_Trailers],1)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!System.HasAddon(slyguy.trailers) + System.HasAddon(plugin.video.youtube) + String.IsEmpty(ListItem.Trailer) + String.IsEqual(ListItem.DBType,movie) + String.IsEqual(Skin.String(AutoYoutubeTrailer),true) + String.IsEqual(Skin.String(trailersource),youtube)]">
+									RunScript(script.bingie.helper,action=playtrailer,title=$INFO[ListItem.Title]$INFO[ListItem.Year])</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!System.HasAddon(slyguy.trailers) + System.HasAddon(plugin.video.youtube) + [String.IsEmpty(ListItem.Trailer) + [String.IsEqual(ListItem.DBType,tvshow) | String.IsEqual(ListItem.DBType,episode)] + String.IsEqual(Skin.String(AutoYoutubeTrailer),true)] + String.IsEqual(Skin.String(trailersource),youtube)]">
+									RunScript(script.bingie.helper,action=playtrailer,title=$VAR[TVShowTitle]$INFO[ListItem.Year],tvshow=true,youtube=$INFO[Skin.String(AutoYoutubeTrailer)])</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(Skin.String(AutoYoutubeTrailer),false) | System.HasAddon(slyguy.trailers) + !String.IsEqual(Skin.String(trailersource),imdb) | System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) | System.HasAddon(plugin.video.imdb.trailers) + System.HasAddon(plugin.video.imdb.trailers)]">SetFocus(70011)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [[Control.IsVisible(51) + Control.IsVisible(5050) + Container(5050).ListItem.IsResumable] | [Control.IsVisible(8181) + Control.IsVisible(1234) + Container(1234).ListItem.IsResumable]]">SetProperty(ShowPlayBeginning,1)</onclick>
+                    </control>
+                    <control type="button" id="44107">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32107]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(541)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">SetProperty(AdditionalInfo, trailers)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">SetFocus(354)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">SetProperty(PlaySearchTrailer,1)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [[Control.IsVisible(51) + Control.IsVisible(5050) + Container(5050).ListItem.IsResumable] | [Control.IsVisible(8181) + Control.IsVisible(1234) + Container(1234).ListItem.IsResumable]]">SetProperty(ShowPlayBeginning,1)</onclick>
+                    </control>
+                    <control type="button" id="44108">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32108]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(56)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">RunScript(script.bingie.helper,action=togglemylist)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog)">RunScript(script.bingie.helper,action=togglemylist)</onclick>
+                    </control>
+                    <control type="button" id="44109">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32109]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(57)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">RunScript(script.bingie.helper,action=togglemylist)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog)">RunScript(script.bingie.helper,action=togglemylist)</onclick>
+                    </control>
+                    <control type="button" id="44110">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32110]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(561)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [!String.IsEmpty(ListItem.Property(tmdb_id))]">RunScript(plugin.video.tmdb.bingie.helper,sync_trakt,tmdb_id=$INFO[ListItem.Property(tmdb_id)],$VAR[Path_Param_Type],sync_type=favorites)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEmpty(ListItem.Property(tmdb_id))]">RunScript(plugin.video.tmdb.bingie.helper,sync_trakt,tmdb_id=$INFO[Container(17195).ListItem.Property(tmdb_id)],$VAR[Path_Param_Type],sync_type=favorites)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!String.IsEmpty(ListItem.Property(tmdb_id))]">RunScript(plugin.video.tmdb.bingie.helper,sync_trakt,tmdb_id=$INFO[ListItem.Property(tmdb_id)],$VAR[Path_Param_Type],sync_type=watchlist)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [String.IsEmpty(ListItem.Property(tmdb_id))]">RunScript(plugin.video.tmdb.bingie.helper,sync_trakt,tmdb_id=$INFO[Container(17195).ListItem.Property(tmdb_id)],$VAR[Path_Param_Type],sync_type=watchlist)</onclick>
+                    </control>
+                    <control type="button" id="44111">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32111]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(562)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [[String.IsEqual(ListItem.DBType,movie) | String.IsEqual(ListItem.DBType,tvshow)] + !String.IsEmpty(ListItem.Property(tmdb_id))]">RunScript(plugin.video.tmdb.bingie.helper,sync_trakt,tmdb_id=$INFO[ListItem.Property(tmdb_id)],$VAR[Path_Param_Type],cache_refresh)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [[String.IsEqual(ListItem.DBType,movie) | String.IsEqual(ListItem.DBType,tvshow)] + String.IsEmpty(ListItem.Property(tmdb_id))]">RunScript(plugin.video.tmdb.bingie.helper,sync_trakt,tmdb_id=$INFO[Container(17195).ListItem.Property(tmdb_id)],$VAR[Path_Param_Type],cache_refresh)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBType,season) + !String.IsEmpty(ListItem.Property(tmdb_id))]">RunScript(plugin.video.tmdb.bingie.helper,sync_trakt,tmdb_id=$INFO[ListItem.Property(tmdb_id)],$VAR[Path_Param_Type],season=$INFO[ListItem.Season],cache_refresh)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBType,season) + String.IsEmpty(ListItem.Property(tmdb_id))]">RunScript(plugin.video.tmdb.bingie.helper,sync_trakt,tmdb_id=$INFO[Container(17195).ListItem.Property(tmdb_id)],$VAR[Path_Param_Type],season=$INFO[ListItem.Season],cache_refresh)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBType,episode) + !String.IsEmpty(ListItem.Property(tmdb_id))]">RunScript(plugin.video.tmdb.bingie.helper,sync_trakt,tmdb_id=$INFO[ListItem.Property(tmdb_id)],$VAR[Path_Param_Type],season=$INFO[ListItem.Season],episode=$INFO[ListItem.Episode],cache_refresh)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBType,episode) + String.IsEmpty(ListItem.Property(tmdb_id))]">RunScript(plugin.video.tmdb.bingie.helper,sync_trakt,tmdb_id=$INFO[Container(17195).ListItem.Property(tmdb_id)],$VAR[Path_Param_Type],season=$INFO[ListItem.Season],episode=$INFO[ListItem.Episode],cache_refresh)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [!String.IsEmpty(ListItem.Property(tmdb_id))]">RunScript(plugin.video.tmdb.bingie.helper,sync_trakt,tmdb_id=$INFO[ListItem.Property(tmdb_id)],$VAR[Path_Param_Type],cache_refresh)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [String.IsEmpty(ListItem.Property(tmdb_id))]">RunScript(plugin.video.tmdb.bingie.helper,sync_trakt,tmdb_id=$INFO[Container(17195).ListItem.Property(tmdb_id)],$VAR[Path_Param_Type],cache_refresh)</onclick>
+                    </control>
+                    <control type="button" id="44112">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32112]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(60)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">SetProperty(AdditionalInfo, plot)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">AlarmClock(FocusText,SetFocus(1050),00:01,silent)</onclick>
+                    </control>
+                    <control type="button" id="44113">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32113]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(64)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">SetProperty(header,$ESCINFO[ListItem.Label],1121)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">SetProperty(textbox,$ESCINFO[ListItem.Plot],1121)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">ActivateWindow(1121)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog)">SetProperty(header,$ESCINFO[ListItem.Label],1121)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog)">SetProperty(textbox,$ESCINFO[ListItem.Plot],1121)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog)">ActivateWindow(1121)</onclick>
+                    </control>
+                    <control type="button" id="44114">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32114]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(61)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">SetProperty(AdditionalInfo, cast)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">SetFocus(8999,0)</onclick>
+                    </control>
+                    <control type="button" id="44115">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32115]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(63)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog)">SetProperty(AdditionalInfo, cast)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog)">SetProperty(subtitle, [CAPITALIZE]$LOCALIZE[31246][/CAPITALIZE])</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog)">SetFocus(8999,0)</onclick>
+                    </control>
+                    <control type="button" id="44116">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32116]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(62)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">SetProperty(AdditionalInfo, similar)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">SetFocus(352)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog)">SetProperty(AdditionalInfo, similar)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog)">SetProperty(subtitle, $LOCALIZE[31479])</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog)">SetFocus(352)</onclick>
+                    </control>
+                    <control type="button" id="44117">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32117]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(611)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEmpty(Window(Home).Property(BusyInfoDialogTrailer)) + Window.IsActive(1190)]">SetProperty(BusyInfoDialogTrailer,1,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">runscript(plugin.video.tmdb.bingie.helper,wikipedia=$VAR[Path_Wikipedia_Title],tmdb_type=$VAR[Path_Wikipedia_Type])</onclick>
+                    </control>
+                    <control type="button" id="44118">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32118]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(631)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [String.IsEmpty(Window(Home).Property(BusyInfoDialogTrailer)) + Window.IsActive(1190)]">SetProperty(BusyInfoDialogTrailer,1,Home)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog)">runscript(plugin.video.tmdb.bingie.helper,wikipedia=$VAR[Path_Wikipedia_Title],tmdb_type=$VAR[Path_Wikipedia_Type])</onclick>
+                    </control>
+                    <control type="button" id="44119">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32119]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(622)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">SetFocus(622)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">Action(Select)</onclick>
+                    </control>
+                    <control type="button" id="44120">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32120]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(14)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">SetFocus(14)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">Action(Select)</onclick>
+                    </control>
+                    <control type="button" id="44121">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32121]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(10)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">SetFocus(10)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">Action(Select)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog)">SetFocus(10)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog)">Action(Select)</onclick>
+                    </control>
+                    <control type="button" id="44122">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32122]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(1040)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsTvShowDBType]]">Runscript(plugin.video.tmdb.bingie.helper,select_artwork,tmdb_id=$INFO[ListItem.UniqueID(tmdb)],tmdb_type=tv)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBType]]">Runscript(plugin.video.tmdb.bingie.helper,select_artwork,tmdb_id=$INFO[ListItem.UniqueID(tmdb)],tmdb_type=movie)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsEpisodeDBType] | $EXP[IsSeasonDBType]]">Runscript(plugin.video.tmdb.bingie.helper,select_artwork,type=tv,tmdb_id=$INFO[ListItem.UniqueID(tvshow.tmdb)],query=$INFO[ListItem.TVShowTitle],season=$INFO[ListItem.Season],episode=$INFO[ListItem.Episode])</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsTvShowDBType]]">Runscript(plugin.video.tmdb.bingie.helper,select_artwork,tmdb_id=$INFO[ListItem.UniqueID(tmdb)],tmdb_type=tv)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBType]]">Runscript(plugin.video.tmdb.bingie.helper,select_artwork,tmdb_id=$INFO[ListItem.UniqueID(tmdb)],tmdb_type=movie)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsEpisodeDBType]]">Runscript(plugin.video.tmdb.bingie.helper,select_artwork,type=tv,tmdb_id=$INFO[ListItem.UniqueID(tvshow.tmdb)],query=$INFO[ListItem.TVShowTitle],season=$INFO[ListItem.Season],episode=$INFO[ListItem.Episode])</onclick>
+                    </control>
+                    <control type="button" id="44123">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32123]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(6)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">SetFocus(6)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">Action(Select)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog)">SetFocus(6)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog)">Action(Select)</onclick>
+                    </control>
+                    <control type="button" id="44124">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32124]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(612)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsTvShowDBType]]">Runscript(plugin.video.tmdb.bingie.helper,refresh_details,tmdb_id=$INFO[ListItem.UniqueID(tmdb)],tmdb_type=tv)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBType]]">Runscript(plugin.video.tmdb.bingie.helper,refresh_details,tmdb_id=$INFO[ListItem.UniqueID(tmdb)],tmdb_type=movie)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsSeasonDBType]]">Runscript(plugin.video.tmdb.bingie.helper,refresh_details,type=tv,tmdb_id=$INFO[ListItem.UniqueID(tvshow.tmdb)],query=$INFO[ListItem.TVShowTitle],season=$INFO[ListItem.Season])</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsEpisodeDBType]]">Runscript(plugin.video.tmdb.bingie.helper,refresh_details,type=tv,tmdb_id=$INFO[ListItem.UniqueID(tvshow.tmdb)],query=$INFO[ListItem.TVShowTitle],season=$INFO[ListItem.Season],episode=$INFO[ListItem.Episode])</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsTvShowDBType]]">Runscript(plugin.video.tmdb.bingie.helper,refresh_details,tmdb_id=$INFO[ListItem.UniqueID(tmdb)],tmdb_type=tv)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsMovieDBType]]">Runscript(plugin.video.tmdb.bingie.helper,refresh_details,tmdb_id=$INFO[ListItem.UniqueID(tmdb)],tmdb_type=movie)</onclick>
+                        <onclick condition="!Skin.HasSetting(UseBingieInfoDialog) + [$EXP[IsEpisodeDBType]]">Runscript(plugin.video.tmdb.bingie.helper,refresh_details,type=tv,tmdb_id=$INFO[ListItem.UniqueID(tvshow.tmdb)],query=$INFO[ListItem.TVShowTitle],season=$INFO[ListItem.Season],episode=$INFO[ListItem.Episode])</onclick>
+                    </control>
+                    <control type="button" id="44125">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32125]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(7001)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">RunScript(script.bingie.helper,action=ratetitle,rateaction=like)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">SetProperty(ratelike,1,Home)</onclick>
+                    </control>
+                    <control type="button" id="44126">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32126]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(7002)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">RunScript(script.bingie.helper,action=ratetitle,rateaction=reset)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">SetProperty(ratelike,1,Home)</onclick>
+                    </control>
+                    <control type="button" id="44127">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32127]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(7003)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">RunScript(script.bingie.helper,action=ratetitle,rateaction=dislike)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">SetProperty(ratedislike,1,Home)</onclick>
+                    </control>
+                    <control type="button" id="44128">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32128]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(7004)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">RunScript(script.bingie.helper,action=ratetitle,rateaction=reset)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog)">SetProperty(ratedislike,1,Home)</onclick>
+                    </control>
+                    <control type="button" id="44129">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32129]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(7011)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBType,movie) | String.IsEqual(ListItem.DBType,tvshow)]">RunScript(plugin.video.tmdb.bingie.helper,sync_trakt,tmdb_id=$INFO[Container(17195).ListItem.Property(tmdb_id)],$VAR[Path_Param_Type],sync_type=like)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBType,episode)]">RunScript(plugin.video.tmdb.bingie.helper,sync_trakt,tmdb_id=$INFO[Container(17195).ListItem.Property(tmdb_id)],type=tv,tmdb_id=$INFO[ListItem.UniqueID(tvshow.tmdb)],query=$INFO[ListItem.TVShowTitle],season=$INFO[ListItem.Season],episode=$INFO[ListItem.Episode],sync_type=like)</onclick>
+                    </control>
+                    <control type="button" id="44130">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32130]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(7033)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBType,movie) | String.IsEqual(ListItem.DBType,tvshow)]">RunScript(plugin.video.tmdb.bingie.helper,sync_trakt,tmdb_id=$INFO[Container(17195).ListItem.Property(tmdb_id)],$VAR[Path_Param_Type],sync_type=dislike)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBType,episode)]">RunScript(plugin.video.tmdb.bingie.helper,sync_trakt,tmdb_id=$INFO[Container(17195).ListItem.Property(tmdb_id)],type=tv,tmdb_id=$INFO[ListItem.UniqueID(tvshow.tmdb)],query=$INFO[ListItem.TVShowTitle],season=$INFO[ListItem.Season],episode=$INFO[ListItem.Episode],sync_type=dislike)</onclick>
+                    </control>
+                    <control type="button" id="44131">
+                        <width>680</width>
+                        <height>76</height>
+                        <font>Reg25</font>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>$LOCALIZE[32131]</label>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <focusedcolor>FFFFFFFF</focusedcolor>
+                        <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+                        <texturenofocus border="10" colordiffuse="E0262626">diffuse/panel.png</texturenofocus>
+                        <visible>Control.IsVisible(7055)</visible>
+                        <onclick>ClearProperty(AcTweeteRTouchInfoActions,Home)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBType,movie) | String.IsEqual(ListItem.DBType,tvshow)]">RunScript(plugin.video.tmdb.bingie.helper,sync_trakt,tmdb_id=$INFO[Container(17195).ListItem.Property(tmdb_id)],$VAR[Path_Param_Type],sync_type=reset)</onclick>
+                        <onclick condition="Skin.HasSetting(UseBingieInfoDialog) + [String.IsEqual(ListItem.DBType,episode)]">RunScript(plugin.video.tmdb.bingie.helper,sync_trakt,tmdb_id=$INFO[Container(17195).ListItem.Property(tmdb_id)],type=tv,tmdb_id=$INFO[ListItem.UniqueID(tvshow.tmdb)],query=$INFO[ListItem.TVShowTitle],season=$INFO[ListItem.Season],episode=$INFO[ListItem.Episode],sync_type=reset)</onclick>
+                    </control>
                 </control>
                 <control type="scrollbar" id="44193">
-                    <left>756</left><top>113</top><width>44</width><height>540</height>
-                    <orientation>vertical</orientation><showonepage>false</showonepage>
-                    <onleft>44192</onleft><onright>44192</onright>
+                    <left>756</left>
+                    <top>113</top>
+                    <width>44</width>
+                    <height>540</height>
+                    <orientation>vertical</orientation>
+                    <showonepage>false</showonepage>
+                    <onleft>44192</onleft>
+                    <onright>44192</onright>
                 </control>
                 <control type="button" id="44194">
-                    <left>64</left><top>692</top><width>245</width><height>84</height>
-                    <font>Reg28</font><align>center</align><aligny>center</aligny>
+                    <left>64</left>
+                    <top>692</top>
+                    <width>245</width>
+                    <height>84</height>
+                    <font>Reg28</font>
+                    <align>center</align>
+                    <aligny>center</aligny>
                     <label>$LOCALIZE[32032]</label>
-                    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
+                    <textcolor>FFFFFFFF</textcolor>
+                    <focusedcolor>FFFFFFFF</focusedcolor>
                     <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
                     <texturenofocus border="10" colordiffuse="E0303030">diffuse/panel.png</texturenofocus>
                     <onclick>PageUp(44193)</onclick>
                 </control>
                 <control type="button" id="44195">
-                    <left>345</left><top>692</top><width>245</width><height>84</height>
-                    <font>Reg28</font><align>center</align><aligny>center</aligny>
+                    <left>345</left>
+                    <top>692</top>
+                    <width>245</width>
+                    <height>84</height>
+                    <font>Reg28</font>
+                    <align>center</align>
+                    <aligny>center</aligny>
                     <label>$LOCALIZE[32033]</label>
-                    <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
+                    <textcolor>FFFFFFFF</textcolor>
+                    <focusedcolor>FFFFFFFF</focusedcolor>
                     <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
                     <texturenofocus border="10" colordiffuse="E0303030">diffuse/panel.png</texturenofocus>
                     <onclick>PageDown(44193)</onclick>
