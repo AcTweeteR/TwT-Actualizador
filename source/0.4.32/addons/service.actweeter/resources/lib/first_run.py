@@ -624,6 +624,8 @@ def mark_setup_check(state, check, status):
     result["schema_version"] = 1
     result["wizard_version"] = WIZARD_VERSION
     if check in MANDATORY_SETUP_CHECKS:
+        if result.get("completed"):
+            result["legacy_completed_review"] = True
         result["setup_state"] = "VERIFYING"
         result["completed"] = False
         result["prompted"] = False
