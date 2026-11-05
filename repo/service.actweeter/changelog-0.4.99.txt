@@ -1,0 +1,5 @@
+AcTweeteR Service 0.4.99 Stable (2026-11-05).
+Conserva la configuración completada y las decisiones Trakt al actualizar.
+Tráilers automáticos: admite identidad por título y año en widgets.
+tvOS: desactiva la gestión del servidor integrado incompatible de Rivulet,
+sin cambiar su servidor externo ni su cuenta. Validación tvOS pendiente.

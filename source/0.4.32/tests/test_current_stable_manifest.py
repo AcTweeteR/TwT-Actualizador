@@ -12,7 +12,7 @@ from verify_current_stable import MANIFEST, verify  # noqa: E402
 
 class CurrentStableManifestTests(unittest.TestCase):
     def test_current_release_matches_immutable_manifest(self):
-        self.assertEqual(verify(), "ac4bffccee2d60b1bd05eeafb33c1e7b037c881c030b16b67e9faef4d206412a")
+        self.assertEqual(verify(), json.loads(MANIFEST.read_text())['index_sha256'])
 
     def test_changed_index_hash_is_rejected(self):
         manifest = json.loads(MANIFEST.read_text())

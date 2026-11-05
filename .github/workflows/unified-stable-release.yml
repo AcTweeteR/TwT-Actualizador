@@ -20,6 +20,8 @@ on:
       - 'tools/promote_priority_stable.py'
       - 'manifests/actweeter-stable-priority-20261104.json'
       - 'tools/promote_epg_watched_perf_stable.py'
+      - 'tools/promote_stabilization_stable.py'
+      - 'manifests/actweeter-stable-stabilization-20261105.json'
       - 'manifests/actweeter-stable-epg-watched-performance-20261105.json'
       - 'manifests/archive/beta6-stable-addons.xml'
       - 'tools/promote_beta34_stable.py'
@@ -55,7 +57,7 @@ jobs:
           ACTWEETER_XSTREAM_LIVE_ZIP: ${{ github.workspace }}/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.41.zip
           ACTWEETER_XSTREAM_TEST_ZIP: ${{ github.workspace }}/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.41.zip
           ACTWEETER_SKIN_LIVE_ZIP: ${{ github.workspace }}/repo/skin.actweeter/skin.actweeter-1.2.41.zip
-          ACTWEETER_SERVICE_LIVE_ZIP: ${{ github.workspace }}/repo/service.actweeter/service.actweeter-0.4.98.zip
+          ACTWEETER_SERVICE_LIVE_ZIP: ${{ github.workspace }}/repo/service.actweeter/service.actweeter-0.4.99.zip
           ACTWEETER_BETA_INDEX: ${{ github.workspace }}/docs/testing/repo/addons.xml
           ACTWEETER_XSTREAM_UPSTREAM_ZIP: ${{ runner.temp }}/xstream-upstream-1.1.2.zip
         run: >-
@@ -142,8 +144,19 @@ jobs:
           set -eu
           python3 tools/promote_epg_watched_perf_stable.py --output-dir "$RUNNER_TEMP/stable-epg-watched-perf"
           cmp "$RUNNER_TEMP/stable-epg-watched-perf/manifest.json" manifests/actweeter-stable-epg-watched-performance-20261105.json
-          cmp "$RUNNER_TEMP/stable-epg-watched-perf/repo/addons.xml" repo/addons.xml
-          cmp "$RUNNER_TEMP/stable-epg-watched-perf/repo/addons.xml.md5" repo/addons.xml.md5
+          cmp "$RUNNER_TEMP/stable-epg-watched-perf/repo/addons.xml" manifests/archive/epg-watched-perf-stable-addons-20261105.xml
+          python3 -c 'import hashlib,pathlib; p=pathlib.Path("manifests/archive/epg-watched-perf-stable-addons-20261105.xml").read_bytes(); assert hashlib.md5(p).hexdigest()==pathlib.Path("${{ runner.temp }}/stable-epg-watched-perf/repo/addons.xml.md5").read_text().strip()'
           cmp "$RUNNER_TEMP/stable-epg-watched-perf/repo/skin.actweeter/skin.actweeter-1.2.41.zip" repo/skin.actweeter/skin.actweeter-1.2.41.zip
           cmp "$RUNNER_TEMP/stable-epg-watched-perf/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.41.zip" repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.41.zip
           cmp "$RUNNER_TEMP/stable-epg-watched-perf/repo/skin.actweeter/changelog-1.2.41.txt" repo/skin.actweeter/changelog-1.2.41.txt
+
+      - name: Rebuild current Service 0.4.99 Stable promotion
+        run: |
+          set -eu
+          python3 tools/promote_stabilization_stable.py "$RUNNER_TEMP/stable-stabilization-099"
+          cmp "$RUNNER_TEMP/stable-stabilization-099/manifest.json" manifests/actweeter-stable-stabilization-20261105.json
+          cmp "$RUNNER_TEMP/stable-stabilization-099/repo/addons.xml" repo/addons.xml
+          cmp "$RUNNER_TEMP/stable-stabilization-099/repo/addons.xml.md5" repo/addons.xml.md5
+          cmp "$RUNNER_TEMP/stable-stabilization-099/repo/service.actweeter/service.actweeter-0.4.99.zip" repo/service.actweeter/service.actweeter-0.4.99.zip
+          cmp "$RUNNER_TEMP/stable-stabilization-099/repo/service.actweeter/changelog-0.4.99.txt" repo/service.actweeter/changelog-0.4.99.txt
+          python3 tools/verify_current_stable.py

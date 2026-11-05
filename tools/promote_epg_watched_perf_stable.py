@@ -65,15 +65,23 @@ def build(output):
     beta_index = checked_source_from_commit(
         "docs/testing/repo/addons.xml", beta["testing_index_sha256"])
     live_beta_index = (ROOT / "docs/testing/repo/addons.xml").read_bytes()
-    if (live_beta_index != beta_index and
-            sha((ROOT / "repo/addons.xml").read_bytes()) != PROMOTED_INDEX):
+    published_index = (ROOT / "repo/addons.xml").read_bytes()
+    current_sha = sha(published_index)
+    later_release = ROOT / "manifests/actweeter-stable-stabilization-20261105.json"
+    later_matches = False
+    if later_release.is_file():
+        later = json.loads(later_release.read_text(encoding="utf-8"))
+        archive = ROOT / "manifests/archive/epg-watched-perf-stable-addons-20261105.xml"
+        later_matches = (later.get("previous_index_sha256") == PROMOTED_INDEX
+                         and later.get("index_sha256") == current_sha
+                         and archive.is_file() and sha(archive.read_bytes()) == PROMOTED_INDEX)
+    if live_beta_index != beta_index and current_sha != PROMOTED_INDEX and not later_matches:
         raise ValueError("Testing source changed after publication")
     if hashlib.md5(beta_index).hexdigest() != beta["testing_index_md5"]:
         raise ValueError("Testing checksum differs from manifest")
 
     previous = checked_source_from_commit("repo/addons.xml", PREVIOUS_INDEX)
-    published_index = (ROOT / "repo/addons.xml").read_bytes()
-    if sha(published_index) not in (PREVIOUS_INDEX, PROMOTED_INDEX):
+    if current_sha not in (PREVIOUS_INDEX, PROMOTED_INDEX) and not later_matches:
         raise ValueError("Stable changed outside expected promotion history")
     # Once promoted, the historical source stays pinned; never rebuild
     # a new release from a moving index or overwrite an older release.

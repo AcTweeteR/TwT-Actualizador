@@ -24,7 +24,7 @@ class PromotedStableTests(unittest.TestCase):
                 ET.parse(ROOT/'repo/addons.xml').getroot()}
         self.assertEqual(stable['skin.actweeter'],'1.2.41')
         self.assertEqual(stable['plugin.video.xstream-pro'],'1.1.2.41')
-        self.assertEqual(stable['service.actweeter'],'0.4.98')
+        self.assertEqual(stable['service.actweeter'],'0.4.99')
         archived={x.get('id'):x.get('version') for x in
                   ET.parse(ROOT/'manifests/archive/priority-stable-addons-20261104.xml').getroot()}
         self.assertEqual(archived['skin.actweeter'],'1.2.40')
@@ -32,7 +32,7 @@ class PromotedStableTests(unittest.TestCase):
         self.assertEqual(archived['service.actweeter'],'0.4.98')
 
     def test_stable_manifest_fails_closed_on_current_hash_mismatch(self):
-        self.assertEqual(verifier.verify(),release.PROMOTED_INDEX)
+        self.assertEqual(verifier.verify(),json.loads(verifier.MANIFEST.read_text())['index_sha256'])
         with tempfile.TemporaryDirectory() as td:
             bad=json.loads(verifier.MANIFEST.read_text())
             bad['index_sha256']='0'*64
@@ -49,7 +49,7 @@ class PromotedStableTests(unittest.TestCase):
             self.assertEqual((dest/'manifest.json').read_bytes(),
                              (ROOT/'manifests/actweeter-stable-epg-watched-performance-20261105.json').read_bytes())
             self.assertEqual((dest/'repo/addons.xml').read_bytes(),
-                             (ROOT/'repo/addons.xml').read_bytes())
+                             (ROOT/'manifests/archive/epg-watched-perf-stable-addons-20261105.xml').read_bytes())
             for addon,(_,version) in release.VERSIONS.items():
                 rel=Path('repo')/addon/(addon+'-'+version+'.zip')
                 self.assertEqual((dest/rel).read_bytes(),(ROOT/rel).read_bytes())
@@ -57,13 +57,14 @@ class PromotedStableTests(unittest.TestCase):
                 release.build(dest)
 
     def test_manifest_pins_exact_beta_and_preserves_all_unchanged_addons(self):
-        manifest=json.loads(verifier.MANIFEST.read_text())
+        manifest=json.loads((ROOT/'manifests/actweeter-stable-epg-watched-performance-20261105.json').read_text())
         beta=json.loads(release.BETA_MANIFEST.read_text())
         self.assertEqual(manifest['beta_index_sha256'],beta['testing_index_sha256'])
         self.assertEqual(manifest['previous_index_sha256'],release.PREVIOUS_INDEX)
         before={x.get('id'):x.get('version') for x in ET.parse(
             ROOT/'manifests/archive/priority-stable-addons-20261104.xml').getroot()}
-        after={x.get('id'):x.get('version') for x in ET.parse(ROOT/'repo/addons.xml').getroot()}
+        after={x.get('id'):x.get('version') for x in ET.parse(
+            ROOT/'manifests/archive/epg-watched-perf-stable-addons-20261105.xml').getroot()}
         self.assertEqual(set(before),set(after))
         self.assertEqual(
             {a for a in after if after[a]!=before[a]},
