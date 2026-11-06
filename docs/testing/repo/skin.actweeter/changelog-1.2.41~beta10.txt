@@ -1,0 +1,1 @@
+Beta: el recorte de textura del canal respeta el marco de selección blanco del resto de widgets.
