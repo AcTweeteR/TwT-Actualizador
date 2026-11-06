@@ -7,7 +7,7 @@ import tempfile
 import threading
 from pathlib import Path
 
-MAX_CHANNELS = 20
+MAX_CHANNELS = 19
 _LOCK = threading.RLock()
 
 

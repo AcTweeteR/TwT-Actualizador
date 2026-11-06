@@ -19,7 +19,7 @@ class HistoryTests(unittest.TestCase):
             path = Path(directory) / "tv.json"
             for number in range(1, 24):
                 self.assertTrue(record(path, number))
-            self.assertEqual(read_history(path), list(range(23, 3, -1)))
+            self.assertEqual(read_history(path), list(range(23, 4, -1)))
             self.assertTrue(record(path, 9))
             self.assertEqual(read_history(path)[:3], [9, 23, 22])
             self.assertEqual(len(read_history(path)), MAX_CHANNELS)
@@ -29,7 +29,7 @@ class HistoryTests(unittest.TestCase):
             self.assertEqual(path.read_bytes(), before)
             self.assertTrue(record(path, 42))
             self.assertEqual(read_history(path)[0], 42)
-            self.assertEqual(len(read_history(path)), 20)
+            self.assertEqual(len(read_history(path)), 19)
 
     def test_invalid_inputs_and_corrupt_profile_are_safe(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -105,7 +105,7 @@ class TVDirectoryTests(unittest.TestCase):
 
 
 class WidgetWiringTests(unittest.TestCase):
-    def test_sources_have_tv_second_no_expand_and_20_cap(self):
+    def test_sources_have_tv_second_no_expand_and_19_cap(self):
         self.assertEqual(LAYOUT_VERSION, 20)
         sources = source_documents(ROOT / "addons/skin.actweeter")
         for name in ("inicio-1", "10000-1"):

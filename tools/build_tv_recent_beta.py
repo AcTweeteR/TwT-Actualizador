@@ -67,7 +67,7 @@ def build_one(addon_id, directory):
         addon.write(xml_path, encoding="utf-8", xml_declaration=True)
         (tree / news).write_text(
             ("Beta: historial de canales TV vistos en Inicio; iconos, programa EPG, "
-             "historial único MRU de 20 canales; actualización sin reconstruir "
+             "historial único MRU de 19 canales; actualización sin reconstruir "
              "el resto de widgets.\n"), encoding="utf-8")
         for path in tree.rglob("*.py"):
             compile(path.read_bytes(), str(path), "exec")
