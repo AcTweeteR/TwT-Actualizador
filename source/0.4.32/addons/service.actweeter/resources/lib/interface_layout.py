@@ -15,9 +15,9 @@ import urllib.parse
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-LAYOUT_VERSION = 21
-LAYOUT_MIGRATION_ID = 'interface-layout-v21-worldtv-submenu'
-GROUPS = ('mainmenu', 'powermenu', 'livetv', 'inicio-1', '10000-1', 'moviehub', 'tvshowhub')
+LAYOUT_VERSION = 22
+LAYOUT_MIGRATION_ID = 'interface-layout-v22-radio-browser-menu'
+GROUPS = ('mainmenu', 'powermenu', 'livetv', 'radio', 'inicio-1', '10000-1', 'moviehub', 'tvshowhub')
 # Exact profile copies shipped as defaults in Beta 8. They may be updated when
 # older state files do not yet track ownership; any byte-level customization
 # remains a conflict and is never silently replaced.
@@ -202,7 +202,12 @@ def interface_migration_due(state):
 def source_documents(skin_root, *, recommendations_enabled=True):
     output = {}
     for group in GROUPS:
-        data = (as_path(skin_root)/'shortcuts'/(group+'.DATA.xml')).read_bytes()
+        path = as_path(skin_root)/'shortcuts'/(group+'.DATA.xml')
+        # Older retained skin archives predate RADIO. Their source validation
+        # must remain readable; only the current skin supplies this group.
+        if group == 'radio' and not path.is_file():
+            continue
+        data = path.read_bytes()
         root = ET.fromstring(data)
         if root.tag != 'shortcuts': raise ValueError('invalid shortcut document')
         changed = False
@@ -219,11 +224,11 @@ def source_documents(skin_root, *, recommendations_enabled=True):
             tv_widget = (group in ('inicio-1', '10000-1') and
                          node.findtext('defaultID') == 'actweeter-tv-recent' and
                          action.startswith('plugin://service.actweeter/?action=tv_recent&'))
-            if group not in ('mainmenu', 'powermenu', 'livetv') and not (action.startswith('plugin://plugin.video.xstream-pro/') or tv_widget):
+            if group not in ('mainmenu', 'powermenu', 'livetv', 'radio') and not (action.startswith('plugin://plugin.video.xstream-pro/') or tv_widget):
                 raise ValueError('non-provider widget source')
             if 'profile_num=' in action or '/Users/' in action:
                 raise ValueError('installation-specific widget source')
-            if group not in ('mainmenu', 'powermenu', 'livetv'):
+            if group not in ('mainmenu', 'powermenu', 'livetv', 'radio'):
                 if 'collections_reload=' not in action:
                     action += '&collections_reload=$INFO[Window(Home).Property(Premium.CollectionsRefresh)]'
                 expanded_action, expandable = expandable_widget_action(action)
@@ -322,6 +327,26 @@ def merge_arcade_shortcut(current, defaults):
         changed = True
     return (ET.tostring(current_root, encoding='utf-8', xml_declaration=True) + b'\n'
             if changed else current)
+
+
+
+def merge_radio_shortcut(current, defaults):
+    """Add Radio after TV without replacing or moving customized menu items."""
+    root = ET.fromstring(current)
+    default_root = ET.fromstring(defaults)
+    if root.tag != 'shortcuts' or default_root.tag != 'shortcuts':
+        raise ValueError('invalid main menu XML')
+    item = default_root.find("shortcut[defaultID='radio']")
+    if item is None:
+        raise ValueError('Radio default shortcut missing')
+    if any(node.findtext('defaultID') == 'radio' or
+           'plugin.audio.radiobrowser' in (node.findtext('action') or '')
+           for node in root.findall('shortcut')):
+        return current
+    tv = root.find("shortcut[defaultID='livetv']")
+    position = list(root).index(tv) + 1 if tv is not None else len(root)
+    root.insert(position, ET.fromstring(ET.tostring(item)))
+    return ET.tostring(root, encoding='utf-8', xml_declaration=True) + b'\n'
 
 
 def expandable_shortcut_ids(documents):
@@ -475,8 +500,9 @@ def apply_layout(shortcuts_root, service_root, skin_root, current_settings,
     merged_mainmenu = False
     if mainmenu_path.is_file():
         try:
-            documents[mainmenu_name] = merge_arcade_shortcut(
-                mainmenu_path.read_bytes(), documents[mainmenu_name])
+            documents[mainmenu_name] = merge_radio_shortcut(
+                merge_arcade_shortcut(mainmenu_path.read_bytes(), documents[mainmenu_name]),
+                documents[mainmenu_name])
             merged_mainmenu = True
         except ET.ParseError as exc:
             raise ValueError('invalid customized main menu XML') from exc

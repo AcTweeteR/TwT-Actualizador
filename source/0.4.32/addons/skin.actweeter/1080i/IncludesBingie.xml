@@ -1754,7 +1754,7 @@
 				<animation effect="slide" end="0,246" condition="Integer.IsEqual(Container(900).NumItems,2)">Conditional</animation>
 				<animation effect="slide" end="0,287" condition="Integer.IsEqual(Container(900).NumItems,1)">Conditional</animation>
 				<width>bingie_menu_width</width>
-                <height>656</height>
+                <height>740</height>
                 <orientation>vertical</orientation>
                 <itemgap>0</itemgap>
 				<onfocus condition="String.IsEmpty(Window(Home).Property(AcTweeteRIntroPlayback))">ClearProperty(StartupMask,Home)</onfocus>
@@ -1849,8 +1849,7 @@
                 <include condition="$EXP[IsBingieViewsActive]">MainMenuContent</include>
             </control>
 
-            <!-- Touch/remote selector is independent from Skin Shortcuts. -->
-            <include>AcTweeteRInputModeSideMenu</include>
+            <!-- Input mode is available under Skin Settings > General. -->
 
             <!-- PowerMenu Buttons -->
             <control type="list" id="40003">

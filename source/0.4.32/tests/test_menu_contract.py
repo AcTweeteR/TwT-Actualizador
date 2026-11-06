@@ -35,6 +35,8 @@ class MenuContractTests(unittest.TestCase):
             [
                 ("INICIO", "ActivateWindow(home,return)", "home", "shortcuts/home.png"),
                 ("TV", "ActivateWindow(TVGuide,return)", "livetv", "shortcuts/tv.png"),
+                ("RADIO", "ActivateWindow(Music,plugin://plugin.audio.radiobrowser/?route=country&countrycode=ES,return)",
+                 "radio", "special://home/addons/plugin.audio.radiobrowser/resources/icon.png"),
                 ("PELÍCULAS", "ActivateWindow(1111,return)", "movies", "shortcuts/clapperboard.png"),
                 ("SERIES", "ActivateWindow(1110,return)", "shows", "shortcuts/tv.png"),
                 ("BUSCAR", "ActivateWindow(1109,return)", "search", "shortcuts/search.png"),
@@ -356,9 +358,11 @@ class MenuContractTests(unittest.TestCase):
                 result = interface_layout.apply_layout(
                     shortcuts, service, ADDON, interface_layout.SETTINGS)
                 self.assertEqual(result["status"], "APPLIED")
-                self.assertEqual(interface_layout.LAYOUT_VERSION, 21)
-                expected_main = interface_layout.merge_arcade_shortcut(
-                    previous_main, (ADDON / "shortcuts/mainmenu.DATA.xml").read_bytes())
+                self.assertEqual(interface_layout.LAYOUT_VERSION, 22)
+                expected_main = interface_layout.merge_radio_shortcut(
+                    interface_layout.merge_arcade_shortcut(
+                        previous_main, (ADDON / "shortcuts/mainmenu.DATA.xml").read_bytes()),
+                    (ADDON / "shortcuts/mainmenu.DATA.xml").read_bytes())
                 for name, wanted in (("skin.actweeter-mainmenu.DATA.xml", expected_main),
                                      ("skin.actweeter-powermenu.DATA.xml",
                                       (ADDON / "shortcuts/powermenu.DATA.xml").read_bytes())):

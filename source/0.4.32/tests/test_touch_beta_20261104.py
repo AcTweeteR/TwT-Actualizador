@@ -46,7 +46,7 @@ class TouchBetaTests(unittest.TestCase):
         setting = root.find("include[@name='AcTweeteRInputModeSettings']")
         self.assertTrue(any(x.findtext("selected") == "!Skin.HasSetting(AcTweeteRTouchMode)"
                             for x in setting.findall("control")))
-        self.assertIn('AcTweeteRInputModeSideMenu',
+        self.assertNotIn('AcTweeteRInputModeSideMenu',
                       (SOURCE/'1080i/IncludesBingie.xml').read_text())
 
     def test_toolbar_uses_real_touch_targets_without_stealing_entire_view(self):
@@ -148,8 +148,8 @@ class TouchBetaTests(unittest.TestCase):
         versions={x.get("id"):x.get("version") for x in feed}
         # The live Testing feed advances independently of the immutable
         # 2026-11-04 Beta1 archive, which remains reproducible above.
-        self.assertEqual(versions["skin.actweeter"],"1.2.43~beta3")
-        self.assertEqual(versions["service.actweeter"],"0.4.103~beta1")
+        self.assertEqual(versions["skin.actweeter"],"1.2.44~beta1")
+        self.assertEqual(versions["service.actweeter"],"0.4.104~beta1")
         self.assertEqual(versions["plugin.video.xstream-pro"],"1.1.2.44~beta8")
         self.assertEqual(versions["repository.rivulet"],"1.0.2")
         self.assertEqual(versions["repository.zachmorris"],"1.0.4")

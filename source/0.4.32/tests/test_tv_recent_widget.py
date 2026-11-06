@@ -106,7 +106,7 @@ class TVDirectoryTests(unittest.TestCase):
 
 class WidgetWiringTests(unittest.TestCase):
     def test_sources_have_tv_second_no_expand_and_19_cap(self):
-        self.assertEqual(LAYOUT_VERSION, 21)
+        self.assertEqual(LAYOUT_VERSION, 22)
         sources = source_documents(ROOT / "addons/skin.actweeter")
         for name in ("inicio-1", "10000-1"):
             root = ET.fromstring(sources[f"skin.actweeter-{name}.DATA.xml"])
