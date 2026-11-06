@@ -348,12 +348,20 @@ def expandable_shortcut_ids(documents):
 
 
 def _matches_profile(node, condition_visible):
-    if condition_visible is None:
-        return True
     conditions = [node.get('condition', '')] + [n.text or '' for n in node.findall('visible')]
-    # Skin Shortcuts emits a separate selector for each profile. Evaluate only
-    # that selector, not transient widget/menu visibility or focus conditions.
+    # The TV card uses mutually exclusive widget_base branches. Skin Shortcuts
+    # generates BOTH include nodes, with condition="true" or "false". Never
+    # validate inactive false branches as if they were rendered widgets: their
+    # intentionally missing expansion properties would block every migration.
     for condition in conditions:
+        normalized = condition.strip().lower()
+        if normalized in ('false', '0'):
+            return False
+        # Skin Shortcuts emits separate selectors for each profile. Evaluate
+        # those selectors only; focus and other transient conditions are not
+        # appropriate for readiness verification.
+        if condition_visible is None:
+            continue
         selector = re.match(r'String\.IsEqual\(System\.ProfileName,[^)]*\)',
                             condition.strip(), flags=re.IGNORECASE)
         if selector is not None and not condition_visible(selector.group(0)):
