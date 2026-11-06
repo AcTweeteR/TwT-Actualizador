@@ -975,6 +975,13 @@ def run_service(kodi, addon_factory, vfs, clock=time.time):
         kodi.log("[AcTweeteR] SLYGUY_PLAYER_GUARD status=" + status, kodi.LOGINFO)
     except (OSError, ValueError, RuntimeError) as exc:
         kodi.log("[AcTweeteR] SLYGUY_PLAYER_GUARD error_type=" + type(exc).__name__, kodi.LOGWARNING)
+    # LauncherM3U is an independent video add-on; configure it without PVR writes.
+    try:
+        from worldtv_setup import configure as configure_worldtv
+        status = configure_worldtv(addon_factory)
+        kodi.log('[AcTweeteR] WORLDTV_SETUP status=' + status, kodi.LOGINFO)
+    except (OSError, ValueError, RuntimeError) as exc:
+        kodi.log('[AcTweeteR] WORLDTV_SETUP error=' + type(exc).__name__, kodi.LOGWARNING)
     instance_id = uuid.uuid4().hex
     profile = _profile_kind(kodi)
     kodi.log("[AcTweeteR] SERVICE_INSTANCE_START profile=%s instance=%s" %

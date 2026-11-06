@@ -15,9 +15,9 @@ import urllib.parse
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-LAYOUT_VERSION = 20
-LAYOUT_MIGRATION_ID = 'interface-layout-v20-tv-recent-widget'
-GROUPS = ('mainmenu', 'powermenu', 'inicio-1', '10000-1', 'moviehub', 'tvshowhub')
+LAYOUT_VERSION = 21
+LAYOUT_MIGRATION_ID = 'interface-layout-v21-worldtv-submenu'
+GROUPS = ('mainmenu', 'powermenu', 'livetv', 'inicio-1', '10000-1', 'moviehub', 'tvshowhub')
 # Exact profile copies shipped as defaults in Beta 8. They may be updated when
 # older state files do not yet track ownership; any byte-level customization
 # remains a conflict and is never silently replaced.
@@ -219,11 +219,11 @@ def source_documents(skin_root, *, recommendations_enabled=True):
             tv_widget = (group in ('inicio-1', '10000-1') and
                          node.findtext('defaultID') == 'actweeter-tv-recent' and
                          action.startswith('plugin://service.actweeter/?action=tv_recent&'))
-            if group not in ('mainmenu', 'powermenu') and not (action.startswith('plugin://plugin.video.xstream-pro/') or tv_widget):
+            if group not in ('mainmenu', 'powermenu', 'livetv') and not (action.startswith('plugin://plugin.video.xstream-pro/') or tv_widget):
                 raise ValueError('non-provider widget source')
             if 'profile_num=' in action or '/Users/' in action:
                 raise ValueError('installation-specific widget source')
-            if group not in ('mainmenu', 'powermenu'):
+            if group not in ('mainmenu', 'powermenu', 'livetv'):
                 if 'collections_reload=' not in action:
                     action += '&collections_reload=$INFO[Window(Home).Property(Premium.CollectionsRefresh)]'
                 expanded_action, expandable = expandable_widget_action(action)
@@ -480,6 +480,31 @@ def apply_layout(shortcuts_root, service_root, skin_root, current_settings,
             merged_mainmenu = True
         except ET.ParseError as exc:
             raise ValueError('invalid customized main menu XML') from exc
+    # Keep any existing user-built TV submenu and add only our independent entry.
+    # This is narrower than replacing the complete submenu, which may contain
+    # custom recordings, timers, or channel actions.
+    tv_name = 'skin.actweeter-livetv.DATA.xml'
+    tv_path = shortcuts_root/tv_name
+    merged_tv = False
+    if tv_path.is_file():
+        current = ET.fromstring(tv_path.read_bytes())
+        desired = ET.fromstring(documents[tv_name])
+        if current.tag != 'shortcuts' or desired.tag != 'shortcuts':
+            raise ValueError('invalid TV submenu XML')
+        already = any(n.findtext('defaultID') == 'worldtv-launcher' or
+                      'plugin.video.launcherm3u' in (n.findtext('action') or '')
+                      for n in current.findall('shortcut'))
+        if not already:
+            world = next((n for n in desired.findall('shortcut')
+                          if n.findtext('defaultID') == 'worldtv-launcher'), None)
+            if world is None:
+                raise ValueError('WorldTV source shortcut missing')
+            current.append(world)
+            documents[tv_name] = ET.tostring(current, encoding='utf-8', xml_declaration=True)
+            merged_tv = True
+        else:
+            # An already present WorldTV entry belongs to the user's layout.
+            documents[tv_name] = tv_path.read_bytes()
     conflicts, changes = [], {}
     for name, wanted in documents.items():
         path = shortcuts_root/name
@@ -489,7 +514,7 @@ def apply_layout(shortcuts_root, service_root, skin_root, current_settings,
         old = path.read_bytes() if path.is_file() else None
         if old == wanted: continue
         if old is not None and digest(old) != state.get('files',{}).get(name):
-            if not (name == mainmenu_name and merged_mainmenu) and digest(old) not in LEGACY_DEFAULT_DIGESTS.get(name, ()):
+            if not ((name == mainmenu_name and merged_mainmenu) or (name == tv_name and merged_tv)) and digest(old) not in LEGACY_DEFAULT_DIGESTS.get(name, ()):
                 conflicts.append(name)
         changes[name] = wanted
     properties = shortcuts_root/'skin.actweeter.properties'

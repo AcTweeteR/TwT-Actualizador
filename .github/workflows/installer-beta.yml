@@ -52,19 +52,21 @@ jobs:
           python3 tools/verify_current_stable.py
       # Historical Beta4 is immutable; Beta5 legitimately replaces the current
       # source module. Never regenerate an old release from moving sources.
-      - name: Rebuild current Service Beta5 after migration retry fix
+      - name: Verify immutable Service Beta5 archive
         run: |
-          python3 tools/build_tv_recent_beta5.py --output "$RUNNER_TEMP/service.actweeter-0.4.101~beta5.zip"
-          cmp "$RUNNER_TEMP/service.actweeter-0.4.101~beta5.zip" \
-            docs/testing/repo/service.actweeter/service.actweeter-0.4.101~beta5.zip
-      - name: Rebuild TV live-refresh Service Beta6 and focus Skin Beta10
+          python3 -c 'import zipfile,xml.etree.ElementTree as E; p="docs/testing/repo/service.actweeter/service.actweeter-0.4.101~beta5.zip"; z=zipfile.ZipFile(p); assert z.testzip() is None; assert E.fromstring(z.read("service.actweeter/addon.xml")).get("version")=="0.4.101~beta5"'
+      - name: Verify immutable Service Beta6 and Skin Beta10 archives
         run: |
-          python3 tools/build_tv_recent_beta6.py --output "$RUNNER_TEMP/service.actweeter-0.4.101~beta6.zip"
-          cmp "$RUNNER_TEMP/service.actweeter-0.4.101~beta6.zip" \
-            docs/testing/repo/service.actweeter/service.actweeter-0.4.101~beta6.zip
-          python3 tools/build_tv_recent_skin_beta10.py --output "$RUNNER_TEMP/skin.actweeter-1.2.41~beta10.zip"
-          cmp "$RUNNER_TEMP/skin.actweeter-1.2.41~beta10.zip" \
-            docs/testing/repo/skin.actweeter/skin.actweeter-1.2.41~beta10.zip
+          python3 - <<'PYTEST'
+          import zipfile
+          from xml.etree import ElementTree as ET
+          from pathlib import Path
+          for aid, ver in [('service.actweeter','0.4.101~beta6'), ('skin.actweeter','1.2.41~beta10')]:
+              path = Path('docs/testing/repo') / aid / f'{aid}-{ver}.zip'
+              with zipfile.ZipFile(path) as archive:
+                  assert archive.testzip() is None
+                  assert ET.fromstring(archive.read(aid+'/addon.xml')).get('version') == ver
+          PYTEST
       - name: Verify isolated Beta feed and immutable dependencies
         run: |
           python3 tools/build_test_channel.py \
@@ -74,8 +76,23 @@ jobs:
             --rivulet-repository-zip source/0.4.32/third_party/rivulet/repository.rivulet-1.0.2.zip \
             --iagl-repository-zip source/0.4.32/third_party/iagl/repository.zachmorris-1.0.4.zip \
             --output "$RUNNER_TEMP/testing"
-          cmp "$RUNNER_TEMP/testing/repo/addons.xml" docs/testing/repo/addons.xml
-          cmp "$RUNNER_TEMP/testing/repo/addons.xml.md5" docs/testing/repo/addons.xml.md5
+          # The archived installer builds an immutable historic Beta feed; a newer
+          # WorldTV Beta must not be compared byte-for-byte with that snapshot.
+          python3 - <<'PYTEST'
+          from pathlib import Path
+          from xml.etree import ElementTree as ET
+          import hashlib
+          live = Path('docs/testing/repo/addons.xml')
+          payload = live.read_bytes()
+          assert hashlib.md5(payload).hexdigest() == (live.parent / 'addons.xml.md5').read_text().strip()
+          versions = {a.get('id'):a.get('version') for a in ET.fromstring(payload)}
+          assert versions['skin.actweeter'] == '1.2.43~beta1'
+          assert versions['service.actweeter'] == '0.4.103~beta1'
+          assert versions['plugin.video.launcherm3u'] == '1.3.3~beta1'
+          for addon_id, version in versions.items():
+              artifact = live.parent / addon_id / f'{addon_id}-{version}.zip'
+              assert artifact.is_file(), artifact
+          PYTEST
           cmp "$RUNNER_TEMP/testing/bootstrap/index.html" docs/testing/bootstrap/index.html
           cmp "$RUNNER_TEMP/testing/bootstrap/repository.actweeter.testing-1.0.2.zip" docs/testing/bootstrap/repository.actweeter.testing-1.0.2.zip
           cmp "$RUNNER_TEMP/testing/repo/repository.actweeter.testing/repository.actweeter.testing-1.0.2.zip" docs/testing/repo/repository.actweeter.testing/repository.actweeter.testing-1.0.2.zip
