@@ -1,0 +1,1 @@
+Beta: botón Submenú exclusivo del modo táctil; navegación por mando intacta.

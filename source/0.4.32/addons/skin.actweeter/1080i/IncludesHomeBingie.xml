@@ -975,6 +975,7 @@
 		</control>	 
 		<!-- Touch-only controls; remote-mode layout remains unchanged. -->
         <include>AcTweeteRTouchToolbar</include>
+        <include>AcTweeteRTouchSubmenuEntry</include>
 
 		<!-- Snow Effect -->
         <include condition="Skin.HasSetting(EnableSnowAnimation)">SnowAnimation</include>
