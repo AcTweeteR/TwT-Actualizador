@@ -74,11 +74,64 @@ def _tv_recent_path():
     return os.path.join(xbmcvfs.translatePath(ADDON.getAddonInfo("profile")), "tv_recent.json")
 
 
-def _tv_recent_invalidate():
+# Wake only after a TV playback event: no extra Home polling on normal startup.
+_TV_RECENT_REFRESH_PENDING = threading.Event()
+_TV_RECENT_REFRESH_GUARD = threading.Lock()
+_TV_RECENT_REFRESH_WORKER = None
+
+
+def _tv_recent_refresh_loop(kodi):
+    """Refresh an existing Home widget after returning from playback.
+
+    Kodi retains the widget directory while fullscreen video / PVR guide is
+    open. Merely updating its URL token does not make it requery the listing.
+    Wait until Home is actually active rather than refreshing the PVR guide or
+    interrupting live video. No Skin Shortcuts rebuild or ReloadSkin is used.
+    """
+    monitor = kodi.Monitor()
+    while not monitor.abortRequested():
+        if not _TV_RECENT_REFRESH_PENDING.wait(2):
+            continue
+        try:
+            if kodi.getCondVisibility("Window.IsActive(Home)"):
+                # A short settle period avoids refreshing the outgoing Home
+                # while switching from Home to fullscreen TV playback.
+                if monitor.waitForAbort(0.5):
+                    break
+                if kodi.getCondVisibility("Window.IsActive(Home)"):
+                    kodi.executebuiltin(
+                        "CancelAlarm(AcTweeteRTVRecentRefresh,silent)", False)
+                    kodi.executebuiltin(
+                        "AlarmClock(AcTweeteRTVRecentRefresh,Container.Refresh,"
+                        "00:00:01,silent)", False)
+                    _TV_RECENT_REFRESH_PENDING.clear()
+                    kodi.log("[AcTweeteR] TV_RECENT home_refresh_scheduled", kodi.LOGINFO)
+        except (RuntimeError, SystemError, AttributeError) as exc:
+            kodi.log("[AcTweeteR] TV_RECENT refresh_alarm_error=%s" %
+                     type(exc).__name__, kodi.LOGWARNING)
+        if monitor.waitForAbort(1):
+            break
+
+
+def _tv_recent_invalidate(kodi=xbmc):
+    """Change only TV's listing token and defer a native refresh until Home."""
+    global _TV_RECENT_REFRESH_WORKER
     try:
-        xbmcgui.Window(10000).setProperty("AcTweeteR.TVRecentRefresh", uuid.uuid4().hex)
-    except (RuntimeError, SystemError, AttributeError):
-        pass
+        kodi.executebuiltin("SetProperty(AcTweeteR.TVRecentRefresh,%s,Home)" %
+                            uuid.uuid4().hex, False)
+    except (RuntimeError, SystemError, AttributeError) as exc:
+        kodi.log("[AcTweeteR] TV_RECENT refresh_property_error=%s" %
+                 type(exc).__name__, kodi.LOGWARNING)
+        return False
+    with _TV_RECENT_REFRESH_GUARD:
+        if (_TV_RECENT_REFRESH_WORKER is None or
+                not _TV_RECENT_REFRESH_WORKER.is_alive()):
+            _TV_RECENT_REFRESH_WORKER = threading.Thread(
+                target=_tv_recent_refresh_loop, args=(kodi,),
+                name="AcTweeteR-TVRecent-Home", daemon=True)
+            _TV_RECENT_REFRESH_WORKER.start()
+        _TV_RECENT_REFRESH_PENDING.set()
+    return True
 
 
 def _tv_recent_record(kodi, channel_id):
@@ -86,7 +139,7 @@ def _tv_recent_record(kodi, channel_id):
         return
     try:
         if record_tv_recent(_tv_recent_path(), channel_id):
-            _tv_recent_invalidate()
+            _tv_recent_invalidate(kodi)
             kodi.log("[AcTweeteR] TV_RECENT updated", kodi.LOGINFO)
     except (OSError, RuntimeError, ValueError) as exc:
         kodi.log("[AcTweeteR] TV_RECENT write_error=" + type(exc).__name__,
@@ -723,7 +776,7 @@ def _run_coordinator(kodi, addon_factory, vfs, clock=time.time, monitor=None,
         if now >= next_tv_epg_refresh:
             if (kodi.getCondVisibility("Window.IsActive(Home)") and
                     read_tv_history(_tv_recent_path())):
-                _tv_recent_invalidate()
+                _tv_recent_invalidate(kodi)
             next_tv_epg_refresh = now + 60
         if now >= next_update_check and not kodi.getCondVisibility("Player.HasMedia"):
             from testing_updates import check as check_testing_updates

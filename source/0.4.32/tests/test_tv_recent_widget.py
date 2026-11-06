@@ -118,6 +118,84 @@ class WidgetWiringTests(unittest.TestCase):
             self.assertNotIn("actweeter_expand", path)
             self.assertNotIn("limit=19", path)
 
+    def test_tv_focus_uses_same_landscape_frame_as_other_widgets(self):
+        root = ET.parse(ROOT / "addons/skin.actweeter/1080i/IncludesHomeWidgets.xml").getroot()
+        layout = root.find(".//include[@name='widget_layout_tv_recent']")
+        focused = layout.find("focusedlayout[@condition='Control.HasFocus($PARAM[widgetid])']")
+        self.assertIsNotNone(focused)
+        frame = focused.find(".//control[@type='image']")
+        self.assertIsNotNone(frame)
+        self.assertIsNotNone(frame.find("include[.='ThumbsFO_DefsBingie']"))
+        self.assertIsNotNone(frame.find("include[.='thumbsborder_focused']"))
+        self.assertIsNotNone(layout.find(
+            "focusedlayout[@condition='!Control.HasFocus($PARAM[widgetid])']"))
+
+    def test_live_tv_refresh_waits_until_home_without_reloading_skin(self):
+        import ast
+        import threading
+        import uuid
+        source = (ROOT / "addons/service.actweeter/service.py").read_text()
+        tree = ast.parse(source)
+        functions = [node for node in tree.body if isinstance(node, ast.FunctionDef)
+                     and node.name in ('_tv_recent_invalidate', '_tv_recent_refresh_loop')]
+        class FakeMonitor:
+            def abortRequested(self):
+                return False
+            def waitForAbort(self, delay):
+                return delay == 1
+        class Kodi:
+            LOGWARNING = 2
+            LOGINFO = 1
+            def __init__(self, home):
+                self.home = home
+                self.calls = []
+            def Monitor(self):
+                return FakeMonitor()
+            def executebuiltin(self, value, wait):
+                self.calls.append((value, wait))
+            def getCondVisibility(self, condition):
+                self.calls.append((condition, None))
+                return self.home
+            def log(self, value, level):
+                self.calls.append((value, level))
+        class FakeThread:
+            created = []
+            def __init__(self, target, args, name, daemon):
+                self.target = target
+                self.args = args
+                self.name = name
+                self.daemon = daemon
+                self.created.append(self)
+            def start(self):
+                pass
+            def is_alive(self):
+                return True
+        stub = Kodi(False)
+        event = threading.Event()
+        env = {'uuid': uuid, 'xbmc': stub, 'threading': threading,
+               '_TV_RECENT_REFRESH_PENDING': event,
+               '_TV_RECENT_REFRESH_GUARD': threading.Lock(),
+               '_TV_RECENT_REFRESH_WORKER': None}
+        env['threading'] = type('FakeThreading', (), {'Thread': FakeThread})
+        exec(compile(ast.Module(body=functions, type_ignores=[]),
+                     'service.py', 'exec'), env)
+        self.assertTrue(env['_tv_recent_invalidate'](stub))
+        self.assertTrue(event.is_set())
+        self.assertEqual(len(FakeThread.created), 1)
+        self.assertTrue(FakeThread.created[0].daemon)
+        env['_tv_recent_refresh_loop'](stub)
+        self.assertTrue(event.is_set())
+        self.assertFalse(any('Container.Refresh' in x for x, _ in stub.calls))
+        stub.home = True
+        env['_tv_recent_refresh_loop'](stub)
+        self.assertFalse(event.is_set())
+        commands = [cmd for cmd, wait in stub.calls if wait is False]
+        self.assertEqual(len([x for x in commands if x.startswith(
+            'SetProperty(AcTweeteR.TVRecentRefresh,')]), 1)
+        self.assertEqual(len([x for x in commands if 'Container.Refresh' in x]), 1)
+        self.assertFalse(any('ReloadSkin' in x or 'SkinShortcuts' in x
+                             for x in commands))
+
     def test_skin_card_and_template_current_epg(self):
         includes = ET.parse(ROOT / "addons/skin.actweeter/1080i/IncludesHomeWidgets.xml")
         self.assertIsNotNone(includes.find(".//include[@name='widget_layout_tv_recent']"))

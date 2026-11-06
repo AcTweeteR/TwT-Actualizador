@@ -398,15 +398,20 @@
         <itemlayout height="339" width="418">
             <include content="AcTweeteRTVRecentCard" />
         </itemlayout>
-        <focusedlayout height="339" width="418">
+        <focusedlayout height="339" width="418" condition="Control.HasFocus($PARAM[widgetid])">
             <control type="group">
                 <include content="AcTweeteRTVRecentCard" />
                 <control type="image">
+                    <visible>true</visible>
                     <width>418</width>
                     <height>242</height>
+                    <include>ThumbsFO_DefsBingie</include>
                     <include>thumbsborder_focused</include>
                 </control>
             </control>
+        </focusedlayout>
+        <focusedlayout height="339" width="418" condition="!Control.HasFocus($PARAM[widgetid])">
+            <include content="AcTweeteRTVRecentCard" />
         </focusedlayout>
     </include>
 

@@ -148,8 +148,8 @@ class TouchBetaTests(unittest.TestCase):
         versions={x.get("id"):x.get("version") for x in feed}
         # The live Testing feed advances independently of the immutable
         # 2026-11-04 Beta1 archive, which remains reproducible above.
-        self.assertEqual(versions["skin.actweeter"],"1.2.41~beta6")
-        self.assertEqual(versions["service.actweeter"],"0.4.101~beta5")
+        self.assertEqual(versions["skin.actweeter"],"1.2.41~beta7")
+        self.assertEqual(versions["service.actweeter"],"0.4.101~beta6")
         self.assertEqual(versions["plugin.video.xstream-pro"],"1.1.2.44~beta8")
         self.assertEqual(versions["repository.rivulet"],"1.0.2")
         self.assertEqual(versions["repository.zachmorris"],"1.0.4")
