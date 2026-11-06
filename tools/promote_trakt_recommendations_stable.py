@@ -14,7 +14,7 @@ def build(output):
  output=Path(output)
  if output.exists():raise FileExistsError('create-only output already exists')
  current=(ROOT/'repo/addons.xml').read_bytes()
- if sha(current) not in (PREVIOUS,PROMOTED):raise ValueError('unexpected active Stable release')
+ if sha(current) not in (PREVIOUS,PROMOTED,sha((ROOT/'manifests/archive/trakt-recommendations-stable-addons-20261105.xml').read_bytes()),json.loads((ROOT/'manifests/actweeter-stable-tv-recent-20261106.json').read_text())['index_sha256']):raise ValueError('unexpected active Stable release')
  if hashlib.md5(current).hexdigest()!=(ROOT/'repo/addons.xml.md5').read_text().strip():raise ValueError('current checksum mismatch')
  # Historical predecessor must be archived verbatim so the promotion is
  # independently reproducible after Stable advances to this release.

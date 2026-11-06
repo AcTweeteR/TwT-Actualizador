@@ -70,6 +70,7 @@
   "channel": "stable",
   "index_md5": "f1427627a10c1f8875379988b6e3e82c",
   "index_sha256": "11d4b5b4a31104e1bc8e4dfb40c453ba2424622e6c9eeeb7ab9c13e7e765f585",
+  "previous_index_sha256": "006ab64927071d2f185fa7ec6003b47e4ec3a56618891b1aa273f8cd9dc2e858",
   "release": "actweeter-stable-tv-recent-20261106",
   "release_date": "2026-11-06",
   "source_beta": {

@@ -148,4 +148,4 @@ class TouchNativeActionsBeta3(unittest.TestCase):
         self.assertEqual(versions["plugin.video.xstream-pro"],"1.1.2.44~beta8")
         stable={e.get("id"):e.get("version") for e in
                 ET.parse(ROOT/"repo/addons.xml").getroot()}
-        self.assertEqual(stable["skin.actweeter"],"1.2.41")
+        self.assertEqual(stable["skin.actweeter"],"1.2.42")

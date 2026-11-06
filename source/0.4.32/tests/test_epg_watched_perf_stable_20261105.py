@@ -22,9 +22,9 @@ class PromotedStableTests(unittest.TestCase):
     def test_current_stable_version_pair_is_greater_than_old(self):
         stable={x.get('id'):x.get('version') for x in
                 ET.parse(ROOT/'repo/addons.xml').getroot()}
-        self.assertEqual(stable['skin.actweeter'],'1.2.41')
+        self.assertEqual(stable['skin.actweeter'],'1.2.42')
         self.assertEqual(stable['plugin.video.xstream-pro'],'1.1.2.45')
-        self.assertEqual(stable['service.actweeter'],'0.4.101')
+        self.assertEqual(stable['service.actweeter'],'0.4.102')
         archived={x.get('id'):x.get('version') for x in
                   ET.parse(ROOT/'manifests/archive/priority-stable-addons-20261104.xml').getroot()}
         self.assertEqual(archived['skin.actweeter'],'1.2.40')
