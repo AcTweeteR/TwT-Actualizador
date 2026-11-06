@@ -1,0 +1,1 @@
+Beta: el panel de submenú muestra hasta doce entradas sin desplazamiento; WorldTV visible.
