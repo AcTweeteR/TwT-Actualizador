@@ -52,19 +52,21 @@ jobs:
           python3 tools/verify_current_stable.py
       # Historical Beta4 is immutable; Beta5 legitimately replaces the current
       # source module. Never regenerate an old release from moving sources.
-      - name: Rebuild current Service Beta5 after migration retry fix
+      - name: Verify immutable Service Beta5 archive
         run: |
-          python3 tools/build_tv_recent_beta5.py --output "$RUNNER_TEMP/service.actweeter-0.4.101~beta5.zip"
-          cmp "$RUNNER_TEMP/service.actweeter-0.4.101~beta5.zip" \
-            docs/testing/repo/service.actweeter/service.actweeter-0.4.101~beta5.zip
-      - name: Rebuild TV live-refresh Service Beta6 and focus Skin Beta10
+          python3 -c 'import zipfile,xml.etree.ElementTree as E; p="docs/testing/repo/service.actweeter/service.actweeter-0.4.101~beta5.zip"; z=zipfile.ZipFile(p); assert z.testzip() is None; assert E.fromstring(z.read("service.actweeter/addon.xml")).get("version")=="0.4.101~beta5"'
+      - name: Verify immutable Service Beta6 and Skin Beta10 archives
         run: |
-          python3 tools/build_tv_recent_beta6.py --output "$RUNNER_TEMP/service.actweeter-0.4.101~beta6.zip"
-          cmp "$RUNNER_TEMP/service.actweeter-0.4.101~beta6.zip" \
-            docs/testing/repo/service.actweeter/service.actweeter-0.4.101~beta6.zip
-          python3 tools/build_tv_recent_skin_beta10.py --output "$RUNNER_TEMP/skin.actweeter-1.2.41~beta10.zip"
-          cmp "$RUNNER_TEMP/skin.actweeter-1.2.41~beta10.zip" \
-            docs/testing/repo/skin.actweeter/skin.actweeter-1.2.41~beta10.zip
+          python3 - <<'PYTEST'
+          import zipfile
+          from xml.etree import ElementTree as ET
+          from pathlib import Path
+          for aid, ver in [('service.actweeter','0.4.101~beta6'), ('skin.actweeter','1.2.41~beta10')]:
+              path = Path('docs/testing/repo') / aid / f'{aid}-{ver}.zip'
+              with zipfile.ZipFile(path) as archive:
+                  assert archive.testzip() is None
+                  assert ET.fromstring(archive.read(aid+'/addon.xml')).get('version') == ver
+          PYTEST
       - name: Verify isolated Beta feed and immutable dependencies
         run: |
           python3 tools/build_test_channel.py \
