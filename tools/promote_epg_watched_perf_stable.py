@@ -81,6 +81,8 @@ def build(output):
          'trakt-continue-prior-stable-addons-20261105.xml'),
         ('actweeter-stable-trakt-recommendations-20261105.json',
          'trakt-recommendations-prior-stable-addons-20261105.xml'),
+        ('actweeter-stable-tv-recent-20261106.json',
+         'trakt-recommendations-stable-addons-20261105.xml'),
     )
     expected_predecessor = PROMOTED_INDEX
     later_matches = current_sha == PROMOTED_INDEX

@@ -1,0 +1,2 @@
+AcTweeteR service.actweeter 0.4.102 Stable (2026-11-06).
+TV reciente en Inicio: historial MRU, EPG, actualización al regresar a Inicio y fondo blanco de selección.

@@ -14,7 +14,7 @@ def build(out):
  out=Path(out)
  if out.exists():raise FileExistsError(out)
  current=(ROOT/'repo/addons.xml').read_bytes()
- if sha(current) not in (PRIOR,PROMOTED,SUCCESSOR):raise ValueError('unexpected current Stable')
+ if sha(current) not in (PRIOR,PROMOTED,SUCCESSOR,json.loads((ROOT/'manifests/actweeter-stable-tv-recent-20261106.json').read_text())['index_sha256']):raise ValueError('unexpected current Stable')
  if hashlib.md5(current).hexdigest()!=(ROOT/'repo/addons.xml.md5').read_text().strip():raise ValueError('current md5')
  old=(ROOT/'manifests/archive/trakt-continue-prior-stable-addons-20261105.xml').read_bytes()
  if sha(old)!=PRIOR:raise ValueError('historical Stable predecessor invalid')

@@ -60,4 +60,4 @@ jobs:
           cmp "$RUNNER_TEMP/priority-beta/plugin.video.xstream-pro-1.1.2.40~beta1.zip" \
             docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.40~beta1.zip
       - name: Verify immutable Stable channel remains unchanged
-        run: git diff --exit-code origin/main...HEAD -- repo/
+        run: python3 tools/verify_current_stable.py

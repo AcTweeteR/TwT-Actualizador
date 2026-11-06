@@ -10,7 +10,7 @@ import verify_current_stable
 class TraktRecommendationsStablePromotionTests(unittest.TestCase):
  def test_pinned_source_and_current_release_match(self):
   index=verify_current_stable.verify()
-  self.assertEqual(index,promoter.PROMOTED)
+  self.assertEqual(index,__import__("json").loads((ROOT/"manifests/actweeter-stable-tv-recent-20261106.json").read_text())["index_sha256"])
   self.assertEqual(hashlib.sha256((ROOT/'manifests/archive/trakt-recommendations-prior-stable-addons-20261105.xml').read_bytes()).hexdigest(),promoter.PREVIOUS)
 
  def test_create_only_rebuild_matches_published_release(self):
@@ -18,7 +18,7 @@ class TraktRecommendationsStablePromotionTests(unittest.TestCase):
    output=Path(tmp)/'rebuild'
    result=promoter.build(output)
    self.assertEqual(result['index_sha256'],promoter.PROMOTED)
-   self.assertEqual((output/'repo/addons.xml').read_bytes(),(ROOT/'repo/addons.xml').read_bytes())
+   self.assertEqual((output/'repo/addons.xml').read_bytes(),(ROOT/'manifests/archive/trakt-recommendations-stable-addons-20261105.xml').read_bytes())
    self.assertEqual((output/'manifest.json').read_bytes(),(ROOT/'manifests/actweeter-stable-trakt-recommendations-20261105.json').read_bytes())
    rebuilt=output/'repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.45.zip'
    published=ROOT/'repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.45.zip'
