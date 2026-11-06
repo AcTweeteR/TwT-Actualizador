@@ -371,8 +371,8 @@
                 <!-- Match Kodi's existing landscape card inset, keeping the
                      focused matte underneath (not over) the channel logo. -->
                 <bordersize>8</bordersize>
-                <texture background="true">$INFO[ListItem.Art(thumb)]</texture>
-                <aspectratio align="center" aligny="center">keep</aspectratio>
+                <texture background="true" diffuse="home/home_matte3.png">$INFO[ListItem.Art(thumb)]</texture>
+                <aspectratio scalediffuse="false" align="center" aligny="center">keep</aspectratio>
             </control>
             <control type="label">
                 <top>244</top>
