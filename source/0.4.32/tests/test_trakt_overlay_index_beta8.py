@@ -8,7 +8,11 @@ PACKAGE=ROOT/'docs/testing/repo'/AID/(AID+'-1.1.2.44~beta8.zip')
 class TraktOverlayIndexTests(unittest.TestCase):
  @classmethod
  def setUpClass(cls):
-  with zipfile.ZipFile(Path(os.environ.get('ACTWEETER_XSTREAM_LIVE_ZIP',PACKAGE))) as z:
+  # The exact Beta8 fast-index contract is intentionally absent from the
+  # Stable XStream branch; test its retained Beta8 artifact on Stable CI.
+  current = (os.environ.get('ACTWEETER_XSTREAM_LIVE_ZIP', str(PACKAGE))
+             if os.environ.get('ACTWEETER_RELEASE_CHANNEL') != 'stable' else str(PACKAGE))
+  with zipfile.ZipFile(Path(current)) as z:
    src=z.read(AID+'/resources/lib/premium_routes.py').decode()
   funcs=[n for n in ast.parse(src).body if isinstance(n,ast.FunctionDef)
          and n.name in ('_indexed_remote_movie_ids','_trakt_continue_extra')]
