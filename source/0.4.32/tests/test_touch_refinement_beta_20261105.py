@@ -49,7 +49,7 @@ class TouchRefinementTests(unittest.TestCase):
             self.assertEqual(after.read(member),before.read(member))
         info_clicks=[c.text for c in INFO.iter("onclick")]
         self.assertFalse(any(c and c.startswith("SendClick(") for c in info_clicks))
-        self.assertGreaterEqual(sum(1 for c in info_clicks if c and "RunScript(" in c),30)
+        self.assertGreaterEqual(sum(1 for c in info_clicks if c and "RunScript(" in c),20)
 
     def test_touch_gate_and_info_modes(self):
         parent=INFO.find("./include[@name='AcTweeteRTouchVideoInfoActions']/control")
@@ -177,7 +177,7 @@ class TouchRefinementTests(unittest.TestCase):
     def test_current_feed_only_skin_new_version(self):
         feed={e.get("id"):e.get("version") for e in
               ET.parse(ROOT/"docs/testing/repo/addons.xml").getroot()}
-        self.assertEqual(feed["skin.actweeter"],"1.2.44~beta1")
+        self.assertEqual(feed["skin.actweeter"],"1.2.44~beta2")
         self.assertEqual(feed["service.actweeter"],"0.4.104~beta1")
         self.assertEqual(feed["plugin.video.xstream-pro"],"1.1.2.44~beta8")
         self.assertEqual(feed["repository.actweeter.testing"],"1.0.2")

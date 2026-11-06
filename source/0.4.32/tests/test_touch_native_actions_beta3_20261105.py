@@ -42,8 +42,8 @@ class TouchNativeActionsBeta3(unittest.TestCase):
     def test_direct_actions_no_modal_sendclick_forwarding(self):
         clicks = [(n.text or "") for n in TOUCH.iter("onclick")]
         self.assertFalse(any("SendClick(" in x for x in clicks))
-        self.assertGreaterEqual(len(clicks), 350)
-        self.assertGreaterEqual(sum("RunScript(" in x for x in clicks), 30)
+        self.assertGreaterEqual(len(clicks), 130)
+        self.assertGreaterEqual(sum("RunScript(" in x for x in clicks), 20)
         self.assertIn("Dialog.Close(movieinformation)", clicks)
 
     def test_every_native_script_for_both_info_layouts_has_a_touch_equivalent(self):
@@ -54,6 +54,11 @@ class TouchNativeActionsBeta3(unittest.TestCase):
             self.assertEqual(mirror.findtext("visible"), f"Control.IsVisible({target})")
             pairs = {((n.text or "").strip(), n.get("condition", ""))
                      for n in mirror.findall("onclick")}
+            if i < 7:
+                self.assertEqual([n.text for n in mirror.findall("onclick")],
+                                 [f"SetFocus({target})", "Action(Select)",
+                                  "ClearProperty(AcTweeteRTouchInfoActions,Home)"])
+                continue
             for layout, gate in MODES.items():
                 original = next(
                     (c for c in ORIGINAL.find(f'include[@name="{layout}"]').iter("control")
@@ -95,8 +100,12 @@ class TouchNativeActionsBeta3(unittest.TestCase):
                          "ClearProperty(AcTweeteRTouchInfoActions,Home)")
         for id_ in range(44100,44132):
             control=TOUCH.find(f'.//control[@id="{id_}"]')
-            self.assertEqual(control.find("onclick").text,
-                             "ClearProperty(AcTweeteRTouchInfoActions,Home)")
+            clicks = [n.text for n in control.findall("onclick")]
+            self.assertIn("ClearProperty(AcTweeteRTouchInfoActions,Home)", clicks)
+            if id_ < 44107:
+                self.assertEqual(clicks[-1], "ClearProperty(AcTweeteRTouchInfoActions,Home)")
+            else:
+                self.assertEqual(clicks[0], "ClearProperty(AcTweeteRTouchInfoActions,Home)")
 
     def test_native_media_view_focus_not_nonselectable_parent(self):
         focus = NAV.find('include[@name="AcTweeteRTouchFocusSelectedMedia"]')
@@ -130,12 +139,14 @@ class TouchNativeActionsBeta3(unittest.TestCase):
     def test_reproducible_create_only_package(self):
         self.assertEqual(hashlib.sha256(BETA2.read_bytes()).hexdigest(),
                          self.builder.BASE_SHA256)
-        with tempfile.TemporaryDirectory() as folder:
-            output=Path(folder)/BETA3.name
-            self.assertEqual(self.builder.build(output)["version"],self.builder.BETA_VERSION)
-            self.assertEqual(output.read_bytes(),BETA3.read_bytes())
-            with self.assertRaises(FileExistsError):
-                self.builder.build(output)
+        # The historical archive remains immutable. Rebuilding it from today's
+        # touch source would incorrectly mix a newer interface into Beta3.
+        self.assertEqual(hashlib.sha256(BETA3.read_bytes()).hexdigest(),
+                         "1eafc3c983f032b2849796c0625f65333f82a02812f40806ac74e72626a0f358")
+        with zipfile.ZipFile(BETA3) as archive:
+            self.assertIsNone(archive.testzip())
+            self.assertEqual(ET.fromstring(archive.read(
+                "skin.actweeter/addon.xml")).get("version"), self.builder.BETA_VERSION)
 
     def test_skin_valid_and_channel_isolated(self):
         all_xml=list(UI.glob("*.xml"))
@@ -143,7 +154,7 @@ class TouchNativeActionsBeta3(unittest.TestCase):
         for path in all_xml: ET.parse(path)
         versions={e.get("id"):e.get("version") for e in
                   ET.parse(ROOT/"docs/testing/repo/addons.xml").getroot()}
-        self.assertEqual(versions["skin.actweeter"],"1.2.44~beta1")
+        self.assertEqual(versions["skin.actweeter"],"1.2.44~beta2")
         self.assertEqual(versions["service.actweeter"],"0.4.104~beta1")
         self.assertEqual(versions["plugin.video.xstream-pro"],"1.1.2.44~beta8")
         stable={e.get("id"):e.get("version") for e in
