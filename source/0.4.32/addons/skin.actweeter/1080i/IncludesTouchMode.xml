@@ -110,6 +110,23 @@
         </control>
     </include>
 
+    <!-- Explicit touch entry into the native submenu: remote/keyboard behavior is untouched. -->
+    <include name="AcTweeteRTouchSubmenuEntry">
+        <control type="button" id="43884">
+            <visible>Skin.HasSetting(AcTweeteRTouchMode) + $EXP[IsMainMenuOpened] + !Skin.HasSetting(DisableAllSubmenus) + Integer.IsGreater(Container(4445).NumItems,0)</visible>
+            <left>482</left><top>84</top><width>250</width><height>76</height>
+            <font>Reg24</font><align>center</align><aligny>center</aligny>
+            <label>Submenú  ›</label>
+            <texturefocus border="10" colordiffuse="FFCD2028">diffuse/panel.png</texturefocus>
+            <texturenofocus border="10" colordiffuse="D01B1B1B">diffuse/panel.png</texturenofocus>
+            <textcolor>FFFFFFFF</textcolor><focusedcolor>FFFFFFFF</focusedcolor>
+            <onclick>SetProperty(submenu,show,Home)</onclick>
+            <onclick>SetProperty(ShowViewSubMenu,show,Home)</onclick>
+            <onclick>SetFocus(4444)</onclick>
+            <onleft>900</onleft><onback>900</onback>
+        </control>
+    </include>
+
     <!-- The close button is visible only in our skin's movie/series info sheet.
          All provider windows, EPG and Kodi native dialogs are untouched. -->
     <include name="AcTweeteRTouchInfoClose">
