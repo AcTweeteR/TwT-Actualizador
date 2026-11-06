@@ -353,7 +353,7 @@ class MenuContractTests(unittest.TestCase):
                 result = interface_layout.apply_layout(
                     shortcuts, service, ADDON, interface_layout.SETTINGS)
                 self.assertEqual(result["status"], "APPLIED")
-                self.assertEqual(interface_layout.LAYOUT_VERSION, 19)
+                self.assertEqual(interface_layout.LAYOUT_VERSION, 20)
                 expected_main = interface_layout.merge_arcade_shortcut(
                     previous_main, (ADDON / "shortcuts/mainmenu.DATA.xml").read_bytes())
                 for name, wanted in (("skin.actweeter-mainmenu.DATA.xml", expected_main),

@@ -55,9 +55,9 @@ class CandidateSourceMetadataTests(unittest.TestCase):
         import sys
         sys.path.insert(0, str(sys_path))
         import interface_layout
-        self.assertEqual(interface_layout.LAYOUT_VERSION, 19)
+        self.assertEqual(interface_layout.LAYOUT_VERSION, 20)
         self.assertEqual(interface_layout.LAYOUT_MIGRATION_ID,
-                         "interface-layout-v19-restore-rivulet-launcher")
+                         "interface-layout-v20-tv-recent-widget")
         self.assertTrue(interface_layout.interface_migration_due({"layout_version": 12}))
 
     def test_candidate_manifest_does_not_claim_runtime_or_publication(self):

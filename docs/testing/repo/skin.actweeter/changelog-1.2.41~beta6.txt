@@ -1,0 +1,1 @@
+Beta: historial de canales TV vistos en Inicio; iconos, programa EPG, historial único MRU de 20 canales; actualización sin reconstruir el resto de widgets.

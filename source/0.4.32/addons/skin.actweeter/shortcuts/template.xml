@@ -57,7 +57,7 @@
                 <param name="submenuid" value="$SKINSHORTCUTS[submenuid]" />
                 <param name="widgetName" value="$SKINSHORTCUTS[widgetName]" />
             </include>
-            <include content="widget_base" condition="$PYTHON['true' if widgetPath else 'false']">
+            <include content="widget_base" condition="$PYTHON['true' if widgetPath and not widgetPath.startswith('plugin://service.actweeter/?action=tv_recent') else 'false']">
                 <param name="contentStyle" value="$SKINSHORTCUTS[contentStyle]" />
                 <param name="widgetid" value="$PYTHON[int(mainmenuid)]$PYTHON[int(widgetid) + 3002]" />
 				<param name="container" value="$SKINSHORTCUTS[container]" />
@@ -71,6 +71,23 @@
                 <param name="widgetPath" value="$SKINSHORTCUTS[widgetPath]" />
                 <param name="widgetExpandable" value="$SKINSHORTCUTS[widgetExpandable]" />
                 <param name="widgetStyle" value="widget_layout_$SKINSHORTCUTS[widgetStyle]" />
+                <param name="widgetSortBy" value="$SKINSHORTCUTS[widgetSortBy]" />
+                <param name="widgetSortOrder" value="$SKINSHORTCUTS[widgetSortOrder]" />
+                <param name="widgetLimit" value="$SKINSHORTCUTS[widgetLimit]" />
+            </include>
+            <include content="widget_base" condition="$PYTHON['true' if widgetPath and widgetPath.startswith('plugin://service.actweeter/?action=tv_recent') else 'false']">
+                <param name="contentStyle" value="$SKINSHORTCUTS[contentStyle]" />
+                <param name="widgetid" value="$PYTHON[int(mainmenuid)]$PYTHON[int(widgetid) + 3002]" />
+				<param name="container" value="$SKINSHORTCUTS[container]" />
+				<param name="position" value="$SKINSHORTCUTS[position]" />
+				<param name="width" value="$SKINSHORTCUTS[width]" />
+				<param name="height" value="$SKINSHORTCUTS[height]" />
+                <param name="widgetName" value="$SKINSHORTCUTS[widgetName]" />
+                <param name="submenuid" value="$SKINSHORTCUTS[submenuid]" />
+                <param name="widgetTags" value="$SKINSHORTCUTS[widgetTags]" />
+                <param name="widgetTarget" value="$SKINSHORTCUTS[widgetTarget]" />
+                <param name="widgetPath" value="$SKINSHORTCUTS[widgetPath]" />
+                <param name="widgetStyle" value="widget_layout_tv_recent" />
                 <param name="widgetSortBy" value="$SKINSHORTCUTS[widgetSortBy]" />
                 <param name="widgetSortOrder" value="$SKINSHORTCUTS[widgetSortOrder]" />
                 <param name="widgetLimit" value="$SKINSHORTCUTS[widgetLimit]" />

@@ -224,6 +224,32 @@ def main(argv=None):
         return
     query = argv[2] if len(argv) > 2 else ""
     params = urllib.parse.parse_qs(query.lstrip("?"), keep_blank_values=True)
+    if params.get('action') == ['tv_recent']:
+        from tv_recent import read_history, tv_rows
+        profile = xbmcvfs.translatePath(xbmcaddon.Addon('service.actweeter').getAddonInfo('profile'))
+        history = read_history(os.path.join(profile, 'tv_recent.json'))
+        rpc = lambda method, fields=None: _rpc(method, fields).get('result', {})
+        for row in tv_rows(history, rpc):
+            item = xbmcgui.ListItem(label=row['name'], label2=row['now'])
+            item.setArt({'thumb': row['icon'], 'poster': row['icon'],
+                         'icon': row['icon'], 'landscape': row['icon']})
+            item.setProperty('AcTweeteR.TVChannel', '1')
+            item.setProperty('AcTweeteR.TVNow', row['now'])
+            item.setProperty('IsPlayable', 'false')
+            url = 'plugin://service.actweeter/?action=tv_play&channelid=%d' % row['id']
+            xbmcplugin.addDirectoryItem(handle, url, item, isFolder=True)
+        xbmcplugin.endOfDirectory(handle, succeeded=True, cacheToDisc=False)
+        return
+    if params.get('action') == ['tv_play']:
+        from tv_recent import _id
+        channel = _id(params.get('channelid', [''])[0])
+        if channel is not None:
+            response = _rpc('Player.Open', {'item': {'channelid': channel}})
+            succeeded = 'error' not in response
+        else:
+            succeeded = False
+        xbmcplugin.endOfDirectory(handle, succeeded=succeeded, cacheToDisc=False)
+        return
     if params.get('action') == ['trakt_actions']:
         from trakt_actions_ui import render as render_trakt_actions
         render_trakt_actions(handle, addon=xbmcaddon.Addon(), vfs=xbmcvfs,
