@@ -134,6 +134,10 @@ class WidgetWiringTests(unittest.TestCase):
         self.assertEqual(group[1].get('content'), 'AcTweeteRTVRecentCard')
         card = root.find(".//include[@name='AcTweeteRTVRecentCard']")
         self.assertEqual(card.findtext("control/control[@type='image']/bordersize"), '8')
+        texture = card.find("control/control[@type='image']/texture")
+        self.assertEqual(texture.get('diffuse'), 'home/home_matte3.png')
+        self.assertEqual(card.find("control/control[@type='image']/aspectratio").get(
+            'scalediffuse'), 'false')
         self.assertIsNotNone(layout.find(
             "focusedlayout[@condition='!Control.HasFocus($PARAM[widgetid])']"))
 
