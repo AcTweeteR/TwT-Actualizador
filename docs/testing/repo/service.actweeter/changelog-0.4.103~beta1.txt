@@ -1,0 +1,1 @@
+WorldTV: instala LauncherM3U como dependencia independiente, configura IPTV-org y XMLTV en perfiles existentes sin sobrescribir listas personalizadas. Migración segura del submenú de TV, sin widgets ni cambios de PVR.

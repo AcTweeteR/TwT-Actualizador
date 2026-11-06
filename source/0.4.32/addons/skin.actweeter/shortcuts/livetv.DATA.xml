@@ -40,4 +40,12 @@
 		<thumb />
 		<action>ActivateWindow(TVTimers)</action>
 	</shortcut>
+	<shortcut>
+		<defaultID>worldtv-launcher</defaultID>
+		<label>WorldTV</label>
+		<label2 />
+		<icon>shortcuts/tv.png</icon>
+		<thumb />
+		<action>RunAddon(plugin.video.launcherm3u)</action>
+	</shortcut>
 </shortcuts>

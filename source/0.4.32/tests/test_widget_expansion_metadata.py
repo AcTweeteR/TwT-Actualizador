@@ -97,6 +97,7 @@ class ExpandableWidgetMetadataTests(unittest.TestCase):
             rows = {
                 "mainmenu": [("Inicio", "ActivateWindow(Home)")],
                 "powermenu": [("Ajustes", "ActivateWindow(Settings)")],
+                "livetv": [("WorldTV", "RunAddon(plugin.video.launcherm3u)")],
                 "inicio-1": [
                     ("Continue", "plugin://plugin.video.xstream-pro/?mode=premium&view=continue&stype=both&reload=$INFO[Window(Home).Property(R)]"),
                     ("Movies", "plugin://plugin.video.xstream-pro/?mode=premium&stype=movie"),

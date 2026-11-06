@@ -29,14 +29,14 @@
 		<license>MIT</license>
 		<news>changelog-1.0.2.txt</news>
 	</extension>
-</addon><addon id="skin.actweeter" version="1.2.41~beta10" name="AcTweeteR" provider-name="AcTweeteR maintainers">
+</addon><addon id="skin.actweeter" version="1.2.43~beta1" name="AcTweeteR" provider-name="AcTweeteR maintainers">
 	<requires>
 		<import version="5.17.0" addon="xbmc.gui" />
 		<import addon="script.bingie.helper" version="1.1.2" />
 		<import addon="script.bingie.toolbox" version="1.0.0" />
 		<import addon="script.bingie.widgets" version="1.0.1" />
 		<import addon="script.skinshortcuts" version="2.0.3" />
-		<import addon="service.actweeter" version="0.4.53" />
+		<import addon="service.actweeter" version="0.4.103~beta1" />
 		<import addon="resource.language.es_es" version="11.0.108" />
 		<import addon="resource.images.studios.coloured" version="0.0.24" />
 		<import addon="plugin.video.tmdb.bingie.helper" version="1.0.1" />
@@ -58,7 +58,7 @@
 		<description lang="es_MX">AcTweeteR - tu espacio de películas, series y televisión.</description>
 		<platform>all</platform>
 		<license>GPL v2.0</license>
-		<news>changelog-1.2.41~beta10.txt</news>
+		<news>changelog-1.2.43~beta1.txt</news>
 		<forum />
 		<source />
 		<assets>
@@ -66,7 +66,7 @@
 			<fanart>extras/media/backgrounds/settings_interface.jpg</fanart>
 		</assets>
 	</extension>
-</addon><addon id="service.actweeter" name="AcTweeteR Service" version="0.4.101~beta6" provider-name="AcTweeteR maintainers">
+</addon><addon id="service.actweeter" name="AcTweeteR Service" version="0.4.103~beta1" provider-name="AcTweeteR maintainers">
   <requires>
     <import addon="xbmc.python" version="3.0.0" />
         <import addon="plugin.video.xstream-pro" version="1.1.2.43" />
@@ -75,7 +75,7 @@
     <import addon="plugin.video.youtube" />
     <import addon="script.trakt" version="3.9.0" />
     <import addon="plugin.video.tmdb.bingie.helper" version="1.0.1" />
-  </requires>
+  <import addon="plugin.video.launcherm3u" version="1.3.3~beta1" /></requires>
   <extension point="xbmc.service" library="service.py" start="startup" />
   <extension point="xbmc.python.script" library="setup.py">
     <provides>executable</provides>
@@ -90,7 +90,7 @@
     <description lang="es_ES">Búsqueda visual inteligente de películas, series, programas y personas. Consulta el índice local de XStream, la guía EPG y los metadatos del helper TMDb existente. Coordina la configuración reanudable y las actualizaciones del catálogo. Las credenciales permanecen en los ajustes oficiales de cada complemento.</description>
     <platform>all</platform>
     <license>GPL-2.0-or-later</license>
-    <news>changelog-0.4.101~beta6.txt</news>
+    <news>changelog-0.4.103~beta1.txt</news>
   </extension>
 </addon><addon id="plugin.video.xstream-pro" name="Xstream Pro" version="1.1.2.44~beta8" provider-name="PesicP">
     <requires>
@@ -154,4 +154,30 @@
             <fanart>fanart.jpg</fanart>
         </assets>
     </extension>
+</addon><addon id="plugin.video.launcherm3u" name="Launcher M3U" version="1.3.3~beta1" provider-name="entreunosyceros">
+  <requires>
+    <import addon="xbmc.python" version="3.0.0" />
+  </requires>
+
+  <extension point="xbmc.python.script" library="default.py">
+    <provides>executable</provides>
+  </extension>
+  <extension point="xbmc.python.pluginsource" library="default.py">
+    <provides>video</provides>
+  </extension>
+  <extension point="xbmc.addon.metadata">
+    <summary lang="en_GB">Fast M3U IPTV player with EPG</summary>
+    <summary lang="es_ES">Reproductor IPTV M3U rápido con EPG</summary>
+    <description lang="en_GB">Load local or remote M3U playlists with SQLite caching optimized for large lists. Optional XMLTV EPG support. Simple browsing by groups, similar to IPTV Simple Client.[CR][CR]Repository: https://github.com/entreunosyceros/launcherm3u</description>
+    <description lang="es_ES">Carga listas M3U locales o remotas con caché SQLite optimizada para listas grandes. Soporte opcional de guía EPG XMLTV. Navegación sencilla por grupos, similar a IPTV Simple Client.[CR][CR]Repositorio: https://github.com/entreunosyceros/launcherm3u</description>
+    <platform>all</platform>
+    <license>GPL-2.0-or-later</license>
+    <website>https://github.com/entreunosyceros/launcherm3u</website>
+    <source>https://github.com/entreunosyceros/launcherm3u</source>
+    <assets>
+      <icon>resources/icon.png</icon>
+      <fanart>resources/fanart.jpg</fanart>
+    </assets>
+    <news>AcTweeteR WorldTV Beta: IPTV-org por países y XMLTV externo preconfigurados.</news>
+  </extension>
 </addon></addons>

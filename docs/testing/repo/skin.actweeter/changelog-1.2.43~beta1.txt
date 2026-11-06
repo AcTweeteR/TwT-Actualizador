@@ -1,0 +1,1 @@
+WorldTV: acceso independiente desde el submenu de TV. Sin cambios en Home, widgets, proveedor IPTV o TV PVR.

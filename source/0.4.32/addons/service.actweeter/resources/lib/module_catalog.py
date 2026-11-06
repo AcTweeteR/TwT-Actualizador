@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 
 
-CATALOG_VERSION = 18
+CATALOG_VERSION = 19
 ALL_TARGET_PLATFORMS = ("macos", "windows", "linux", "android", "tvos")
 
 MODULES = (
@@ -29,7 +29,8 @@ MODULES = (
             {"id": "service.actweeter", "minimum": "0.4.23", "source": "repository.actweeter",
              "license": "GPL-2.0-or-later", "platforms": ALL_TARGET_PLATFORMS,
              "dependencies": ("plugin.video.xstream-pro", "pvr.iptvsimple", "plugin.video.youtube",
-                              "slyguy.trailers", "script.trakt", "plugin.video.tmdb.bingie.helper"),
+                              "slyguy.trailers", "script.trakt", "plugin.video.tmdb.bingie.helper",
+                              "plugin.video.launcherm3u"),
              "configuration": "Resumable setup state in add-on profile; Trakt account authorization remains user-owned",
              "update": "Kodi add-on repository automatic updates",
              "recovery": "Rerun AcTweeteR setup/repair"},
@@ -154,6 +155,13 @@ MODULES = (
              "configuration": "Rivulet settings and Stremio account remain upstream-owned",
              "update": "Kodi add-on repository automatic updates from repository.rivulet",
              "recovery": "Kodi native reinstall; retain Rivulet add-on profile"},
+            {"id": "plugin.video.launcherm3u", "minimum": "1.3.3~beta1",
+             "source": "AcTweeteR Testing: LauncherM3U 1.3.3 upstream GPL-2.0-or-later with WorldTV defaults",
+             "license": "GPL-2.0-or-later", "platforms": ALL_TARGET_PLATFORMS,
+             "dependencies": (),
+             "configuration": "IPTV-org country playlist and independent XMLTV; preserve custom user playlists",
+             "update": "Kodi native repository updates in AcTweeteR Testing",
+             "recovery": "Reinstall LauncherM3U from AcTweeteR; preserve its addon data"},
             {"id": "repository.zachmorris", "minimum": "1.0.4", "source": "official Zach Morris repository bootstrap, SHA-256 pinned in Beta",
              "license": "GPL-3.0", "platforms": ALL_TARGET_PLATFORMS,
              "dependencies": (), "configuration": "Official repository metadata; no user data changed",
@@ -233,6 +241,7 @@ _REPOSITORIES = {
     "inputstream.adaptive": ("repository.xbmc.org",),
     "repository.rivulet": ("repository.actweeter",),
     "plugin.video.rivulet": ("repository.rivulet",),
+    "plugin.video.launcherm3u": ("repository.actweeter.testing", "repository.actweeter"),
     "repository.zachmorris": ("repository.actweeter",),
     "plugin.program.iagl": ("repository.zachmorris",),
 }

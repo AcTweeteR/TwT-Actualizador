@@ -78,7 +78,10 @@ class CollectionsWidgetTests(unittest.TestCase):
             self.assertEqual(result['status'], 'APPLIED')
             backup = service / 'interface_backups' / result['backup']
             for name in result['changed']:
-                self.assertEqual((backup / name).read_bytes(), original[name])
+                if name in original:
+                    self.assertEqual((backup / name).read_bytes(), original[name])
+                else:
+                    self.assertFalse((backup / name).exists())  # newly introduced submenu
             self.assertEqual(layout.apply_layout(shortcuts, service, SKIN, layout.SETTINGS)['status'], 'CURRENT')
             custom = shortcuts / 'skin.actweeter-moviehub.DATA.xml'
             custom.write_bytes(custom.read_bytes().replace(b'Populares', b'Mis personalizados'))
