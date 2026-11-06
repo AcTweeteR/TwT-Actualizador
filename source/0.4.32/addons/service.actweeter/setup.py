@@ -1767,7 +1767,8 @@ def _run_pending_interface_migration(dialog, *, explicit=False):
 
     marker = interface_attempt_signature(
         LAYOUT_VERSION, active_skin_version,
-        generated_digest + ":" + properties_digest)
+        generated_digest + ":" + properties_digest,
+        ADDON.getAddonInfo("version"))
     if not explicit and window.getProperty(marker_name) == marker:
         xbmc.log("[AcTweeteR] INTERFACE_LAYOUT_UPDATE status=coalesced reason=same_stale_output",
                  xbmc.LOGINFO)

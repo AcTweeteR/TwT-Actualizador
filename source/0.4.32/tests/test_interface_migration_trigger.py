@@ -106,6 +106,15 @@ class InterfaceMigrationTriggerTests(unittest.TestCase):
             12, "1.2.29~beta8", "generated-xml-hash"))
         self.assertNotEqual(signature, interface_layout.interface_attempt_signature(
             12, "1.2.29~beta8", "replaced-skin-output-hash"))
+        # A Service upgrade fixes a failed generation even when the skin and
+        # generated output have not changed. The new version must retry once.
+        before = interface_layout.interface_attempt_signature(
+            20, "1.2.41~beta6", "unchanged-output", "0.4.101~beta4")
+        after = interface_layout.interface_attempt_signature(
+            20, "1.2.41~beta6", "unchanged-output", "0.4.101~beta5")
+        self.assertNotEqual(before, after)
+        self.assertEqual(after, interface_layout.interface_attempt_signature(
+            20, "1.2.41~beta6", "unchanged-output", "0.4.101~beta5"))
 
     def test_coordinator_validates_generated_output_before_session_marker(self):
         source = (ROOT / "addons/service.actweeter/setup.py").read_text(encoding="utf-8")
