@@ -91,8 +91,24 @@ class AutoplaySkinWiringTests(unittest.TestCase):
                                 if 'AcTweeteR.CollectionFolder' not in n.get('condition', '')
                                 and not (path.name == 'IncludesFunctions.xml'
                                          and 'RunScript(slyguy.trailers' in (n.text or ''))]
-                    self.assertEqual(actions(before), actions(after),
-                                     (path.name, tag))
+                    previous, current = actions(before), actions(after)
+                    if (path.name in ('IncludesBingie.xml', 'IncludesHomeWidgets.xml')
+                            and tag in ('onup', 'ondown')
+                            and any('13008' in a.get('condition', '')
+                                    for a, _ in previous)):
+                        # TV is a new second row: only the legacy last-row
+                        # Spotlight transition may shift 13008 -> 13009.
+                        def without_tv_shift(values):
+                            return [entry for entry in values if not any(
+                                str(n) in entry[0].get('condition', '') for n in (13008, 13009))]
+                        self.assertEqual(without_tv_shift(previous),
+                                         without_tv_shift(current), (path.name, tag))
+                        self.assertTrue(any('13009' in attrs.get('condition', '')
+                                            for attrs, _ in current))
+                        self.assertTrue(any('13008' in attrs.get('condition', '')
+                                            for attrs, _ in current))
+                    else:
+                        self.assertEqual(previous, current, (path.name, tag))
                 if path.name == 'IncludesBingie.xml':
                     folders = [n for n in after.iter('onclick')
                                if 'AcTweeteR.CollectionFolder' in n.get('condition', '')]

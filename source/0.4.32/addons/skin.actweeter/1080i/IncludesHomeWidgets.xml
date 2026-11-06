@@ -360,6 +360,56 @@
         </focusedlayout>
     </include>   
     
+    <!-- Lightweight TV MRU card: channel logo + live EPG title. No expand control. -->
+    <include name="AcTweeteRTVRecentCard">
+        <control type="group">
+            <width>418</width>
+            <height>339</height>
+            <control type="image">
+                <width>418</width>
+                <height>242</height>
+                <texture background="true">$INFO[ListItem.Art(thumb)]</texture>
+                <aspectratio align="center" aligny="center">keep</aspectratio>
+            </control>
+            <control type="label">
+                <top>244</top>
+                <left>8</left>
+                <width>400</width>
+                <height>41</height>
+                <font>Reg26</font>
+                <textcolor>$INFO[Skin.String(TagOverlaysTextColor)]</textcolor>
+                <label>[B]$INFO[ListItem.Label][/B]</label>
+                <scroll>true</scroll>
+            </control>
+            <control type="label">
+                <top>285</top>
+                <left>8</left>
+                <width>400</width>
+                <height>43</height>
+                <font>tagsecrow</font>
+                <textcolor>$INFO[Skin.String(TagOverlaysTextColor)]</textcolor>
+                <label>$INFO[ListItem.Property(AcTweeteR.TVNow)]</label>
+                <scroll>true</scroll>
+            </control>
+        </control>
+    </include>
+    <include name="widget_layout_tv_recent">
+        <height>339</height>
+        <itemlayout height="339" width="418">
+            <include content="AcTweeteRTVRecentCard" />
+        </itemlayout>
+        <focusedlayout height="339" width="418">
+            <control type="group">
+                <include content="AcTweeteRTVRecentCard" />
+                <control type="image">
+                    <width>418</width>
+                    <height>242</height>
+                    <include>thumbsborder_focused</include>
+                </control>
+            </control>
+        </focusedlayout>
+    </include>
+
     <!-- widget square layout -->
     <include name="widget_layout_square">
         <height>$PARAM[height]</height>
@@ -785,8 +835,10 @@
             </include>
             <visible>Container($PARAM[widgetid]).IsUpdating + Control.IsVisible($PARAM[widgetid]) | Integer.IsGreater(Container($PARAM[widgetid]).NumItems,0)</visible>
             <movement>7</movement>
-            <!-- The runtime Favorites row (13008) is the deliberate lower entry into Spotlight. -->
-            <ondown condition="Window.IsActive(Home) + String.IsEqual($PARAM[widgetid],13008) + Control.IsVisible(1508) + Integer.IsGreater(Container(1508).NumItems,0)">1508</ondown>
+            <!-- Consumer Favorites moves from 13008 to 13009 with the TV row;
+                 retain the pre-migration fallback for customized profiles. -->
+            <ondown condition="Window.IsActive(Home) + String.IsEqual($PARAM[widgetid],13009) + Control.IsVisible(1508) + Integer.IsGreater(Container(1508).NumItems,0)">1508</ondown>
+            <ondown condition="Window.IsActive(Home) + String.IsEqual($PARAM[widgetid],13008) + !Control.IsVisible(13009) + Control.IsVisible(1508) + Integer.IsGreater(Container(1508).NumItems,0)">1508</ondown>
             <!-- Consume only the terminal Home widget edge so it cannot fall through to footer power controls. -->
             <ondown condition="Window.IsActive(Home) + String.IsEqual($PARAM[widgetid],53003)">noop</ondown>
             <orientation>$PARAM[position]</orientation>

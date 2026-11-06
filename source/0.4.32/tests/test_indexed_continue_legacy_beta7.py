@@ -8,7 +8,10 @@ PACKAGE=ROOT/'docs/testing/repo'/AID/(AID+'-1.1.2.44~beta7.zip')
 class IndexedContinueLegacy(unittest.TestCase):
  @classmethod
  def setUpClass(cls):
-  with zipfile.ZipFile(Path(os.environ.get('ACTWEETER_XSTREAM_LIVE_ZIP',PACKAGE))) as z:
+  # This historical Beta7 function is not exported by the Stable package.
+  current = (os.environ.get('ACTWEETER_XSTREAM_LIVE_ZIP', str(PACKAGE))
+             if os.environ.get('ACTWEETER_RELEASE_CHANNEL') != 'stable' else str(PACKAGE))
+  with zipfile.ZipFile(Path(current)) as z:
    source=z.read(AID+'/resources/lib/premium_routes.py').decode()
   node=next(node for node in ast.parse(source).body if isinstance(node,ast.FunctionDef) and node.name=='_indexed_continue_movies')
   cls.compiled=compile(ast.Module(body=[node],type_ignores=[]),'continue','exec')

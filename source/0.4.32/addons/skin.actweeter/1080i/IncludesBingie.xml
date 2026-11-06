@@ -2283,7 +2283,8 @@
             </include>
             <onright condition="String.IsEmpty(Window(Home).Property(spotlightinfo))">SetProperty(spotlightinfo,1,Home)</onright>
             <onright condition="!String.IsEmpty(Window(Home).Property(spotlightinfo)) + Control.IsVisible(1509)">1509</onright>
-            <onup condition="Window.IsActive(Home) + Control.IsVisible(13008) + Integer.IsGreater(Container(13008).NumItems,0)">13008</onup>
+            <onup condition="Window.IsActive(Home) + Control.IsVisible(13009) + Integer.IsGreater(Container(13009).NumItems,0)">13009</onup>
+            <onup condition="Window.IsActive(Home) + !Control.IsVisible(13009) + Control.IsVisible(13008) + Integer.IsGreater(Container(13008).NumItems,0)">13008</onup>
             <onleft condition="!String.IsEmpty(Window(Home).Property(spotlightinfo))">ClearProperty(spotlightinfo,Home)</onleft>
             <onleft condition="String.IsEmpty(Window(Home).Property(spotlightinfo)) + $EXP[IsPlayingUnrecognizedContent]">SetProperty(KeepPlayingPreview,1,Home)</onleft>
             <onleft condition="String.IsEmpty(Window(Home).Property(spotlightinfo))">SetFocus(900,$INFO[Window(Home).Property(menupos)])</onleft>

@@ -15,8 +15,8 @@ import urllib.parse
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-LAYOUT_VERSION = 19
-LAYOUT_MIGRATION_ID = 'interface-layout-v19-restore-rivulet-launcher'
+LAYOUT_VERSION = 20
+LAYOUT_MIGRATION_ID = 'interface-layout-v20-tv-recent-widget'
 GROUPS = ('mainmenu', 'powermenu', 'inicio-1', '10000-1', 'moviehub', 'tvshowhub')
 # Exact profile copies shipped as defaults in Beta 8. They may be updated when
 # older state files do not yet track ownership; any byte-level customization
@@ -216,7 +216,10 @@ def source_documents(skin_root, *, recommendations_enabled=True):
                 raise ValueError('invalid shortcut item')
             action_node = node.find('action')
             action = action_node.text or ''
-            if group not in ('mainmenu', 'powermenu') and not action.startswith('plugin://plugin.video.xstream-pro/'):
+            tv_widget = (group in ('inicio-1', '10000-1') and
+                         node.findtext('defaultID') == 'actweeter-tv-recent' and
+                         action.startswith('plugin://service.actweeter/?action=tv_recent&'))
+            if group not in ('mainmenu', 'powermenu') and not (action.startswith('plugin://plugin.video.xstream-pro/') or tv_widget):
                 raise ValueError('non-provider widget source')
             if 'profile_num=' in action or '/Users/' in action:
                 raise ValueError('installation-specific widget source')
@@ -681,8 +684,17 @@ def generated_rows(path, *, condition_visible=None):
                 if route:
                     sensitive=any(k.lower() in ('username','password','token','auth','url','server','api_key')
                                   for k in urllib.parse.parse_qs(urllib.parse.urlparse(route).query))
-                    provider_only=route.startswith('plugin://plugin.video.xstream-pro/') and not sensitive
-                    query=urllib.parse.parse_qs(urllib.parse.urlparse(route).query)
+                    parts=urllib.parse.urlsplit(route)
+                    query=urllib.parse.parse_qs(parts.query)
+                    # Strict first-party exception for the TV MRU widget: the
+                    # source is our Kodi service, not a provider or a user URL.
+                    tv_recent=(name == 'Widgets' and parts.scheme == 'plugin' and
+                               parts.netloc == 'service.actweeter' and parts.path == '/' and
+                               query.get('action') == ['tv_recent'] and
+                               set(query).issubset({'action', 'reload', 'collections_reload'}))
+                    provider_only=(not sensitive and
+                                   (route.startswith('plugin://plugin.video.xstream-pro/')
+                                    or tv_recent))
                     route_expandable=expandable_widget_action(route)[1] if provider_only else False
                     metadata_expandable=params.get('widgetExpandable','').strip().lower()=='true'
                     route_has_expansion=(query.get('actweeter_expand')==['1']

@@ -55,6 +55,7 @@ from playing_video_item import get_playing_video_item  # noqa: E402
 from interface_layout import SpotlightRotation
 from plugin_query_trace import begin as begin_plugin_trace, emit as emit_plugin_trace  # noqa: E402
 from continue_widgets import invalidate_continue_widgets  # noqa: E402
+from tv_recent import channel_from_item, current_tv_channel, record as record_tv_recent, read_history as read_tv_history  # noqa: E402
 from performance_metrics import PerformanceRecorder  # noqa: E402
 from interaction_trace import player_started as trace_player_started  # noqa: E402
 from interaction_trace import player_terminal as trace_player_terminal  # noqa: E402
@@ -69,6 +70,29 @@ from trakt_sync_consent import enabled as trakt_sync_enabled  # noqa: E402
 from trakt_sync_scheduler import Scheduler as TraktSyncScheduler  # noqa: E402
 
 
+def _tv_recent_path():
+    return os.path.join(xbmcvfs.translatePath(ADDON.getAddonInfo("profile")), "tv_recent.json")
+
+
+def _tv_recent_invalidate():
+    try:
+        xbmcgui.Window(10000).setProperty("AcTweeteR.TVRecentRefresh", uuid.uuid4().hex)
+    except (RuntimeError, SystemError, AttributeError):
+        pass
+
+
+def _tv_recent_record(kodi, channel_id):
+    if channel_id is None:
+        return
+    try:
+        if record_tv_recent(_tv_recent_path(), channel_id):
+            _tv_recent_invalidate()
+            kodi.log("[AcTweeteR] TV_RECENT updated", kodi.LOGINFO)
+    except (OSError, RuntimeError, ValueError) as exc:
+        kodi.log("[AcTweeteR] TV_RECENT write_error=" + type(exc).__name__,
+                 kodi.LOGWARNING)
+
+
 _MONITOR_BASE = getattr(xbmc, "Monitor", object)
 if isinstance(_MONITOR_BASE, type):
     class AcTweeteRMonitor(_MONITOR_BASE):
@@ -77,6 +101,13 @@ if isinstance(_MONITOR_BASE, type):
             self.preview = preview
 
         def onNotification(self, sender, method, data):
+            if method == "Player.OnPlay":
+                try:
+                    payload = json.loads(data) if isinstance(data, str) else data
+                    channel_id = channel_from_item(payload.get("item")) if isinstance(payload, dict) else None
+                    _tv_recent_record(xbmc, channel_id)
+                except (ValueError, TypeError, AttributeError):
+                    pass
             if sender == "service.actweeter" and method in (
                     "actweeter_intro_finish", "Other.actweeter_intro_finish"):
                 player = getattr(self, "intro_player", None)
@@ -249,6 +280,9 @@ class SlyGuyTrailerReturnPlayer(_PLAYER_BASE):
         if self.kodi.getInfoLabel("Window(Home).Property(AcTweeteRIntroPlayback)") == "1":
             self._finish_intro("superseded")
         self.intro_terminal_seen = False
+        # PVR TV is captured as playback starts, independently of VOD, Trakt
+        # and previews. Duplicate OnPlay/AVStarted callbacks are idempotent.
+        _tv_recent_record(self.kodi, current_tv_channel(self.kodi))
         if self.auto_preview is not None:
             try:
                 item = self.getPlayingItem()
@@ -671,6 +705,7 @@ def _run_coordinator(kodi, addon_factory, vfs, clock=time.time, monitor=None,
     pending_refresh = None
     next_refresh_check = service_started_at
     next_update_check = service_started_at + 30
+    next_tv_epg_refresh = service_started_at + 60
     cached_profile_path = ""
     cached_profile_number = 1
     service_profile = vfs.translatePath(ADDON.getAddonInfo("profile"))
@@ -683,6 +718,13 @@ def _run_coordinator(kodi, addon_factory, vfs, clock=time.time, monitor=None,
     while not monitor.abortRequested():
         now = clock()
         spotlight_rotation.tick(kodi, now, active_window=_window_id(kodi))
+        # EPG titles may change without playback. Invalidate this row alone,
+        # only while Home is shown and the user actually has TV history.
+        if now >= next_tv_epg_refresh:
+            if (kodi.getCondVisibility("Window.IsActive(Home)") and
+                    read_tv_history(_tv_recent_path())):
+                _tv_recent_invalidate()
+            next_tv_epg_refresh = now + 60
         if now >= next_update_check and not kodi.getCondVisibility("Player.HasMedia"):
             from testing_updates import check as check_testing_updates
             threading.Thread(target=check_testing_updates,

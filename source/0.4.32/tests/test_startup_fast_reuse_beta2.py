@@ -6,7 +6,10 @@ AID='service.actweeter';BETA=ROOT/'docs/testing/repo'/AID/(AID+'-0.4.101~beta2.z
 class StartupFastReuseTests(unittest.TestCase):
  @classmethod
  def setUpClass(cls):
-  with zipfile.ZipFile(Path(os.environ.get('ACTWEETER_SERVICE_LIVE_ZIP',BETA))) as z:
+  # A Beta2-specific historical contract must not inspect the Stable service.
+  current = (os.environ.get('ACTWEETER_SERVICE_LIVE_ZIP', str(BETA))
+             if os.environ.get('ACTWEETER_RELEASE_CHANNEL') != 'stable' else str(BETA))
+  with zipfile.ZipFile(Path(current)) as z:
    source=z.read(AID+'/setup.py').decode()
   cls.tree=ast.parse(source)
   cls.source=source

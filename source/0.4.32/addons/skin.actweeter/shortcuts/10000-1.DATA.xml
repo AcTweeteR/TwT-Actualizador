@@ -8,6 +8,14 @@
         <action>plugin://plugin.video.xstream-pro/?mode=premium&amp;view=continue&amp;stype=both&amp;reload=$INFO[Window(Home).Property(Premium.ContinueRefresh)]&amp;actweeter_expand=1&amp;limit=19</action>
     </shortcut>
     <shortcut>
+        <label>TV</label>
+        <label2 />
+        <icon />
+        <thumb />
+        <defaultID>actweeter-tv-recent</defaultID>
+        <action>plugin://service.actweeter/?action=tv_recent&amp;reload=$INFO[Window(Home).Property(AcTweeteR.TVRecentRefresh)]</action>
+    </shortcut>
+    <shortcut>
         <label>Añadidas recientemente</label>
         <label2 />
         <icon />

@@ -126,6 +126,9 @@ def test_failed_refresh_callback_is_terminal_and_backoff_does_not_hide_typeerror
         "RefreshGate": RefreshGate,
         "SpotlightRotation": _SpotlightRotation,
         "_window_id": lambda _kodi: None,
+        # EPG-only Home updates do not affect the provider refresh coordinator.
+        "read_tv_history": lambda _path: [],
+        "_tv_recent_path": lambda: str(tmp_path / "tv_recent.json"),
         "time": time,
         "ADDON": _Addon(service_profile),
         "vfs": _VFS(),
