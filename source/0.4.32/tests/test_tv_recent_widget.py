@@ -123,15 +123,21 @@ class WidgetWiringTests(unittest.TestCase):
         layout = root.find(".//include[@name='widget_layout_tv_recent']")
         focused = layout.find("focusedlayout[@condition='Control.HasFocus($PARAM[widgetid])']")
         self.assertIsNotNone(focused)
-        frame = focused.find(".//control[@type='image']")
-        self.assertIsNotNone(frame)
-        self.assertIsNotNone(frame.find("include[.='ThumbsFO_DefsBingie']"))
-        self.assertIsNotNone(frame.find("include[.='thumbsborder_focused']"))
-        # Kodi draws each child in order. The focus matte must be underneath
-        # the icon, not on top: otherwise the selected TV logo turns solid white.
         group = focused.find('control')
-        self.assertEqual([child.tag for child in group][:2], ['control', 'include'])
-        self.assertEqual(group[1].get('content'), 'AcTweeteRTVRecentCard')
+        self.assertEqual([child.tag for child in group][:2], ['include', 'control'])
+        self.assertEqual(group[0].get('content'), 'AcTweeteRTVRecentCard')
+        border = group[1]
+        self.assertEqual(border.get('type'), 'group')
+        edges = border.findall('control')
+        self.assertEqual(len(edges), 4)
+        self.assertEqual([edge.findtext('texture') for edge in edges],
+                         ['colors/color_white.png'] * 4)
+        self.assertEqual([edge.findtext('width') for edge in edges],
+                         ['418','418','4','4'])
+        self.assertEqual([edge.findtext('height') for edge in edges],
+                         ['4','4','242','242'])
+        self.assertEqual(edges[1].findtext('top'),'238')
+        self.assertEqual(edges[3].findtext('left'),'414')
         card = root.find(".//include[@name='AcTweeteRTVRecentCard']")
         self.assertEqual(card.findtext("control/control[@type='image']/bordersize"), '8')
         texture = card.find("control/control[@type='image']/texture")

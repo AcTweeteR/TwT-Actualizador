@@ -403,15 +403,17 @@
         </itemlayout>
         <focusedlayout height="339" width="418" condition="Control.HasFocus($PARAM[widgetid])">
             <control type="group">
-                <control type="image">
-                    <visible>true</visible>
+                <!-- Same white highlight color as the other widget rows,
+                     but four thin edges instead of a filled white rectangle. -->
+                <include content="AcTweeteRTVRecentCard" />
+                <control type="group">
                     <width>418</width>
                     <height>242</height>
-                    <include>ThumbsFO_DefsBingie</include>
-                    <include>thumbsborder_focused</include>
+                    <control type="image"><width>418</width><height>4</height><texture>colors/color_white.png</texture></control>
+                    <control type="image"><top>238</top><width>418</width><height>4</height><texture>colors/color_white.png</texture></control>
+                    <control type="image"><width>4</width><height>242</height><texture>colors/color_white.png</texture></control>
+                    <control type="image"><left>414</left><width>4</width><height>242</height><texture>colors/color_white.png</texture></control>
                 </control>
-                <!-- Draw art after the matte, so only the inset border shows. -->
-                <include content="AcTweeteRTVRecentCard" />
             </control>
         </focusedlayout>
         <focusedlayout height="339" width="418" condition="!Control.HasFocus($PARAM[widgetid])">
