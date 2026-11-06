@@ -17,7 +17,7 @@ from pathlib import Path
 
 LAYOUT_VERSION = 22
 LAYOUT_MIGRATION_ID = 'interface-layout-v22-radio-browser-menu'
-GROUPS = ('mainmenu', 'powermenu', 'livetv', 'radio', 'inicio-1', '10000-1', 'moviehub', 'tvshowhub')
+GROUPS = ('mainmenu', 'powermenu', 'livetv', 'inicio-1', '10000-1', 'moviehub', 'tvshowhub')
 # Exact profile copies shipped as defaults in Beta 8. They may be updated when
 # older state files do not yet track ownership; any byte-level customization
 # remains a conflict and is never silently replaced.
@@ -201,7 +201,7 @@ def interface_migration_due(state):
 
 def source_documents(skin_root, *, recommendations_enabled=True):
     output = {}
-    for group in GROUPS:
+    for group in GROUPS + ('radio',):
         path = as_path(skin_root)/'shortcuts'/(group+'.DATA.xml')
         # Older retained skin archives predate RADIO. Their source validation
         # must remain readable; only the current skin supplies this group.
