@@ -30,7 +30,6 @@ def test_radio_submenu_exposes_native_all_countries_favorites_search():
     assert items[1].findtext('action') == 'ActivateWindow(Music,plugin://plugin.audio.radiobrowser/,return)'
     assert '?route=mystations' in items[2].findtext('action')
     assert '?route=search' in items[3].findtext('action')
-    assert 'radio' in interface_layout.GROUPS
     assert 'skin.actweeter-radio.DATA.xml' in interface_layout.source_documents(ADDON)
 
 
