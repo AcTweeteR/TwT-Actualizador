@@ -127,6 +127,13 @@ class WidgetWiringTests(unittest.TestCase):
         self.assertIsNotNone(frame)
         self.assertIsNotNone(frame.find("include[.='ThumbsFO_DefsBingie']"))
         self.assertIsNotNone(frame.find("include[.='thumbsborder_focused']"))
+        # Kodi draws each child in order. The focus matte must be underneath
+        # the icon, not on top: otherwise the selected TV logo turns solid white.
+        group = focused.find('control')
+        self.assertEqual([child.tag for child in group][:2], ['control', 'include'])
+        self.assertEqual(group[1].get('content'), 'AcTweeteRTVRecentCard')
+        card = root.find(".//include[@name='AcTweeteRTVRecentCard']")
+        self.assertEqual(card.findtext("control/control[@type='image']/bordersize"), '8')
         self.assertIsNotNone(layout.find(
             "focusedlayout[@condition='!Control.HasFocus($PARAM[widgetid])']"))
 
