@@ -1,0 +1,1 @@
+Beta: actualiza automáticamente el historial de TV al volver a Inicio sin necesitar RECARGAR; refresco limitado al widget activo.
