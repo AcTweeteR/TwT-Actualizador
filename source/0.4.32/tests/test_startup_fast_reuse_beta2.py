@@ -7,8 +7,7 @@ class StartupFastReuseTests(unittest.TestCase):
  @classmethod
  def setUpClass(cls):
   # A Beta2-specific historical contract must not inspect the Stable service.
-  current = (os.environ.get('ACTWEETER_SERVICE_LIVE_ZIP', str(BETA))
-             if os.environ.get('ACTWEETER_RELEASE_CHANNEL') != 'stable' else str(BETA))
+  current = str(BETA)  # Immutable historical Beta2 fixture, not the rolling current Beta.
   with zipfile.ZipFile(Path(current)) as z:
    source=z.read(AID+'/setup.py').decode()
   cls.tree=ast.parse(source)

@@ -758,9 +758,17 @@ def interface_preparation_needed(migration_due, generated_ready):
     return bool(migration_due or not generated_ready)
 
 
-def interface_attempt_signature(layout_version, skin_version, output_digest):
-    """Key one bounded attempt to the actual skin generation, not just schema."""
-    fields = (str(layout_version), str(skin_version or ''), str(output_digest or 'missing'))
+def interface_attempt_signature(layout_version, skin_version, output_digest,
+                                service_version=''):
+    """Retry a stale build after a Service bugfix, but never loop on Home.
+
+    A failing generation can be marked attempted for the entire Kodi process.
+    A later Service update may fix that failure without changing the skin or
+    its generated XML; including the installed Service version permits one
+    new bounded repair attempt while preserving duplicate-build protection.
+    """
+    fields = (str(layout_version), str(skin_version or ''),
+              str(service_version or ''), str(output_digest or 'missing'))
     return hashlib.sha256('\0'.join(fields).encode('utf-8')).hexdigest()[:24]
 
 

@@ -1,0 +1,1 @@
+Beta: vuelve a intentar la migración del diseño después de actualizar Service incluso si no cambian el skin ni los XML generados; conserva el bloqueo antibucles.
