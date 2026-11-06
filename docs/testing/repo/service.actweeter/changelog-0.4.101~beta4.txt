@@ -1,0 +1,1 @@
+Beta: corrige la validación de los widgets condicionales de Skin Shortcuts; las ramas inactivas no bloquean la migración ni provocan recargas.

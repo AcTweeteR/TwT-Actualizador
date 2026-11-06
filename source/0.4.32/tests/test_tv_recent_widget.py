@@ -149,6 +149,34 @@ class WidgetWiringTests(unittest.TestCase):
             p.write_bytes(ET.tostring(root))
             self.assertFalse(generated_rows(p)['Widgets'][0]['provider_only'])
 
+    def test_generated_template_excludes_inactive_false_widget_branch(self):
+        # Real Skin Shortcuts generates both conditional widget_base branches.
+        # The unused branch must not fail expandable-property verification.
+        with tempfile.TemporaryDirectory() as directory:
+            p = Path(directory) / 'generated.xml'
+            root = ET.Element('includes')
+            inc = ET.SubElement(root, 'include',
+                                {'name': 'skinshortcuts-template-Widgets'})
+            route = ('plugin://plugin.video.xstream-pro/?mode=premium&'
+                     'view=continue&stype=both&actweeter_expand=1&limit=19')
+            for condition, expansion in [('true', 'true'), ('false', None)]:
+                node = ET.SubElement(inc, 'include',
+                                     {'content': 'widget_base', 'condition': condition})
+                ET.SubElement(node, 'param', name='widgetName', value='Continuar viendo')
+                ET.SubElement(node, 'param', name='widgetPath', value=route)
+                if expansion is not None:
+                    ET.SubElement(node, 'param', name='widgetExpandable', value=expansion)
+            tv = ET.SubElement(inc, 'include',
+                               {'content': 'widget_base', 'condition': 'true'})
+            ET.SubElement(tv, 'param', name='widgetName', value='TV')
+            ET.SubElement(tv, 'param', name='widgetPath',
+                          value='plugin://service.actweeter/?action=tv_recent&reload=1')
+            p.write_bytes(ET.tostring(root))
+            rows = generated_rows(p)['Widgets']
+            self.assertEqual([r['label'] for r in rows], ['Continuar viendo', 'TV'])
+            self.assertTrue(all(r['expansion_ready'] for r in rows))
+            self.assertFalse(rows[1]['expandable'])
+
     def test_service_does_not_write_vod_trakt_or_playlists(self):
         source = (ROOT / "addons/service.actweeter/resources/lib/tv_recent.py").read_text()
         self.assertNotIn("trakt", source.lower())

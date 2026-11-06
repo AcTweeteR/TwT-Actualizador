@@ -126,7 +126,8 @@ class MenuContractTests(unittest.TestCase):
             migration = ("interface-layout-v17-trakt-menu" if
                          addon.get("version") == "0.4.94" else
                          "interface-layout-v20-tv-recent-widget" if
-                         "~beta3" in addon.get("version", "") else
+                         ("0.4.101~beta" in addon.get("version", "") or
+                          addon.get("version") == "0.4.102") else
                          "interface-layout-v19-restore-rivulet-launcher")
             self.assertIn(migration, layout)
             self.assertIn("current_root.find(\"shortcut[defaultID='trakt']\")", layout)
