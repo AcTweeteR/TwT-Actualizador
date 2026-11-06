@@ -50,11 +50,8 @@ jobs:
           cmp "$RUNNER_TEMP/epg-watched-perf-beta/skin.actweeter-1.2.41~beta4.zip" docs/testing/repo/skin.actweeter/skin.actweeter-1.2.41~beta4.zip
           cmp "$RUNNER_TEMP/epg-watched-perf-beta/plugin.video.xstream-pro-1.1.2.40~beta2.zip" docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.40~beta2.zip
           python3 tools/verify_current_stable.py
-      - name: Rebuild TV widget conditional-layout Beta hotfix
-        run: |
-          python3 tools/build_tv_recent_beta4.py --output "$RUNNER_TEMP/service.actweeter-0.4.101~beta4.zip"
-          cmp "$RUNNER_TEMP/service.actweeter-0.4.101~beta4.zip" \
-            docs/testing/repo/service.actweeter/service.actweeter-0.4.101~beta4.zip
+      # Historical Beta4 is immutable; Beta5 legitimately replaces the current
+      # source module. Never regenerate an old release from moving sources.
       - name: Rebuild current Service Beta5 after migration retry fix
         run: |
           python3 tools/build_tv_recent_beta5.py --output "$RUNNER_TEMP/service.actweeter-0.4.101~beta5.zip"
