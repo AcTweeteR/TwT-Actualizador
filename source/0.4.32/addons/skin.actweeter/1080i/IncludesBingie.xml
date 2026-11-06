@@ -1939,7 +1939,7 @@
 				<posy>72</posy>
                 <visible allowhiddenfocus="true">[String.IsEqual(Window(Home).Property(submenu),show) | Control.HasFocus(4444)] + Integer.IsGreater(Container(4445).NumItems,0)</visible>
                 <width>450</width>
-                <height>250</height>
+                <height>650</height>
                 <itemgap>3</itemgap>
                 <focusposition>0</focusposition>
                 <movement>3</movement>

@@ -69,7 +69,7 @@ def test_beta_packages_are_separate_from_provider_pvr():
     versions = {
         WORLDTV_ID: "1.3.3~beta1",
         "service.actweeter": "0.4.103~beta1",
-        "skin.actweeter": "1.2.43~beta2",
+        "skin.actweeter": "1.2.43~beta3",
     }
     index = ET.parse(folder / "addons.xml").getroot()
     indexed = {addon.get("id"): addon for addon in index}
