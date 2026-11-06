@@ -87,10 +87,25 @@ class AutoplaySkinWiringTests(unittest.TestCase):
                             'String.IsEqual(ListItem.DBType,movie)'))
                 for tag in ('onclick', 'onup', 'ondown', 'onleft', 'onright', 'onback'):
                     def actions(root):
-                        return [(n.attrib, n.text) for n in root.iter(tag)
-                                if 'AcTweeteR.CollectionFolder' not in n.get('condition', '')
-                                and not (path.name == 'IncludesFunctions.xml'
-                                         and 'RunScript(slyguy.trailers' in (n.text or ''))]
+                        result = []
+                        for n in root.iter(tag):
+                            if 'AcTweeteR.CollectionFolder' in n.get('condition', ''):
+                                continue
+                            if (path.name == 'IncludesFunctions.xml'
+                                    and 'RunScript(slyguy.trailers' in (n.text or '')):
+                                continue
+                            attrs = dict(n.attrib)
+                            # The new Beta supports SlyGuy without also
+                            # requiring the YouTube plugin to be installed.
+                            # A dedicated test verifies that new opt-in gate.
+                            if path.name == 'IncludesSkinSettings.xml' and (
+                                    n.text or '').strip() in (
+                                    'Skin.ToggleSetting(SpotLightTrailers)',
+                                    'Skin.ToggleSetting(BingieAutoTrailer)'):
+                                attrs['condition'] = attrs.get('condition', '').replace(
+                                    'System.HasAddon(slyguy.trailers) | ', '', 1)
+                            result.append((attrs, n.text))
+                        return result
                     previous, current = actions(before), actions(after)
                     if (path.name in ('IncludesBingie.xml', 'IncludesHomeWidgets.xml')
                             and tag in ('onup', 'ondown')

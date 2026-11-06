@@ -486,7 +486,7 @@
             <label>$LOCALIZE[31370]</label>
 			<onclick condition="!System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) + String.IsEqual(Skin.String(AutoYoutubeTrailer),true)">InstallAddon(plugin.video.youtube)</onclick>
 			<onclick condition="!System.HasAddon(plugin.video.imdb.trailers) + String.IsEqual(Skin.String(trailersource),imdb) + String.IsEqual(Skin.String(AutoYoutubeTrailer),true)">InstallAddon(plugin.video.imdb.trailers)</onclick>
-            <onclick condition="String.IsEqual(Skin.String(AutoYoutubeTrailer),false) | System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) | System.HasAddon(plugin.video.imdb.trailers) + System.HasAddon(plugin.video.imdb.trailers)">Skin.ToggleSetting(SpotLightTrailers)</onclick>
+            <onclick condition="System.HasAddon(slyguy.trailers) | String.IsEqual(Skin.String(AutoYoutubeTrailer),false) | System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) | System.HasAddon(plugin.video.imdb.trailers) + System.HasAddon(plugin.video.imdb.trailers)">Skin.ToggleSetting(SpotLightTrailers)</onclick>
             <selected>Skin.HasSetting(SpotLightTrailers)</selected>
             <visible>System.HasAddon(slyguy.trailers) + System.HasAddon(plugin.video.youtube)</visible>
         </control>
@@ -496,7 +496,7 @@
             <label>$LOCALIZE[31173]</label>
 			<onclick condition="!System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) + String.IsEqual(Skin.String(AutoYoutubeTrailer),true)">InstallAddon(plugin.video.youtube)</onclick>
 			<onclick condition="!System.HasAddon(plugin.video.imdb.trailers) + String.IsEqual(Skin.String(trailersource),imdb) + String.IsEqual(Skin.String(AutoYoutubeTrailer),true)">InstallAddon(plugin.video.imdb.trailers)</onclick>
-            <onclick condition="String.IsEqual(Skin.String(AutoYoutubeTrailer),false) | System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) | String.IsEqual(Skin.String(trailersource),imdb) + System.HasAddon(plugin.video.imdb.trailers)">Skin.ToggleSetting(BingieAutoTrailer)</onclick>
+            <onclick condition="System.HasAddon(slyguy.trailers) | String.IsEqual(Skin.String(AutoYoutubeTrailer),false) | System.HasAddon(plugin.video.youtube) + String.IsEqual(Skin.String(trailersource),youtube) | String.IsEqual(Skin.String(trailersource),imdb) + System.HasAddon(plugin.video.imdb.trailers)">Skin.ToggleSetting(BingieAutoTrailer)</onclick>
             <selected>Skin.HasSetting(BingieAutoTrailer)</selected>
             <visible>System.HasAddon(slyguy.trailers) + System.HasAddon(plugin.video.youtube)</visible>
         </control>	
