@@ -118,22 +118,27 @@ class WidgetWiringTests(unittest.TestCase):
             self.assertNotIn("actweeter_expand", path)
             self.assertNotIn("limit=19", path)
 
-    def test_tv_focus_uses_same_landscape_frame_as_other_widgets(self):
+    def test_tv_focus_has_four_visible_white_edges_without_opaque_matte(self):
         root = ET.parse(ROOT / "addons/skin.actweeter/1080i/IncludesHomeWidgets.xml").getroot()
         layout = root.find(".//include[@name='widget_layout_tv_recent']")
         focused = layout.find("focusedlayout[@condition='Control.HasFocus($PARAM[widgetid])']")
         self.assertIsNotNone(focused)
-        frame = focused.find(".//control[@type='image']")
-        self.assertIsNotNone(frame)
-        self.assertIsNotNone(frame.find("include[.='ThumbsFO_DefsBingie']"))
-        self.assertIsNotNone(frame.find("include[.='thumbsborder_focused']"))
-        # Kodi draws each child in order. The focus matte must be underneath
-        # the icon, not on top: otherwise the selected TV logo turns solid white.
         group = focused.find('control')
-        self.assertEqual([child.tag for child in group][:2], ['control', 'include'])
-        self.assertEqual(group[1].get('content'), 'AcTweeteRTVRecentCard')
-        card = root.find(".//include[@name='AcTweeteRTVRecentCard']")
-        self.assertEqual(card.findtext("control/control[@type='image']/bordersize"), '8')
+        self.assertEqual(group[0].get('content'), 'AcTweeteRTVRecentCard')
+        frame = group[1]
+        self.assertEqual(frame.get('type'), 'group')
+        self.assertEqual(frame.findtext('width'), '418')
+        self.assertEqual(frame.findtext('height'), '242')
+        edges = frame.findall('control')
+        self.assertEqual(len(edges), 4)
+        for edge in edges:
+            self.assertEqual(edge.get('type'), 'image')
+            self.assertEqual(edge.findtext('texture'), 'colors/color_white.png')
+            self.assertEqual(edge.find('texture').get('colordiffuse'), 'FFFFFFFF')
+        self.assertEqual([edge.findtext('height') for edge in edges[:2]], ['4', '4'])
+        self.assertEqual([edge.findtext('width') for edge in edges[2:]], ['4', '4'])
+        self.assertEqual(edges[1].findtext('top'), '238')
+        self.assertEqual(edges[3].findtext('left'), '414')
         self.assertIsNotNone(layout.find(
             "focusedlayout[@condition='!Control.HasFocus($PARAM[widgetid])']"))
 

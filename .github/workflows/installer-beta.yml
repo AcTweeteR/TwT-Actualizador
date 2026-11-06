@@ -27,7 +27,7 @@ jobs:
           ACTWEETER_XSTREAM_LIVE_ZIP: ${{ github.workspace }}/docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.44~beta8.zip
           ACTWEETER_XSTREAM_TEST_ZIP: ${{ github.workspace }}/docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.44~beta8.zip
           ACTWEETER_XSTREAM_UPSTREAM_ZIP: ${{ runner.temp }}/xstream-upstream-1.1.2.zip
-          ACTWEETER_SKIN_LIVE_ZIP: ${{ github.workspace }}/docs/testing/repo/skin.actweeter/skin.actweeter-1.2.41~beta8.zip
+          ACTWEETER_SKIN_LIVE_ZIP: ${{ github.workspace }}/docs/testing/repo/skin.actweeter/skin.actweeter-1.2.41~beta9.zip
           ACTWEETER_SERVICE_LIVE_ZIP: ${{ github.workspace }}/docs/testing/repo/service.actweeter/service.actweeter-0.4.101~beta6.zip
           ACTWEETER_BETA_INDEX: ${{ github.workspace }}/docs/testing/repo/addons.xml
           ACTWEETER_RELEASE_CHANNEL: beta
@@ -57,19 +57,19 @@ jobs:
           python3 tools/build_tv_recent_beta5.py --output "$RUNNER_TEMP/service.actweeter-0.4.101~beta5.zip"
           cmp "$RUNNER_TEMP/service.actweeter-0.4.101~beta5.zip" \
             docs/testing/repo/service.actweeter/service.actweeter-0.4.101~beta5.zip
-      - name: Rebuild TV live-refresh Service Beta6 and focus Skin Beta8
+      - name: Rebuild TV live-refresh Service Beta6 and focus Skin Beta9
         run: |
           python3 tools/build_tv_recent_beta6.py --output "$RUNNER_TEMP/service.actweeter-0.4.101~beta6.zip"
           cmp "$RUNNER_TEMP/service.actweeter-0.4.101~beta6.zip" \
             docs/testing/repo/service.actweeter/service.actweeter-0.4.101~beta6.zip
-          python3 tools/build_tv_recent_skin_beta8.py --output "$RUNNER_TEMP/skin.actweeter-1.2.41~beta8.zip"
-          cmp "$RUNNER_TEMP/skin.actweeter-1.2.41~beta8.zip" \
-            docs/testing/repo/skin.actweeter/skin.actweeter-1.2.41~beta8.zip
+          python3 tools/build_tv_recent_skin_beta9.py --output "$RUNNER_TEMP/skin.actweeter-1.2.41~beta9.zip"
+          cmp "$RUNNER_TEMP/skin.actweeter-1.2.41~beta9.zip" \
+            docs/testing/repo/skin.actweeter/skin.actweeter-1.2.41~beta9.zip
       - name: Verify isolated Beta feed and immutable dependencies
         run: |
           python3 tools/build_test_channel.py \
             --service-zip docs/testing/repo/service.actweeter/service.actweeter-0.4.101~beta6.zip \
-            --skin-zip docs/testing/repo/skin.actweeter/skin.actweeter-1.2.41~beta8.zip \
+            --skin-zip docs/testing/repo/skin.actweeter/skin.actweeter-1.2.41~beta9.zip \
             --xstream-zip docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.44~beta8.zip \
             --rivulet-repository-zip source/0.4.32/third_party/rivulet/repository.rivulet-1.0.2.zip \
             --iagl-repository-zip source/0.4.32/third_party/iagl/repository.zachmorris-1.0.4.zip \
