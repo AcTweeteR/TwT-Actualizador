@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "addons/service.actweeter/resources/lib"))
 from tv_recent import (MAX_CHANNELS, channel_from_item, channel_catalog,
                        current_tv_channel, read_history, record, tv_rows)
-from interface_layout import LAYOUT_VERSION, source_documents
+from interface_layout import LAYOUT_VERSION, source_documents, generated_rows
 
 
 class HistoryTests(unittest.TestCase):
@@ -127,6 +127,27 @@ class WidgetWiringTests(unittest.TestCase):
         template = (ROOT / "addons/skin.actweeter/shortcuts/template.xml").read_text()
         self.assertIn('value="widget_layout_tv_recent"', template)
         self.assertIn("widgetPath.startswith('plugin://service.actweeter/?action=tv_recent')", template)
+
+    def test_native_generated_layout_accepts_only_first_party_tv_route(self):
+        import xml.etree.ElementTree as ET
+        with tempfile.TemporaryDirectory() as directory:
+            p = Path(directory) / 'skin.xml'
+            root = ET.Element('includes')
+            inc = ET.SubElement(root, 'include', {'name': 'skinshortcuts-template-Widgets'})
+            tv = ET.SubElement(inc, 'include', {'content': 'widget_base'})
+            ET.SubElement(tv, 'param', {'name': 'widgetName', 'value': 'TV'})
+            ET.SubElement(tv, 'param', {'name': 'widgetPath', 'value':
+                'plugin://service.actweeter/?action=tv_recent&reload=1'})
+            p.write_bytes(ET.tostring(root))
+            rows = generated_rows(p)['Widgets']
+            self.assertEqual(len(rows), 1)
+            self.assertTrue(rows[0]['provider_only'])
+            self.assertTrue(rows[0]['expansion_ready'])
+            self.assertFalse(rows[0]['expandable'])
+            tv.find("param[@name='widgetPath']").set('value',
+                'plugin://service.actweeter/?action=tv_recent&url=https://unknown.example/')
+            p.write_bytes(ET.tostring(root))
+            self.assertFalse(generated_rows(p)['Widgets'][0]['provider_only'])
 
     def test_service_does_not_write_vod_trakt_or_playlists(self):
         source = (ROOT / "addons/service.actweeter/resources/lib/tv_recent.py").read_text()

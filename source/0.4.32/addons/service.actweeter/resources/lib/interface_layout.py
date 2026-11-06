@@ -684,8 +684,17 @@ def generated_rows(path, *, condition_visible=None):
                 if route:
                     sensitive=any(k.lower() in ('username','password','token','auth','url','server','api_key')
                                   for k in urllib.parse.parse_qs(urllib.parse.urlparse(route).query))
-                    provider_only=route.startswith('plugin://plugin.video.xstream-pro/') and not sensitive
-                    query=urllib.parse.parse_qs(urllib.parse.urlparse(route).query)
+                    parts=urllib.parse.urlsplit(route)
+                    query=urllib.parse.parse_qs(parts.query)
+                    # Strict first-party exception for the TV MRU widget: the
+                    # source is our Kodi service, not a provider or a user URL.
+                    tv_recent=(name == 'Widgets' and parts.scheme == 'plugin' and
+                               parts.netloc == 'service.actweeter' and parts.path == '/' and
+                               query.get('action') == ['tv_recent'] and
+                               set(query).issubset({'action', 'reload', 'collections_reload'}))
+                    provider_only=(not sensitive and
+                                   (route.startswith('plugin://plugin.video.xstream-pro/')
+                                    or tv_recent))
                     route_expandable=expandable_widget_action(route)[1] if provider_only else False
                     metadata_expandable=params.get('widgetExpandable','').strip().lower()=='true'
                     route_has_expansion=(query.get('actweeter_expand')==['1']
