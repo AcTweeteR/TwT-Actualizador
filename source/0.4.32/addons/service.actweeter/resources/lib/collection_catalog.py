@@ -93,6 +93,72 @@ class Catalog:
             db.execute('UPDATE lists SET mappings=? WHERE local_id=?',(json.dumps(mappings,sort_keys=True),identifier))
         return mappings['trakt_sync']
 
+    def ensure_native_defaults(self, *, scope, favorites_folder, approved):
+        """Bind only the four first-party folders to their matching Trakt lists.
+
+        The caller has already verified Trakt account, provider, profile and
+        both import/export consents. Never overwrite or silently remap existing
+        account-specific mappings. No network requests are made here.
+        """
+        if approved is not True:
+            raise PermissionError('explicitly approved native sync required')
+        if (not isinstance(scope, dict)
+                or set(scope) != {'account','profile','provider_scope','kodi_profile','generation'}
+                or not re.fullmatch(r'[A-Za-z0-9_-]{1,128}', str(scope['account']))
+                or not re.fullmatch(r'[1-9][0-9]?', str(scope['profile']))
+                or any(not re.fullmatch(r'[0-9a-f]{64}', str(scope[key]))
+                       for key in ('provider_scope','kodi_profile','generation'))):
+            raise ValueError('verified account and provider binding required')
+        if (not isinstance(favorites_folder,str) or favorites_folder not in
+                ('Favorites','Favoritos')):
+            raise ValueError('unsupported native favorites folder')
+        definitions = (
+            ('Favoritos de películas', favorites_folder, 'movie', 'movie', 'favorites'),
+            ('Favoritos de series', favorites_folder, 'series', 'show', 'favorites'),
+            ('Pendientes de películas', 'AcTweeteR Pending - Movies', 'movie', 'movie', 'watchlist'),
+            ('Pendientes de series', 'AcTweeteR Pending - Series', 'series', 'show', 'watchlist'),
+        )
+        added = 0
+        refreshed = 0
+        with self._db() as db:
+            db.execute('BEGIN IMMEDIATE')
+            existing = [(identifier,json.loads(raw)) for identifier,raw
+                        in db.execute('SELECT local_id,mappings FROM lists')]
+            for title,folder,media,kind,target in definitions:
+                source = {'folder':folder,'media_type':media,
+                          'folder_sha256':hashlib.sha256(folder.encode('utf-8')).hexdigest()}
+                matching = [(identifier,data) for identifier,data in existing
+                            if data.get('xstream_source') == source]
+                if len(matching) > 1:
+                    raise PermissionError('duplicate native collection mapping')
+                if matching:
+                    # Older manually configured destinations take precedence.
+                    # Never turn a different account into this one implicitly.
+                    previous = matching[0][1].get('trakt_sync')
+                    if not isinstance(previous,dict) or not isinstance(previous.get('scope'),dict):
+                        raise PermissionError('native mapping lacks a verified scope')
+                    if previous['scope'] != scope:
+                        # Token refresh changes the ephemeral credential
+                        # generation. Rebind only after verified OAuth readback
+                        # proves the *same* account, provider and Kodi profile.
+                        stable = ('account','profile','provider_scope','kodi_profile')
+                        if any(previous['scope'].get(key) != scope[key] for key in stable):
+                            raise PermissionError('native mapping bound to another account or provider')
+                        matching[0][1]['trakt_sync']['scope'] = dict(scope)
+                        db.execute('UPDATE lists SET mappings=? WHERE local_id=?',
+                                   (json.dumps(matching[0][1],sort_keys=True),matching[0][0]))
+                        refreshed += 1
+                    continue
+                mappings = {'xstream_source':source,
+                            'trakt_sync':{'scope':dict(scope),'destination':target,
+                                          'revision':uuid.uuid4().hex}}
+                identifier = str(uuid.uuid4())
+                db.execute('INSERT INTO lists VALUES (?,?,?,?)',
+                           (identifier,title,kind,json.dumps(mappings,sort_keys=True)))
+                existing.append((identifier,mappings))
+                added += 1
+        return {'created':added,'existing':len(definitions)-added,'refreshed':refreshed}
+
     def _capture_destination(self, db, identifier, scope, origin):
         if origin != 'local' or scope is None:
             return

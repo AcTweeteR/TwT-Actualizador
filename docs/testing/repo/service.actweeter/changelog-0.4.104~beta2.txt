@@ -1,0 +1,1 @@
+Beta: sincronización Trakt bidireccional de Favoritos y Pendientes. Vinculación automática solo con importación y exportación autorizadas. Primera sincronización sin borrados: solo identidades TMDb verificadas.

@@ -24,8 +24,8 @@ jobs:
           echo '915f45708670d07e789bb73b7390a7b5cf30175f818ef5da8ea18c9f13f537fe  '"$RUNNER_TEMP/xstream-upstream-1.1.2.zip" | shasum -a 256 -c -
       - name: Installer and channel-isolation tests
         env:
-          ACTWEETER_XSTREAM_LIVE_ZIP: ${{ github.workspace }}/docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.44~beta8.zip
-          ACTWEETER_XSTREAM_TEST_ZIP: ${{ github.workspace }}/docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.44~beta8.zip
+          ACTWEETER_XSTREAM_LIVE_ZIP: ${{ github.workspace }}/docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.44~beta9.zip
+          ACTWEETER_XSTREAM_TEST_ZIP: ${{ github.workspace }}/docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.44~beta9.zip
           ACTWEETER_XSTREAM_UPSTREAM_ZIP: ${{ runner.temp }}/xstream-upstream-1.1.2.zip
           ACTWEETER_SKIN_LIVE_ZIP: ${{ github.workspace }}/docs/testing/repo/skin.actweeter/skin.actweeter-1.2.41~beta10.zip
           ACTWEETER_SERVICE_LIVE_ZIP: ${{ github.workspace }}/docs/testing/repo/service.actweeter/service.actweeter-0.4.101~beta6.zip
@@ -59,6 +59,12 @@ jobs:
           python3 tools/build_epg_watched_perf_beta.py --output "$RUNNER_TEMP/epg-watched-perf-beta"
           cmp "$RUNNER_TEMP/epg-watched-perf-beta/skin.actweeter-1.2.41~beta4.zip" docs/testing/repo/skin.actweeter/skin.actweeter-1.2.41~beta4.zip
           cmp "$RUNNER_TEMP/epg-watched-perf-beta/plugin.video.xstream-pro-1.1.2.40~beta2.zip" docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.40~beta2.zip
+          python3 tools/verify_current_stable.py
+      - name: Rebuild exact Trakt native-list Beta packages
+        run: |
+          python3 tools/build_native_trakt_collections_beta.py "$RUNNER_TEMP/native-trakt-beta"
+          cmp "$RUNNER_TEMP/native-trakt-beta/service.actweeter/service.actweeter-0.4.104~beta2.zip" docs/testing/repo/service.actweeter/service.actweeter-0.4.104~beta2.zip
+          cmp "$RUNNER_TEMP/native-trakt-beta/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.44~beta9.zip" docs/testing/repo/plugin.video.xstream-pro/plugin.video.xstream-pro-1.1.2.44~beta9.zip
           python3 tools/verify_current_stable.py
       # Historical Beta4 is immutable; Beta5 legitimately replaces the current
       # source module. Never regenerate an old release from moving sources.
@@ -97,8 +103,9 @@ jobs:
           assert hashlib.md5(payload).hexdigest() == (live.parent / 'addons.xml.md5').read_text().strip()
           versions = {a.get('id'):a.get('version') for a in ET.fromstring(payload)}
           assert versions['skin.actweeter'] == '1.2.44~beta2'
-          assert versions['service.actweeter'] == '0.4.104~beta1'
+          assert versions['service.actweeter'] == '0.4.104~beta2'
           assert versions['plugin.video.launcherm3u'] == '1.3.3~beta1'
+          assert versions['plugin.video.xstream-pro'] == '1.1.2.44~beta9'
           for addon_id, version in versions.items():
               artifact = live.parent / addon_id / f'{addon_id}-{version}.zip'
               assert artifact.is_file(), artifact
