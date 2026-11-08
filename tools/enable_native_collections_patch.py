@@ -92,7 +92,7 @@ def _binding(context, trakt, xbmcaddon, xbmcvfs):''')
                                     profile=profile, scope=scope, root=service_root)
         result = run_cycle(''', '''        # Native collections are optional. A failed/partial Trakt list GET
         # must never block the separately verified watched/resume cycle.
-        if import_allowed:
+        if import_allowed and not one_shot:
             try:
                 import trakt_local_journal as journal
                 from lib.collection_catalog import Catalog, _runtime_scope

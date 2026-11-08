@@ -138,7 +138,7 @@ class NativeCollectionsBeta(unittest.TestCase):
             self.assertEqual(text,patch_native(old.read('plugin.video.xstream-pro/resources/lib/trakt_auto_routes.py').decode()))
             for marker in ('with journal.runtime_scope(native_store)',
                            'ensure_native_defaults(', '_stage_first_native_additions(',
-                           'if incomplete:', 'if import_allowed:', 'adopted.update(', 'only_id=target_id'):
+                           'if incomplete:', 'if import_allowed and not one_shot:', 'adopted.update(', 'only_id=target_id'):
                 self.assertIn(marker,text)
         with tempfile.TemporaryDirectory() as folder:
             for aid,pkg in [('service.actweeter',SERVICE_BETA),('plugin.video.xstream-pro',BETA)]:
