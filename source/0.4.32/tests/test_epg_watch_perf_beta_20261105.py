@@ -317,8 +317,8 @@ class EpgWatchedPerformanceTests(unittest.TestCase):
         vals={x.get('id'):x.get('version') for x in
               ET.parse(REPO/'addons.xml').getroot()}
         self.assertEqual(vals['skin.actweeter'],'1.2.44~beta2')
-        self.assertEqual(vals['plugin.video.xstream-pro'],'1.1.2.44~beta8')
-        self.assertEqual(vals['service.actweeter'],'0.4.104~beta1')
+        self.assertEqual(vals['plugin.video.xstream-pro'],'1.1.2.44~beta9')
+        self.assertEqual(vals['service.actweeter'],'0.4.104~beta2')
         stable={x.get('id'):x.get('version') for x in
                 ET.parse(ROOT/'repo/addons.xml').getroot()}
         self.assertEqual(stable['skin.actweeter'],'1.2.42')

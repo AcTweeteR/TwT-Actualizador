@@ -68,7 +68,7 @@ def test_beta_packages_are_separate_from_provider_pvr():
     folder = ROOT / "docs/testing/repo"
     versions = {
         WORLDTV_ID: "1.3.3~beta1",
-        "service.actweeter": "0.4.104~beta1",
+        "service.actweeter": "0.4.104~beta2",
         "skin.actweeter": "1.2.44~beta2",
     }
     index = ET.parse(folder / "addons.xml").getroot()

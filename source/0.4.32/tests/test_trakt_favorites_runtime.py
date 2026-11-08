@@ -81,7 +81,11 @@ from contextlib import contextmanager
 sys.path.insert(0, sys.argv[2]+'/addons/service.actweeter/resources')
 sys.path.insert(0, sys.argv[2]+'/third_party/xstream')
 import trakt_local_journal as journal
-import trakt_auto_routes as routes
+# Load the exact candidate implementation, not the historical source stub.
+with __import__('zipfile').ZipFile(sys.argv[1]) as candidate:
+ source=candidate.read('plugin.video.xstream-pro/resources/lib/trakt_auto_routes.py')
+routes=types.ModuleType('trakt_auto_routes_candidate')
+exec(compile(source,'candidate/trakt_auto_routes.py','exec'),routes.__dict__)
 from lib.collection_catalog import Catalog
 from lib.trakt_outbox import Outbox
 import lib.collection_catalog as catalog_module

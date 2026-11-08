@@ -126,7 +126,7 @@ class MenuContractTests(unittest.TestCase):
                 "service.actweeter/resources/lib/interface_layout.py").decode()
             addon = ET.fromstring(archive.read("service.actweeter/addon.xml"))
             migration = ("interface-layout-v22-radio-browser-menu" if
-                         addon.get("version") == "0.4.104~beta1" else
+                         addon.get("version", "").startswith("0.4.104~beta") else
                          "interface-layout-v17-trakt-menu" if
                          addon.get("version") == "0.4.94" else
                          "interface-layout-v20-tv-recent-widget" if

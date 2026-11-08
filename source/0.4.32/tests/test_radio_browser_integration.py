@@ -106,7 +106,7 @@ def test_official_addon_is_required_without_bundling():
 def test_published_candidates_retained_worldtv_stable_and_crc():
     versions = {item.get('id'):item.get('version') for item in ET.parse(FEED/'addons.xml').getroot()}
     assert versions['skin.actweeter']=='1.2.44~beta2'
-    assert versions['service.actweeter']=='0.4.104~beta1'
+    assert versions['service.actweeter']=='0.4.104~beta2'
     assert versions['plugin.video.launcherm3u']=='1.3.3~beta1'
     assert hashlib.md5((FEED/'addons.xml').read_bytes()).hexdigest()==(FEED/'addons.xml.md5').read_text().strip()
     for addon_id in ('service.actweeter','skin.actweeter'):
